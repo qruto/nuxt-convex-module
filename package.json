@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@qruto/nuxt-convex",
+  "version": "0.1.0",
+  "description": "Convex for Vue & Nuxt — a faithful port of Convex's official React/Next integration (queries, mutations, actions, pagination, file storage, SSR) with opt-in Better Auth and Polar",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qruto/nuxt-convex.git"
+  },
+  "license": "MIT",
+  "author": "Slava Razum <razum@qruto.to>",
+  "homepage": "https://github.com/qruto/nuxt-convex#readme",
+  "bugs": {
+    "url": "https://github.com/qruto/nuxt-convex/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/qruto"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "vue",
+    "convex",
+    "better-auth",
+    "polar",
+    "realtime",
+    "ssr"
+  ],
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/module.js"
+    },
+    "./vue": {
+      "types": "./dist/runtime/vue/index.d.ts",
+      "import": "./dist/runtime/vue/index.js"
+    },
+    "./server": {
+      "types": "./dist/runtime/nuxt/index.d.ts",
+      "import": "./dist/runtime/nuxt/index.js"
+    },
+    "./better-auth/vue": {
+      "types": "./dist/runtime/better-auth/vue/index.d.ts",
+      "import": "./dist/runtime/better-auth/vue/index.js"
+    },
+    "./polar/vue": {
+      "types": "./dist/runtime/polar/vue/components.d.ts",
+      "import": "./dist/runtime/polar/vue/components.js"
+    },
+    "./clerk/vue": {
+      "types": "./dist/runtime/clerk/vue/index.d.ts",
+      "import": "./dist/runtime/clerk/vue/index.js"
+    },
+    "./auth0/vue": {
+      "types": "./dist/runtime/auth0/vue/index.d.ts",
+      "import": "./dist/runtime/auth0/vue/index.js"
+    }
+  },
+  "main": "./dist/module.js",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.ts"
+      ],
+      "vue": [
+        "./dist/runtime/vue/index.d.ts"
+      ],
+      "server": [
+        "./dist/runtime/nuxt/index.d.ts"
+      ],
+      "better-auth/vue": [
+        "./dist/runtime/better-auth/vue/index.d.ts"
+      ],
+      "polar/vue": [
+        "./dist/runtime/polar/vue/components.d.ts"
+      ],
+      "clerk/vue": [
+        "./dist/runtime/clerk/vue/index.d.ts"
+      ],
+      "auth0/vue": [
+        "./dist/runtime/auth0/vue/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@11.6.0",
+  "engines": {
+    "node": ">=24.11.0",
+    "pnpm": ">=11.6.0"
+  },
+  "scripts": {
+    "preinstall": "npx -y only-allow pnpm",
+    "prepare": "git config hook.commitlint.event commit-msg && git config hook.commitlint.command 'pnpm exec commitlint --edit' || true",
+    "prepack": "pnpm run build",
+    "build": "nuxt-module-build build && node scripts/normalize-module-ext.js",
+    "dev": "pnpm run dev:prepare && nuxt dev website",
+    "start": "pnpm run dev:prepare && nuxt dev website",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && node scripts/normalize-module-ext.js && nuxt prepare website",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest --run",
+    "test:coverage": "vitest --run --coverage",
+    "test:watch": "vitest --watch",
+    "test:types": "pnpm run test:types:lib && cd website && vue-tsc --noEmit",
+    "test:types:lib": "pnpm run dev:prepare && vue-tsc --noEmit",
+    "test:unit": "vitest --project unit --run",
+    "test:nuxt": "vitest --project nuxt --run",
+    "test:quality": "fallow",
+    "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
+    "bump": "pnpm exec taze major -w"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^4.4.8",
+    "dedent": "^1.7.2",
+    "h3": "^1.15.0",
+    "nuxt-security": "^2.6.0"
+  },
+  "peerDependencies": {
+    "@auth0/auth0-vue": ">=2.0.0",
+    "@better-auth/passkey": ">=1.6.0",
+    "@clerk/vue": ">=2.0.0",
+    "@convex-dev/better-auth": ">=0.12.0",
+    "@convex-dev/polar": ">=0.9.0",
+    "@polar-sh/checkout": ">=0.3.0",
+    "better-auth": ">=1.6.0",
+    "convex": ">=1.39.0",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@auth0/auth0-vue": {
+      "optional": true
+    },
+    "@better-auth/passkey": {
+      "optional": true
+    },
+    "@clerk/vue": {
+      "optional": true
+    },
+    "@convex-dev/better-auth": {
+      "optional": true
+    },
+    "@convex-dev/polar": {
+      "optional": true
+    },
+    "@polar-sh/checkout": {
+      "optional": true
+    },
+    "better-auth": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@auth0/auth0-vue": "^2.7.0",
+    "@better-auth/passkey": "~1.6.18",
+    "@clerk/vue": "2.4.9",
+    "@codecov/nuxt-plugin": "^2.0.1",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@convex-dev/better-auth": "^0.12.3",
+    "@convex-dev/polar": "^0.9.1",
+    "@nuxt/devtools": "^3.2.4",
+    "@nuxt/eslint": "^1.16.0",
+    "@nuxt/eslint-config": "^1.16.0",
+    "@nuxt/module-builder": "^1.0.2",
+    "@nuxt/schema": "^4.4.8",
+    "@nuxt/test-utils": "^4.0.3",
+    "@polar-sh/checkout": "^0.3.0",
+    "@types/node": "latest",
+    "@unhead/vue": "^3.1.4",
+    "@vitest/coverage-v8": "^4.1.8",
+    "@vue/test-utils": "^2.4.11",
+    "better-auth": "~1.6.18",
+    "changelogen": "^0.6.2",
+    "changelogithub": "^14.0.0",
+    "convex": "^1.41.0",
+    "convex-helpers": "^0.1.119",
+    "eslint": "^10.5.0",
+    "fallow": "^2.96.0",
+    "happy-dom": "^20.10.3",
+    "npm-run-all2": "^8.0.4",
+    "nuxt": "catalog:",
+    "oxc-parser": "^0.135.0",
+    "typedoc": "^0.28.0",
+    "typedoc-plugin-frontmatter": "^1.3.0",
+    "typedoc-plugin-markdown": "^4.6.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
+    "vue-tsc": "^3.3.5",
+    "ws": "^8.21.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

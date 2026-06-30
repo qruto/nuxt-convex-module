@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "name": "nuxt-convex-website",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "@qruto/nuxt-convex": "workspace:*",
+    "convex": "^1.41.0",
+    "docus": "^5.12.2",
+    "nuxt": "catalog:"
+  }
+}

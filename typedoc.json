@@ -1,0 +1,42 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-frontmatter"],
+  "tsconfig": "tsconfig.typedoc.json",
+
+  "entryPoints": [
+    "src/runtime/vue/index.ts",
+    "src/runtime/nuxt/index.ts",
+    "src/runtime/clerk/vue/index.ts",
+    "src/runtime/auth0/vue/index.ts",
+    "src/runtime/better-auth/vue/index.ts",
+    "src/runtime/polar/vue/components.ts"
+  ],
+  "entryPointStrategy": "resolve",
+
+  "out": "website/content/3.api-reference/9.reference",
+  "readme": "none",
+  "githubPages": false,
+  "hideGenerator": true,
+  "skipErrorChecking": true,
+
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "sort": ["source-order"],
+
+  "router": "module",
+  "entryFileName": "index",
+  "hidePageHeader": true,
+  "hideBreadcrumbs": true,
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "indexFormat": "table",
+
+  "frontmatterGlobals": {
+    "navigation": true
+  }
+}

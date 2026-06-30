@@ -1,0 +1,25 @@
+{
+  // Dedicated TypeScript project for TypeDoc. It only needs to resolve modules
+  // well enough to read the public API + TSDoc comments (TypeDoc runs with
+  // `skipErrorChecking`), so it isn't used for typechecking.
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node"],
+    "jsx": "preserve"
+  },
+  "include": [
+    "src/runtime/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
+}
