@@ -1,9 +1,12 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, createResolver, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Nuxt } from '@nuxt/schema'
 import { resolveFunctionsDir } from './functions-dir'
+
+/** Scoped, silenceable build-time logger (consola) for this module. */
+const logger = useLogger('nuxt-convex')
 
 export interface ModuleOptions {
   /** Convex deployment URL (defaults to `NUXT_PUBLIC_CONVEX_URL`). */
@@ -76,6 +79,7 @@ export default defineNuxtModule<ModuleOptions>({
     registerServerImports(resolver)
     registerIntegrations(resolver, nuxt, options)
     applyConvexCsp(nuxt, url, siteUrl)
+    watchBackendCodegen(nuxt)
   },
 })
 
@@ -159,16 +163,18 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     : options.url || process.env.NUXT_PUBLIC_CONVEX_URL
 
   if (!url && !nuxt.options._prepare) {
-    console.warn('[nuxt-convex] No Convex URL configured. Set `convex.url` in nuxt.config or NUXT_PUBLIC_CONVEX_URL.')
+    logger.warn('No Convex URL configured. Set `convex.url` in nuxt.config or NUXT_PUBLIC_CONVEX_URL.')
   }
 
   const siteUrl = options.siteUrl || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || ''
 
-  nuxt.options.runtimeConfig.public.backend = {
-    url: url || '',
-    siteUrl,
-  }
-  nuxt.options.runtimeConfig.backend = { siteUrl }
+  // Kit-blessed merge: publishes the resolved backend url/siteUrl while
+  // preserving any sibling keys a user already set, instead of overwriting the
+  // whole `backend` object as a direct assignment would.
+  updateRuntimeConfig({
+    public: { backend: { url: url || '', siteUrl } },
+    backend: { siteUrl },
+  })
 
   return { url: url || '', siteUrl }
 }
@@ -255,6 +261,21 @@ function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
         '',
       ].join('\n')
     },
+  })
+}
+
+/**
+ * In dev, re-render the provide-api plugin the instant `convex dev` emits
+ * `_generated/api`, so the generated `api` is wired app-wide without a
+ * dev-server restart (the fs-guarded template otherwise only re-evaluates on a
+ * full rebuild). Uses Nuxt's existing file watcher via the `builder:watch`
+ * hook — no watcher of our own to tear down.
+ */
+function watchBackendCodegen(nuxt: Nuxt): void {
+  if (!nuxt.options.dev) return
+  nuxt.hook('builder:watch', async (_event, path) => {
+    if (!path.replace(/\\/g, '/').includes('_generated/api')) return
+    await updateTemplates({ filter: template => template.filename === 'nuxt-convex-provide-api.mjs' })
   })
 }
 
@@ -347,6 +368,9 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
     route: `${authRoute}/**`,
     handler: resolver.resolve('./runtime/better-auth/nuxt/proxy'),
   })
+  // The proxy forwards live session/token traffic — never cache it, and keep it
+  // out of any prerender pass.
+  extendRouteRules(`${authRoute}/**`, { cache: false, prerender: false })
   addRouteMiddleware({
     name: 'auth',
     path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
