@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "build.config.ts",
+    "nuxt.config.ts",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "scripts/**/*.{ts,js}",
+    "src/module.ts",
+    "src/runtime/vue/plugin.ts",
+    "src/runtime/better-auth/nuxt/middleware.ts",
+    "src/runtime/better-auth/nuxt/proxy.ts",
+    "src/runtime/better-auth/nuxt/server.ts",
+    "src/runtime/better-auth/vue/plugin.client.ts",
+    "src/runtime/better-auth/vue/plugin.server.ts",
+    "website/nuxt.config.ts",
+    "website/app.config.ts",
+    "website/app.css",
+    "website/layouts/**/*.vue",
+    "website/pages/**/*.vue",
+    "website/components/**/*.vue",
+    "website/server/**/*.ts",
+    "website/backend/**/*.ts",
+    "test/setup/**/*.ts",
+    "test/helpers/**/*.ts",
+    "test/fixtures/**/*.{ts,vue}",
+    "test/fake-watch.ts"
+  ],
+  "ignorePatterns": [
+    "dist/**",
+    ".nuxt/**",
+    "website/.nuxt/**",
+    "website/backend/_generated/**",
+    "src/runtime/vue/index.ts"
+  ],
+  "ignoreDependencies": [
+    "@vue/test-utils",
+    "oxc-parser",
+    "@codecov/nuxt-plugin",
+    "convex-helpers",
+    "nuxt-security",
+    "@convex-dev/better-auth",
+    "@convex-dev/polar",
+    "@better-auth/passkey",
+    "better-auth",
+    "@polar-sh/checkout",
+    "@clerk/vue",
+    "@auth0/auth0-vue",
+    "typedoc-plugin-markdown",
+    "typedoc-plugin-frontmatter"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "duplicates": {
+    "ignore": [
+      "**/_generated/**",
+      "test/**",
+      "website/**",
+      "src/runtime/vue/client.ts",
+      "src/runtime/vue/queries-observer.ts",
+      "src/runtime/vue/hydration.ts",
+      "src/runtime/vue/composables/**",
+      "src/runtime/nuxt/index.ts"
+    ]
+  },
+  "health": {
+    "ignore": [
+      "test/**",
+      "**/_generated/**",
+      "src/module.ts",
+      "src/runtime/vue/client.ts",
+      "src/runtime/vue/queries-observer.ts",
+      "src/runtime/vue/hydration.ts",
+      "src/runtime/vue/composables/**",
+      "src/runtime/nuxt/index.ts"
+    ]
+  }
+}

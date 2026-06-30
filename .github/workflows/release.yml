@@ -1,0 +1,93 @@
+name: Release
+
+# Manually triggered from the Actions tab (Release → Run workflow).
+# Performs the whole release in CI — no local tooling, no stored secrets:
+#   gate → changelogen (bump + CHANGELOG.md + commit + tag)
+#        → npm publish (Trusted Publishing / OIDC)
+#        → push commit + tag → changelogithub (GitHub Release)
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Version bump
+        type: choice
+        default: auto
+        options:
+          - auto # derive from conventional commits
+          - patch
+          - minor
+          - major
+
+# Only one release at a time; never cancel a publish midway.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the release commit + tag, create the GitHub Release
+  id-token: write # npm Trusted Publishing (OIDC)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history + tags for changelogen, and to push back
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      # npm Trusted Publishing (OIDC) requires npm >= 11.5.1.
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Gate: never tag or publish a broken state.
+      - name: Lint
+        run: pnpm run lint
+      - name: Test
+        run: pnpm run test
+      - name: Type check
+        run: pnpm run test:types:lib
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Bump version, write CHANGELOG.md (with contributors), commit and tag — locally.
+      - name: Bump version & changelog
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type }}
+        run: |
+          if [ "$RELEASE_TYPE" = "auto" ]; then
+            pnpm exec changelogen --release
+          else
+            pnpm exec changelogen --release --"$RELEASE_TYPE"
+          fi
+
+      # Publish first; only mutate the remote once npm has accepted the release.
+      # `npm publish` runs `prepack` (the build); on failure nothing has been pushed.
+      - name: Publish to npm
+        run: npm publish
+
+      - name: Push release commit & tag
+        run: |
+          git push origin HEAD
+          git push origin --tags
+
+      # GitHub Release: conventional grouping + "Thanks to contributors" section.
+      - name: Create GitHub Release
+        run: pnpm exec changelogithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
