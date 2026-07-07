@@ -32,22 +32,53 @@ baseline versions; **always start there.**
 | `<ConvexProviderWithAuth useAuth>` | `provideConvexAuth({ client, useAuth })` composable |
 | `<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>` | `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0` composables (+ thin component wrappers) |
 | `useState` / `useEffect` reconciliation | `ref` + `watch` / `watchEffect` (see `vue/auth/index.ts` for the auth-state port and the comments explaining the live-sign-out edge case) |
+| `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
 | Static hook arguments | `MaybeRefOrGetter` inputs, read via `toValue` |
 | Returns a plain value | Returns `ComputedRef` / `ShallowRef` (VueUse convention) |
 | JSX helper components (`<Authenticated>`, …) | `defineComponent` render functions in `vue/auth/helpers.ts` |
-| Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server) |
+| Function-component name (automatic in React) | Explicit `name:` option — a plain-`.ts` `defineComponent` is otherwise `<Anonymous>` in devtools/warnings |
+| `{ children: ReactNode }` typing | Nothing — Vue components accept a default slot implicitly; do **not** add `slots: SlotsType<…>` declarations |
+| Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
+| Framework-qualified names (`NextjsOptions`, `convexBetterAuthNextJs`) | Substitute the framework part only: `NuxtOptions`, `convexBetterAuthNuxt` |
+| Ambient per-request context (`next/headers` + `React.cache`) | Explicit H3 `event` parameter (Nitro has no ambient request context) |
+| `React.cache` per-request memoization | Memoize on `event.context` (see `backendAuth`'s token cache) |
+| `fetchAccessToken` identity change between renders (re-auth trigger) | Pass the fetcher as a `Ref`/`ComputedRef` whose identity changes (or bump the port-only `authVersion` key) |
 
 Reuse the existing generic primitives instead of writing new auth cores: the Clerk/Auth0
 adapters are thin shims over `provideConvexAuth` / `createConvexAuthState`
 (`src/runtime/vue/auth/index.ts`). When an upstream "provider" component takes a `useAuth`
 prop, port it as a `useAuthFromX` shim feeding `provideConvexAuth`.
 
+**The migration contract**: public interface names match upstream **verbatim** unless a rule
+above sanctions the difference. Vue conveniences must be strictly additive (a required
+upstream prop may become optional with an auto-provided default; nothing gets renamed).
+User-facing error/warning texts stay verbatim too, modulo the sanctioned name substitutions —
+tests and log-matching written against upstream must keep working. The same goes for code
+*shape*: keep upstream's destructuring, branch order, and early returns wherever Vue doesn't
+force a change, so a side-by-side diff shows only the sanctioned translations, never
+stylistic drift. This extends to **internal** symbols: keep upstream's names (even
+unexported ones like `splitQuery`, `createInitialState`) and declare them in the same order
+as the upstream file; when a rule conflicts with a lint rule, scope the lint rule off for
+`src/runtime/**` instead of rewriting the line (see `no-dynamic-delete` in
+`eslint.config.js`).
+
 ## Known intentional divergences (do not "fix" toward React)
 
 - `watchPaginatedQuery` throws by design — pagination is handled in the `usePaginatedQuery`
   composable (Convex's internal `PaginatedQueryClient` is not a public export).
+- The Better Auth runtime imports the app's client via the `#convex/auth-client` alias (resolved
+  by `src/module.ts` to the user's `convex.betterAuth.authClient` module or the bundled default).
+  This is the Vue/Nuxt analog of `ConvexBetterAuthProvider` taking `authClient` as a prop — do
+  **not** "fix" these imports back to a hardcoded `./client`. The `convexClient` /
+  `crossDomainClient` client plugins are reused as-is from
+  `@convex-dev/better-auth/client/plugins`, never reimplemented.
 - File-storage composables (`useUpload`, `useUploadQueue`, `useStorageUrl`) are Vue-only
   extensions.
+- `backendAuth`'s JWT-cache retry predicate deliberately inverts upstream v0.12.5's
+  `callWithToken`: upstream retries with a force-refreshed token only when
+  `jwtCache.isAuthError(error)` is **false** (almost certainly an upstream bug); the port
+  retries exactly when the cached JWT is rejected as an auth error. See the comment in
+  `src/runtime/better-auth/nuxt/server.ts` and its test — do not sync the condition back.
 - Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = backend-only,
   react-start = framework-specific, `convexQueryOptions` = `@internal`).
 

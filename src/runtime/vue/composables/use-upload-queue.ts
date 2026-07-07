@@ -1,5 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
-import { useConvex } from '../client'
+import { useConvexOrThrow } from '../client'
 import { uploadFile, type GenerateUploadUrl, type StorageId } from './use-upload'
 
 /**
@@ -134,7 +134,7 @@ export function useUploadQueue(
   generateUploadUrl: GenerateUploadUrl,
   options: UseUploadQueueOptions = {},
 ): VueUploadQueue {
-  const convex = useConvex()
+  const convex = useConvexOrThrow('useUploadQueue')
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? 3))
   const items = ref<UploadQueueItem[]>([])
   const controllers = new Map<string, AbortController>()

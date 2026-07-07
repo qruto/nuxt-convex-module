@@ -1,96 +1,65 @@
 /**
- * Convex + Clerk integration for Vue.
+ * Vue login component for use with Clerk.
  *
- * A Vue/Nuxt port of `convex/react-clerk`'s `ConvexProviderWithClerk`. It adapts
- * `@clerk/vue`'s `useAuth()` into the generic Convex auth provider
+ * A Vue/Nuxt port of `convex/react-clerk`. The provider is exposed both as the
+ * {@link provideConvexAuthFromClerk} composable and the thin
+ * {@link ConvexProviderWithClerk} component wrapper; both adapt `@clerk/vue`'s
+ * `useAuth()` into the generic Convex auth provider
  * ({@link provideConvexAuth}) — no new auth core, just the SDK shim.
  *
  * @module
  */
 import { useAuth as useClerkAuth } from '@clerk/vue'
-import { defineComponent, toValue, type ComputedRef, type PropType, type SlotsType, type VNode } from 'vue'
+import { defineComponent, toValue, type ComputedRef, type PropType } from 'vue'
 import type { AuthTokenFetcher } from 'convex/browser'
-import { provideConvexAuth, type ConvexAuthState } from '../../vue/auth/index'
-import { useConvex, type ConvexVueClient } from '../../vue/client'
+import { provideConvexAuth, type ConvexAuthState, type IConvexVueClient } from '../../vue/auth/index'
+import { useConvexOrThrow } from '../../vue/client'
 
-/**
- * Minimal structural view of `@clerk/vue`'s `useAuth()` return — only the
- * fields the Convex adapter needs. Mirrors the hand-written `UseAuth` type in
- * `convex/react-clerk`, decoupling us from Clerk's full discriminated-union
- * type (which `useAuth` exposes as a per-field map of `ComputedRef`s).
- */
-export type ClerkGetToken = (options?: { template?: string, skipCache?: boolean }) => Promise<string | null>
-
-export interface ClerkAuthRefs {
+// https://clerk.com/docs/reference/clerk-react/useauth — `@clerk/vue` returns
+// each field as a `ComputedRef`. Hand-written like upstream's `UseAuth` (the
+// real composable's return type references Clerk-internal types that cannot be
+// named in our emitted declarations; it is structurally compatible and
+// assigned through a cast). Exported (upstream keeps it private) because it
+// appears in the public {@link ConvexProviderWithClerkOptions}.
+export type UseAuth = () => {
   isLoaded: ComputedRef<boolean>
   isSignedIn: ComputedRef<boolean | undefined>
-  getToken: ComputedRef<ClerkGetToken>
-  // We don't read these directly, but a change in either should trigger a new
-  // token fetch (see `authVersion` below).
-  orgId: ComputedRef<string | null | undefined>
-  orgRole: ComputedRef<string | null | undefined>
-  sessionClaims: ComputedRef<{ aud?: unknown } | null | undefined>
+  getToken: ComputedRef<(options: {
+    template?: 'convex'
+    skipCache?: boolean
+  }) => Promise<string | null>>
+  // We don't use these properties but they should trigger a new token fetch.
+  orgId: ComputedRef<string | undefined | null>
+  orgRole: ComputedRef<string | undefined | null>
+  // `Record<string, unknown>` mirrors upstream verbatim — anything narrower is
+  // a TS "weak type" that Clerk's real `ComputedRef<JwtPayload>` fails to
+  // satisfy, breaking the documented `useAuth` wiring at compile time.
+  sessionClaims: ComputedRef<Record<string, unknown> | undefined | null>
 }
-
-/**
- * Portable type for `@clerk/vue`'s `useAuth` composable, narrowed to the fields
- * the Convex adapter reads. We don't reuse `typeof import('@clerk/vue').useAuth`
- * directly because its return type references Clerk-internal types that cannot
- * be named in our emitted declarations; the real composable is structurally
- * compatible and assigned through a cast.
- */
-export type ClerkUseAuth = () => ClerkAuthRefs
 
 /**
  * Options for {@link provideConvexAuthFromClerk} / `<ConvexProviderWithClerk>`.
  */
 export interface ConvexProviderWithClerkOptions {
   /** Convex client to authenticate. Defaults to the provided {@link useConvex} client. */
-  client?: ConvexVueClient
+  client?: IConvexVueClient
   /** Clerk's `useAuth` composable. Defaults to `useAuth` from `@clerk/vue`. */
-  useAuth?: ClerkUseAuth
+  useAuth?: UseAuth
 }
 
 /**
- * Adapt Clerk's reactive auth state into the shape {@link provideConvexAuth}
- * expects. Mirrors `useAuthFromClerk` in `convex/react-clerk`.
- */
-function useAuthFromClerk(useAuth: ClerkUseAuth) {
-  const { isLoaded, isSignedIn, getToken, orgId, orgRole, sessionClaims } = useAuth()
-
-  const fetchAccessToken: AuthTokenFetcher = async ({ forceRefreshToken }) => {
-    try {
-      const get = toValue(getToken)
-      const claims = toValue(sessionClaims)
-      if (claims?.aud === 'convex') {
-        // Using the Convex integration (claims already carry `aud: "convex"`).
-        return await get({ skipCache: forceRefreshToken })
-      }
-      // Using the "convex" JWT template.
-      return await get({ template: 'convex', skipCache: forceRefreshToken })
-    }
-    catch {
-      return null
-    }
-  }
-
-  return {
-    isLoading: () => !toValue(isLoaded),
-    isAuthenticated: () => toValue(isSignedIn) ?? false,
-    fetchAccessToken,
-    // Re-run `setAuth` whenever the active organization changes — the Vue analog
-    // of React's `[orgId, orgRole]` dependency array.
-    authVersion: () => `${toValue(orgId) ?? ''}:${toValue(orgRole) ?? ''}`,
-  }
-}
-
-/**
- * Authenticate the Convex client with Clerk and expose the reactive auth state
- * to descendants via {@link useConvexAuth}.
+ * A composable which provides a {@link ConvexVueClient}
+ * authenticated with Clerk, exposing the reactive auth state to descendants
+ * via {@link useConvexAuth} — the Vue translation of wrapping the app in
+ * `convex/react-clerk`'s `<ConvexProviderWithClerk>`.
  *
- * Call this in a top-level component's `setup` (the app must be wrapped by a
- * configured Clerk plugin from `@clerk/vue`). Equivalent to wrapping with
- * `<ConvexProviderWithClerk>`.
+ * Call it in a top-level component's `setup`. The app must be wrapped by a
+ * configured `clerkPlugin`, from `@clerk/vue`, `@clerk/nuxt` or
+ * another Vue-based Clerk client library and have the corresponding
+ * `useAuth` composable passed in (it defaults to `useAuth` from `@clerk/vue`).
+ *
+ * See [Convex Clerk](https://docs.convex.dev/auth/clerk) on how to set up
+ * Convex with Clerk.
  *
  * @example
  * ```vue
@@ -105,16 +74,18 @@ function useAuthFromClerk(useAuth: ClerkUseAuth) {
 export function provideConvexAuthFromClerk(
   options: ConvexProviderWithClerkOptions = {},
 ): ConvexAuthState {
-  const client = options.client ?? useConvex()
+  const client = options.client ?? useConvexOrThrow('provideConvexAuthFromClerk')
   // The real `@clerk/vue` composable is structurally compatible with our
-  // narrowed {@link ClerkUseAuth} (its return type just carries extra fields).
-  const useAuth = options.useAuth ?? (useClerkAuth as unknown as ClerkUseAuth)
+  // narrowed {@link UseAuth} (its return type just carries extra fields).
+  const useAuth = options.useAuth ?? (useClerkAuth as unknown as UseAuth)
   return provideConvexAuth({ client, useAuth: () => useAuthFromClerk(useAuth) })
 }
 
 /**
- * Component form of {@link provideConvexAuthFromClerk} — a drop-in parity port
- * of `convex/react-clerk`'s `<ConvexProviderWithClerk>`. Renders its default
+ * A wrapper Vue component which provides a {@link ConvexVueClient}
+ * authenticated with Clerk — the component form of
+ * {@link provideConvexAuthFromClerk}, kept as a drop-in parity port of
+ * `convex/react-clerk`'s `<ConvexProviderWithClerk>`. Renders its default
  * slot once Convex auth is wired.
  *
  * @public
@@ -122,12 +93,48 @@ export function provideConvexAuthFromClerk(
 export const ConvexProviderWithClerk = defineComponent({
   name: 'ConvexProviderWithClerk',
   props: {
-    client: { type: Object as PropType<ConvexVueClient>, default: undefined },
-    useAuth: { type: Function as PropType<ClerkUseAuth>, default: undefined },
+    client: { type: Object as PropType<IConvexVueClient>, default: undefined },
+    useAuth: { type: Function as PropType<UseAuth>, default: undefined },
   },
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(props, { slots }) {
     provideConvexAuthFromClerk({ client: props.client, useAuth: props.useAuth })
     return () => slots.default?.()
   },
 })
+
+// The Vue translation of upstream's `useUseAuthFromClerk`: the memoizing outer
+// wrapper is unnecessary (`provideConvexAuth` invokes `useAuth` once in
+// `setup`), so only the inner `useAuthFromClerk` composable is ported.
+function useAuthFromClerk(useAuth: UseAuth) {
+  const { isLoaded, isSignedIn, getToken, orgId, orgRole, sessionClaims } = useAuth()
+  const fetchAccessToken: AuthTokenFetcher = async ({ forceRefreshToken }) => {
+    try {
+      if (toValue(sessionClaims)?.aud === 'convex') {
+        // Using the Convex integration
+        return await toValue(getToken)({
+          skipCache: forceRefreshToken,
+        })
+      }
+      else {
+        // Using the JWT token template
+        return await toValue(getToken)({
+          template: 'convex',
+          skipCache: forceRefreshToken,
+        })
+      }
+    }
+    catch {
+      return null
+    }
+  }
+  return {
+    isLoading: () => !toValue(isLoaded),
+    isAuthenticated: () => toValue(isSignedIn) ?? false,
+    fetchAccessToken,
+    // The `authVersion` key triggers setAuth() whenever these change — the Vue
+    // translation of upstream rebuilding `fetchAccessToken` with dependencies
+    // `[orgId, orgRole]`. Anything else from the JWT Clerk wants to be
+    // reactive goes here too.
+    authVersion: () => `${toValue(orgId) ?? ''}:${toValue(orgRole) ?? ''}`,
+  }
+}

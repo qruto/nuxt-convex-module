@@ -981,6 +981,76 @@ describe.sequential('auth websocket tests', () => {
       await client.close()
     })
   })
+
+  // Ported from convex-js `react/ConvexAuthState.test.tsx` ("Tokens are used
+  // to schedule refetch"). Once the server confirms the force-refreshed fresh
+  // token, the client schedules a steady-state refetch from the JWT's `exp`
+  // claim, so the token fetcher fires a third time when the token lifetime
+  // elapses. Same two-confirmation choreography as the invalid-JWT test above,
+  // but with fake `setTimeout` only — socket I/O still needs the real event
+  // loop (`setImmediate`) to deliver the server's confirmations.
+  it('schedules a steady-state token refetch from the JWT exp claim', async () => {
+    await withInMemoryWebSocket(async ({ address, receive, send }) => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+      const client = testVueClient(address)
+
+      const tokenLifetimeSeconds = 60
+      let tokenId = 0
+      const tokenFetcher = vi.fn(async () =>
+        jwtEncode(
+          { iat: 1234500, exp: 1234500 + tokenLifetimeSeconds },
+          `secret${tokenId++}`, // simulate a new token on every fetch
+        ),
+      )
+      client.setAuth(tokenFetcher)
+
+      // Initial handshake authenticates with the first (cached) token.
+      expect((await receive()).type).toEqual('Connect')
+      expect((await receive()).type).toEqual('Authenticate')
+      expect((await receive()).type).toEqual('ModifyQuerySet')
+
+      // Confirm the cached token; the client force-refreshes to a fresh token.
+      const cachedVersion = getQuerySetVersion(client)
+      send({
+        type: 'Transition',
+        startVersion: { ...cachedVersion, identity: 0 },
+        endVersion: { ...cachedVersion, identity: 1 },
+        modifications: [],
+      })
+
+      // The force-refreshed (fresh) token is sent as a new Authenticate.
+      expect((await receive()).type).toEqual('Authenticate')
+      expect(tokenFetcher).toHaveBeenCalledTimes(2)
+
+      // Confirm the fresh token; the client schedules a refetch from `exp`.
+      const timersBeforeConfirmation = vi.getTimerCount()
+      const freshVersion = getQuerySetVersion(client)
+      send({
+        type: 'Transition',
+        startVersion: { ...freshVersion, identity: 1 },
+        endVersion: { ...freshVersion, identity: 2 },
+        modifications: [],
+      })
+
+      // Scheduling only happens once the client processes the Transition —
+      // real socket I/O that fake timers can't advance — so yield the event
+      // loop until the scheduled refetch timer shows up.
+      while (vi.getTimerCount() <= timersBeforeConfirmation) {
+        await new Promise(resolve => setImmediate(resolve))
+      }
+      expect(tokenFetcher).toHaveBeenCalledTimes(2)
+
+      // Elapse the token lifetime; the scheduled refetch fires and
+      // force-fetches a third token.
+      await vi.advanceTimersByTimeAsync(tokenLifetimeSeconds * 1000)
+
+      expect(tokenFetcher).toHaveBeenCalledTimes(3)
+      expect(tokenFetcher).toHaveBeenNthCalledWith(3, {
+        forceRefreshToken: true,
+      })
+      await client.close()
+    })
+  })
 })
 
 describe.sequential('authMode WebSocket', () => {

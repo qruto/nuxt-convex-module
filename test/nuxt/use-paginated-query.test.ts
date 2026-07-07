@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { nextTick, ref, type ComputedRef } from 'vue'
+import { nextTick, ref, shallowRef, type ComputedRef } from 'vue'
 import {
   anyApi,
   getFunctionName,
@@ -208,7 +208,10 @@ describe('usePaginatedQuery', () => {
       pushFirstPageError(client, queryRef, 'boom-positional')
       await nextTick()
 
-      expect(() => result.value).toThrow('boom-positional')
+      // Reading any of the returned refs surfaces the thrown error (which
+      // propagates to `errorCaptured` when read during render).
+      expect(() => result.results.value).toThrow('boom-positional')
+      expect(() => result.status.value).toThrow('boom-positional')
 
       await client.close()
     })
@@ -220,17 +223,16 @@ describe('usePaginatedQuery', () => {
     const client = new ConvexVueClient(address, { logger: silentConnectLogger })
 
     const watchQuerySpy = vi.spyOn(client, 'watchQuery')
-    const { result } = await mountWithConvex(
+    // The docs' destructuring idiom is the contract — each field is a live ref.
+    const { result: { results, status, isLoading } } = await mountWithConvex(
       client,
       () => usePaginatedQuery(queryRef, 'skip', { initialNumItems: 10 }),
     )
 
     expect(watchQuerySpy).not.toHaveBeenCalled()
-    expect(result.value).toMatchObject({
-      isLoading: true,
-      results: [],
-      status: 'LoadingFirstPage',
-    })
+    expect(isLoading.value).toBe(true)
+    expect(results.value).toEqual([])
+    expect(status.value).toBe('LoadingFirstPage')
 
     await client.close()
   })
@@ -312,11 +314,9 @@ describe('usePaginatedQuery', () => {
       expect(firstPageArgs).toMatchObject({
         paginationOpts: { numItems: 10, cursor: null, id: expect.any(Number) },
       })
-      expect(result.value).toMatchObject({
-        isLoading: true,
-        results: [],
-        status: 'LoadingFirstPage',
-      })
+      expect(result.isLoading.value).toBe(true)
+      expect(result.results.value).toEqual([])
+      expect(result.status.value).toBe('LoadingFirstPage')
 
       await client.close()
     })
@@ -348,16 +348,14 @@ describe('usePaginatedQuery', () => {
       } satisfies PaginationResult<unknown>)
       await nextTick()
 
-      expect(result.value.results).toEqual(['general-item'])
+      expect(result.results.value).toEqual(['general-item'])
 
       args.value = { channel: 'random' }
       await nextTick()
 
-      expect(result.value).toMatchObject({
-        isLoading: true,
-        results: [],
-        status: 'LoadingFirstPage',
-      })
+      expect(result.isLoading.value).toBe(true)
+      expect(result.results.value).toEqual([])
+      expect(result.status.value).toBe('LoadingFirstPage')
 
       const secondArgs = getWatchQueryArgs(
         watchQuerySpy.mock.calls as WatchQueryCalls,
@@ -371,7 +369,81 @@ describe('usePaginatedQuery', () => {
       } satisfies PaginationResult<unknown>)
       await nextTick()
 
-      expect(result.value.results).toEqual(['random-item'])
+      expect(result.results.value).toEqual(['random-item'])
+
+      await client.close()
+    })
+  })
+
+  it('updates to a new query when the query name changes', async () => {
+    await withInMemoryWebSocket(async ({ address }) => {
+      const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+      const watchQuerySpy = vi.spyOn(client, 'watchQuery')
+      // The stable positional form takes a static query reference; the
+      // reactive-query path is the object form, which re-reads `query` via
+      // `toValue` — swap the ref to change the query name (mirrors upstream's
+      // "Updates to a new query if query name or args change").
+      // `shallowRef` because the `anyApi` proxy must not be wrapped in deep
+      // reactivity (its `get` trap returns a new proxy for every property,
+      // which sends Vue's `toRaw` into infinite recursion).
+      const query = shallowRef(anyApi.myQuery!.default as PaginatedQueryReference)
+
+      const { result } = await mountWithConvex(
+        client,
+        () =>
+          usePaginatedQuery_experimental(() => ({
+            query: query.value,
+            args: {},
+            initialNumItems: 1,
+          })),
+        { tick: true },
+      )
+
+      const callsForQuery = (name: string) =>
+        watchQuerySpy.mock.calls.filter(
+          ([q]) => getFunctionName(q) === name,
+        ) as WatchQueryCalls
+
+      const firstArgs = getWatchQueryArgs(
+        callsForQuery('myQuery'),
+        args => asPaginatedCallArgs(args).paginationOpts?.cursor === null,
+      )
+      applyOptimisticQueryResult(client, query.value, firstArgs, {
+        page: ['first-query-item'],
+        isDone: true,
+        continueCursor: 'cursor-first',
+        splitCursor: null,
+      } satisfies PaginationResult<unknown>)
+      await nextTick()
+
+      expect(result.value.data).toEqual(['first-query-item'])
+
+      // Swap to a different query function reference (name change).
+      query.value = anyApi.myQuery2!.default as PaginatedQueryReference
+      await nextTick()
+
+      // State resets to loading the first page of the new query.
+      expect(result.value).toMatchObject({
+        isLoading: true,
+        data: undefined,
+        status: 'pending',
+        canLoadMore: false,
+      })
+
+      // A fresh first-page subscription was created for the new query name.
+      const secondArgs = getWatchQueryArgs(
+        callsForQuery('myQuery2'),
+        args => asPaginatedCallArgs(args).paginationOpts?.cursor === null,
+      )
+      applyOptimisticQueryResult(client, query.value, secondArgs, {
+        page: ['second-query-item'],
+        isDone: true,
+        continueCursor: 'cursor-second',
+        splitCursor: null,
+      } satisfies PaginationResult<unknown>)
+      await nextTick()
+
+      expect(result.value.data).toEqual(['second-query-item'])
 
       await client.close()
     })
@@ -408,13 +480,14 @@ describe('usePaginatedQuery', () => {
       await withInMemoryWebSocket(async ({ address }) => {
         const client = new ConvexVueClient(address, { logger: silentConnectLogger })
 
-        const { result } = await mountWithConvex(
+        // Destructured refs + stable loadMore — the documented consumption.
+        const { result: { results, status, loadMore } } = await mountWithConvex(
           client,
           () => usePaginatedQuery(queryRef, {}, { initialNumItems: 1 }),
           { tick: true },
         )
 
-        expect(result.value.status).toBe('LoadingFirstPage')
+        expect(status.value).toBe('LoadingFirstPage')
 
         applyOptimisticQueryResult(
           client,
@@ -429,8 +502,8 @@ describe('usePaginatedQuery', () => {
         )
         await nextTick()
 
-        expect(result.value.status).toBe('CanLoadMore')
-        expect(result.value.results).toEqual(['item1'])
+        expect(status.value).toBe('CanLoadMore')
+        expect(results.value).toEqual(['item1'])
 
         applyOptimisticQueryResult(
           client,
@@ -443,11 +516,11 @@ describe('usePaginatedQuery', () => {
             splitCursor: null,
           } satisfies PaginationResult<unknown>,
         )
-        result.value.loadMore(2)
+        loadMore(2)
         await nextTick()
 
-        expect(result.value.status).toBe('Exhausted')
-        expect(result.value.results).toEqual(['item1', 'item2'])
+        expect(status.value).toBe('Exhausted')
+        expect(results.value).toEqual(['item1', 'item2'])
 
         await client.close()
       })
@@ -476,8 +549,8 @@ describe('usePaginatedQuery', () => {
         )
         await nextTick()
 
-        expect(result.value.status).toBe('Exhausted')
-        expect(result.value.results).toEqual(['item1'])
+        expect(result.status.value).toBe('Exhausted')
+        expect(result.results.value).toEqual(['item1'])
 
         applyOptimisticQueryResult(
           client,
@@ -492,8 +565,8 @@ describe('usePaginatedQuery', () => {
         )
         await nextTick()
 
-        expect(result.value.status).toBe('Exhausted')
-        expect(result.value.results).toEqual(['item2', 'item3'])
+        expect(result.status.value).toBe('Exhausted')
+        expect(result.results.value).toEqual(['item2', 'item3'])
 
         await client.close()
       })
@@ -523,8 +596,8 @@ describe('usePaginatedQuery', () => {
         await nextTick()
         await nextTick()
 
-        expect(result.value.status).toBe('Exhausted')
-        expect(result.value.results).toEqual([
+        expect(result.status.value).toBe('Exhausted')
+        expect(result.results.value).toEqual([
           'item1',
           'item2',
           'item3',
@@ -556,8 +629,8 @@ describe('usePaginatedQuery', () => {
         await nextTick()
         await nextTick()
 
-        expect(result.value.status).toBe('Exhausted')
-        expect(result.value.results).toEqual([
+        expect(result.status.value).toBe('Exhausted')
+        expect(result.results.value).toEqual([
           'item1S',
           'item2S',
           'item3S',
@@ -621,10 +694,16 @@ describe('UsePaginatedQueryObjectReturnType', () => {
     }>()
   })
 
-  it('positional-form return type does NOT include an error variant', () => {
+  it('positional-form return type is the object-of-refs shape (no error variant)', () => {
     type PosResult = UsePaginatedQueryReturnType<MyQuery>
+    // No error variant — positional forms throw instead (upstream parity).
     type ErrorVariant = Extract<PosResult, { status: 'error' }>
     expectTypeOf<ErrorVariant>().toEqualTypeOf<never>()
+    // The fields are refs + a stable function, so the documented destructuring
+    // idiom stays reactive.
+    expectTypeOf<PosResult['results']>().toEqualTypeOf<ComputedRef<string[]>>()
+    expectTypeOf<PosResult['isLoading']>().toEqualTypeOf<ComputedRef<boolean>>()
+    expectTypeOf<PosResult['loadMore']>().toEqualTypeOf<(numItems: number) => void>()
   })
 
   it('throwOnError removes the error variant from the object-form union', () => {
@@ -681,11 +760,11 @@ describe('usePaginatedQuery_experimental', () => {
     const useExperimental = (() => {}) as unknown as typeof usePaginatedQuery_experimental
     type Query = typeof queryRef
 
-    // Positional form: both hooks return the TitleCase positional result.
+    // Positional form: both hooks return the object-of-refs positional result.
     expectTypeOf(useExperimental(queryRef, {}, { initialNumItems: 10 }))
-      .toEqualTypeOf<ComputedRef<UsePaginatedQueryReturnType<Query>>>()
+      .toEqualTypeOf<UsePaginatedQueryReturnType<Query>>()
     expectTypeOf(usePaginated(queryRef, {}, { initialNumItems: 10 }))
-      .toEqualTypeOf<ComputedRef<UsePaginatedQueryReturnType<Query>>>()
+      .toEqualTypeOf<UsePaginatedQueryReturnType<Query>>()
 
     // Object form: only the experimental hook accepts it, returning the
     // lowercase-status object result.
@@ -696,6 +775,56 @@ describe('usePaginatedQuery_experimental', () => {
     // form is a type error there, matching React.
     // @ts-expect-error object form is not part of the positional-only signature
     usePaginated({ query: queryRef, args: {}, initialNumItems: 10 })
+  })
+
+  it('positional form paginates like the stable hook (destructured refs + loadMore)', async () => {
+    await withInMemoryWebSocket(async ({ address }) => {
+      resetPaginationId()
+      const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+
+      const { result: { results, status, loadMore } } = await mountWithConvex(
+        client,
+        () => usePaginatedQuery_experimental(queryRef, {}, { initialNumItems: 1 }),
+        { tick: true },
+      )
+
+      expect(status.value).toBe('LoadingFirstPage')
+
+      applyOptimisticQueryResult(
+        client,
+        queryRef,
+        { paginationOpts: { numItems: 1, cursor: null, id: 1 } as PaginationOptions },
+        {
+          page: ['item1'],
+          continueCursor: 'abc',
+          isDone: false,
+          splitCursor: null,
+        } satisfies PaginationResult<unknown>,
+      )
+      await nextTick()
+
+      expect(status.value).toBe('CanLoadMore')
+      expect(results.value).toEqual(['item1'])
+
+      applyOptimisticQueryResult(
+        client,
+        queryRef,
+        { paginationOpts: { numItems: 2, cursor: 'abc', id: 1 } as PaginationOptions },
+        {
+          page: ['item2'],
+          continueCursor: 'def',
+          isDone: true,
+          splitCursor: null,
+        } satisfies PaginationResult<unknown>,
+      )
+      loadMore(2)
+      await nextTick()
+
+      expect(status.value).toBe('Exhausted')
+      expect(results.value).toEqual(['item1', 'item2'])
+
+      await client.close()
+    })
   })
 
   it('object form returns pending when skipped', async () => {

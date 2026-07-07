@@ -13,7 +13,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, relative, posix, sep } from 'node:path'
 
 const ROOT = new URL(
-  '../website/content/3.api-reference/9.reference/',
+  '../website/content/4.api-reference/9.reference/',
   import.meta.url,
 ).pathname
 

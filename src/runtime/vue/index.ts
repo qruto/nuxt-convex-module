@@ -3,44 +3,132 @@
  *
  * This module contains:
  * 1. {@link ConvexVueClient}, a client for using Convex in Vue.
- * 2. {@link ConvexClientKey}, a Vue injection key for providing the client.
- * 3. {@link Authenticated}, {@link Unauthenticated} and {@link AuthLoading} helper auth components.
- * 4. Composables {@link useQuery}, {@link useMutation}, {@link useAction} and more.
+ * 2. {@link ConvexClientKey}, an injection key that stores this client in Vue context.
+ * 3. {@link Authenticated}, {@link Unauthenticated}, {@link AuthLoading} and {@link AuthRefreshing} helper auth components.
+ * 4. Composables {@link useQuery}, {@link useMutation}, {@link useAction} and more for accessing this
+ *    client from your Vue components.
  *
+ * ## Usage
+ *
+ * ### Creating the client
+ *
+ * ```typescript
+ * import { ConvexVueClient } from "@qruto/nuxt-convex/vue";
+ *
+ * // typically loaded from an environment variable
+ * const address = "https://small-mouse-123.convex.cloud"
+ * const convex = new ConvexVueClient(address);
+ * ```
+ *
+ * ### Storing the client in Vue context
+ *
+ * ```typescript
+ * import { ConvexClientKey } from "@qruto/nuxt-convex/vue";
+ *
+ * // (the Nuxt module registers a plugin that does this automatically)
+ * app.provide(ConvexClientKey, convex);
+ * ```
+ *
+ * ### Using the auth helpers
+ *
+ * ```typescript
+ * import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "@qruto/nuxt-convex/vue";
+ *
+ * <Authenticated>
+ *   Logged in
+ * </Authenticated>
+ * <Unauthenticated>
+ *   Logged out
+ * </Unauthenticated>
+ * <AuthLoading>
+ *   Still loading
+ * </AuthLoading>
+ * <AuthRefreshing>
+ *   Refreshing token...
+ * </AuthRefreshing>
+ * ```
+ *
+ * ### Using Vue composables
+ *
+ * ```typescript
+ * import { useQuery, useMutation } from "@qruto/nuxt-convex/vue";
+ * import { api } from "../convex/_generated/api";
+ *
+ * // In your component's <script setup>:
+ * const counter = useQuery(api.getCounter.default);
+ * const increment = useMutation(api.incrementCounter.default);
+ * // Your component here!
+ * ```
  * @module
  */
-
-// Client
-// Derive additional shared types from the official Convex React integration
-// (avoids duplication and keeps our public API types in sync with upstream).
-// Use "import type" here so the specifier is erased in JS output; no runtime dep
-// on convex/react (and thus no "react" peer) even if this barrel is loaded.
-// Internals (composables) use local defs; barrel provides the canonical types.
-// Paginated* / UsePaginated* / RequestForQueries / UseQueryResult now derived
-// inside the composables (see use-*.ts) and re-exported via export * below.
-// (additional derives happen in composables; barrel re-exports via submodules + explicit server/browser types)
-
+export * from './composables/use-paginated-query'
+// Upstream: use_paginated_query2.ts — merged into use-paginated-query.ts (see PARITY.md).
+export {
+  usePaginatedQuery_experimental,
+  type UsePaginatedQueryOptions,
+  type UsePaginatedQueryObjectReturnType,
+} from './composables/use-paginated-query'
+export { usePaginatedQuery } from './composables/use-paginated-query'
+export { useQueries, type RequestForQueries } from './composables/use-queries'
+export type { AuthTokenFetcher } from 'convex/browser'
+export * from './auth/helpers'
+export * from './auth'
+// Named (not `export *`): vue/hydration.ts also exports port-internal helpers.
+export { usePreloadedQuery, type Preloaded } from './hydration'
+/* @internal */
+export { useSubscription } from './composables/use-subscription'
+// Upstream exports the block below from client.ts; the port hosts the
+// composables in vue/composables/* files (see PARITY.md), so the same symbols
+// follow in upstream's order, re-exported per source file.
+export { type VueMutation } from './composables/use-mutation'
+export { type VueAction } from './composables/use-action'
+export {
+  type Watch,
+  type WatchQueryOptions,
+  type MutationOptions,
+  type ConvexVueClientOptions,
+} from './client'
+export {
+  type OptionalRestArgsOrSkip,
+  type UseQueryResult,
+} from './composables/use-query'
 export {
   ConvexVueClient,
-  ConvexClientKey,
   useConvex,
-  type Watch,
+  // Upstream: `ConvexProvider` — the plugin provides the client via this key.
+  ConvexClientKey,
+} from './client'
+export { useQuery, useQuery_experimental } from './composables/use-query'
+export { useMutation } from './composables/use-mutation'
+export { useAction } from './composables/use-action'
+export { useConvexConnectionState } from './composables/use-connection-state'
+// `convexQueryOptions` (marked `@internal` upstream) is deliberately not ported — see PARITY.md.
+export type { QueryOptions } from 'convex/browser'
+
+// --- Vue-only additions beyond the upstream `convex/react` index surface ---
+// (see PARITY.md "Vue-only additions"; keep grouped here, after the mirrored exports)
+
+// `useConvex*` aliases avoid name clashes with other auto-imported composables.
+export { useConvexQueries } from './composables/use-queries'
+export { useConvexQuery } from './composables/use-query'
+export { useConvexMutation } from './composables/use-mutation'
+export { useConvexAction } from './composables/use-action'
+
+// Barrel type conveniences from the client module.
+// `VueMutationOptions` is the Vue-family alias of upstream's `MutationOptions`
+// (same treatment as `VueMutation` / `VueAction`).
+export {
   type PaginatedWatch,
-  type WatchQueryOptions,
   type VueMutationOptions,
-  type ConvexVueClientOptions,
   type ConvexLogger,
 } from './client'
 
+// Type re-exports for convenience.
 export type {
-  AuthTokenFetcher,
   ConnectionState,
   OptimisticUpdate,
   QueryJournal,
-  QueryOptions,
 } from 'convex/browser'
-
-// Re-export convex types for convenience
 export type {
   FunctionReference,
   FunctionArgs,
@@ -48,51 +136,9 @@ export type {
   OptionalRestArgs,
   ArgsAndOptions,
 } from 'convex/server'
-
 export type { Value } from 'convex/values'
 
-// (Paginated* types derived in composables/use-paginated-query.ts and surfaced via export *)
-
-// Queries
-export {
-  useConvexQueries,
-  useQueries,
-  type RequestForQueries,
-} from './composables/use-queries'
-
-// Query
-export {
-  useQuery,
-  useQuery_experimental,
-  useConvexQuery,
-  type UseQueryResult,
-  type OptionalRestArgsOrSkip,
-} from './composables/use-query'
-
-// Mutation
-export {
-  useMutation,
-  useConvexMutation,
-  type VueMutation,
-} from './composables/use-mutation'
-
-// Public alias matching Convex's mutation option naming.
-export type { VueMutationOptions as MutationOptions } from './client'
-
-// Action
-export {
-  useAction,
-  useConvexAction,
-  type VueAction,
-} from './composables/use-action'
-
-// Paginated Query
-export * from './composables/use-paginated-query'
-
-// Connection State
-export { useConvexConnectionState } from './composables/use-connection-state'
-
-// File Storage (convenience helpers beyond Convex's React parity surface)
+// File Storage helpers (not in `convex/react`).
 export {
   useUpload,
   useConvexUpload,
@@ -117,21 +163,7 @@ export {
   type GetStorageUrl,
 } from './composables/use-storage-url'
 
-// Auth
-export {
-  useConvexAuth,
-  provideConvexAuth,
-  createConvexAuthState,
-  createScopedConvexAuthState,
-  ConvexAuthStateKey,
-  type ConvexAuthState,
-  type ConvexAuthProviderOptions,
-} from './auth'
-
-// Auth Helpers
-export { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from './auth/helpers'
-
-// App API wiring (provide/consume the generated Convex `api`)
+// App API wiring (provide/consume the generated Convex `api`).
 export {
   provideBackendApi,
   useBackendApi,
@@ -139,12 +171,3 @@ export {
   BackendApiKey,
   type BackendApi,
 } from './provide'
-
-// Hydration / SSR
-export {
-  usePreloadedQuery,
-  type Preloaded,
-} from './hydration'
-
-// Subscription utility (internal)
-export { useSubscription } from './composables/use-subscription'

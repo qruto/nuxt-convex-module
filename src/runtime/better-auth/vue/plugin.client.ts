@@ -12,7 +12,7 @@ export default defineNuxtPlugin<ConvexNuxtInjection>(async (nuxtApp) => {
   const url = useRuntimeConfig().public.backend.url
 
   if (!url) {
-    console.warn('[nuxt-backend] No Convex URL configured for client plugin.')
+    console.warn('[nuxt-convex] No Convex URL configured for client plugin.')
     return { provide: {} }
   }
 
@@ -33,10 +33,11 @@ export default defineNuxtPlugin<ConvexNuxtInjection>(async (nuxtApp) => {
   })
   nuxtApp.vueApp.provide(ConvexAuthStateKey, state)
 
-  window.addEventListener('beforeunload', () => {
-    scope.stop()
-    client.close()
-  })
+  // No teardown on `beforeunload` — the event is cancelable and fires before
+  // the user answers the unsaved-changes dialog, so closing the client here
+  // would drop in-flight mutations when the user chooses to stay (upstream
+  // never closes on unload). `scope` lives for the app's lifetime.
+  void scope
 
   return {
     provide: {

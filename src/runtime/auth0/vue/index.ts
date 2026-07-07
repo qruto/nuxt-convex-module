@@ -1,64 +1,39 @@
 /**
- * Convex + Auth0 integration for Vue.
+ * Vue login component for use with Auth0.
  *
- * A Vue/Nuxt port of `convex/react-auth0`'s `ConvexProviderWithAuth0`. It adapts
+ * A Vue/Nuxt port of `convex/react-auth0`. The provider is exposed both as the
+ * {@link provideConvexAuthFromAuth0} composable and the thin
+ * {@link ConvexProviderWithAuth0} component wrapper; both adapt
  * `@auth0/auth0-vue`'s `useAuth0()` into the generic Convex auth provider
  * ({@link provideConvexAuth}) — no new auth core, just the SDK shim.
  *
  * @module
  */
 import { useAuth0 } from '@auth0/auth0-vue'
-import { defineComponent, type PropType, type SlotsType, type VNode } from 'vue'
-import type { AuthTokenFetcher } from 'convex/browser'
-import { provideConvexAuth, type ConvexAuthState } from '../../vue/auth/index'
-import { useConvex, type ConvexVueClient } from '../../vue/client'
+import { defineComponent, type PropType } from 'vue'
+
+// Upstream re-describes its client interface locally (`IConvexReactClient`);
+// the port's mirror is exported from the auth core, so import it instead.
+import { provideConvexAuth, type ConvexAuthState, type IConvexVueClient } from '../../vue/auth/index'
+import { useConvexOrThrow } from '../../vue/client'
 
 /**
  * Options for {@link provideConvexAuthFromAuth0} / `<ConvexProviderWithAuth0>`.
  */
 export interface ConvexProviderWithAuth0Options {
   /** Convex client to authenticate. Defaults to the provided {@link useConvex} client. */
-  client?: ConvexVueClient
+  client?: IConvexVueClient
 }
 
 /**
- * Adapt Auth0's reactive auth state into the shape {@link provideConvexAuth}
- * expects. Mirrors `useAuthFromAuth0` in `convex/react-auth0`.
+ * The composable form of {@link ConvexProviderWithAuth0} — provides a
+ * {@link ConvexVueClient} authenticated with Auth0.
  *
- * `isLoading` / `isAuthenticated` are Auth0 `Ref`s, passed through unwrapped
- * (the provider reads them with `toValue`). The token is the Auth0 `id_token`
- * obtained via a detailed silent token request.
- */
-function useAuthFromAuth0() {
-  const auth0 = useAuth0()
-
-  const fetchAccessToken: AuthTokenFetcher = async ({ forceRefreshToken }) => {
-    try {
-      const response = await auth0.getAccessTokenSilently({
-        detailedResponse: true,
-        cacheMode: forceRefreshToken ? 'off' : 'on',
-      })
-      return response.id_token
-    }
-    catch {
-      return null
-    }
-  }
-
-  return {
-    isLoading: auth0.isLoading,
-    isAuthenticated: auth0.isAuthenticated,
-    fetchAccessToken,
-  }
-}
-
-/**
- * Authenticate the Convex client with Auth0 and expose the reactive auth state
- * to descendants via {@link useConvexAuth}.
+ * It must be called in an app wrapped by a configured Auth0 plugin from
+ * `@auth0/auth0-vue`.
  *
- * Call this in a top-level component's `setup` (the app must be wrapped by a
- * configured Auth0 plugin from `@auth0/auth0-vue`). Equivalent to wrapping with
- * `<ConvexProviderWithAuth0>`.
+ * See [Convex Auth0](https://docs.convex.dev/auth/auth0) on how to set up
+ * Convex with Auth0.
  *
  * @example
  * ```vue
@@ -73,25 +48,51 @@ function useAuthFromAuth0() {
 export function provideConvexAuthFromAuth0(
   options: ConvexProviderWithAuth0Options = {},
 ): ConvexAuthState {
-  const client = options.client ?? useConvex()
+  const client = options.client ?? useConvexOrThrow('provideConvexAuthFromAuth0')
   return provideConvexAuth({ client, useAuth: useAuthFromAuth0 })
 }
 
 /**
- * Component form of {@link provideConvexAuthFromAuth0} — a drop-in parity port
- * of `convex/react-auth0`'s `<ConvexProviderWithAuth0>`. Renders its default
- * slot once Convex auth is wired.
+ * A wrapper Vue component which provides a {@link ConvexVueClient}
+ * authenticated with Auth0 — the component form of
+ * {@link provideConvexAuthFromAuth0}. Renders its default slot once Convex
+ * auth is wired.
+ *
+ * It must be wrapped by a configured Auth0 plugin from `@auth0/auth0-vue`.
+ *
+ * See [Convex Auth0](https://docs.convex.dev/auth/auth0) on how to set up
+ * Convex with Auth0.
  *
  * @public
  */
 export const ConvexProviderWithAuth0 = defineComponent({
   name: 'ConvexProviderWithAuth0',
   props: {
-    client: { type: Object as PropType<ConvexVueClient>, default: undefined },
+    client: { type: Object as PropType<IConvexVueClient>, default: undefined },
   },
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(props, { slots }) {
     provideConvexAuthFromAuth0({ client: props.client })
     return () => slots.default?.()
   },
 })
+
+// Mirrors `useAuthFromAuth0` in `convex/react-auth0`. `isLoading` /
+// `isAuthenticated` are Auth0 `Ref`s passed through unwrapped (the provider
+// reads them with `toValue`); `useCallback` / `useMemo` drop out — setup-scope
+// code runs once and `@auth0/auth0-vue` binds its methods.
+function useAuthFromAuth0() {
+  const { isLoading, isAuthenticated, getAccessTokenSilently } = useAuth0()
+  const fetchAccessToken = async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+    try {
+      const response = await getAccessTokenSilently({
+        detailedResponse: true,
+        cacheMode: forceRefreshToken ? 'off' : 'on',
+      })
+      return response.id_token as string
+    }
+    catch {
+      return null
+    }
+  }
+  return { isLoading, isAuthenticated, fetchAccessToken }
+}

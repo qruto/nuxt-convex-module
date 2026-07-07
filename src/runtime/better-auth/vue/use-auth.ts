@@ -1,6 +1,6 @@
 import type { AuthTokenFetcher } from 'convex/browser'
 import { computed, ref, type ComputedRef } from 'vue'
-import { authClient, type AuthClient } from './client'
+import { authClient, type AuthClient } from '#convex/auth-client'
 
 /**
  * Module-level state, shared across all `useAuth()` calls in the Nuxt app.
@@ -33,13 +33,15 @@ export type AuthSession = ReturnType<typeof useClientSession>
 export type AuthUser = { id: string, email: string, name: string } & Record<string, unknown>
 
 export interface UseAuthService {
+  // Upstream's `useAuthFromBetterAuth` return shape, in upstream order.
+  isLoading: ComputedRef<boolean>
+  isAuthenticated: ComputedRef<boolean>
+  fetchAccessToken: AuthTokenFetcher
+  // Vue-only service extensions (documented in PARITY.md).
   client: AuthClient
   session: AuthSession
   /** The current user, or `null` when signed out / still loading. */
   user: ComputedRef<AuthUser | null>
-  isAuthenticated: ComputedRef<boolean>
-  isLoading: ComputedRef<boolean>
-  fetchAccessToken: AuthTokenFetcher
   authVersion: ComputedRef<string | null>
   /** Sign the current user out. */
   signOut: () => Promise<unknown>
@@ -83,9 +85,13 @@ export function useAuth(initialToken?: string | null): UseAuthService {
 
   const currentAuthVersion = () => authVersion.value ?? (session.value.isPending ? PENDING_AUTH_VERSION : null)
 
-  const fetchAccessToken: AuthTokenFetcher = async ({ forceRefreshToken }) => {
+  const fetchAccessToken: AuthTokenFetcher = async ({
+    forceRefreshToken = false,
+  }: { forceRefreshToken?: boolean } = {}) => {
     const version = currentAuthVersion()
 
+    // Maps upstream's cache-clearing `useEffect`: the session settled to
+    // signed-out, so drop the cached token instead of fetching a new one.
     if (version === null) {
       cachedToken.value = null
       cachedTokenVersion = null
@@ -94,42 +100,32 @@ export function useAuth(initialToken?: string | null): UseAuthService {
       return null
     }
 
-    if (
-      cachedToken.value
-      && cachedTokenVersion === version
-      && !forceRefreshToken
-    ) {
+    // The trailing version checks replace upstream's `[sessionId]` callback
+    // deps: a cache entry from another session never satisfies this caller.
+    if (cachedToken.value && !forceRefreshToken && cachedTokenVersion === version) {
       return cachedToken.value
     }
-
-    if (
-      !forceRefreshToken
-      && pendingToken
-      && pendingTokenVersion === version
-    ) {
+    if (!forceRefreshToken && pendingToken && pendingTokenVersion === version) {
       return pendingToken
     }
-
-    const request = (async () => {
-      try {
-        const result = await client.convex?.token({ fetchOptions: { throw: false } })
-        const token = result?.data?.token ?? null
+    pendingTokenVersion = version
+    pendingToken = client.convex
+      .token({ fetchOptions: { throw: false } })
+      .then(({ data }) => {
+        const token = data?.token || null
         cachedToken.value = token
         cachedTokenVersion = version
         return token
-      }
-      catch {
+      })
+      .catch(() => {
         cachedToken.value = null
         cachedTokenVersion = version
         return null
-      }
-    })()
-
-    pendingTokenVersion = version
-    pendingToken = request.finally(() => {
-      pendingToken = null
-      pendingTokenVersion = null
-    })
+      })
+      .finally(() => {
+        pendingToken = null
+        pendingTokenVersion = null
+      })
     return pendingToken
   }
 
@@ -148,19 +144,22 @@ export function useAuth(initialToken?: string | null): UseAuthService {
   }
 
   return {
+    isLoading: computed(() => session.value.isPending && !cachedToken.value),
+    // Diverges from upstream's `Boolean(session?.session) || cachedToken !== null`:
+    // a settled signed-out session must read unauthenticated immediately (Vue has
+    // no re-render to run upstream's cache-clearing effect first), and Better Auth
+    // session data without a nested `session` still counts as signed in.
+    isAuthenticated: computed(
+      () => !!session.value.data || (session.value.isPending && cachedToken.value !== null),
+    ),
+    fetchAccessToken,
+    // Vue-only service extensions (documented in PARITY.md).
     client,
     session,
     user: computed<AuthUser | null>(() => {
       const data = session.value.data as { user?: AuthUser } | null | undefined
       return data?.user ?? null
     }),
-    isAuthenticated: computed(
-      () => !!session.value.data || (session.value.isPending && cachedToken.value !== null),
-    ),
-    isLoading: computed(
-      () => session.value.isPending && cachedToken.value === null,
-    ),
-    fetchAccessToken,
     authVersion,
     signOut: () => c.signOut(),
     sendOtp: (email, type = 'sign-in') => c.emailOtp.sendVerificationOtp({ email, type }),

@@ -1,9 +1,21 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { effectScope, inject, provide, ref, toValue, watch, watchEffect, type EffectScope, type InjectionKey, type MaybeRefOrGetter } from 'vue'
-import type { ConvexVueClient } from '../client'
+import { computed, effectScope, inject, provide, ref, toValue, unref, watch, watchEffect, type ComputedRef, type EffectScope, type InjectionKey, type MaybeRef, type MaybeRefOrGetter } from 'vue'
+
+// Mirrors upstream's `IConvexReactClient` — just describe the interface enough
+// to help users pass the right type. Exported (upstream keeps it private) so
+// wrappers or test doubles that only implement `setAuth`/`clearAuth` are
+// accepted.
+export type IConvexVueClient = {
+  setAuth(
+    fetchToken: AuthTokenFetcher,
+    onChange: (isAuthenticated: boolean) => void,
+    onRefreshChange?: (isRefreshing: boolean) => void,
+  ): void
+  clearAuth(): void
+}
 
 /**
- * Reactive auth state provided by {@link provideConvexAuth}.
+ * Type representing the state of an auth integration with Convex.
  *
  * - `isLoading`: the client is still resolving the initial auth state and
  *   waiting for the server to confirm the current token.
@@ -13,57 +25,92 @@ import type { ConvexVueClient } from '../client'
  *   `isAuthenticated` is also `true`. Routine background token rotation does
  *   not trigger this state.
  *
+ * Each field is a `ComputedRef` (the Vue translation of upstream's re-rendered
+ * plain booleans), so the upstream destructuring idiom stays reactive:
+ * `const { isLoading, isAuthenticated } = useConvexAuth()`.
+ *
  * @public
  */
-export interface ConvexAuthState {
-  isLoading: boolean
-  isAuthenticated: boolean
-  isRefreshing: boolean
+export type ConvexAuthState = {
+  isLoading: ComputedRef<boolean>
+  isAuthenticated: ComputedRef<boolean>
+  isRefreshing: ComputedRef<boolean>
 }
 
+// The Vue translation of upstream's `ConvexAuthContext` (context → provide/inject).
 export const ConvexAuthStateKey: InjectionKey<ConvexAuthState> = Symbol('ConvexAuthState')
 
 /**
- * Access the Convex auth state injected by {@link provideConvexAuth}.
+ * Get the {@link ConvexAuthState} within a Vue component.
  *
- * Reads the current `isLoading` and `isAuthenticated` values. Throws if
- * `provideConvexAuth` has not been called in an ancestor component.
+ * This relies on a Convex auth integration provider being above in the Vue
+ * component tree. See {@link ConvexAuthState} for the meaning of each field.
  *
  * @returns The current {@link ConvexAuthState}.
  *
  * @public
  */
-export function useConvexAuth(): ConvexAuthState {
+export function useConvexAuth(): {
+  isLoading: ComputedRef<boolean>
+  isAuthenticated: ComputedRef<boolean>
+  isRefreshing: ComputedRef<boolean>
+} {
   const authContext = inject(ConvexAuthStateKey)
   if (authContext === undefined) {
     throw new Error(
       'Could not find Convex auth context. '
       + 'Ensure `provideConvexAuth` has been called in an ancestor component '
-      + 'or that the Convex auth plugin is installed.',
+      + 'or that the Convex auth plugin is installed, or you might have two '
+      + 'instances of the `@qruto/nuxt-convex` runtime loaded in your project.',
     )
   }
   return authContext
 }
 
 /**
- * Options for {@link provideConvexAuth}.
+ * Options for {@link provideConvexAuth} — the Vue translation of the props of
+ * upstream's `ConvexProviderWithAuth` component.
  */
 export interface ConvexAuthProviderOptions {
-  client: ConvexVueClient
+  client: IConvexVueClient
   useAuth: () => {
     isLoading: MaybeRefOrGetter<boolean>
     isAuthenticated: MaybeRefOrGetter<boolean>
-    fetchAccessToken: AuthTokenFetcher
+    /**
+     * The token fetcher. May be a `Ref`/`ComputedRef` whose *identity* changes
+     * when re-authentication is needed — the Vue translation of upstream
+     * re-running its `setAuth` effect when the `useAuth` prop returns a new
+     * `fetchAccessToken` function between renders (e.g. Clerk's `useCallback`
+     * deps `[orgId, orgRole]`). A plain function never re-triggers.
+     *
+     * (A getter is deliberately not accepted here: the fetcher is itself a
+     * function, so a getter would be indistinguishable from the value.)
+     */
+    fetchAccessToken: MaybeRef<AuthTokenFetcher>
+    /**
+     * Alternative re-authentication trigger for providers that hand out a
+     * stable fetcher function: when this value changes, auth state transitions
+     * back to loading, `clearAuth` runs, and `fetchAccessToken` is called
+     * again against the new auth context.
+     */
     authVersion?: MaybeRefOrGetter<unknown>
   }
 }
 
 /**
- * Wire an external auth provider into the Convex client and make auth state
- * available to all descendant components via {@link useConvexAuth}.
+ * A replacement for the plain Convex client provide (upstream's
+ * `ConvexProvider`) which additionally provides {@link ConvexAuthState} to
+ * descendants of the calling component.
  *
- * Call this in a top-level layout component's `setup` function, passing the
- * auth provider's loading/authenticated flags and its token fetcher.
+ * Use this to integrate any auth provider with Convex. The `useAuth` option
+ * should be a Vue composable that returns the provider's authentication state
+ * and a function to fetch a JWT access token.
+ *
+ * If the returned `fetchAccessToken` ref identity (or the optional
+ * `authVersion` value) updates then auth state
+ * will transition to loading and the `fetchAccessToken()` function called again.
+ *
+ * See [Custom Auth Integration](https://docs.convex.dev/auth/advanced/custom-auth) for more information.
  *
  * @example
  * ```vue
@@ -89,7 +136,8 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
 
 /**
  * Build reactive {@link ConvexAuthState} and wire watchers between the
- * external auth provider and the Convex client, without calling `provide()`.
+ * external auth provider and the Convex client, without calling `provide()` —
+ * the body of upstream's `ConvexProviderWithAuth` component.
  *
  * Use this when you need to install the state at the Nuxt app level
  * (`nuxtApp.vueApp.provide`) rather than from a component's setup function.
@@ -106,34 +154,11 @@ export function createConvexAuthState(
     isLoading: authProviderLoading,
     isAuthenticated: authProviderAuthenticated,
     fetchAccessToken,
-    authVersion: authProviderVersion,
+    authVersion,
   } = useAuth()
 
-  const isAuthProviderLoading = () => toValue(authProviderLoading)
-  const isAuthProviderAuthenticated = () => toValue(authProviderAuthenticated)
-  const currentAuthProviderVersion = () => toValue(authProviderVersion)
-
   const isConvexAuthenticated = ref<boolean | null>(null)
-  // `true` while the socket is paused fetching a replacement token after a
-  // server rejection. Mirrors the `isRefreshing` state in convex/react's
-  // `ConvexProviderWithAuth`.
-  const refreshing = ref(false)
-
-  const computeIsAuthenticated = () =>
-    isAuthProviderAuthenticated() && (isConvexAuthenticated.value ?? false)
-
-  const authState = {
-    get isLoading() {
-      return isConvexAuthenticated.value === null
-    },
-    get isAuthenticated() {
-      return computeIsAuthenticated()
-    },
-    get isRefreshing() {
-      // Only surface refreshing while authenticated, matching upstream.
-      return refreshing.value && computeIsAuthenticated()
-    },
-  }
+  const isRefreshing = ref<boolean>(false)
 
   const register = () => {
     // Reconcile the Convex auth state with the external auth provider.
@@ -152,54 +177,80 @@ export function createConvexAuthState(
     // re-runs the reconciliation after the cleanup and settles it to `false`.
     watch(
       () => [
-        isAuthProviderLoading(),
-        isAuthProviderAuthenticated(),
+        toValue(authProviderLoading),
+        toValue(authProviderAuthenticated),
         isConvexAuthenticated.value,
       ] as const,
-      ([loading, authenticated]) => {
-        // Provider went (back) to loading: drop to the loading state so we can
-        // transition straight to "authenticated" without flashing through
-        // "unauthenticated".
-        if (loading && isConvexAuthenticated.value !== null) {
+      ([authProviderLoading, authProviderAuthenticated]) => {
+        // If the useAuth went back to the authProviderLoading state (which is unusual but possible)
+        // reset the Convex auth state to null so that we can correctly
+        // transition the state from "loading" to "authenticated"
+        // without going through "unauthenticated".
+        if (authProviderLoading && isConvexAuthenticated.value !== null) {
           isConvexAuthenticated.value = null
-          refreshing.value = false
+          isRefreshing.value = false
         }
-        // Provider settled as not-authenticated: reflect it.
-        else if (!loading && !authenticated && isConvexAuthenticated.value !== false) {
+
+        // If the useAuth goes to not authenticated then isConvexAuthenticated should reflect that.
+        if (
+          !authProviderLoading
+          && !authProviderAuthenticated
+          && isConvexAuthenticated.value !== false
+        ) {
           isConvexAuthenticated.value = false
-          refreshing.value = false
+          isRefreshing.value = false
         }
       },
       { immediate: true },
     )
 
-    // Set auth on the Convex client when authenticated.
+    // Set auth on the Convex client when authenticated. Merges upstream's
+    // `ConvexAuthStateFirstEffect` and `ConvexAuthStateLastEffect` (their
+    // first/last-child ordering guarantees relative to sibling components'
+    // query subscriptions have no Vue watcher-scheduling equivalent).
     watchEffect((onCleanup) => {
-      const providerLoading = isAuthProviderLoading()
-      const providerAuthenticated = isAuthProviderAuthenticated()
-      const authVersion = currentAuthProviderVersion()
+      let isThisEffectRelevant = true
+      // The loading flag is read only for dependency tracking (the effect
+      // re-registers when it flips, mirroring upstream's effect deps) — it
+      // must not gate `setAuth`: a provider may report a cached session
+      // (authenticated) while still revalidating (loading), and upstream
+      // authenticates the client immediately in that window.
+      void toValue(authProviderLoading)
+      void toValue(authVersion)
+      // Unwrapping here (not outside the effect) tracks the ref, so a new
+      // fetcher identity re-registers auth — upstream's effect re-running when
+      // `fetchAccessToken` changes between renders.
+      const fetchToken = unref(fetchAccessToken)
+      if (toValue(authProviderAuthenticated)) {
+        client.setAuth(
+          fetchToken,
+          (backendReportsIsAuthenticated) => {
+            if (isThisEffectRelevant) {
+              isConvexAuthenticated.value = backendReportsIsAuthenticated
+            }
+          },
+          // Upstream names this callback's parameter `isRefreshing` too; that
+          // would shadow the ref here.
+          (refreshing) => {
+            if (isThisEffectRelevant) {
+              isRefreshing.value = refreshing
+            }
+          },
+        )
+        onCleanup(() => {
+          isThisEffectRelevant = false
 
-      void authVersion
-
-      if (providerLoading || !providerAuthenticated) {
-        return
+          client.clearAuth()
+          // Set state back to loading in case this is a transition from one
+          // fetchToken function to another which signals a new auth context,
+          // e.g. a new orgId from Clerk. Auth context changes like this
+          // return isAuthenticated: true from useAuth() but if
+          // useAuth reports isAuthenticated: false on the next flush
+          // then this null value will be overridden to false.
+          isConvexAuthenticated.value = null
+          isRefreshing.value = false
+        })
       }
-
-      client.setAuth(
-        fetchAccessToken,
-        (backendIsAuthenticated) => {
-          isConvexAuthenticated.value = backendIsAuthenticated
-        },
-        (isRefreshing) => {
-          refreshing.value = isRefreshing
-        },
-      )
-
-      onCleanup(() => {
-        client.clearAuth()
-        isConvexAuthenticated.value = null
-        refreshing.value = false
-      })
     })
   }
 
@@ -210,7 +261,14 @@ export function createConvexAuthState(
     register()
   }
 
-  return authState
+  const isAuthenticated = computed(
+    () => toValue(authProviderAuthenticated) && (isConvexAuthenticated.value ?? false),
+  )
+  return {
+    isLoading: computed(() => isConvexAuthenticated.value === null),
+    isAuthenticated,
+    isRefreshing: computed(() => isRefreshing.value && isAuthenticated.value),
+  }
 }
 
 /**

@@ -3,11 +3,12 @@ import type {
   FunctionArgs,
   FunctionReference,
   FunctionReturnType,
+  paginationOptsValidator,
   PaginationOptions,
   PaginationResult,
 } from 'convex/server'
 import { getFunctionName } from 'convex/server'
-import type { Value } from 'convex/values'
+import type { Infer, Value } from 'convex/values'
 import { ConvexError, compareValues, convexToJson } from 'convex/values'
 import { computed, shallowRef, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import { useConvex } from '../client'
@@ -19,7 +20,7 @@ import type {
   PaginatedQueryReference,
   PaginatedQueryArgs,
   PaginatedQueryItem,
-  UsePaginatedQueryReturnType,
+  PaginationStatus,
   UsePaginatedQueryResult,
   UsePaginatedQueryOptions,
   UsePaginatedQueryObjectReturnType,
@@ -31,7 +32,6 @@ export type {
   PaginatedQueryReference,
   PaginatedQueryArgs,
   PaginatedQueryItem,
-  UsePaginatedQueryReturnType,
   // fallow-ignore-next-line unused-type
   UsePaginatedQueryResult,
   UsePaginatedQueryOptions,
@@ -40,10 +40,10 @@ export type {
   PaginationStatus,
 } from 'convex/react'
 
-// Internal state key type.
+// Incrementing integer for each page queried in the usePaginatedQuery hook.
 type QueryPageKey = number
 
-interface UsePaginatedQueryState {
+type UsePaginatedQueryState = {
   query: FunctionReference<'query'>
   args: Record<string, Value>
   id: number
@@ -53,12 +53,83 @@ interface UsePaginatedQueryState {
     QueryPageKey,
     {
       query: FunctionReference<'query'>
-      args: Record<string, Value>
+      // Use the validator type as a test that it matches the args
+      // we generate.
+      args: { paginationOpts: Infer<typeof paginationOptsValidator> }
     }
   >
   ongoingSplits: Record<QueryPageKey, [QueryPageKey, QueryPageKey]>
   skip: boolean
 }
+
+// State updaters, applied as `state.value = updater(state.value)` — the Vue
+// translation of upstream's `setState(updater)`. The `!` assertions cover
+// `noUncheckedIndexedAccess` (upstream indexes directly); the call site only
+// splits pages whose results exist.
+const splitQuery
+  = (key: QueryPageKey, splitCursor: string, continueCursor: string) =>
+    (prevState: UsePaginatedQueryState) => {
+      const queries = { ...prevState.queries }
+      const splitKey1 = prevState.nextPageKey
+      const splitKey2 = prevState.nextPageKey + 1
+      const nextPageKey = prevState.nextPageKey + 2
+      queries[splitKey1] = {
+        query: prevState.query,
+        args: {
+          ...prevState.args,
+          paginationOpts: {
+            ...prevState.queries[key]!.args.paginationOpts,
+            endCursor: splitCursor,
+          },
+        },
+      }
+      queries[splitKey2] = {
+        query: prevState.query,
+        args: {
+          ...prevState.args,
+          paginationOpts: {
+            ...prevState.queries[key]!.args.paginationOpts,
+            cursor: splitCursor,
+            endCursor: continueCursor,
+          },
+        },
+      }
+      const ongoingSplits = { ...prevState.ongoingSplits }
+      ongoingSplits[key] = [splitKey1, splitKey2]
+      return {
+        ...prevState,
+        nextPageKey,
+        queries,
+        ongoingSplits,
+      }
+    }
+
+const completeSplitQuery
+  = (key: QueryPageKey) => (prevState: UsePaginatedQueryState) => {
+    const completedSplit = prevState.ongoingSplits[key]
+    if (completedSplit === undefined) {
+      return prevState
+    }
+    const queries = { ...prevState.queries }
+    delete queries[key]
+    const ongoingSplits = { ...prevState.ongoingSplits }
+    delete ongoingSplits[key]
+    let pageKeys = prevState.pageKeys.slice()
+    const pageIndex = prevState.pageKeys.findIndex(v => v === key)
+    if (pageIndex >= 0) {
+      pageKeys = [
+        ...prevState.pageKeys.slice(0, pageIndex),
+        ...completedSplit,
+        ...prevState.pageKeys.slice(pageIndex + 1),
+      ]
+    }
+    return {
+      ...prevState,
+      queries,
+      pageKeys,
+      ongoingSplits,
+    }
+  }
 
 type PaginatedQueryValue<Item> = PaginationResult<Item> & {
   splitCursor?: string | null
@@ -104,16 +175,6 @@ type UsePaginatedQueryInternalResult<Item>
       loadMore: (numItems: number) => void
     }
 
-let paginationId = 0
-function nextPaginationId(): number {
-  return ++paginationId
-}
-
-/** @internal */
-export function resetPaginationId(): void {
-  paginationId = 0
-}
-
 /**
  * Load data reactively from a paginated query to create a growing list.
  *
@@ -125,12 +186,17 @@ export function resetPaginationId(): void {
  * import { usePaginatedQuery } from '#imports'
  * import { api } from '#backend/api'
  *
- * const { results, status, loadMore, isLoading } = usePaginatedQuery(
+ * const { results, status, loadMore } = usePaginatedQuery(
  *   api.messages.list,
  *   { channel: '#general' },
  *   { initialNumItems: 5 },
  * )
  * </script>
+ *
+ * <template>
+ *   <div v-for="{ _id, body } in results" :key="_id">{{ body }}</div>
+ *   <button :disabled="status !== 'CanLoadMore'" @click="loadMore(5)">Load More</button>
+ * </template>
  * ```
  *
  * @public
@@ -139,79 +205,43 @@ export function usePaginatedQuery<Query extends PaginatedQueryReference>(
   query: Query,
   args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
   options: { initialNumItems: number },
-): ComputedRef<UsePaginatedQueryReturnType<Query>> {
-  validateInitialNumItems(options?.initialNumItems)
-
+): UsePaginatedQueryReturnType<Query> {
   const internal = usePaginatedQueryInternal<Query>(
     () => query,
     args,
     () => options,
-    () => true,
   )
-
-  return narrowToPositionalResult<Query>(internal)
+  return splitToRefs<Query>(internal)
 }
 
 /**
- * Adapt the internal result to the public positional union as a `ComputedRef`.
+ * Split the internal result into the public object-of-refs shape. `loadMore`
+ * is a stable closure that reads the *current* state at call time — the Vue
+ * analog of upstream returning a fresh `loadMore` each render.
  *
- * The positional forms run with `throwOnError`, so `usePaginatedQueryInternal`
- * never produces the internal `'Error'` variant — the defensive re-throw here
- * both preserves that semantic and narrows the type to
- * {@link UsePaginatedQueryReturnType}, so the public `ComputedRef` is inferred
- * rather than asserted with a cast.
+ * Each field checks the internal `'Error'` variant itself (rather than going
+ * through one shared throwing computed): a computed whose getter throws
+ * serves its stale cached value to the next dependent read, so a shared
+ * narrowing computed would surface the real error only on the first field
+ * accessed. This is how the positional forms implement upstream's
+ * `throwOnError: true`.
  */
-function narrowToPositionalResult<Query extends PaginatedQueryReference>(
+function splitToRefs<Query extends PaginatedQueryReference>(
   internal: ComputedRef<UsePaginatedQueryInternalResult<PaginatedQueryItem<Query>>>,
-): ComputedRef<UsePaginatedQueryReturnType<Query>> {
-  return computed(() => {
+): UsePaginatedQueryReturnType<Query> {
+  const current = (): UsePaginatedQueryResult<PaginatedQueryItem<Query>> => {
     const value = internal.value
     if (value.status === INTERNAL_ERROR_STATUS) throw value.error
     return value
-  })
-}
-
-function validateInitialNumItems(value: unknown): void {
-  if (typeof value !== 'number' || value < 0) {
-    throw new Error(
-      `\`options.initialNumItems\` must be a positive number. Received \`${String(value)}\`.`,
-    )
   }
-}
-
-function reshapeToObjectForm<Query extends PaginatedQueryReference>(
-  internal: UsePaginatedQueryInternalResult<PaginatedQueryItem<Query>>,
-): UsePaginatedQueryObjectReturnType<Query, false> {
-  const { results, loadMore } = internal
-  if (internal.status === INTERNAL_ERROR_STATUS) {
-    return {
-      data: results,
-      status: 'error' as const,
-      canLoadMore: false as const,
-      isLoading: false as const,
-      error: internal.error,
-      loadMore,
-    } as UsePaginatedQueryObjectReturnType<Query, false>
-  }
-  if (internal.status === 'LoadingFirstPage' || internal.status === 'LoadingMore') {
-    return {
-      data: internal.status === 'LoadingFirstPage' ? undefined : results,
-      status: 'pending' as const,
-      canLoadMore: false as const,
-      isLoading: true as const,
-      error: undefined,
-      loadMore,
-    } as UsePaginatedQueryObjectReturnType<Query, false>
-  }
-  // CanLoadMore or Exhausted
   return {
-    data: results,
-    status: 'success' as const,
-    canLoadMore: internal.status === 'CanLoadMore',
-    isLoading: false as const,
-    error: undefined,
-    loadMore,
-  } as UsePaginatedQueryObjectReturnType<Query, false>
+    results: computed(() => current().results),
+    status: computed(() => current().status),
+    isLoading: computed(() => current().isLoading),
+    loadMore: (numItems: number) => {
+      current().loadMore(numItems)
+    },
+  }
 }
 
 /**
@@ -221,12 +251,20 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
   query: MaybeRefOrGetter<Query>,
   args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
   options: MaybeRefOrGetter<{ initialNumItems: number }>,
-  throwOnError: MaybeRefOrGetter<boolean>,
 ): ComputedRef<UsePaginatedQueryInternalResult<PaginatedQueryItem<Query>>> {
+  const initialOptions = toValue(options)
+  if (
+    typeof initialOptions?.initialNumItems !== 'number'
+    || initialOptions.initialNumItems < 0
+  ) {
+    throw new Error(
+      `\`options.initialNumItems\` must be a positive number. Received \`${initialOptions?.initialNumItems}\`.`,
+    )
+  }
   const convex = useConvex()
   const logger = convex.logger
 
-  function buildInitialState(
+  function createInitialState(
     q: Query,
     currentArgs: Record<string, Value>,
     skip: boolean,
@@ -266,7 +304,7 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
   const initialArgsObject = (initialSkip ? {} : initialRawArgs) as Record<string, Value>
   const { initialNumItems: initialInitialNumItems } = toValue(options)
   const state = shallowRef<UsePaginatedQueryState>(
-    buildInitialState(initialQuery, initialArgsObject, initialSkip, initialInitialNumItems),
+    createInitialState(initialQuery, initialArgsObject, initialSkip, initialInitialNumItems),
   )
 
   // Reactive queries input for useConvexQueries. Resets state whenever
@@ -286,7 +324,7 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
         || skip !== currentState.skip
 
     if (needsReset) {
-      state.value = buildInitialState(q, argsObject, skip, initialNumItems)
+      state.value = createInitialState(q, argsObject, skip, initialNumItems)
     }
 
     return state.value.queries
@@ -294,100 +332,18 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
 
   const allResults = useConvexQueries(queriesInput)
 
-  function splitPage(
-    key: QueryPageKey,
-    splitCursor: string,
-    continueCursor: string,
-  ): void {
-    const prev = state.value
-    const currentQuery = prev.queries[key]
-    if (currentQuery === undefined) {
-      return
-    }
-    const queries = { ...prev.queries }
-    const splitKey1 = prev.nextPageKey
-    const splitKey2 = prev.nextPageKey + 1
-
-    const currentArgs = currentQuery.args
-    const basePaginationOpts = (currentArgs as { paginationOpts: Record<string, unknown> }).paginationOpts
-    queries[splitKey1] = {
-      query: prev.query,
-      args: {
-        ...currentArgs,
-        paginationOpts: {
-          ...basePaginationOpts,
-          endCursor: splitCursor,
-        },
-      },
-    }
-    queries[splitKey2] = {
-      query: prev.query,
-      args: {
-        ...currentArgs,
-        paginationOpts: {
-          ...basePaginationOpts,
-          cursor: splitCursor,
-          endCursor: continueCursor,
-        },
-      },
-    }
-
-    const ongoingSplits = { ...prev.ongoingSplits }
-    ongoingSplits[key] = [splitKey1, splitKey2]
-
-    state.value = {
-      ...prev,
-      nextPageKey: prev.nextPageKey + 2,
-      queries,
-      ongoingSplits,
-    }
-  }
-
-  function completeSplit(key: QueryPageKey): void {
-    const prev = state.value
-    const completedSplit = prev.ongoingSplits[key]
-    if (completedSplit === undefined) return
-
-    const queries = { ...prev.queries }
-    const ongoingSplits = { ...prev.ongoingSplits }
-    for (const k of Object.keys(queries)) {
-      if (Number(k) === key) Reflect.deleteProperty(queries, k)
-    }
-    for (const k of Object.keys(ongoingSplits)) {
-      if (Number(k) === key) Reflect.deleteProperty(ongoingSplits, k)
-    }
-
-    let pageKeys = prev.pageKeys.slice()
-    const pageIndex = prev.pageKeys.findIndex(v => v === key)
-    if (pageIndex >= 0) {
-      pageKeys = [
-        ...prev.pageKeys.slice(0, pageIndex),
-        ...completedSplit,
-        ...prev.pageKeys.slice(pageIndex + 1),
-      ]
-    }
-
-    state.value = {
-      ...prev,
-      queries,
-      pageKeys,
-      ongoingSplits,
-    }
-  }
-
   function resetState(): void {
     const q = toValue(query)
     const rawArgs = toValue(args)
     const skip = rawArgs === 'skip'
     const argsObject = (skip ? {} : rawArgs) as Record<string, Value>
     const { initialNumItems } = toValue(options)
-    state.value = buildInitialState(q, argsObject, skip, initialNumItems)
+    state.value = createInitialState(q, argsObject, skip, initialNumItems)
   }
 
   return computed<UsePaginatedQueryInternalResult<PaginatedQueryItem<Query>>>(() => {
     const currState = state.value
     const { initialNumItems } = toValue(options)
-    const shouldThrow = toValue(throwOnError)
     const resultsObject = allResults.value
     let lastResult: PaginationResult<Value> | undefined
     let maybeError: Error | undefined
@@ -422,9 +378,11 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
           }
         }
 
-        if (shouldThrow) {
-          throw currResult
-        }
+        // Never throw from this shared computed — a computed whose getter
+        // throws serves a stale cached value to the next read, hiding the
+        // real error. The error variant is returned as data; the public
+        // forms (`splitToRefs` field refs / object-form reshape) decide
+        // whether to throw.
         maybeError = currResult
         break
       }
@@ -441,7 +399,7 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
           resultsObject[ongoingSplit[0]] !== undefined
           && resultsObject[ongoingSplit[1]] !== undefined
         ) {
-          completeSplit(pageKey)
+          state.value = completeSplitQuery(pageKey)(state.value)
         }
       }
       else if (
@@ -451,7 +409,7 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
           || result.page.length > initialNumItems * 2
         )
       ) {
-        splitPage(pageKey, result.splitCursor, result.continueCursor)
+        state.value = splitQuery(pageKey, result.splitCursor, result.continueCursor)(state.value)
       }
 
       if (result.pageStatus === SPLIT_PAGE_STATUSES[1]) {
@@ -511,15 +469,17 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
         alreadyLoadingMore = true
 
         const prev = state.value
-        const rawArgs = toValue(args)
-        const argsObject = (rawArgs === 'skip' ? {} : rawArgs) as Record<string, Value>
 
         const pageKeys = [...prev.pageKeys, prev.nextPageKey]
         const queries = { ...prev.queries }
         queries[prev.nextPageKey] = {
           query: prev.query,
+          // Pair the cursor with the args snapshot captured in state (not the
+          // live args input) so the page query stays consistent with the
+          // session that produced the cursor, mirroring upstream's
+          // `prevState.args`.
           args: {
-            ...argsObject,
+            ...prev.args,
             paginationOpts: {
               numItems,
               cursor: continueCursor,
@@ -539,92 +499,47 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
   })
 }
 
+let paginationId = 0
+function nextPaginationId(): number {
+  return ++paginationId
+}
+
+/** @internal */
+export function resetPaginationId(): void {
+  paginationId = 0
+}
+
+/**
+ * Return shape of {@link usePaginatedQuery} — the fields of upstream's
+ * `UsePaginatedQueryResult` as `ComputedRef`s plus a *stable* `loadMore`
+ * function. This is the Vue translation of upstream's per-render plain object:
+ * it keeps the documented destructuring idiom reactive,
+ * `const { results, status, loadMore } = usePaginatedQuery(...)`.
+ *
+ * (Upstream's name is kept even though the shape is ref-wrapped — the same
+ * treatment as `ConvexAuthState` — so mechanically ported type annotations
+ * keep compiling. The plain union stays available as
+ * {@link UsePaginatedQueryResult}.)
+ *
+ * @public
+ */
+export type UsePaginatedQueryReturnType<Query extends PaginatedQueryReference> = {
+  results: ComputedRef<PaginatedQueryItem<Query>[]>
+  status: ComputedRef<PaginationStatus>
+  isLoading: ComputedRef<boolean>
+  /**
+   * Fetch `numItems` more results. Stable across state changes; only fetches
+   * when `status` is `'CanLoadMore'` (matching the documented semantics).
+   */
+  loadMore: (numItems: number) => void
+}
+
 function noopLoadMore(_numItems: number): void {
   // Intentional noop — only meaningful in `CanLoadMore` state.
 }
 
 /** @public */
 export const useConvexPaginatedQuery = usePaginatedQuery
-
-/**
- * Experimental paginated query that adds an object-form overload on top of the
- * positional {@link usePaginatedQuery}, mirroring the public name React's
- * Convex integration exposes (`usePaginatedQuery_experimental`).
- *
- * The positional overload behaves exactly like {@link usePaginatedQuery}: it
- * returns the TitleCase {@link UsePaginatedQueryReturnType} and throws on error.
- * The object overload returns the lowercase-status
- * {@link UsePaginatedQueryObjectReturnType} and surfaces errors via
- * `status: 'error'` (unless `throwOnError: true`).
- *
- * Note: React backs its experimental hook with the Convex client's native
- * `PaginatedQueryClient`, which the published `convex` package does not export.
- * This port reuses our manual page-management implementation, which produces
- * identical observable results (`results`/`data`, `status`, `loadMore`).
- *
- * @public
- */
-export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
-  query: Query,
-  args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
-  options: { initialNumItems: number },
-): ComputedRef<UsePaginatedQueryReturnType<Query>>
-
-export function usePaginatedQuery_experimental<
-  Query extends PaginatedQueryReference,
-  ThrowOnError extends boolean = false,
->(
-  options: MaybeRefOrGetter<UsePaginatedQueryOptions<Query, ThrowOnError>>,
-): ComputedRef<UsePaginatedQueryObjectReturnType<Query, ThrowOnError>>
-
-export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
-  queryOrOptions:
-    | Query
-    | MaybeRefOrGetter<UsePaginatedQueryOptions<Query>>,
-  args?: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
-  options?: { initialNumItems: number },
-):
-  | ComputedRef<UsePaginatedQueryReturnType<Query>>
-  | ComputedRef<UsePaginatedQueryObjectReturnType<Query>> {
-  // Detect object-form by sniffing the first arg. Supports reactive refs
-  // (ref/computed/getter) of the options object too, matching the
-  // `MaybeRefOrGetter` contract used elsewhere in this package.
-  const firstValue = toValue(queryOrOptions as MaybeRefOrGetter<unknown>)
-  const isObjectOptions = typeof firstValue === 'object'
-    && firstValue !== null
-    && 'query' in (firstValue as object)
-
-  if (isObjectOptions) {
-    const optsGetter = () => toValue(
-      queryOrOptions as MaybeRefOrGetter<UsePaginatedQueryOptions<Query>>,
-    )
-    const initial = optsGetter()
-    validateInitialNumItems(initial.initialNumItems)
-
-    const internal = usePaginatedQueryInternal<Query>(
-      () => optsGetter().query,
-      () => optsGetter().args,
-      () => ({ initialNumItems: optsGetter().initialNumItems }),
-      () => optsGetter().throwOnError ?? false,
-    )
-
-    // Object form is derived state → a `computed`; `reshapeToObjectForm`
-    // already returns the object union, so the `ComputedRef` type is inferred.
-    return computed(() => reshapeToObjectForm<Query>(internal.value))
-  }
-
-  validateInitialNumItems(options?.initialNumItems)
-
-  const query = queryOrOptions as Query
-  const internal = usePaginatedQueryInternal<Query>(
-    () => query,
-    args as MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
-    () => options as { initialNumItems: number },
-    () => true,
-  )
-
-  return narrowToPositionalResult<Query>(internal)
-}
 
 /**
  * Optimistically update values in a paginated list.
@@ -765,7 +680,18 @@ export function insertAtPosition<Query extends PaginatedQueryReference>(
   // the `paginationOpts.id`.
   const queryGroups: Record<string, LocalQueryResult<Query>[]> = {}
   for (const q of queries) {
-    if (!matchesArgs(q.args, argsToMatch)) continue
+    // Upstream deliberately filters with strict `===` here — unlike
+    // `insertAtTop` / `insertAtBottomIfLoaded`, which match structurally via
+    // `compareValues`. Object/array values in `argsToMatch` therefore never
+    // match (reference inequality), same as upstream.
+    if (
+      argsToMatch !== undefined
+      && !Object.keys(argsToMatch).every(
+        k => (argsToMatch as Record<string, unknown>)[k] === (q.args as Record<string, unknown>)[k],
+      )
+    ) {
+      continue
+    }
     const key = JSON.stringify(
       Object.fromEntries(
         Object.entries(q.args as Record<string, unknown>).map(([k, v]) => [
@@ -909,4 +835,122 @@ function matchesArgs(
   return Object.keys(argsToMatch).every(
     k => compareValues(argsToMatch[k] as Value, args[k] as Value) === 0,
   )
+}
+
+/**
+ * Experimental paginated query that adds an object-form overload on top of the
+ * positional {@link usePaginatedQuery}, mirroring the public name React's
+ * Convex integration exposes (`usePaginatedQuery_experimental`).
+ *
+ * The positional overload behaves exactly like {@link usePaginatedQuery}: it
+ * returns the object-of-refs {@link UsePaginatedQueryReturnType} (TitleCase
+ * statuses) and throws on error. The object overload returns a `ComputedRef`
+ * of the lowercase-status discriminated union
+ * {@link UsePaginatedQueryObjectReturnType} — kept whole (not split into refs)
+ * so the `status`/`data`/`error` type narrowing survives — and surfaces errors
+ * via `status: 'error'` (unless `throwOnError: true`).
+ *
+ * Note: React backs its experimental hook with the Convex client's native
+ * `PaginatedQueryClient`, which the published `convex` package does not export.
+ * This port reuses our manual page-management implementation, which produces
+ * identical observable results (`results`/`data`, `status`, `loadMore`).
+ *
+ * @public
+ */
+export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
+  query: Query,
+  args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
+  options: { initialNumItems: number },
+): UsePaginatedQueryReturnType<Query>
+
+export function usePaginatedQuery_experimental<
+  Query extends PaginatedQueryReference,
+  ThrowOnError extends boolean = false,
+>(
+  options: MaybeRefOrGetter<UsePaginatedQueryOptions<Query, ThrowOnError>>,
+): ComputedRef<UsePaginatedQueryObjectReturnType<Query, ThrowOnError>>
+
+export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
+  queryOrOptions:
+    | Query
+    | MaybeRefOrGetter<UsePaginatedQueryOptions<Query>>,
+  args?: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
+  options?: { initialNumItems: number },
+):
+  | UsePaginatedQueryReturnType<Query>
+  | ComputedRef<UsePaginatedQueryObjectReturnType<Query>> {
+  // Detect object-form by sniffing the first arg. Supports reactive refs
+  // (ref/computed/getter) of the options object too, matching the
+  // `MaybeRefOrGetter` contract used elsewhere in this package.
+  const firstValue = toValue(queryOrOptions as MaybeRefOrGetter<unknown>)
+  const isObjectOptions = typeof firstValue === 'object'
+    && firstValue !== null
+    && 'query' in (firstValue as object)
+
+  if (isObjectOptions) {
+    const optsGetter = () => toValue(
+      queryOrOptions as MaybeRefOrGetter<UsePaginatedQueryOptions<Query>>,
+    )
+    const internal = usePaginatedQueryInternal<Query>(
+      () => optsGetter().query,
+      () => optsGetter().args,
+      () => ({ initialNumItems: optsGetter().initialNumItems }),
+    )
+
+    // Object form is derived state → a `computed`; `reshapeToObjectForm2`
+    // already returns the object union, so the `ComputedRef` type is inferred.
+    return computed(() =>
+      reshapeToObjectForm2<Query>(internal.value, optsGetter().throwOnError ?? false),
+    )
+  }
+
+  const query = queryOrOptions as Query
+  const internal = usePaginatedQueryInternal<Query>(
+    () => query,
+    args as MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
+    () => options as { initialNumItems: number },
+  )
+
+  return splitToRefs<Query>(internal)
+}
+
+function reshapeToObjectForm2<Query extends PaginatedQueryReference>(
+  internal: UsePaginatedQueryInternalResult<PaginatedQueryItem<Query>>,
+  throwOnError: boolean,
+): UsePaginatedQueryObjectReturnType<Query, false> {
+  const { results, loadMore } = internal
+  if (internal.status === INTERNAL_ERROR_STATUS) {
+    if (throwOnError) {
+      throw internal.error
+    }
+    return {
+      // Upstream returns an empty array on error, never the pages loaded
+      // before the failure.
+      data: [],
+      status: 'error' as const,
+      canLoadMore: false as const,
+      isLoading: false as const,
+      error: internal.error,
+      loadMore,
+    } as UsePaginatedQueryObjectReturnType<Query, false>
+  }
+  if (internal.status === 'LoadingFirstPage' || internal.status === 'LoadingMore') {
+    return {
+      data: internal.status === 'LoadingFirstPage' ? undefined : results,
+      status: 'pending' as const,
+      canLoadMore: false as const,
+      isLoading: true as const,
+      error: undefined,
+      loadMore,
+    } as UsePaginatedQueryObjectReturnType<Query, false>
+  }
+  // CanLoadMore or Exhausted
+  return {
+    data: results,
+    status: 'success' as const,
+    canLoadMore: internal.status === 'CanLoadMore',
+    isLoading: false as const,
+    error: undefined,
+    loadMore,
+  } as UsePaginatedQueryObjectReturnType<Query, false>
 }

@@ -67,7 +67,7 @@ Everything from `convex/react`, the Vue way
   Reactive live queries
 
   #description
-  `useQuery`, `useQueries`, `useMutation`, `useAction`, cursor `usePaginatedQuery` — VueUse-shaped: `MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns.
+  `useQuery`, `useQueries`, `useMutation`, `useAction`, cursor `usePaginatedQuery`. Queries are VueUse-shaped — `MaybeRefOrGetter` args, `ComputedRef`/`ShallowRef` results; mutations and actions return plain async functions.
   :::
 
   :::u-page-feature

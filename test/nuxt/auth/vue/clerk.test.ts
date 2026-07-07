@@ -52,7 +52,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const App = defineComponent({
       setup() {
         const auth = useConvexAuth()
-        return () => h('div', auth.isLoading ? 'Loading' : auth.isAuthenticated ? 'In' : 'Out')
+        return () => h('div', auth.isLoading.value ? 'Loading' : auth.isAuthenticated.value ? 'In' : 'Out')
       },
     })
     const Wrapper = defineComponent({
@@ -153,7 +153,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const Child = defineComponent({
       setup() {
         const auth = useConvexAuth()
-        return () => h('span', auth.isAuthenticated ? 'In' : 'Out')
+        return () => h('span', auth.isAuthenticated.value ? 'In' : 'Out')
       },
     })
     const Wrapper = defineComponent({

@@ -14,7 +14,8 @@ import { backendAuth } from './server'
  * ```
  */
 
-async function serverGuard(path: string) {
+/** Exported for unit tests — `import.meta.server` is compile-time. @internal */
+export async function serverGuard(path: string) {
   const event = useRequestEvent()
   if (!event) return
   // Capture the Nuxt app *before* the await — awaiting loses the async context,
@@ -55,7 +56,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     await waitForSession(() => session.value.isPending)
   }
 
-  if (!session.value.data) {
+  // Same self-redirect guard as the server branch.
+  if (!session.value.data && to.path !== '/login') {
     return navigateTo('/login')
   }
 })

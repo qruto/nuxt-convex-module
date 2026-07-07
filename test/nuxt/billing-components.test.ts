@@ -50,13 +50,13 @@ describe('CheckoutLink', () => {
   it('eagerly generates an embedded checkout link on mount', async () => {
     const api = { generateCheckoutLink: checkoutRef } as unknown as PolarComponentApi
     const actionSpy = vi.spyOn(client, 'action').mockResolvedValue({ url: 'https://polar.test/checkout' })
-    const wrapper = await mountComponent(CheckoutLink, { products: ['prod_1'], api })
+    const wrapper = await mountComponent(CheckoutLink, { productIds: ['prod_1'], polarApi: api })
     await flushPromises()
     await nextTick()
 
     const anchor = wrapper.find('a')
     expect(anchor.attributes('href')).toBe('https://polar.test/checkout')
-    expect(anchor.attributes('data-polar-checkout')).toBe('')
+    expect(anchor.attributes('data-polar-checkout')).toBe('true')
     expect(anchor.attributes('data-polar-checkout-theme')).toBe('dark')
     expect(PolarEmbedCheckout.init).toHaveBeenCalled()
     expect(actionSpy).toHaveBeenCalledWith(checkoutRef, expect.objectContaining({ productIds: ['prod_1'] }))
@@ -65,7 +65,7 @@ describe('CheckoutLink', () => {
   it('renders a lazy placeholder and creates the embed on click', async () => {
     const api = { generateCheckoutLink: checkoutRef } as unknown as PolarComponentApi
     const actionSpy = vi.spyOn(client, 'action').mockResolvedValue({ url: 'https://polar.test/lazy' })
-    const wrapper = await mountComponent(CheckoutLink, { products: ['prod_1'], lazy: true, theme: 'light', api })
+    const wrapper = await mountComponent(CheckoutLink, { productIds: ['prod_1'], lazy: true, theme: 'light', polarApi: api })
     await flushPromises()
 
     const anchor = wrapper.find('a')
@@ -85,7 +85,7 @@ describe('CheckoutLink', () => {
     const api = { generateCheckoutLink: checkoutRef } as unknown as PolarComponentApi
     vi.spyOn(client, 'action').mockResolvedValue({ url: 'https://polar.test/redirect' })
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
-    const wrapper = await mountComponent(CheckoutLink, { products: ['prod_1'], lazy: true, embed: false, api })
+    const wrapper = await mountComponent(CheckoutLink, { productIds: ['prod_1'], lazy: true, embed: false, polarApi: api })
     await flushPromises()
 
     await wrapper.find('a').trigger('click')
@@ -97,7 +97,7 @@ describe('CheckoutLink', () => {
 
   it('is inert when the billing namespace has no checkout action', async () => {
     const actionSpy = vi.spyOn(client, 'action')
-    const wrapper = await mountComponent(CheckoutLink, { products: ['prod_1'], lazy: true, api: {} as PolarComponentApi })
+    const wrapper = await mountComponent(CheckoutLink, { productIds: ['prod_1'], lazy: true, polarApi: {} as PolarComponentApi })
     await flushPromises()
 
     await wrapper.find('a').trigger('click')
@@ -115,7 +115,7 @@ describe('CustomerPortalLink', () => {
       resolve = r
     })
     vi.spyOn(client, 'action').mockReturnValue(pending)
-    const wrapper = await mountComponent(CustomerPortalLink, { api })
+    const wrapper = await mountComponent(CustomerPortalLink, { polarApi: api })
     await flushPromises()
 
     expect(wrapper.find('a').exists()).toBe(false) // still loading
@@ -132,7 +132,7 @@ describe('CustomerPortalLink', () => {
 
   it('renders nothing when the portal action is not configured', async () => {
     const actionSpy = vi.spyOn(client, 'action')
-    const wrapper = await mountComponent(CustomerPortalLink, { api: {} as PolarComponentApi })
+    const wrapper = await mountComponent(CustomerPortalLink, { polarApi: {} as PolarComponentApi })
     await flushPromises()
 
     expect(wrapper.find('a').exists()).toBe(false)
