@@ -54,6 +54,12 @@ export interface ModuleOptions {
   auth0?: boolean
   /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
   authRoute?: string
+  /**
+   * Convex panel in Nuxt DevTools (dev only): connection state, live query
+   * subscriptions, auth state, and client logs. Enabled by default whenever
+   * Nuxt DevTools is; set `false` to disable just the Convex tab.
+   */
+  devtools?: boolean
 }
 
 declare module '@nuxt/schema' {
@@ -82,6 +88,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     authRoute: '/api/auth',
+    devtools: true,
   },
   // nuxt-security is an integral part of the integration: declaring it as a
   // module dependency makes Nuxt's core loader install it (hoisting its types
@@ -91,7 +98,7 @@ export default defineNuxtModule<ModuleOptions>({
   moduleDependencies: {
     'nuxt-security': {},
   },
-  setup(options, nuxt) {
+  async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
 
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
@@ -107,11 +114,31 @@ export default defineNuxtModule<ModuleOptions>({
     applyConvexCsp(nuxt, url, siteUrl)
     watchBackendCodegen(nuxt)
 
+    if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
+      // Lazy import keeps @nuxt/devtools-kit out of production module evaluation.
+      const { setupDevtools } = await import('./devtools/index')
+      setupDevtools(resolver, nuxt, {
+        url,
+        siteUrl,
+        rootDir: nuxt.options.rootDir,
+        functionsDir: resolveFunctionsDir(nuxt.options.rootDir),
+        integrations,
+      })
+      // Appended so it runs after whichever plugin provides the Convex client.
+      addPlugin({ src: resolver.resolve('./runtime/devtools/plugin.client'), mode: 'client' }, { append: true })
+    }
+
     if (nuxt.options.dev && !nuxt.options._prepare) {
       logger.info(formatStartupSummary(url, resolveFunctionsDir(nuxt.options.rootDir), integrations))
     }
   },
 })
+
+/** Whether the Nuxt DevTools UI itself is enabled for this app. */
+function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
+  const devtools = nuxt.options.devtools as boolean | { enabled?: boolean } | undefined
+  return typeof devtools === 'boolean' ? devtools : devtools?.enabled !== false
+}
 
 /**
  * Which opt-in integrations ended up enabled — returned by
