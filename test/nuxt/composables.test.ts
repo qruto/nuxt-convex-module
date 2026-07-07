@@ -4,7 +4,7 @@ import { defineComponent, h, provide } from 'vue'
 import type { ConnectionState } from 'convex/browser'
 import { makeFunctionReference } from 'convex/server'
 import { ConvexClientKey, ConvexVueClient, useConvex } from '../../src/runtime/vue/client'
-import { mountWithConvex } from '../helpers/vue_test_utils'
+import { mockAuthState, mountWithConvex } from '../helpers/vue_test_utils'
 import { silentConnectLogger } from '../helpers/silent-logger'
 import { createMutation, useMutation } from '../../src/runtime/vue/composables/use-mutation'
 import { useAction } from '../../src/runtime/vue/composables/use-action'
@@ -65,10 +65,12 @@ describe('useConvex', () => {
     expect(result).toBe(client)
   })
 
-  it('throws if no client is provided', async () => {
+  it('returns undefined if no client is provided (matching upstream)', async () => {
     const Wrapper = defineComponent({
       setup() {
-        expect(() => useConvex()).toThrow()
+        // Upstream `useConvex` returns the (possibly undefined) context value
+        // silently; the per-composable error lives in `useMutation` & co.
+        expect(useConvex()).toBeUndefined()
         return () => h('div')
       },
     })
@@ -78,6 +80,19 @@ describe('useConvex', () => {
 })
 
 describe('useMutation', () => {
+  it('throws the per-composable missing-client error without a provider', async () => {
+    const Wrapper = defineComponent({
+      setup() {
+        expect(() => useMutation(seededMutationRef)).toThrow(
+          'Could not find Convex client! `useMutation` must be used in the Vue component tree',
+        )
+        return () => h('div')
+      },
+    })
+
+    await mountSuspended(Wrapper)
+  })
+
   it('returns a callable function that invokes client.mutation', async () => {
     const mutationRef = makeFunctionReference<'mutation'>('api.tasks.create')
     const mutationSpy = vi.spyOn(client, 'mutation').mockImplementation(async () => ({ success: true }) as never)
@@ -116,7 +131,7 @@ describe('useConvexConnectionState', () => {
 })
 
 describe('useConvexAuth', () => {
-  it('returns isLoading, isAuthenticated and isRefreshing refs', async () => {
+  it('returns isLoading, isAuthenticated and isRefreshing computed refs', async () => {
     let authState!: ConvexAuthState
 
     const Child = defineComponent({
@@ -128,20 +143,21 @@ describe('useConvexAuth', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provide(ConvexAuthStateKey, {
-          isLoading: false,
-          isAuthenticated: true,
-          isRefreshing: false,
-        })
+        provide(
+          ConvexAuthStateKey,
+          mockAuthState({ isLoading: false, isAuthenticated: true }).state,
+        )
         return () => h(Child)
       },
     })
 
     await mountSuspended(Wrapper)
 
-    expect(authState.isLoading).toBe(false)
-    expect(authState.isAuthenticated).toBe(true)
-    expect(authState.isRefreshing).toBe(false)
+    // ComputedRef fields keep the upstream destructuring idiom reactive.
+    const { isLoading, isAuthenticated, isRefreshing } = authState
+    expect(isLoading.value).toBe(false)
+    expect(isAuthenticated.value).toBe(true)
+    expect(isRefreshing.value).toBe(false)
   })
 })
 
@@ -200,6 +216,8 @@ describe('useQuery', () => {
     const mutation = createMutation(
       seededMutationRef,
       client,
+      // @ts-expect-error — async handlers are rejected at the type level
+      // (matching upstream); this asserts the runtime warn behind the guard.
     ).withOptimisticUpdate(async () => {})
     void mutation()
     expect(consoleWarnSpy).toHaveBeenCalledWith(

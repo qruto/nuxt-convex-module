@@ -269,7 +269,7 @@ describe('createMutation', () => {
     }
     const mutation = createMutation(testMutation, client)
     expect(() => mutation(fakeDomEvent as unknown as Record<string, unknown>)).toThrow(
-      'Convex mutation called with Event object.',
+      'Convex function called with Event object.',
     )
   })
 
@@ -277,7 +277,9 @@ describe('createMutation', () => {
     const mutation = createMutation(
       testMutation,
       client,
-    ).withOptimisticUpdate(async () => {}) // async fn: intentionally wrong type
+      // @ts-expect-error — async handlers are rejected at the type level
+      // (matching upstream); this asserts the runtime warn behind the guard.
+    ).withOptimisticUpdate(async () => {})
 
     const consoleWarnSpy = vi.spyOn(console, 'warn')
     void mutation()
@@ -295,7 +297,7 @@ describe('createMutation', () => {
 // ── async query fetch ─────────────────────────────────────────────────────────
 // Coverage for async query reads on the Vue client.
 
-describe('How many times do you have to go through the first one? ', () => {
+describe('async query fetch', () => {
   let client: ConvexVueClient
 
   beforeEach(() => {

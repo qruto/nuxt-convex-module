@@ -1,8 +1,8 @@
-import { defineComponent, type SlotsType, type VNode } from 'vue'
+import { defineComponent } from 'vue'
 import { useConvexAuth } from './index'
 
 /**
- * Renders slot content only if the client is authenticated.
+ * Renders the default slot if the client is authenticated.
  *
  * @example
  * ```vue
@@ -15,18 +15,19 @@ import { useConvexAuth } from './index'
  */
 export const Authenticated = defineComponent({
   name: 'Authenticated',
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(_, { slots }) {
-    const auth = useConvexAuth()
+    const { isLoading, isAuthenticated } = useConvexAuth()
     return () => {
-      if (auth.isLoading || !auth.isAuthenticated) return null
+      if (isLoading.value || !isAuthenticated.value) {
+        return null
+      }
       return slots.default?.()
     }
   },
 })
 
 /**
- * Renders slot content only if the client is unauthenticated (and not loading).
+ * Renders the default slot if the client is using authentication but is not authenticated.
  *
  * @example
  * ```vue
@@ -39,18 +40,20 @@ export const Authenticated = defineComponent({
  */
 export const Unauthenticated = defineComponent({
   name: 'Unauthenticated',
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(_, { slots }) {
-    const auth = useConvexAuth()
+    const { isLoading, isAuthenticated } = useConvexAuth()
     return () => {
-      if (auth.isLoading || auth.isAuthenticated) return null
+      if (isLoading.value || isAuthenticated.value) {
+        return null
+      }
       return slots.default?.()
     }
   },
 })
 
 /**
- * Renders slot content only while the auth state is loading.
+ * Renders the default slot if the client isn't using authentication or is in the process
+ * of authenticating.
  *
  * @example
  * ```vue
@@ -63,24 +66,25 @@ export const Unauthenticated = defineComponent({
  */
 export const AuthLoading = defineComponent({
   name: 'AuthLoading',
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(_, { slots }) {
-    const auth = useConvexAuth()
+    const { isLoading } = useConvexAuth()
     return () => {
-      if (!auth.isLoading) return null
+      if (!isLoading.value) {
+        return null
+      }
       return slots.default?.()
     }
   },
 })
 
 /**
- * Renders slot content while the client is refreshing the auth token for an
- * already-authenticated session (the server rejected the current token and the
- * socket is paused while a new one is fetched). Routine background token
- * rotation does not trigger this state.
+ * Renders the default slot while the client is refreshing the auth token for an
+ * already-authenticated session (the server rejected the current token and
+ * the socket is paused while a new one is fetched). Routine background
+ * token rotation does not trigger this state.
  *
- * Whether used inside `<Authenticated>` or not, slot content is only rendered
- * while the user is authenticated.
+ * Whether used inside of `<Authenticated>` or not, the default slot will only be
+ * rendered if the user is authenticated.
  *
  * @example
  * ```vue
@@ -93,11 +97,12 @@ export const AuthLoading = defineComponent({
  */
 export const AuthRefreshing = defineComponent({
   name: 'AuthRefreshing',
-  slots: Object as SlotsType<{ default: () => VNode[] }>,
   setup(_, { slots }) {
-    const auth = useConvexAuth()
+    const { isAuthenticated, isRefreshing } = useConvexAuth()
     return () => {
-      if (!auth.isAuthenticated || !auth.isRefreshing) return null
+      if (!isAuthenticated.value || !isRefreshing.value) {
+        return null
+      }
       return slots.default?.()
     }
   },

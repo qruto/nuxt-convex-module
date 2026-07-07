@@ -17,7 +17,7 @@ const mockAuthClient = {
   },
 }
 
-vi.mock('../../../../src/runtime/better-auth/vue/client', () => ({
+vi.mock('#convex/auth-client', () => ({
   authClient: mockAuthClient,
 }))
 

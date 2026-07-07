@@ -4,7 +4,7 @@
 // trying — and failing — to auto-mount onto `#__nuxt`, which otherwise emits a
 // benign "[Vue warn]: Failed to mount app" line into the test output.
 // @vitest-environment happy-dom
-// @vitest-environment-options { "url": "https://nuxt-backend.localhost/" }
+// @vitest-environment-options { "url": "https://nuxt-convex.localhost/" }
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { mockGetSession, mockUpdateSession, mockVerify } = vi.hoisted(() => ({
@@ -13,14 +13,16 @@ const { mockGetSession, mockUpdateSession, mockVerify } = vi.hoisted(() => ({
   mockVerify: vi.fn(),
 }))
 
-vi.mock('../../../../src/runtime/better-auth/vue/client', () => ({
+vi.mock('#convex/auth-client', () => ({
   authClient: {
     getSession: mockGetSession,
+    // `updateSession` is a top-level action of the cross-domain client plugin
+    // (matches `convex/react`'s `authClientWithCrossDomain.updateSession()`).
+    updateSession: mockUpdateSession,
     crossDomain: {
       oneTimeToken: {
         verify: mockVerify,
       },
-      updateSession: mockUpdateSession,
     },
   },
 }))
@@ -32,7 +34,7 @@ async function loadModule() {
 describe('auth/vue/cross-domain', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    window.history.replaceState({}, '', 'https://nuxt-backend.localhost/profile')
+    window.history.replaceState({}, '', 'https://nuxt-convex.localhost/profile')
   })
 
   it('exchanges the cross-domain one-time token and refreshes the auth session', async () => {
@@ -44,7 +46,7 @@ describe('auth/vue/cross-domain', () => {
         },
       },
     })
-    window.history.replaceState({}, '', 'https://nuxt-backend.localhost/profile?ott=one-time-token&next=%2Fdashboard')
+    window.history.replaceState({}, '', 'https://nuxt-convex.localhost/profile?ott=one-time-token&next=%2Fdashboard')
 
     await consumeCrossDomainOneTimeToken()
 
@@ -64,7 +66,7 @@ describe('auth/vue/cross-domain', () => {
   it('no-ops when the OTT exchange does not return a session token', async () => {
     const { consumeCrossDomainOneTimeToken } = await loadModule()
     mockVerify.mockResolvedValue({ data: { session: null } })
-    window.history.replaceState({}, '', 'https://nuxt-backend.localhost/profile?ott=missing-token')
+    window.history.replaceState({}, '', 'https://nuxt-convex.localhost/profile?ott=missing-token')
 
     await consumeCrossDomainOneTimeToken()
 

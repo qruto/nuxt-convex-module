@@ -9,11 +9,12 @@
     "src/runtime/clerk/vue/index.ts",
     "src/runtime/auth0/vue/index.ts",
     "src/runtime/better-auth/vue/index.ts",
+    "src/runtime/better-auth/nuxt/server.ts",
     "src/runtime/polar/vue/components.ts"
   ],
   "entryPointStrategy": "resolve",
 
-  "out": "website/content/3.api-reference/9.reference",
+  "out": "website/content/4.api-reference/9.reference",
   "readme": "none",
   "githubPages": false,
   "hideGenerator": true,

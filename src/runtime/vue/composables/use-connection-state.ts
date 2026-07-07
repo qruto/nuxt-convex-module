@@ -1,14 +1,19 @@
 import type { ConnectionState } from 'convex/browser'
 import type { ShallowRef } from 'vue'
-import { useConvex } from '../client'
+import { useConvexOrThrow } from '../client'
 import { useSubscription } from './use-subscription'
 
 /**
- * Subscribe reactively to the Convex WebSocket connection state.
+ * Vue composable to get the current {@link ConnectionState} and subscribe to changes.
  *
- * Returns a shallow ref that updates automatically whenever the connection
- * state changes. Useful for displaying online/offline indicators or request
- * spinners.
+ * This composable returns a shallow ref of the current connection state that
+ * automatically updates when any part of the connection state changes (e.g.,
+ * when going online/offline, when requests start/complete, etc.).
+ *
+ * The shape of ConnectionState may change in the future which may cause this
+ * composable to update more frequently.
+ *
+ * Throws an error if no Convex client has been provided.
  *
  * @example
  * ```vue
@@ -21,21 +26,24 @@ import { useSubscription } from './use-subscription'
  * </template>
  * ```
  *
- * @returns A shallow ref containing the current {@link ConnectionState}.
+ * @returns The current {@link ConnectionState} with the Convex backend.
  *
  * @public
  */
 export function useConvexConnectionState(): ShallowRef<ConnectionState> {
-  const convex = useConvex()
+  const convex = useConvexOrThrow('useConvexConnectionState')
 
-  // Bridge the client's `{ connectionState, subscribeToConnectionState }` pair
-  // into Vue reactivity through the shared `useSubscription` primitive. Mirrors
-  // React's `useConvexConnectionState`, which composes `useSubscription` the
-  // same way, and lets `useSubscription` re-read the value synchronously when
-  // the effect attaches (closing the gap between the initial read and the
-  // subscription).
-  return useSubscription({
-    getCurrentValue: () => convex.connectionState(),
-    subscribe: callback => convex.subscribeToConnectionState(() => callback()),
-  })
+  // Upstream's `useCallback` wrappers are dropped — a composable runs once
+  // per setup, so these closures are already stable.
+  const getCurrentValue = () => {
+    return convex.connectionState()
+  }
+
+  const subscribe = (callback: () => void) => {
+    return convex.subscribeToConnectionState(() => {
+      callback()
+    })
+  }
+
+  return useSubscription({ getCurrentValue, subscribe })
 }

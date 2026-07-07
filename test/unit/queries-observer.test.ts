@@ -1,7 +1,8 @@
 import { anyApi, type FunctionReference } from 'convex/server'
 import type { Value } from 'convex/values'
 import { afterEach, beforeEach, expect, test, vi, type MockedFunction } from 'vitest'
-import { QueriesObserver, type RequestForQueries } from '../../src/runtime/vue/queries-observer'
+import type { RequestForQueries } from '../../src/runtime/vue/composables/use-queries'
+import { QueriesObserver } from '../../src/runtime/vue/queries-observer'
 import FakeWatch from '../fake-watch'
 
 let queriesObserver: QueriesObserver

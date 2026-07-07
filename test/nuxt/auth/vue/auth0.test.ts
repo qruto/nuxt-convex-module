@@ -52,7 +52,7 @@ describe('ConvexProviderWithAuth0 (provideConvexAuthFromAuth0)', () => {
     const App = defineComponent({
       setup() {
         const auth = useConvexAuth()
-        return () => h('div', auth.isLoading ? 'Loading' : auth.isAuthenticated ? 'In' : 'Out')
+        return () => h('div', auth.isLoading.value ? 'Loading' : auth.isAuthenticated.value ? 'In' : 'Out')
       },
     })
     const Wrapper = defineComponent({

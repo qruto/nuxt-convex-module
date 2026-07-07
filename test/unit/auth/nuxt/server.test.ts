@@ -67,7 +67,7 @@ describe('auth/nuxt/server', () => {
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
     mockFetchQuery.mockResolvedValue([{ text: 'Buy milk' }])
 
-    const auth = backendAuth({} as never, {
+    const auth = backendAuth({ context: {} } as never, {
       convexSiteUrl: 'https://example.convex.site',
     })
 
@@ -86,6 +86,30 @@ describe('auth/nuxt/server', () => {
     expect(forwardedHeaders.has('transfer-encoding')).toBe(false)
   })
 
+  it('shares the token across backendAuth instances for the same request', async () => {
+    // The cache lives on event.context (the H3 analog of upstream wrapping
+    // getToken in React.cache): the server plugin, the auth middleware, and a
+    // user route each call backendAuth(event) but must share one fetch.
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    mockGetToken.mockResolvedValue({ token: 'jwt-shared', isFresh: false })
+
+    const event = { context: {} } as never
+    const opts = { convexSiteUrl: 'https://example.convex.site' }
+
+    await expect(backendAuth(event, opts).getToken()).resolves.toBe('jwt-shared')
+    await expect(backendAuth(event, opts).isAuthenticated()).resolves.toBe(true)
+
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
+
+    // A different request (fresh event.context) fetches its own token.
+    await expect(backendAuth({ context: {} } as never, opts).getToken()).resolves.toBe('jwt-shared')
+    expect(mockGetToken).toHaveBeenCalledTimes(2)
+  })
+
+  // Asserts the port's deliberate inversion of upstream v0.12.5's
+  // `callWithToken` predicate (upstream rethrows on auth errors — a bug; see
+  // the comment in server.ts and AGENTS.md "Known intentional divergences").
+  // A future upstream sync must not "fix" this back.
   it('refreshes the token once when jwt cache marks the first error as auth-related', async () => {
     const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
@@ -98,7 +122,7 @@ describe('auth/nuxt/server', () => {
       .mockRejectedValueOnce(authError)
       .mockResolvedValueOnce([{ text: 'Fresh result' }])
 
-    const auth = backendAuth({} as never, {
+    const auth = backendAuth({ context: {} } as never, {
       convexSiteUrl: 'https://example.convex.site',
       jwtCache: {
         enabled: true,
@@ -124,7 +148,7 @@ describe('auth/nuxt/server', () => {
     mockFetchMutation.mockResolvedValue({ _id: 'task-1' })
     mockFetchAction.mockResolvedValue({ ok: true })
 
-    const auth = backendAuth({} as never, {
+    const auth = backendAuth({ context: {} } as never, {
       convexSiteUrl: 'https://example.convex.site',
     })
 
@@ -148,20 +172,109 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    const response = await backendAuth({} as never, {
+    const response = await backendAuth({ context: {} } as never, {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
     expect(response).toBeInstanceOf(Response)
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
-    const proxiedRequest = mockFetch.mock.calls[0]?.[0] as Request
-    expect(proxiedRequest.url).toBe('https://example.convex.site/api/auth/session?foo=bar')
-    expect(proxiedRequest.headers.get('host')).toBe('example.convex.site')
-    expect(proxiedRequest.headers.get('x-forwarded-host')).toBe('app.example.com')
-    expect(proxiedRequest.headers.get('x-forwarded-proto')).toBe('https')
-    expect(proxiedRequest.headers.get('x-better-auth-forwarded-host')).toBe('app.example.com')
-    expect(proxiedRequest.headers.get('x-better-auth-forwarded-proto')).toBe('https')
+    // Upstream shape: `fetch(nextUrl, init)` — a URL string plus RequestInit.
+    const [proxiedUrl, proxiedInit] = mockFetch.mock.calls[0] as [string, RequestInit]
+    const proxiedHeaders = proxiedInit.headers as Headers
+    expect(proxiedUrl).toBe('https://example.convex.site/api/auth/session?foo=bar')
+    expect(proxiedHeaders.get('host')).toBe('example.convex.site')
+    expect(proxiedHeaders.get('x-forwarded-host')).toBe('app.example.com')
+    expect(proxiedHeaders.get('x-forwarded-proto')).toBe('https')
+    expect(proxiedHeaders.get('x-better-auth-forwarded-host')).toBe('app.example.com')
+    expect(proxiedHeaders.get('x-better-auth-forwarded-proto')).toBe('https')
+  })
+
+  it('strips hop-by-hop headers from the forwarded request', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    const inboundHeaders = new Headers({ 'cookie': 'session=abc', 'content-type': 'application/json' })
+    inboundHeaders.set('transfer-encoding', 'chunked')
+    inboundHeaders.set('content-length', '42')
+    inboundHeaders.set('connection', 'keep-alive')
+    mockToWebRequest.mockReturnValue(new Request('https://app.example.com/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: inboundHeaders,
+      body: JSON.stringify({ email: 'test@example.com' }),
+    }))
+    mockFetch.mockResolvedValue(new Response('ok'))
+
+    await backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+    }).handler()
+
+    const proxiedInit = mockFetch.mock.calls[0]?.[1] as RequestInit
+    const proxiedHeaders = proxiedInit.headers as Headers
+    // undici rejects an outbound `transfer-encoding: chunked`; these must be dropped.
+    expect(proxiedHeaders.get('transfer-encoding')).toBeNull()
+    expect(proxiedHeaders.get('content-length')).toBeNull()
+    expect(proxiedHeaders.get('connection')).toBeNull()
+    expect(proxiedHeaders.get('accept-encoding')).toBe('application/json')
+    // Non-hop-by-hop headers still pass through.
+    expect(proxiedHeaders.get('content-type')).toBe('application/json')
+  })
+
+  it('buffers the POST body and forwards it to the proxied request', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    const body = JSON.stringify({ email: 'test@example.com' })
+    mockToWebRequest.mockReturnValue(new Request('https://app.example.com/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: { cookie: 'session=abc' },
+      body,
+    }))
+    mockFetch.mockResolvedValue(new Response('ok'))
+
+    await backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+    }).handler()
+
+    const proxiedInit = mockFetch.mock.calls[0]?.[1] as RequestInit
+    // The inbound stream is buffered before forwarding, not piped through.
+    expect(new TextDecoder().decode(proxiedInit.body as ArrayBuffer)).toBe(body)
+  })
+
+  it('does not forward a body for GET requests', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    mockToWebRequest.mockReturnValue(new Request('https://app.example.com/api/auth/get-session', {
+      method: 'GET',
+      headers: { cookie: 'session=abc' },
+    }))
+    mockFetch.mockResolvedValue(new Response('ok'))
+
+    await backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+    }).handler()
+
+    const proxiedInit = mockFetch.mock.calls[0]?.[1] as RequestInit
+    expect(proxiedInit.body).toBeUndefined()
+  })
+
+  it('does not forward a body for an empty POST', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    // An empty string still produces a body stream — it buffers to zero bytes.
+    mockToWebRequest.mockReturnValue(new Request('https://app.example.com/api/auth/sign-out', {
+      method: 'POST',
+      headers: { cookie: 'session=abc' },
+      body: '',
+    }))
+    mockFetch.mockResolvedValue(new Response('ok'))
+
+    await backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+    }).handler()
+
+    const proxiedInit = mockFetch.mock.calls[0]?.[1] as RequestInit
+    // A zero-length buffered body is dropped, matching upstream's empty-POST
+    // behavior (the `byteLength > 0` guard in the handler).
+    expect(proxiedInit.body).toBeUndefined()
   })
 
   it('strips stale content-encoding/length from the proxied response', async () => {
@@ -180,7 +293,7 @@ describe('auth/nuxt/server', () => {
       },
     }))
 
-    const response = await backendAuth({} as never, {
+    const response = await backendAuth({ context: {} } as never, {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -204,7 +317,7 @@ describe('auth/nuxt/server', () => {
     })
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
 
-    await backendAuth({} as never).getToken()
+    await backendAuth({ context: {} } as never).getToken()
 
     expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://runtime.convex.site')
   })

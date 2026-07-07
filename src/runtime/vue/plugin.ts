@@ -30,9 +30,9 @@ export default defineNuxtPlugin((nuxtApp) => {
   const client = new ConvexVueClient(url)
   nuxtApp.vueApp.provide(ConvexClientKey, client)
 
-  if (import.meta.client) {
-    window.addEventListener('beforeunload', () => {
-      void client.close()
-    })
-  }
+  // No teardown on `beforeunload` — upstream never closes the client there.
+  // The event is cancelable: it fires BEFORE the user answers the
+  // unsaved-changes dialog (the client's own `unsavedChangesWarning`), so
+  // closing here would drop in-flight mutations exactly when the user chose
+  // to stay. The browser tears the socket down on a real navigation anyway.
 })

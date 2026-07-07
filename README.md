@@ -85,7 +85,7 @@ Listing `@qruto/nuxt-convex` in your `modules` array wires Convex into every lay
 
 ### Manual imports · subpath exports
 
-Everything above is auto-imported in Nuxt, but each surface is also a real **subpath export** — reach for these for explicit/type-only imports, or to use the composables in a **plain Vue** (non-Nuxt) app:
+Everything above is auto-imported in Nuxt, but each surface is also a real **subpath export** — reach for these for explicit/type-only imports. `/vue`, `/clerk/vue`, `/auth0/vue`, and `/polar/vue` are self-contained, so they also work in a **plain Vue** (non-Nuxt) app; `/better-auth/vue` and `/server` rely on Nuxt-provided aliases/runtime config and need Nuxt:
 
 | Import path | Contents |
 |---|---|
@@ -94,7 +94,8 @@ Everything above is auto-imported in Nuxt, but each surface is also a real **sub
 | `@qruto/nuxt-convex/server` | Nitro/server: `fetchQuery`, `fetchMutation`, `fetchAction`, `preloadQuery`, `preloadedQueryResult` |
 | `@qruto/nuxt-convex/clerk/vue` | `provideConvexAuthFromClerk`, `<ConvexProviderWithClerk>` |
 | `@qruto/nuxt-convex/auth0/vue` | `provideConvexAuthFromAuth0`, `<ConvexProviderWithAuth0>` |
-| `@qruto/nuxt-convex/better-auth/vue` | `useAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `<AuthBoundary>` |
+| `@qruto/nuxt-convex/better-auth/vue` | `useAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
+| `@qruto/nuxt-convex/better-auth/server` | Nitro/server: `backendAuth(event)` (auto-imported in server code; import explicitly for the `BackendAuthOptions` / `BackendAuthService` types) |
 | `@qruto/nuxt-convex/polar/vue` | `<CheckoutLink>`, `<CustomerPortalLink>` |
 
 ## Integrations (auto-detected)
@@ -117,13 +118,14 @@ export default defineNuxtConfig({
   // override only if you want to force one on/off or change the auth route.
   convex: {
     // betterAuth: false,
+    // betterAuth: { authClient: './app/convex-auth-client' }, // bring your own client
     // polar: false,
     // authRoute: '/api/auth',
   },
 })
 ```
 
-- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useAuth` (session, sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `backendAuth(event)` for request-scoped server calls. Imported directly via `@qruto/nuxt-convex/better-auth/vue`.
+- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useAuth` (session, sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `backendAuth(event)` for request-scoped server calls. Imported directly via `@qruto/nuxt-convex/better-auth/vue`. Bring your own auth client (to choose plugins — e.g. add `crossDomainClient()` for cross-domain auth) by pointing `convex.betterAuth.authClient` at a module that exports `authClient`; otherwise the bundled default (`convexClient` + `emailOTPClient` + `passkeyClient`) is used.
 - **Clerk** (when `@clerk/vue` is installed) — a Vue port of `convex/react-clerk`: `provideConvexAuthFromClerk()` and `<ConvexProviderWithClerk>`. Types via `@qruto/nuxt-convex/clerk/vue`.
 - **Auth0** (when `@auth0/auth0-vue` is installed) — a Vue port of `convex/react-auth0`: `provideConvexAuthFromAuth0()` and `<ConvexProviderWithAuth0>`. Types via `@qruto/nuxt-convex/auth0/vue`.
 - **Polar** (when `@convex-dev/polar` is installed) — a Vue port of `@convex-dev/polar/react`'s `<CheckoutLink>` and `<CustomerPortalLink>`. Types via `@qruto/nuxt-convex/polar/vue`.
@@ -200,7 +202,9 @@ The authoritative file-by-file map, pinned upstream baseline versions, and out-o
 1. Clone this repository
 2. Install dependencies using `pnpm install`
 3. Prepare for development using `pnpm dev:prepare`
-4. Start development server using `pnpm dev`
+4. Start the development server (the docs/playground app) using `pnpm dev` — or `pnpm start`
+
+`pnpm dev` runs the playground through [portless](https://portless.sh), so it is served at a stable, named HTTPS URL — **https://nuxt-convex.localhost** — instead of a shifting `localhost:<port>`. portless generates and trusts a local CA on first run (auto-elevating to bind port 443); pass `--no-tls` for plain HTTP, or run `nuxt dev website` directly to bypass portless entirely.
 
 We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASING.md](./RELEASING.md).
 

@@ -28,4 +28,22 @@ export default createConfigForNuxt({
         'vue/multi-word-component-names': 'off',
       },
     },
+    // The runtime mirrors upstream convex/react code shape verbatim (see
+    // AGENTS.md's migration contract) — rewriting upstream lines to satisfy
+    // these rules breaks side-by-side diffability for no runtime benefit:
+    // dynamic `delete` on page-key records, `any` in upstream type
+    // constraints and `makeFunctionReference<..., any, any>` calls, the
+    // `: {}` conditional-type branch in `withOptimisticUpdate`, plain
+    // `new Error` where the rule wants `TypeError`, and upstream doc comments
+    // whose `@param` names describe rest-parameter contents.
+    {
+      files: ['src/runtime/**'],
+      rules: {
+        '@typescript-eslint/no-dynamic-delete': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-empty-object-type': 'off',
+        'unicorn/prefer-type-error': 'off',
+        'jsdoc/check-param-names': 'off',
+      },
+    },
   )

@@ -12,7 +12,14 @@
     "noEmit": true,
     "rootDir": ".",
     "types": ["node"],
-    "jsx": "preserve"
+    "jsx": "preserve",
+    // Resolve the Nuxt-module alias to the bundled default client (what
+    // src/module.ts falls back to), so the reference documents the real
+    // authClient/AuthClient types instead of `any`.
+    "baseUrl": ".",
+    "paths": {
+      "#convex/auth-client": ["./src/runtime/better-auth/vue/client.ts"]
+    }
   },
   "include": [
     "src/runtime/**/*.ts"

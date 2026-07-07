@@ -5,8 +5,9 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { makeFunctionReference } from 'convex/server'
 import { AuthBoundary } from '../../../../src/runtime/better-auth/vue/auth-boundary'
 import { ConvexClientKey, ConvexVueClient } from '../../../../src/runtime/vue/client'
-import { ConvexAuthStateKey, type ConvexAuthState } from '../../../../src/runtime/vue/auth'
+import { ConvexAuthStateKey } from '../../../../src/runtime/vue/auth'
 import { silentConnectLogger } from '../../../helpers/silent-logger'
+import { mockAuthState } from '../../../helpers/vue_test_utils'
 
 const getAuthUserFn = makeFunctionReference<'query'>('auth:getAuthUser')
 
@@ -15,7 +16,7 @@ function makeAuthClient() {
 }
 
 async function mountBoundary(
-  authState: Pick<ConvexAuthState, 'isLoading' | 'isAuthenticated'>,
+  authState: { isLoading: boolean, isAuthenticated: boolean },
   props: Record<string, unknown>,
   slot: () => unknown,
 ) {
@@ -23,7 +24,7 @@ async function mountBoundary(
   const Wrapper = defineComponent({
     setup() {
       provide(ConvexClientKey, client)
-      provide(ConvexAuthStateKey, { isRefreshing: false, ...authState })
+      provide(ConvexAuthStateKey, mockAuthState(authState).state)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return () => h(AuthBoundary as any, props, { default: slot })
     },

@@ -9,9 +9,15 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "@convex-dev/polar": "^0.9.2",
+    "@polar-sh/checkout": "^0.3.0",
     "@qruto/nuxt-convex": "workspace:*",
     "convex": "^1.41.0",
     "docus": "^5.12.2",
     "nuxt": "catalog:"
+  },
+  "devDependencies": {
+    "@nuxtjs/i18n": "^10.4.0",
+    "get-port-please": "^3.2.0"
   }
 }

@@ -1,5 +1,5 @@
 import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Nuxt } from '@nuxt/schema'
@@ -8,6 +8,25 @@ import { resolveFunctionsDir } from './functions-dir'
 /** Scoped, silenceable build-time logger (consola) for this module. */
 const logger = useLogger('nuxt-convex')
 
+/**
+ * Configuration for the opt-in Better Auth integration.
+ *
+ * @public
+ */
+export interface BetterAuthModuleOptions {
+  /**
+   * Path (relative to the Nuxt `rootDir`, or absolute) to a module that exports
+   * your configured Better Auth client as `authClient` — and, ideally, its type
+   * as `AuthClient`. Mirrors `convex/react`'s "you own the `authClient`" model:
+   * include whatever client plugins you need, e.g. `crossDomainClient()` from
+   * `@convex-dev/better-auth/client/plugins` for cross-domain auth. Defaults to
+   * the bundled client (`convexClient` + `emailOTPClient` + `passkeyClient`).
+   *
+   * @example './app/convex-auth-client'
+   */
+  authClient?: string
+}
+
 export interface ModuleOptions {
   /** Convex deployment URL (defaults to `NUXT_PUBLIC_CONVEX_URL`). */
   url?: string
@@ -15,9 +34,10 @@ export interface ModuleOptions {
   siteUrl?: string
   /**
    * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is
-   * installed; set `false` to force it off (or `true` to require it).
+   * installed; set `false` to force it off, `true` to require it, or a
+   * {@link BetterAuthModuleOptions} object to point at a custom auth client.
    */
-  betterAuth?: boolean
+  betterAuth?: boolean | BetterAuthModuleOptions
   /**
    * Polar billing components. Auto-enabled when `@convex-dev/polar` is
    * installed; set `false` to force it off (or `true` to require it).
@@ -55,6 +75,11 @@ export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'nuxt-convex',
     configKey: 'convex',
+    // `moduleDependencies` (below) is a Nuxt >= 4.1 feature — fail fast with a
+    // clear kit error on older Nuxt instead of silently skipping nuxt-security.
+    compatibility: {
+      nuxt: '>=4.1.0',
+    },
   },
   defaults: {
     authRoute: '/api/auth',
@@ -72,6 +97,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
     registerBackendAliases(nuxt)
+    registerAuthClientAlias(resolver, nuxt, options)
 
     registerBackendApiPlugin(resolver, nuxt)
     registerVueComposables(resolver)
@@ -119,17 +145,26 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
 }
 
 /**
- * Ship a tightened, Convex-aware CSP by default. Only in production builds (a
- * strict connect-src would break Vite HMR / devtools in `nuxt dev`) and only
- * when a build-time Convex URL is known (otherwise we'd lock Convex out instead
- * of allowing it). nuxt-security is installed afterwards via moduleDependencies,
- * so mutating its config here lands before it reads it.
+ * Ship a tightened, Convex-aware CSP by default. `connect-src` is tightened
+ * only in production builds — creating it in dev would break the Vite HMR and
+ * devtools WebSockets, which run on their own ports that `'self'` doesn't
+ * cover, while nuxt-security's defaults leave `connect-src` unset (open). The
+ * resource directives (`img-src` / `media-src`) are widened in dev too:
+ * nuxt-security enforces its default `img-src 'self' data:` during `nuxt dev`
+ * as well, which would block files served from Convex storage. Applies only
+ * when a build-time Convex URL is known (otherwise we'd lock Convex out
+ * instead of allowing it). nuxt-security is installed afterwards via
+ * moduleDependencies, so mutating its config here lands before it reads it.
  */
 function applyConvexCsp(nuxt: Nuxt, url: string, siteUrl: string): void {
   const opts = nuxt.options as unknown as Record<string, unknown>
-  if (!url || nuxt.options.dev || opts.security === false) return
+  if (!url || opts.security === false) return
   const security = (opts.security ??= {}) as Record<string, unknown>
-  applyConvexSecurityDefaults(security, convexConnectSrc(url, siteUrl), convexResourceSrc(url))
+  applyConvexSecurityDefaults(
+    security,
+    nuxt.options.dev ? [] : convexConnectSrc(url, siteUrl),
+    convexResourceSrc(url),
+  )
 }
 
 /**
@@ -229,6 +264,30 @@ function registerBackendAliases(nuxt: Nuxt): void {
 }
 
 /**
+ * Register the `#convex/auth-client` alias used by the Better Auth runtime
+ * (`use-auth`, `auth-boundary`, `cross-domain`) to resolve the app's Better Auth
+ * client. This is the Vue/Nuxt analog of `convex/react` taking the `authClient`
+ * as a prop: point `convex.betterAuth.authClient` at your own client module to
+ * choose your plugins (e.g. add `crossDomainClient()` for cross-domain auth),
+ * otherwise it resolves to the bundled default client.
+ *
+ * Registered unconditionally (not gated on the integration being enabled) so the
+ * library's own type-check always resolves the alias, and on both Vite
+ * (`options.alias`) and Nitro (`nitro.alias`).
+ */
+function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): void {
+  const custom = typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined
+  const target = custom
+    ? (isAbsolute(custom) ? custom : join(nuxt.options.rootDir, custom))
+    : resolver.resolve('./runtime/better-auth/vue/client')
+
+  nuxt.options.nitro ||= {}
+  nuxt.options.nitro.alias ||= {}
+  nuxt.options.alias['#convex/auth-client'] = target
+  nuxt.options.nitro.alias['#convex/auth-client'] = target
+}
+
+/**
  * Auto-provide the generated Convex `api` (`#backend/api`) app-wide so the
  * composables and components that read from a namespace (e.g. the Polar
  * `<CheckoutLink>`) work with zero arguments — see `runtime/vue/provide.ts`.
@@ -312,11 +371,10 @@ function registerVueComposables(resolver: Resolver): void {
     { name: 'useBackendNamespace', from: resolver.resolve('./runtime/vue/provide') },
     { name: 'usePreloadedQuery', from: resolver.resolve('./runtime/vue/hydration') },
     { name: 'usePaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
+    { name: 'useConvexPaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'usePaginatedQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
   ]
-  for (const composable of composables) {
-    addImports(composable)
-  }
+  addImports(composables)
 }
 
 /**
@@ -379,6 +437,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
 
   addServerImports([
     { name: 'backendAuth', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
+    { name: 'convexBetterAuthNuxt', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
   ])
 }
 
@@ -501,9 +560,13 @@ export function applyConvexSecurityDefaults(
 
 /**
  * Set a CSP directive to the union of its existing value (or `baseline` if it
- * was unset) and `additions`, deduplicated and order-preserving.
+ * was unset) and `additions`, deduplicated and order-preserving. With no
+ * additions the directive is left entirely untouched — materializing the
+ * baseline alone would *create* a restriction where nuxt-security's defaults
+ * leave the directive open (how `connect-src` stays HMR-safe in dev).
  */
 function tightenDirective(csp: Record<string, unknown>, name: string, baseline: string[], additions: string[]): void {
+  if (additions.length === 0) return
   const existing = Array.isArray(csp[name]) ? csp[name] as string[] : baseline
   csp[name] = uniq([...existing, ...additions])
 }

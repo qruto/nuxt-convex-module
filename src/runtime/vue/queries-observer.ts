@@ -1,12 +1,19 @@
+import { convexToJson, type Value } from 'convex/values'
+import type { PaginatedWatch, Watch } from './client'
 import type { QueryJournal } from 'convex/browser'
-import type { FunctionReference } from 'convex/server'
-import { getFunctionName } from 'convex/server'
-import type { Value } from 'convex/values'
-import { convexToJson } from 'convex/values'
-import type { Watch, PaginatedWatch } from './client'
-// Derive the RequestForQueries type (incl. paginationOptions) from convex/react
-// so our observer matches the canonical shape without local duplication.
-import type { RequestForQueries } from 'convex/react'
+import { type FunctionReference, getFunctionName } from 'convex/server'
+import type { RequestForQueries } from './composables/use-queries'
+
+// Upstream imports `PaginatedQueryResult` and `SubscribeToPaginatedQueryOptions`
+// from convex's internal `browser/sync/*` modules, which are not in the package
+// export map — mirror/derive them locally instead.
+type PaginatedQueryResult<T> = NonNullable<
+  ReturnType<PaginatedWatch<T>['localQueryResult']>
+>
+export interface SubscribeToPaginatedQueryOptions {
+  initialNumItems: number
+  id: number
+}
 
 type Identifier = string
 
@@ -15,7 +22,7 @@ type QueryInfo = {
   args: Record<string, Value>
   watch: Watch<Value> | PaginatedWatch<Value>
   unsubscribe: () => void
-  paginationOptions?: unknown
+  paginationOptions?: SubscribeToPaginatedQueryOptions
 }
 
 export interface CreateWatch {
@@ -25,18 +32,15 @@ export interface CreateWatch {
     options: {
       journal?: QueryJournal
       // Just the existence of this option makes this a paginated query
-      // (matches React's QueriesObserver/CreateWatch).
-      paginationOptions?: unknown
+      paginationOptions?: SubscribeToPaginatedQueryOptions
     },
   ): Watch<Value> | PaginatedWatch<Value>
 }
 
 /**
- * Tracks subscriptions for a dynamic set of Convex queries and notifies
- * listeners whenever any result changes.
+ * A class for observing the results of multiple queries at the same time.
  *
- * Framework-agnostic: the composables layer ({@link useConvexQueries}) wraps
- * this class with Vue reactivity.
+ * Any time the result of a query changes, the listeners are notified.
  */
 export class QueriesObserver {
   public createWatch: CreateWatch
@@ -55,14 +59,15 @@ export class QueriesObserver {
       {
         query: FunctionReference<'query'>
         args: Record<string, Value>
-        paginationOptions?: unknown
+        paginationOptions?: SubscribeToPaginatedQueryOptions
       }
     >,
-  ): void {
+  ) {
     // Add the new queries before unsubscribing from the old ones so that
-    // the deduping in the client can help if there are duplicates.
-    // Matches React's QueriesObserver.setQueries.
+    // the deduping in the `ConvexVueClient` can help if there are duplicates.
     for (const identifier of Object.keys(newQueries)) {
+      // `!` assertions cover `noUncheckedIndexedAccess` (upstream indexes
+      // directly); keys come from `Object.keys`.
       const { query, args, paginationOptions } = newQueries[identifier]!
       // Might throw
       getFunctionName(query)
@@ -115,12 +120,21 @@ export class QueriesObserver {
 
   getLocalResults(
     queries: RequestForQueries,
-  ): Record<Identifier, Value | undefined | Error | unknown> {
-    const result: Record<Identifier, Value | Error | undefined | unknown> = {}
+  ): Record<
+    Identifier,
+    Value | undefined | Error | PaginatedQueryResult<Value>
+  > {
+    const result: Record<
+      Identifier,
+      Value | Error | undefined | PaginatedQueryResult<Value>
+    > = {}
     for (const identifier of Object.keys(queries)) {
-      const entry = queries[identifier]!
-      const { query, args } = entry
-      const paginationOptions = (entry as { paginationOptions?: unknown }).paginationOptions
+      const { query, args } = queries[identifier]!
+      // `paginationOptions` is `@internal` upstream and stripped from the
+      // published `RequestForQueries` type, so read it through a cast.
+      const paginationOptions = (queries[identifier]! as {
+        paginationOptions?: SubscribeToPaginatedQueryOptions
+      }).paginationOptions
 
       // Might throw
       getFunctionName(query)
@@ -133,7 +147,7 @@ export class QueriesObserver {
         paginationOptions ? { paginationOptions } : {},
       )
 
-      let value: Value | undefined | Error | unknown
+      let value: Value | undefined | Error | PaginatedQueryResult<Value>
       try {
         value = watch.localQueryResult()
       }
@@ -152,24 +166,23 @@ export class QueriesObserver {
     return result
   }
 
-  setCreateWatch(createWatch: CreateWatch): void {
+  setCreateWatch(createWatch: CreateWatch) {
     this.createWatch = createWatch
     // If we have a new watch, we might be using a new Convex client.
     // Recreate all the watches being careful to preserve the journals.
-    // Matches React (handles journal only on non-paginated watches).
     for (const identifier of Object.keys(this.queries)) {
       const { query, args, watch, paginationOptions }
         = this.queries[identifier]!
       const journal = 'journal' in watch ? watch.journal() : undefined
       this.removeQuery(identifier)
       this.addQuery(identifier, query, args, {
-        ...(journal ? { journal } : {}),
+        ...(journal ? { journal } : []),
         ...(paginationOptions ? { paginationOptions } : {}),
       })
     }
   }
 
-  destroy(): void {
+  destroy() {
     for (const identifier of Object.keys(this.queries)) {
       this.removeQuery(identifier)
     }
@@ -184,17 +197,17 @@ export class QueriesObserver {
       paginationOptions,
       journal,
     }: {
-      paginationOptions?: unknown
+      paginationOptions?: SubscribeToPaginatedQueryOptions
       journal?: QueryJournal
     },
-  ): void {
+  ) {
     if (this.queries[identifier] !== undefined) {
       throw new Error(
         `Tried to add a new query with identifier ${identifier} when it already exists.`,
       )
     }
     const watch = this.createWatch(query, args, {
-      ...(journal ? { journal } : {}),
+      ...(journal ? { journal } : []),
       ...(paginationOptions ? { paginationOptions } : {}),
     })
     const unsubscribe = watch.onUpdate(() => this.notifyListeners())
@@ -207,14 +220,12 @@ export class QueriesObserver {
     }
   }
 
-  private removeQuery(identifier: Identifier): void {
+  private removeQuery(identifier: Identifier) {
     const info = this.queries[identifier]
     if (info === undefined) {
       throw new Error(`No query found with identifier ${identifier}.`)
     }
     info.unsubscribe()
-    // Use delete to match React's QueriesObserver (simpler, matches structure).
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.queries[identifier]
   }
 
@@ -224,8 +235,3 @@ export class QueriesObserver {
     }
   }
 }
-
-// Re-export the (derived) RequestForQueries for consumers of the observer module
-// and for use-queries.ts re-export. The shape (with optional paginationOptions)
-// comes from 'convex/react'.
-export type { RequestForQueries } from 'convex/react'

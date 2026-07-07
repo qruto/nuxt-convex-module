@@ -1,6 +1,24 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, nextTick, provide } from 'vue'
+import { computed, defineComponent, h, nextTick, provide, reactive } from 'vue'
 import { ConvexClientKey, type ConvexVueClient } from '../../src/runtime/vue/client'
+import type { ConvexAuthState } from '../../src/runtime/vue/auth'
+
+/**
+ * Build a {@link ConvexAuthState} (public `ComputedRef` fields) backed by a
+ * mutable reactive source, so tests can flip plain booleans on `source` while
+ * consumers see the public computed shape.
+ */
+export function mockAuthState(
+  initial: { isLoading: boolean, isAuthenticated: boolean, isRefreshing?: boolean },
+): { source: { isLoading: boolean, isAuthenticated: boolean, isRefreshing: boolean }, state: ConvexAuthState } {
+  const source = reactive({ isRefreshing: false, ...initial })
+  const state: ConvexAuthState = {
+    isLoading: computed(() => source.isLoading),
+    isAuthenticated: computed(() => source.isAuthenticated),
+    isRefreshing: computed(() => source.isRefreshing),
+  }
+  return { source, state }
+}
 
 /**
  * Mount a composable inside a Vue component tree that provides a

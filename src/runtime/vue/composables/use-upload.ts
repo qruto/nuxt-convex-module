@@ -1,7 +1,7 @@
 import type { FunctionReference } from 'convex/server'
 import type { GenericId } from 'convex/values'
 import { ref, shallowRef, type Ref } from 'vue'
-import { useConvex } from '../client'
+import { useConvexOrThrow } from '../client'
 
 /**
  * A `generateUploadUrl` mutation: takes no arguments and returns a one-time
@@ -206,7 +206,7 @@ export function useUpload(
   generateUploadUrl: GenerateUploadUrl,
   options: UseUploadOptions = {},
 ): VueUpload {
-  const convex = useConvex()
+  const convex = useConvexOrThrow('useUpload')
   const isUploading = ref(false)
   const progress = ref(0)
   const error = shallowRef<Error | null>(null)

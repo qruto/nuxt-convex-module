@@ -8,10 +8,10 @@ import { type App, hasInjectionContext, inject, type InjectionKey, provide } fro
  */
 export type BackendApi = Record<string, Record<string, unknown>>
 
-export const BackendApiKey: InjectionKey<BackendApi> = Symbol('nuxt-backend:api')
+export const BackendApiKey: InjectionKey<BackendApi> = Symbol('nuxt-convex:api')
 
 /**
- * Make the generated Convex `api` available to every `nuxt-backend` composable
+ * Make the generated Convex `api` available to every `nuxt-convex` composable
  * and component, so `useBilling()`, `<CheckoutLink>`, `useEmailStatus()`, … work
  * with zero arguments.
  *

@@ -1,3 +1,4 @@
+import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { backendAuth } from '../nuxt/server'
@@ -20,7 +21,7 @@ async function prefetchAuthToken(
     initialToken.value = token ?? null
   }
   catch (error) {
-    console.warn('[nuxt-backend] Failed to prefetch auth token for SSR:', error)
+    console.warn('[nuxt-convex] Failed to prefetch auth token for SSR:', error)
   }
 }
 
@@ -54,9 +55,9 @@ export default defineNuxtPlugin<ConvexNuxtInjection>(async (nuxtApp) => {
   // preloaded query helpers return the server-prefetched value during SSR
   // and defer the live query to the client plugin.
   const ssrAuthState: ConvexAuthState = {
-    isLoading: true,
-    isAuthenticated: false,
-    isRefreshing: false,
+    isLoading: computed(() => true),
+    isAuthenticated: computed(() => false),
+    isRefreshing: computed(() => false),
   }
   nuxtApp.vueApp.provide(ConvexAuthStateKey, ssrAuthState)
 

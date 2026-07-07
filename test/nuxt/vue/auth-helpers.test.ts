@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, provide, reactive, nextTick } from 'vue'
+import { defineComponent, h, provide, nextTick } from 'vue'
 import { Authenticated, AuthLoading, AuthRefreshing, Unauthenticated } from '../../../src/runtime/vue/auth/helpers'
 import { ConvexAuthStateKey } from '../../../src/runtime/vue/auth'
+import { mockAuthState } from '../../helpers/vue_test_utils'
 
 describe('auth helpers', () => {
   it('helpers are valid children', async () => {
-    const state = reactive({ isLoading: false, isAuthenticated: true, isRefreshing: false })
+    const { state } = mockAuthState({ isLoading: false, isAuthenticated: true, isRefreshing: false })
 
     const Wrapper = defineComponent({
       setup() {
@@ -26,7 +27,7 @@ describe('auth helpers', () => {
   })
 
   it('renders AuthRefreshing only while authenticated and refreshing', async () => {
-    const state = reactive({ isLoading: false, isAuthenticated: true, isRefreshing: false })
+    const { source, state } = mockAuthState({ isLoading: false, isAuthenticated: true, isRefreshing: false })
 
     const Wrapper = defineComponent({
       setup() {
@@ -41,18 +42,18 @@ describe('auth helpers', () => {
     // Authenticated but not refreshing → hidden.
     expect(wrapper.text()).not.toContain('Refreshing')
 
-    state.isRefreshing = true
+    source.isRefreshing = true
     await nextTick()
     expect(wrapper.text()).toContain('Refreshing')
 
     // Refreshing only renders while authenticated.
-    state.isAuthenticated = false
+    source.isAuthenticated = false
     await nextTick()
     expect(wrapper.text()).not.toContain('Refreshing')
   })
 
   it('helpers can take many children', async () => {
-    const state = reactive({ isLoading: false, isAuthenticated: true, isRefreshing: false })
+    const { state } = mockAuthState({ isLoading: false, isAuthenticated: true, isRefreshing: false })
 
     const Wrapper = defineComponent({
       setup() {
@@ -73,7 +74,7 @@ describe('auth helpers', () => {
   })
 
   it('renders the matching helper when auth state changes', async () => {
-    const state = reactive({ isLoading: true, isAuthenticated: false, isRefreshing: false })
+    const { source, state } = mockAuthState({ isLoading: true, isAuthenticated: false, isRefreshing: false })
 
     const Wrapper = defineComponent({
       setup() {
@@ -89,11 +90,11 @@ describe('auth helpers', () => {
     const wrapper = await mountSuspended(Wrapper)
     expect(wrapper.text()).toBe('Loading')
 
-    state.isLoading = false
+    source.isLoading = false
     await nextTick()
     expect(wrapper.text()).toBe('Unauthenticated')
 
-    state.isAuthenticated = true
+    source.isAuthenticated = true
     await nextTick()
     expect(wrapper.text()).toBe('Authenticated')
   })

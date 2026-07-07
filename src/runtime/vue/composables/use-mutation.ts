@@ -1,112 +1,94 @@
 import type { OptimisticUpdate } from 'convex/browser'
 import type { FunctionArgs, FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { getFunctionName, makeFunctionReference } from 'convex/server'
-import { useConvex, type ConvexVueClient } from '../client'
+import type { Value } from 'convex/values'
+import { useConvexOrThrow, type ConvexVueClient } from '../client'
 
-type EventLike = {
-  bubbles: unknown
-  cancelable: unknown
-  target: unknown
-  preventDefault: () => void
-}
-
-function isEventLike(value: unknown): value is EventLike {
-  return (
-    typeof value === 'object'
-    && value !== null
-    && 'bubbles' in value
-    && 'cancelable' in value
-    && 'target' in value
-    && 'preventDefault' in value
-    && typeof value.preventDefault === 'function'
-  )
-}
-
+// TODO Typedoc doesn't generate documentation for the comment below perhaps
+// because it's a callable interface.
 /**
- * In Vue, `@click` (and other event) handlers receive a native DOM Event as
- * their first argument. Detect the mistake early and throw a helpful error
- * instead of sending the event object to the Convex backend.
- */
-function assertNotAccidentalArgument(value: unknown): void {
-  if (isEventLike(value)) {
-    throw new Error(
-      'Convex mutation called with Event object. '
-      + 'Did you use a Convex mutation as an event handler directly? '
-      + 'Event handlers like @click receive a native Event object as their first argument. '
-      + 'These Event objects are not valid Convex values. '
-      + 'Try wrapping the function like `const handler = () => myMutation()` '
-      + 'and using `handler` in the event handler.',
-    )
-  }
-}
-
-/**
- * A callable object that runs a Convex mutation and optionally applies an
- * optimistic update before the server response arrives.
- *
- * Returned by {@link useMutation} and {@link createMutation}.
+ * An interface to execute a Convex mutation function on the server.
  *
  * @public
  */
 export interface VueMutation<Mutation extends FunctionReference<'mutation'>> {
-  /** Execute the mutation, returning a Promise of its return value. */
+  /**
+   * Execute the mutation on the server, returning a `Promise` of its return value.
+   *
+   * @param args - Arguments for the mutation to pass up to the server.
+   * @returns The return value of the server-side function call.
+   */
   (...args: OptionalRestArgs<Mutation>): Promise<FunctionReturnType<Mutation>>
+
   /**
    * Define an optimistic update to apply as part of this mutation.
    *
+   * This is a temporary update to the local query results to facilitate a
+   * fast, interactive UI. It enables query results to update before a mutation
+   * executed on the server.
+   *
+   * When the mutation is invoked, the optimistic update will be applied.
+   *
+   * Optimistic updates can also be used to temporarily remove queries from the
+   * client and create loading experiences until a mutation completes and the
+   * new query results are synced.
+   *
+   * The update will be automatically rolled back when the mutation is fully
+   * completed and queries have been updated.
+   *
+   * @param optimisticUpdate - The optimistic update to apply.
    * @returns A new `VueMutation` with the update configured.
+   *
+   * @public
    */
-  withOptimisticUpdate(
-    optimisticUpdate: OptimisticUpdate<FunctionArgs<Mutation>>,
+  withOptimisticUpdate<T extends OptimisticUpdate<FunctionArgs<Mutation>>>(
+    optimisticUpdate: T
+      & (ReturnType<T> extends Promise<any>
+        ? 'Optimistic update handlers must be synchronous'
+        : {}),
   ): VueMutation<Mutation>
 }
 
-/**
- * Create a mutation function bound to the given client.
- *
- * Low-level alternative to {@link useMutation} for contexts where the
- * Vue composition API (and its `inject`) is unavailable — e.g. unit tests.
- *
- * @public
- */
-export function createMutation<Mutation extends FunctionReference<'mutation'>>(
-  mutationReference: Mutation,
+// Exported only for testing.
+export function createMutation(
+  mutationReference: FunctionReference<'mutation'>,
   client: ConvexVueClient,
-  update?: OptimisticUpdate<FunctionArgs<Mutation>>,
-): VueMutation<Mutation> {
-  function mutation(
-    ...args: OptionalRestArgs<Mutation>
-  ): Promise<FunctionReturnType<Mutation>> {
-    const mutationArgs = (args[0] ?? {}) as FunctionArgs<Mutation>
-    assertNotAccidentalArgument(mutationArgs)
-    return client.mutation(mutationReference, mutationArgs, {
+  update?: OptimisticUpdate<any>,
+): VueMutation<any> {
+  function mutation(args?: Record<string, Value>): Promise<unknown> {
+    assertNotAccidentalArgument(args)
+
+    return client.mutation(mutationReference, args, {
       optimisticUpdate: update,
     })
   }
-  mutation.withOptimisticUpdate = function withOptimisticUpdate<
-    Update extends OptimisticUpdate<FunctionArgs<Mutation>>,
-  >(
-    optimisticUpdate: Update & (ReturnType<Update> extends Promise<unknown>
-      ? 'Optimistic update handlers must be synchronous'
-      : unknown),
-  ): VueMutation<Mutation> {
+  mutation.withOptimisticUpdate = function withOptimisticUpdate(
+    optimisticUpdate: OptimisticUpdate<any>,
+  ): VueMutation<any> {
     if (update !== undefined) {
       throw new Error(
-        `Already specified optimistic update for mutation ${getFunctionName(mutationReference)}`,
+        `Already specified optimistic update for mutation ${getFunctionName(
+          mutationReference,
+        )}`,
       )
     }
     return createMutation(mutationReference, client, optimisticUpdate)
   }
-  return mutation as VueMutation<Mutation>
+  return mutation as VueMutation<any>
 }
 
 /**
  * Construct a new {@link VueMutation}.
  *
- * Returns a function that you can call to execute a Convex mutation.
- * The returned function is stable (same reference) for the lifetime of the composable.
+ * Returns a function that you can call to execute a Convex mutation. The
+ * returned function is stable for the lifetime of the composable (same
+ * reference identity), so it can be safely passed around and memoized.
  *
- * Mutations can optionally be configured with optimistic updates.
+ * Mutations can optionally be configured with
+ * [optimistic updates](https://docs.convex.dev/client/react/optimistic-updates)
+ * for instant UI feedback.
+ *
+ * Throws an error if no Convex client has been provided.
  *
  * @example
  * ```vue
@@ -122,8 +104,9 @@ export function createMutation<Mutation extends FunctionReference<'mutation'>>(
  * </script>
  * ```
  *
- * @param mutation - A FunctionReference for the public mutation to run.
- * @returns The {@link VueMutation} object.
+ * @param mutation - A {@link server.FunctionReference} for the public mutation
+ * to run like `api.dir1.dir2.filename.func`.
+ * @returns The {@link VueMutation} object with that name.
  *
  * @public
  */
@@ -132,12 +115,34 @@ export function useMutation<Mutation extends FunctionReference<'mutation'>>(
 ): VueMutation<Mutation> {
   const mutationReference
     = typeof mutation === 'string'
-      ? makeFunctionReference<'mutation'>(mutation) as Mutation
+      ? makeFunctionReference<'mutation', any, any>(mutation)
       : mutation
 
-  const convex = useConvex()
+  // Upstream: `useContext(ConvexContext)` plus the in-hook undefined check.
+  const convex = useConvexOrThrow('useMutation')
+  // Upstream wraps this in `useMemo`; a composable runs once per setup, so
+  // the call is already stable.
   return createMutation(mutationReference, convex)
 }
 
 /** @public */
 export const useConvexMutation = useMutation
+
+// When a function is called with a single argument that looks like a
+// DOM Event it was likely called as an event handler. (Upstream detects
+// React's SyntheticEvent; Vue event handlers receive native DOM events.)
+function assertNotAccidentalArgument(value: any) {
+  // these are properties of a DOM Event
+  // https://developer.mozilla.org/en-US/docs/Web/API/Event
+  if (
+    typeof value === 'object'
+    && value !== null
+    && 'bubbles' in value
+    && 'cancelable' in value
+    && 'preventDefault' in value
+  ) {
+    throw new Error(
+      `Convex function called with Event object. Did you use a Convex function as an event handler directly? Event handlers like @click receive an event object as their first argument. These Event objects are not valid Convex values. Try wrapping the function like \`const handler = () => myMutation();\` and using \`handler\` in the event handler.`,
+    )
+  }
+}
