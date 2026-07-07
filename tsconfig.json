@@ -4,6 +4,7 @@
   "exclude": [
     "dist",
     "node_modules",
-    "website"
+    "website",
+    "client"
   ]
 }
