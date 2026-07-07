@@ -13,7 +13,7 @@
  * ### Creating the client
  *
  * ```typescript
- * import { ConvexVueClient } from "@qruto/nuxt-convex/vue";
+ * import { ConvexVueClient } from "nuxt-convex-kit/vue";
  *
  * // typically loaded from an environment variable
  * const address = "https://small-mouse-123.convex.cloud"
@@ -23,7 +23,7 @@
  * ### Storing the client in Vue context
  *
  * ```typescript
- * import { ConvexClientKey } from "@qruto/nuxt-convex/vue";
+ * import { ConvexClientKey } from "nuxt-convex-kit/vue";
  *
  * // (the Nuxt module registers a plugin that does this automatically)
  * app.provide(ConvexClientKey, convex);
@@ -32,7 +32,7 @@
  * ### Using the auth helpers
  *
  * ```typescript
- * import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "@qruto/nuxt-convex/vue";
+ * import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "nuxt-convex-kit/vue";
  *
  * <Authenticated>
  *   Logged in
@@ -51,7 +51,7 @@
  * ### Using Vue composables
  *
  * ```typescript
- * import { useQuery, useMutation } from "@qruto/nuxt-convex/vue";
+ * import { useQuery, useMutation } from "nuxt-convex-kit/vue";
  * import { api } from "../convex/_generated/api";
  *
  * // In your component's <script setup>:

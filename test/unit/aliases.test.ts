@@ -5,7 +5,7 @@ import { getBackendAliases } from '../../src/module'
 // resolveFunctionsDir falls back to the standard `convex/` dir when neither a
 // convex.json nor a convex/ or backend/ directory exists, so an empty root keeps
 // this test pure.
-const rootDir = '/tmp/nuxt-convex-alias-fixture'
+const rootDir = '/tmp/nuxt-convex-kit-alias-fixture'
 const generatedDir = join(rootDir, 'convex', '_generated')
 
 describe('backend import aliases', () => {

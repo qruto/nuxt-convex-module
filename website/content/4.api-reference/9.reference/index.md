@@ -1,7 +1,7 @@
 ---
 navigation: true
 title: Modules
-description: Auto-generated TypeScript API reference for every public @qruto/nuxt-convex module.
+description: Auto-generated TypeScript API reference for every public nuxt-convex-kit module.
 ---
 
 # API Modules

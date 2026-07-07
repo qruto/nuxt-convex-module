@@ -29,7 +29,7 @@ A faithful Vue/Nuxt port of Convex's official React/Next integration — reactiv
   color: neutral
   variant: subtle
   size: xl
-  to: https://github.com/qruto/nuxt-convex
+  to: https://github.com/qruto/nuxt-convex-kit
   target: _blank
   icon: i-simple-icons-github
   ---

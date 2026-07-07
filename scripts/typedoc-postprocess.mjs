@@ -74,10 +74,10 @@ await writeFile(
       '---',
       'navigation: true',
       'title: Modules',
-      'description: Auto-generated TypeScript API reference for every public @qruto/nuxt-convex module.',
+      'description: Auto-generated TypeScript API reference for every public nuxt-convex-kit module.',
       '---',
     ].join('\n'))
-    .replace(/^# @qruto\/nuxt-convex$/m, '# API Modules'),
+    .replace(/^# nuxt-convex-kit$/m, '# API Modules'),
 )
 
 console.log(`typedoc-postprocess: cleaned links in ${touched} file(s); wrote nav + index meta`)

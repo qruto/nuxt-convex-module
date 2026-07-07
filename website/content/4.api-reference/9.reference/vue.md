@@ -18,7 +18,7 @@ This module contains:
 ### Creating the client
 
 ```typescript
-import { ConvexVueClient } from "@qruto/nuxt-convex/vue";
+import { ConvexVueClient } from "nuxt-convex-kit/vue";
 
 // typically loaded from an environment variable
 const address = "https://small-mouse-123.convex.cloud"
@@ -28,7 +28,7 @@ const convex = new ConvexVueClient(address);
 ### Storing the client in Vue context
 
 ```typescript
-import { ConvexClientKey } from "@qruto/nuxt-convex/vue";
+import { ConvexClientKey } from "nuxt-convex-kit/vue";
 
 // (the Nuxt module registers a plugin that does this automatically)
 app.provide(ConvexClientKey, convex);
@@ -37,7 +37,7 @@ app.provide(ConvexClientKey, convex);
 ### Using the auth helpers
 
 ```typescript
-import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "@qruto/nuxt-convex/vue";
+import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "nuxt-convex-kit/vue";
 
 <Authenticated>
   Logged in
@@ -56,7 +56,7 @@ import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "@qr
 ### Using Vue composables
 
 ```typescript
-import { useQuery, useMutation } from "@qruto/nuxt-convex/vue";
+import { useQuery, useMutation } from "nuxt-convex-kit/vue";
 import { api } from "../convex/_generated/api";
 
 // In your component's <script setup>:
@@ -3433,7 +3433,7 @@ function provideBackendApi(api, app?): void;
 
 Defined in: src/runtime/vue/provide.ts:28
 
-Make the generated Convex `api` available to every `nuxt-convex` composable
+Make the generated Convex `api` available to every `nuxt-convex-kit` composable
 and component, so `useBilling()`, `<CheckoutLink>`, `useEmailStatus()`, … work
 with zero arguments.
 

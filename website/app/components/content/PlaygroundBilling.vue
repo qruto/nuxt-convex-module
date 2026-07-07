@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // <CheckoutLink> and <CustomerPortalLink> are the real globally registered
-// components from @qruto/nuxt-convex (auto-registered because @convex-dev/polar
+// components from nuxt-convex-kit (auto-registered because @convex-dev/polar
 // is installed). They resolve their actions from the auto-provided `api.billing`
 // namespace — on the playground those are demo stand-ins returning polar.sh
 // sandbox URLs, so `:embed="false"` keeps the checkout a plain link.

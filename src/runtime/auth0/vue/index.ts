@@ -38,7 +38,7 @@ export interface ConvexProviderWithAuth0Options {
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { provideConvexAuthFromAuth0 } from '@qruto/nuxt-convex/auth0/vue'
+ * import { provideConvexAuthFromAuth0 } from 'nuxt-convex-kit/auth0/vue'
  * provideConvexAuthFromAuth0()
  * </script>
  * ```
