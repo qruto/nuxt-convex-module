@@ -16,20 +16,21 @@ import { resolveFunctionSource } from './resolve-function-source'
  * Wire the Convex panel into Nuxt DevTools (dev-only; lazily imported so
  * `@nuxt/devtools-kit` never loads in production builds):
  *
- * - serve the panel app — from `dist/client` via sirv in the published
- *   package, or proxied to the `pnpm dev:client` dev server while developing
- *   this module (the `./client` dir doesn't exist next to the stub);
+ * - serve the panel app — from `dist/devtools-client` via sirv in the
+ *   published package, or proxied to the `pnpm dev:devtools-client` dev server
+ *   while developing this module (the `./devtools-client` dir doesn't exist
+ *   next to the stub);
  * - register the iframe tab;
  * - expose the server-side RPC (build-time info + function-source lookup —
  *   live client state reaches the panel through the in-page bridge instead).
  */
 export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServerInfo): void {
-  const clientPath = resolver.resolve('./client')
+  const devtoolsClientPath = resolver.resolve('./devtools-client')
 
-  if (existsSync(clientPath)) {
+  if (existsSync(devtoolsClientPath)) {
     nuxt.hook('vite:serverCreated', async (server) => {
       const sirv = (await import('sirv')).default
-      server.middlewares.use(DEVTOOLS_UI_ROUTE, sirv(clientPath, { dev: true, single: true }))
+      server.middlewares.use(DEVTOOLS_UI_ROUTE, sirv(devtoolsClientPath, { dev: true, single: true }))
     })
   }
   else {

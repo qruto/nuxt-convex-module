@@ -4,7 +4,7 @@
 
 packages:
   - website
-  - client
+  - devtools-client-app
 
 # --- Catalog: one version, used across every workspace package ---------------
 # Reference with `"nuxt": "catalog:"` in package.json so the root module and the

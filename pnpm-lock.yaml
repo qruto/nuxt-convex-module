@@ -148,7 +148,7 @@ importers:
         specifier: ^8.21.0
         version: 8.21.0
 
-  client:
+  devtools-client-app:
     devDependencies:
       '@nuxt/devtools-kit':
         specifier: ^3.2.4

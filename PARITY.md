@@ -100,7 +100,7 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
 - `vue/plugin.ts` — base Convex client Nuxt plugin (the Nuxt analog of the user manually
   rendering `<ConvexProvider client={…}>`; registered when no auth integration owns the client).
 - `nuxt/config.ts`, `module.ts`, `functions-dir.ts` — Nuxt module wiring.
-- `runtime/devtools/**`, `devtools/**`, `client/` — Nuxt DevTools panel (dev-only). **Sync
+- `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` — Nuxt DevTools panel (dev-only). **Sync
   hazard:** `runtime/devtools/bridge.ts` deliberately observes `ConvexVueClient` from the
   outside so `vue/client.ts` stays byte-diffable against upstream — it reads the TS-private
   `listeners` map and `cachedSync`, and instance-patches `transition`/`close` at runtime. It
