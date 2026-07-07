@@ -122,9 +122,11 @@
     "bump": "pnpm exec taze major -w"
   },
   "dependencies": {
+    "@nuxt/devtools-kit": "^3.2.4",
     "@nuxt/kit": "^4.4.8",
     "h3": "^1.15.0",
-    "nuxt-security": "^2.6.0"
+    "nuxt-security": "^2.6.0",
+    "sirv": "^3.0.2"
   },
   "peerDependencies": {
     "@auth0/auth0-vue": ">=2.0.0",
