@@ -27,6 +27,16 @@ export function resolveFunctionsDir(rootDir: string): string {
   return DEFAULT_FUNCTIONS_DIR
 }
 
+/**
+ * Whether `convex dev` (codegen) has emitted the generated `api` module for a
+ * project — the fs-guard shared by the provide-api plugin template, the
+ * fallback type template, and the dev-time onboarding notice.
+ */
+export function hasGeneratedApi(rootDir: string, functionsDir: string = resolveFunctionsDir(rootDir)): boolean {
+  const generatedApi = join(rootDir, functionsDir, '_generated', 'api')
+  return existsSync(`${generatedApi}.d.ts`) || existsSync(`${generatedApi}.js`)
+}
+
 function readFunctionsDirFromConvexJson(convexJsonPath: string): string | undefined {
   if (!existsSync(convexJsonPath)) {
     return
