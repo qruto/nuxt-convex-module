@@ -1,9 +1,8 @@
 import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
-import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Nuxt } from '@nuxt/schema'
-import { resolveFunctionsDir } from './functions-dir'
+import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
 const logger = useLogger('nuxt-convex')
@@ -103,11 +102,62 @@ export default defineNuxtModule<ModuleOptions>({
     registerVueComposables(resolver)
     registerAuthComponents(resolver)
     registerServerImports(resolver)
-    registerIntegrations(resolver, nuxt, options)
+    const integrations = registerIntegrations(resolver, nuxt, options)
     applyConvexCsp(nuxt, url, siteUrl)
     watchBackendCodegen(nuxt)
+
+    if (nuxt.options.dev && !nuxt.options._prepare) {
+      logger.info(formatStartupSummary(url, resolveFunctionsDir(nuxt.options.rootDir), integrations))
+    }
   },
 })
+
+/**
+ * Which opt-in integrations ended up enabled — returned by
+ * {@link registerIntegrations} for the dev startup summary (and the DevTools
+ * panel, which reports the active adapter).
+ */
+export interface IntegrationFlags {
+  betterAuth: boolean
+  clerk: boolean
+  auth0: boolean
+  polar: boolean
+}
+
+/**
+ * Decide whether an opt-in integration is enabled, distinguishing the
+ * misconfiguration case: explicitly enabled but the backing package is not
+ * installed (`missingPackage`), where silently registering the runtime would
+ * surface as an opaque Vite import error instead of an actionable message.
+ * Auto-detection (option unset) treats package absence as the normal case.
+ */
+export function resolveIntegrationState(
+  explicit: boolean | object | undefined,
+  installed: boolean,
+): { enabled: boolean, missingPackage: boolean } {
+  if (explicit === false) return { enabled: false, missingPackage: false }
+  if (explicit === undefined) return { enabled: installed, missingPackage: false }
+  return installed
+    ? { enabled: true, missingPackage: false }
+    : { enabled: false, missingPackage: true }
+}
+
+/**
+ * The dev-mode one-line startup summary: resolved deployment URL, functions
+ * directory, and which opt-in integrations are active.
+ */
+export function formatStartupSummary(url: string, functionsDir: string, integrations: IntegrationFlags): string {
+  const names: Record<keyof IntegrationFlags, string> = {
+    betterAuth: 'better-auth',
+    clerk: 'clerk',
+    auth0: 'auth0',
+    polar: 'polar',
+  }
+  const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)
+    .filter(key => integrations[key])
+    .map(key => names[key])
+  return `Convex ${url || '(no URL)'} · functions: ${functionsDir}/ · integrations: ${enabled.join(', ') || 'none'}`
+}
 
 /**
  * Enable the opt-in integrations, auto-detected when their package is installed
@@ -115,9 +165,17 @@ export default defineNuxtModule<ModuleOptions>({
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
-function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): void {
-  const enableBetterAuth = options.betterAuth ?? isPackageInstalled('@convex-dev/better-auth', nuxt.options.rootDir)
-  if (enableBetterAuth) {
+function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): IntegrationFlags {
+  const resolve = (key: keyof IntegrationFlags & keyof ModuleOptions, pkg: string): boolean => {
+    const state = resolveIntegrationState(options[key], isPackageInstalled(pkg, nuxt.options.rootDir))
+    if (state.missingPackage) {
+      logger.error(`\`convex.${key}\` is enabled but \`${pkg}\` is not installed. Run \`npm install ${pkg}\` or remove the option.`)
+    }
+    return state.enabled
+  }
+
+  const betterAuth = resolve('betterAuth', '@convex-dev/better-auth')
+  if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
     registerBetterAuth(resolver, options.authRoute || '/api/auth')
@@ -128,20 +186,22 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerBaseConvexClient(resolver)
   }
 
-  const enableClerk = options.clerk ?? isPackageInstalled('@clerk/vue', nuxt.options.rootDir)
-  if (enableClerk) {
+  const clerk = resolve('clerk', '@clerk/vue')
+  if (clerk) {
     registerClerk(resolver)
   }
 
-  const enableAuth0 = options.auth0 ?? isPackageInstalled('@auth0/auth0-vue', nuxt.options.rootDir)
-  if (enableAuth0) {
+  const auth0 = resolve('auth0', '@auth0/auth0-vue')
+  if (auth0) {
     registerAuth0(resolver)
   }
 
-  const enablePolar = options.polar ?? isPackageInstalled('@convex-dev/polar', nuxt.options.rootDir)
-  if (enablePolar) {
+  const polar = resolve('polar', '@convex-dev/polar')
+  if (polar) {
     registerPolarComponents(resolver)
   }
+
+  return { betterAuth, clerk, auth0, polar }
 }
 
 /**
@@ -198,7 +258,10 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     : options.url || process.env.NUXT_PUBLIC_CONVEX_URL
 
   if (!url && !nuxt.options._prepare) {
-    logger.warn('No Convex URL configured. Set `convex.url` in nuxt.config or NUXT_PUBLIC_CONVEX_URL.')
+    logger.warn(
+      'No Convex deployment URL configured. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config. '
+      + 'Note: `npx convex dev` writes CONVEX_URL to .env.local, which Nuxt does not load.',
+    )
   }
 
   const siteUrl = options.siteUrl || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || ''
@@ -300,15 +363,24 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
  */
 function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
-  const generatedApi = join(nuxt.options.rootDir, functionsDir, '_generated', 'api')
   const provideModule = resolver.resolve('./runtime/vue/provide')
+  // One-shot onboarding notice: point at `npx convex dev` while codegen is
+  // absent, and confirm (once) when the watcher re-renders with it present.
+  let notifiedMissing = false
 
   addPluginTemplate({
     filename: 'nuxt-convex-provide-api.mjs',
     getContents: () => {
-      const hasApi = existsSync(`${generatedApi}.d.ts`) || existsSync(`${generatedApi}.js`)
-      if (!hasApi) {
+      if (!hasGeneratedApi(nuxt.options.rootDir, functionsDir)) {
+        if (nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
+          notifiedMissing = true
+          logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. Convex features no-op until it exists.`)
+        }
         return 'import { defineNuxtPlugin } from \'#app\'\nexport default defineNuxtPlugin(() => {})\n'
+      }
+      if (notifiedMissing) {
+        notifiedMissing = false
+        logger.success('Convex codegen detected — generated `api` wired app-wide.')
       }
       return [
         'import { defineNuxtPlugin } from \'#app\'',
