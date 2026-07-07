@@ -5,6 +5,6 @@
     "dist",
     "node_modules",
     "website",
-    "client"
+    "devtools-client-app"
   ]
 }

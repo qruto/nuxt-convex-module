@@ -1,12 +1,12 @@
 // Shared between the module (server side of the DevTools RPC) and the panel
-// app in `client/` (browser side) — keep this file dependency-free.
+// app in `devtools-client-app/` (browser side) — keep this file dependency-free.
 
 export const RPC_NAMESPACE = 'nuxt-convex'
 
 /** Route the panel iframe is served under (sirv when built, proxy in dev). */
 export const DEVTOOLS_UI_ROUTE = '/__nuxt-convex'
 
-/** Port `pnpm dev:client` runs the panel dev server on (3300 is nuxt/fonts'). */
+/** Port `pnpm dev:devtools-client` runs the panel dev server on (3300 is nuxt/fonts'). */
 export const DEVTOOLS_UI_LOCAL_PORT = 3630
 
 /**
