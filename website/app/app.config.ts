@@ -7,7 +7,8 @@ export default defineAppConfig({
   ui: {
     colors: {
       primary: 'orange',
-      neutral: 'zinc',
+      // Pure-grey neutral (zinc carries a blue cast) — titanium has no hue.
+      neutral: 'neutral',
       info: 'orange',
     },
   },
