@@ -115,7 +115,9 @@ export function createConvexDevtoolsBridge(client: ConvexVueClient): ConvexDevto
 
   // ── queries ────────────────────────────────────────────────────────────────
   const computeQueries = (): DevtoolsQuerySnapshot[] => {
-    const sync = internals.cachedSync as (BaseConvexClient & SyncInternals) | undefined
+    // Not an intersection with BaseConvexClient: its own `optimisticQueryResults`
+    // is private, which would reduce the intersection to `never`.
+    const sync = internals.cachedSync as unknown as SyncInternals | undefined
     return Array.from(listeners.entries(), ([token, callbacks]) => {
       const { udfPath, args, paginated } = parseQueryToken(token)
       const stats = queryStats.get(token)
