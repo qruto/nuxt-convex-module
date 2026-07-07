@@ -41,10 +41,19 @@ The `website/` directory is a full Nuxt app (product homepage · docs · interac
 pnpm dev
 ```
 
+To work on the **Nuxt DevTools panel** (`client/`), also start its dev server — in-repo the panel iframe is proxied to it (the published package serves the prebuilt `dist/client` instead):
+
+```bash
+pnpm dev:client
+```
+
+Then open the website, launch Nuxt DevTools in the browser, and pick the Convex tab. The website playground pages provide live queries/mutations to inspect.
+
 ## Project Structure
 
 ```
 src/        # Module source (Nuxt module + Convex component)
+client/     # Nuxt DevTools panel app (served in the DevTools iframe)
 test/       # Vitest unit & integration tests
 website/    # Nuxt app: product homepage · docs (Docus) · interactive playground
 ```

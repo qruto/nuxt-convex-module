@@ -73,6 +73,7 @@ Listing `@qruto/nuxt-convex` in your `modules` array wires Convex into every lay
 - **Provide-api plugin** · `addPluginTemplate` — wires the generated `api` app-wide; fs-guarded to a no-op until `convex dev` has run, and **re-rendered live** the moment codegen appears (`builder:watch`).
 - **Server handler + route rule** · `addServerHandler` / `extendRouteRules` — the same-origin `/api/auth/**` proxy, marked uncacheable (Better Auth only).
 - **Route middleware** · `addRouteMiddleware` — the opt-in `auth` page guard (Better Auth only).
+- **Nuxt DevTools tab** · `addCustomTab` + devtools RPC — a **Convex panel** (dev only): live connection state, active query subscriptions with results and per-query server logs, auth state, the client log stream, and open-in-editor for Convex functions. Disable with `convex.devtools: false`.
 
 ### Runtime config & import aliases
 
