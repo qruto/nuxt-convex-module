@@ -31,23 +31,29 @@
    orange carries the signal.
    ════════════════════════════════════════════════════════════════ */
 @theme {
-  /* Rounded type system: Fredoka (display) + Nunito (sans/body) + JetBrains Mono.
+  /* Rounded type system: Gabarito (display) + Nunito (sans/body) + JetBrains Mono.
      `--font-sans` drives the Docus/Nuxt UI docs chrome → soft, rounded Nunito. */
   --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 
-  /* Fluorescent orange — re-tones Tailwind `orange` (the Nuxt UI primary). */
-  --color-orange-50:  #fff4ed;
-  --color-orange-100: #ffe6d5;
-  --color-orange-200: #ffc8aa;
-  --color-orange-300: #ffa274;
-  --color-orange-400: #ff6f3d;
-  --color-orange-500: #ff5a1f;
-  --color-orange-600: #f0420a;
-  --color-orange-700: #c63307;
-  --color-orange-800: #9d2b0e;
-  --color-orange-900: #7e260f;
-  --color-orange-950: #441305;
+/* Fluorescent orange — Nuxt UI inlines its palette as literal
+   `--ui-color-primary-*` values at build time (a `@theme` re-tone of
+   Tailwind `orange` never reaches it, and unused theme vars are
+   tree-shaken), so the primary scale is overridden at the documented
+   variable seam instead. */
+:root {
+  --ui-color-primary-50:  #fff4ed;
+  --ui-color-primary-100: #ffe6d5;
+  --ui-color-primary-200: #ffc8aa;
+  --ui-color-primary-300: #ffa274;
+  --ui-color-primary-400: #ff6f3d;
+  --ui-color-primary-500: #ff5a1f;
+  --ui-color-primary-600: #f0420a;
+  --ui-color-primary-700: #c63307;
+  --ui-color-primary-800: #9d2b0e;
+  --ui-color-primary-900: #7e260f;
+  --ui-color-primary-950: #441305;
 }
 
 :root {
@@ -83,9 +89,10 @@ html.light { color-scheme: light; }
   --bg:         light-dark(#e8e8e8, #161616);
   --surface:    light-dark(#fafafa, #232323);
   --surface-hi: light-dark(#ffffff, #2b2b2b);
-  /* `--sink` (recessed wells) sits clearly below the surface so nested wells,
-     readouts and inputs read as carved, not washed-out. */
-  --sink:       light-dark(#dadada, #151515);
+  /* `--sink` (recessed wells) sits a quiet half-step below the surface —
+     premium restraint: the recess is read from the inset shadow's hairline,
+     not from a heavy tonal drop. */
+  --sink:       light-dark(#e6e6e6, #1a1a1a);
 
   /* ── Ink — neutral, AA-checked on the titanium grays ───────── */
   --ink:       light-dark(#1c1c1c, #ededed);
@@ -180,7 +187,7 @@ html.light { color-scheme: light; }
    ════════════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scrollbar-color: var(--edge-hi) transparent; scrollbar-width: thin; }
+html { scrollbar-color: var(--edge-hi) transparent; scrollbar-width: thin; scroll-behavior: smooth; }
 
 body { margin: 0; }
 
@@ -228,6 +235,60 @@ input, .mono, code, pre, time, .tnum { font-variant-numeric: tabular-nums; }
    Shared utilities
    ════════════════════════════════════════════════════════════════ */
 .mono { font-family: var(--mono); }
+
+/* Laser-etched marking — text carved into the material: dimmed ink with a
+   1px light catch on the lower edge (light mode); in dark the groove reads
+   as a shadow instead. */
+.etched {
+  color: var(--ink-dim);
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+
+/* ── Landing section scaffold ────────────────────────────────────
+   The homepage reads like a field manual: every section shares one
+   structure — etched index eyebrow, display title, quiet sub. */
+.ld-inner {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: clamp(2.75rem, 7vh, 4.75rem) 1.5rem;
+}
+.ld-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+}
+.ld-tick {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: var(--glow-accent-soft);
+}
+.ld-index { color: var(--accent-soft); }
+.ld-title {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 0.6rem;
+}
+.ld-sub {
+  font-family: var(--font);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  margin: 0;
+  max-width: 44rem;
+}
+.ld-sect { border-bottom: 1px solid var(--edge); }
 
 .lab-label {
   font-family: var(--mono);
@@ -293,7 +354,8 @@ code.inline {
 /* ════════════════════════════════════════════════════════════════
    Focus & touch (Web Interface Guidelines) — ring sits ON TOP of depth
    ════════════════════════════════════════════════════════════════ */
-.pg-shell :where(a, button, summary, [role="button"], .lb):focus-visible {
+.pg-shell :where(a, button, summary, [role="button"], .lb):focus-visible,
+.btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -435,10 +497,10 @@ details.dev > .dev-body { padding: 0.25rem 0.85rem 0.85rem; }
     inset 1px 1px 0 rgb(255 255 255 / 0.95),
     8px 20px 48px rgb(0 0 0 / 0.16);
   --inset-1:
-    inset 1px 1px 2px rgb(0 0 0 / 0.10),
-    inset -1px -1px 0 rgb(255 255 255 / 0.6);
+    inset 1px 1px 1px rgb(0 0 0 / 0.06),
+    inset -1px -1px 0 rgb(255 255 255 / 0.55);
   --inset-2:
-    inset 2px 2px 5px rgb(0 0 0 / 0.14),
+    inset 1px 1px 2px rgb(0 0 0 / 0.08),
     inset -1px -1px 0 rgb(255 255 255 / 0.5);
 
   --glow-accent:
@@ -478,11 +540,11 @@ details.dev > .dev-body { padding: 0.25rem 0.85rem 0.85rem; }
       inset 1px 1px 0 rgb(255 255 255 / 0.1),
       10px 24px 56px rgb(0 0 0 / 0.68);
     --inset-1:
-      inset 1px 1px 3px rgb(0 0 0 / 0.5),
-      inset -1px -1px 0 rgb(255 255 255 / 0.05);
-    --inset-2:
-      inset 2px 2px 6px rgb(0 0 0 / 0.6),
+      inset 1px 1px 2px rgb(0 0 0 / 0.35),
       inset -1px -1px 0 rgb(255 255 255 / 0.04);
+    --inset-2:
+      inset 1px 1px 3px rgb(0 0 0 / 0.42),
+      inset -1px -1px 0 rgb(255 255 255 / 0.03);
     --grad-bevel: linear-gradient(135deg,
       rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.5));
   }
@@ -493,8 +555,8 @@ html.dark {
   --elev-2: inset 1px 1px 0 rgb(255 255 255 / 0.07), 2px 4px 6px rgb(0 0 0 / 0.45), 3px 8px 18px rgb(0 0 0 / 0.5);
   --elev-3: inset 1px 1px 0 rgb(255 255 255 / 0.08), 5px 12px 26px rgb(0 0 0 / 0.55);
   --elev-4: inset 1px 1px 0 rgb(255 255 255 / 0.1), 10px 24px 56px rgb(0 0 0 / 0.68);
-  --inset-1: inset 1px 1px 3px rgb(0 0 0 / 0.5), inset -1px -1px 0 rgb(255 255 255 / 0.05);
-  --inset-2: inset 2px 2px 6px rgb(0 0 0 / 0.6), inset -1px -1px 0 rgb(255 255 255 / 0.04);
+  --inset-1: inset 1px 1px 2px rgb(0 0 0 / 0.35), inset -1px -1px 0 rgb(255 255 255 / 0.04);
+  --inset-2: inset 1px 1px 3px rgb(0 0 0 / 0.42), inset -1px -1px 0 rgb(255 255 255 / 0.03);
   --grad-bevel: linear-gradient(135deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.5));
 }
 html.light {
@@ -503,8 +565,8 @@ html.light {
   --elev-2: inset 1px 1px 0 rgb(255 255 255 / 0.9), 1px 2px 2px rgb(0 0 0 / 0.05), 3px 6px 14px rgb(0 0 0 / 0.09);
   --elev-3: inset 1px 1px 0 rgb(255 255 255 / 0.9), 2px 4px 6px rgb(0 0 0 / 0.04), 5px 12px 24px rgb(0 0 0 / 0.11);
   --elev-4: inset 1px 1px 0 rgb(255 255 255 / 0.95), 8px 20px 48px rgb(0 0 0 / 0.16);
-  --inset-1: inset 1px 1px 2px rgb(0 0 0 / 0.10), inset -1px -1px 0 rgb(255 255 255 / 0.6);
-  --inset-2: inset 2px 2px 5px rgb(0 0 0 / 0.14), inset -1px -1px 0 rgb(255 255 255 / 0.5);
+  --inset-1: inset 1px 1px 1px rgb(0 0 0 / 0.06), inset -1px -1px 0 rgb(255 255 255 / 0.55);
+  --inset-2: inset 1px 1px 2px rgb(0 0 0 / 0.08), inset -1px -1px 0 rgb(255 255 255 / 0.5);
   --grad-bevel: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.12) 45%, rgb(0 0 0 / 0.14));
 }
 
@@ -567,6 +629,32 @@ html.light {
    so it won't touch the homepage device's scoped <header>).
    ════════════════════════════════════════════════════════════════ */
 
+/* ── THE GROUND ──────────────────────────────────────────────────
+   Depth design applied to the ground itself: the whole site — homepage
+   AND docs — sits on the titanium mill canvas, not on blank white/black.
+   Raised surfaces (cards, header, popovers) are then genuinely LIGHTER
+   than the ground in light mode (bead-blast #fafafa on mill #e8e8e8) and
+   lighter in dark too — physical elevation, not just borders.
+   These override Nuxt UI's `@layer theme` tokens (unlayered wins). */
+:root, .light {
+  --ui-bg: #e8e8e8;
+  --ui-bg-muted: #e0e0e0;
+  --ui-bg-elevated: #dcdcdc;
+  --ui-bg-accented: #d2d2d2;
+  --ui-border: rgb(0 0 0 / 0.08);
+  --ui-border-muted: rgb(0 0 0 / 0.06);
+  --ui-border-accented: rgb(0 0 0 / 0.13);
+}
+.dark {
+  --ui-bg: #161616;
+  --ui-bg-muted: #1d1d1d;
+  --ui-bg-elevated: #232323;
+  --ui-bg-accented: #2b2b2b;
+  --ui-border: rgb(255 255 255 / 0.07);
+  --ui-border-muted: rgb(255 255 255 / 0.05);
+  --ui-border-accented: rgb(255 255 255 / 0.13);
+}
+
 /* Header — a softly lifted bar. */
 header.backdrop-blur {
   box-shadow: 0 1px 0 var(--edge), 0 10px 26px -20px rgb(0 0 0 / 0.5);
@@ -610,6 +698,9 @@ header button:has(kbd):hover { box-shadow: var(--elev-2); }
    rounded, surfaced block. Lift them a hair off the page; raise on hover so
    the depth tracks the existing hover:border-primary affordance. */
 :where(a, div)[class*="border-default"][class*="rounded-md"][class*="bg-default"] {
+  /* On the titanium ground, raised tiles get the bead-blast surface —
+     lighter than the canvas, so the elevation is physical. */
+  background-color: var(--surface);
   box-shadow: var(--elev-1);
   transition: box-shadow var(--transition), border-color var(--transition),
     background-color var(--transition);
