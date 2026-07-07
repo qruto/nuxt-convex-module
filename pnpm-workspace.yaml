@@ -27,7 +27,9 @@ allowBuilds:
   # uses Node's built-in `node:sqlite`, better-auth runs against Convex. Don't compile
   # its native addon.
   better-sqlite3: false
-  browser-tabs-lock: set this to true or false
+  # Transitive only (via @auth0/auth0-spa-js). Its postinstall just prints a
+  # promotional banner — nothing is built; keep it denied.
+  browser-tabs-lock: false
   esbuild: true
   sharp: true # Image optimization (Nuxt Image / OG images) for the docs site (Docus)
   unrs-resolver: true
