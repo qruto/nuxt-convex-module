@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "nuxt-convex-devtools-client",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3630",
+    "generate": "nuxt generate"
+  },
+  "devDependencies": {
+    "@nuxt/devtools-kit": "^3.2.4",
+    "@nuxt/devtools-ui-kit": "^3.2.4",
+    "nuxt": "catalog:"
+  }
+}

@@ -21,9 +21,10 @@ export default createConfigForNuxt({
     {
       ignores: ['.agents/**'],
     },
-    // Playground demo components use short, single-word names by design.
+    // Playground demo components and DevTools panel pages use short,
+    // single-word names by design.
     {
-      files: ['website/**/*.vue'],
+      files: ['website/**/*.vue', 'client/**/*.vue'],
       rules: {
         'vue/multi-word-component-names': 'off',
       },
