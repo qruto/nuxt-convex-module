@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { createRequire } from 'node:module'
 import type { Nuxt } from '@nuxt/schema'
@@ -99,6 +99,7 @@ export default defineNuxtModule<ModuleOptions>({
     registerAuthClientAlias(resolver, nuxt, options)
 
     registerBackendApiPlugin(resolver, nuxt)
+    registerBackendTypeFallback(nuxt)
     registerVueComposables(resolver)
     registerAuthComponents(resolver)
     registerServerImports(resolver)
@@ -396,17 +397,80 @@ function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
 }
 
 /**
- * In dev, re-render the provide-api plugin the instant `convex dev` emits
- * `_generated/api`, so the generated `api` is wired app-wide without a
- * dev-server restart (the fs-guarded template otherwise only re-evaluates on a
- * full rebuild). Uses Nuxt's existing file watcher via the `builder:watch`
- * hook — no watcher of our own to tear down.
+ * Contents of the fallback type template: placeholder (`any`-typed) ambient
+ * declarations for the generated `#backend/*` modules while `convex dev`
+ * hasn't emitted codegen yet, so a fresh project typechecks instead of failing
+ * on every `#backend/api` import. Once codegen exists the template goes empty
+ * and the real generated types win via the tsconfig `paths` the aliases
+ * already produce.
+ */
+export function backendTypeFallbackContents(hasApi: boolean, functionsDir: string): string {
+  if (hasApi) {
+    // Real codegen resolves through the tsconfig paths — declare nothing so
+    // the generated types are the only source of truth.
+    return 'export {}\n'
+  }
+  return [
+    `// Placeholder until \`npx convex dev\` generates ${functionsDir}/_generated.`,
+    'declare module \'#backend/api\' {',
+    '  export const api: any',
+    '  export const internal: any',
+    '  export const components: any',
+    '}',
+    'declare module \'#backend/server\' {',
+    '  export const query: any',
+    '  export const internalQuery: any',
+    '  export const mutation: any',
+    '  export const internalMutation: any',
+    '  export const action: any',
+    '  export const internalAction: any',
+    '  export const httpAction: any',
+    '  export type QueryCtx = any',
+    '  export type MutationCtx = any',
+    '  export type ActionCtx = any',
+    '  export type DatabaseReader = any',
+    '  export type DatabaseWriter = any',
+    '}',
+    'declare module \'#backend/dataModel\' {',
+    '  export type Doc<TableName extends string = string> = any',
+    '  export type Id<TableName extends string = string> = string',
+    '  export type DataModel = any',
+    '  export type TableNames = string',
+    '}',
+    '',
+  ].join('\n')
+}
+
+/**
+ * Register the fs-guarded fallback type template (app + nitro contexts, since
+ * server routes import `#backend/api` too). Symmetric to
+ * {@link registerBackendApiPlugin}'s runtime no-op guard, and re-rendered by
+ * {@link watchBackendCodegen} the moment codegen lands.
+ */
+function registerBackendTypeFallback(nuxt: Nuxt): void {
+  const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
+  addTypeTemplate({
+    filename: 'types/nuxt-convex-backend.d.ts',
+    getContents: () => backendTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
+  }, { nuxt: true, nitro: true })
+}
+
+/** Templates that must re-render when `convex dev` emits `_generated/api`. */
+const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-provide-api.mjs', 'types/nuxt-convex-backend.d.ts']
+
+/**
+ * In dev, re-render the codegen-guarded templates the instant `convex dev`
+ * emits `_generated/api`, so the generated `api` is wired app-wide (and the
+ * placeholder types retire) without a dev-server restart — the fs-guarded
+ * templates otherwise only re-evaluate on a full rebuild. Uses Nuxt's existing
+ * file watcher via the `builder:watch` hook — no watcher of our own to tear
+ * down.
  */
 function watchBackendCodegen(nuxt: Nuxt): void {
   if (!nuxt.options.dev) return
   nuxt.hook('builder:watch', async (_event, path) => {
     if (!path.replace(/\\/g, '/').includes('_generated/api')) return
-    await updateTemplates({ filter: template => template.filename === 'nuxt-convex-provide-api.mjs' })
+    await updateTemplates({ filter: template => CODEGEN_GUARDED_TEMPLATES.includes(template.filename) })
   })
 }
 
