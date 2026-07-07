@@ -44,7 +44,7 @@ describe('formatStartupSummary', () => {
 })
 
 describe('hasGeneratedApi', () => {
-  const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-convex-codegen-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-convex-kit-codegen-'))
   afterAll(() => rmSync(rootDir, { recursive: true, force: true }))
 
   it('is false before `convex dev` has emitted _generated/api', () => {

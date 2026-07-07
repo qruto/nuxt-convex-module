@@ -22,7 +22,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   if (!url) {
     if (import.meta.client) {
-      console.warn('[nuxt-convex] No Convex URL configured; client not created.')
+      console.warn('[nuxt-convex-kit] No Convex URL configured; client not created.')
     }
     return
   }

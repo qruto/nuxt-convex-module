@@ -57,7 +57,7 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
   })
 
   addCustomTab({
-    name: 'nuxt-convex',
+    name: 'nuxt-convex-kit',
     title: 'Convex',
     icon: `${DEVTOOLS_UI_ROUTE}/icon.svg`,
     view: {

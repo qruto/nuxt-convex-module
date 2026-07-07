@@ -2,7 +2,7 @@
 import type { Id } from '#backend/dataModel'
 import { api } from '#backend/api'
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
-import { insertAtTop, optimisticallyUpdateValueInPaginatedQuery } from '@qruto/nuxt-convex/vue'
+import { insertAtTop, optimisticallyUpdateValueInPaginatedQuery } from 'nuxt-convex-kit/vue'
 
 // Paginated task list: 5 items per page, growing as `loadMore` is called.
 // `results`, `status`, and `isLoading` are ComputedRefs; `loadMore` is stable.

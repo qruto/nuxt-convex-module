@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
-import type { RequestForQueries } from '@qruto/nuxt-convex/vue'
+import type { RequestForQueries } from 'nuxt-convex-kit/vue'
 import { api } from '#backend/api'
 
 // `useQueries` subscribes to a *dynamic* set of queries: the checkboxes below

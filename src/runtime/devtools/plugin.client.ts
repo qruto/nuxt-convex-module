@@ -16,7 +16,7 @@ declare global {
 // Auth's). It looks the client up instead of creating one, so it attaches
 // identically on every client-provisioning path without touching ported files.
 export default defineNuxtPlugin({
-  name: 'nuxt-convex:devtools',
+  name: 'nuxt-convex-kit:devtools',
   setup(nuxtApp) {
     const attach = (): boolean => {
       const client = nuxtApp.vueApp.runWithContext(() => inject(ConvexClientKey, undefined))

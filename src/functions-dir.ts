@@ -50,7 +50,7 @@ function readFunctionsDirFromConvexJson(convexJsonPath: string): string | undefi
     return normalizeFunctionsDir(convexJson.functions)
   }
   catch (error) {
-    console.warn(`[nuxt-convex] Failed to parse convex.json: ${error instanceof Error ? error.message : String(error)}`)
+    console.warn(`[nuxt-convex-kit] Failed to parse convex.json: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
