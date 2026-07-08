@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { setResponseHeader } from 'h3'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { backendAuth } from '../nuxt/server'
@@ -12,13 +13,27 @@ function buildProvide(ssrClient?: ConvexVueClient): { provide: ConvexNuxtInjecti
   return ssrClient ? { provide: { convex: ssrClient } } : { provide: {} }
 }
 
-async function prefetchAuthToken(
+/**
+ * Prefetch the Convex JWT for SSR and stash it in `initialToken`.
+ *
+ * Exported for unit testing.
+ */
+export async function prefetchAuthToken(
   event: ReturnType<typeof useRequestEvent>,
   initialToken: ReturnType<typeof useState<string | null>>,
 ) {
   try {
     const token = await backendAuth(event!).getToken()
     initialToken.value = token ?? null
+    if (token && event) {
+      // The token is serialized into the client-readable SSR payload
+      // (`window.__NUXT__`), and any `preloadAuthQuery` data rides the same
+      // payload — so this response body carries a per-user secret. Forbid
+      // shared/browser caching by default so an authenticated page can never
+      // be replayed to a different user from a CDN or proxy. Set early enough
+      // that a route with stricter needs can still override it.
+      setResponseHeader(event, 'Cache-Control', 'private, no-store')
+    }
   }
   catch (error) {
     console.warn('[nuxt-convex-module] Failed to prefetch auth token for SSR:', error)
