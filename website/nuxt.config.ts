@@ -11,9 +11,9 @@ catch {
   // playground pages show their "backend offline" state.
 }
 
-// The documentation site for `nuxt-convex-kit` — one Nuxt app combining the
+// The documentation site for `nuxt-convex-module` — one Nuxt app combining the
 // product homepage and the docs. Docus (extended as a layer) provides the docs
-// theme, Nuxt Content, search, and SEO; `nuxt-convex-kit` is installed so the
+// theme, Nuxt Content, search, and SEO; `nuxt-convex-module` is installed so the
 // composables/components are available to live examples.
 
 // Nuxt CLI normally pins Vite's HMR WebSocket to the main dev server so no
@@ -27,7 +27,7 @@ const hmrPort = await getRandomPort()
 export default defineNuxtConfig({
   extends: ['docus'],
   modules: [
-    'nuxt-convex-kit',
+    'nuxt-convex-module',
   ],
   devtools: { enabled: true },
   app: {

@@ -1,17 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "nuxt-convex-kit",
+  "name": "nuxt-convex-module",
   "version": "0.1.0",
   "description": "Convex for Vue & Nuxt — a faithful port of Convex's official React/Next integration (queries, mutations, actions, pagination, file storage, SSR) with opt-in Better Auth and Polar",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qruto/nuxt-convex-kit.git"
+    "url": "git+https://github.com/qruto/nuxt-convex-module.git"
   },
   "license": "MIT",
   "author": "Slava Razum <razum@qruto.to>",
-  "homepage": "https://github.com/qruto/nuxt-convex-kit#readme",
+  "homepage": "https://github.com/qruto/nuxt-convex-module#readme",
   "bugs": {
-    "url": "https://github.com/qruto/nuxt-convex-kit/issues"
+    "url": "https://github.com/qruto/nuxt-convex-module/issues"
   },
   "funding": {
     "type": "github",
@@ -106,7 +106,7 @@
     "prepack": "pnpm run build",
     "build": "nuxt-module-build build && node scripts/normalize-module-ext.js && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",
-    "dev": "pnpm run dev:prepare && portless nuxt-convex-kit nuxt dev website",
+    "dev": "pnpm run dev:prepare && portless nuxt-convex-module nuxt dev website",
     "dev:devtools-client": "nuxt dev devtools-client-app --port 3630",
     "start": "pnpm run dev",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && node scripts/normalize-module-ext.js && nuxt prepare website",

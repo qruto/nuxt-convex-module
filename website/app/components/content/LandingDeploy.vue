@@ -4,7 +4,7 @@
 const steps = [
   {
     id: 'MODULE',
-    cmd: 'npx nuxi module add nuxt-convex-kit',
+    cmd: 'npx nuxi module add nuxt-convex-module',
     note: 'One module. Composables, components, and server helpers auto-import.',
   },
   {

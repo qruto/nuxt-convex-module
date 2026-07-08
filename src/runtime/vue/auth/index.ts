@@ -61,7 +61,7 @@ export function useConvexAuth(): {
       'Could not find Convex auth context. '
       + 'Ensure `provideConvexAuth` has been called in an ancestor component '
       + 'or that the Convex auth plugin is installed, or you might have two '
-      + 'instances of the `nuxt-convex-kit` runtime loaded in your project.',
+      + 'instances of the `nuxt-convex-module` runtime loaded in your project.',
     )
   }
   return authContext

@@ -26,7 +26,7 @@ const specs = [
           <span class="lh-title-accent text-grad">machined to match upstream.</span>
         </h1>
         <p class="lh-lead">
-          nuxt-convex-kit ports Convex's official React and Next.js integration
+          nuxt-convex-module ports Convex's official React and Next.js integration
           to Vue with the same public API — live queries, mutations, actions,
           pagination, file storage, and SSR. Better Auth and Polar wire
           themselves up when installed.
@@ -40,7 +40,7 @@ const specs = [
             <span aria-hidden="true">→</span>
           </NuxtLink>
           <a
-            href="https://github.com/qruto/nuxt-convex-kit"
+            href="https://github.com/qruto/nuxt-convex-module"
             target="_blank"
             rel="noopener"
             class="btn lh-btn"

@@ -21,7 +21,7 @@ async function prefetchAuthToken(
     initialToken.value = token ?? null
   }
   catch (error) {
-    console.warn('[nuxt-convex-kit] Failed to prefetch auth token for SSR:', error)
+    console.warn('[nuxt-convex-module] Failed to prefetch auth token for SSR:', error)
   }
 }
 

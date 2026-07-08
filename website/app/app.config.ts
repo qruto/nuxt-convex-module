@@ -30,11 +30,11 @@ export default defineAppConfig({
   },
 
   socials: {
-    github: 'https://github.com/qruto/nuxt-convex-kit',
+    github: 'https://github.com/qruto/nuxt-convex-module',
   },
 
   github: {
-    url: 'https://github.com/qruto/nuxt-convex-kit',
+    url: 'https://github.com/qruto/nuxt-convex-module',
     branch: 'main',
     rootDir: 'website',
   },

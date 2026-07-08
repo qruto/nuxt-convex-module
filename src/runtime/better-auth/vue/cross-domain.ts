@@ -61,7 +61,7 @@ export async function consumeCrossDomainOneTimeToken(): Promise<void> {
       }
     }
     catch (error) {
-      console.warn('[nuxt-convex-kit] failed to consume cross-domain one-time token', error)
+      console.warn('[nuxt-convex-module] failed to consume cross-domain one-time token', error)
     }
   }
 }

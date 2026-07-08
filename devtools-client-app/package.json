@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "nuxt-convex-kit-devtools-client",
+  "name": "nuxt-convex-module-devtools-client",
   "type": "module",
   "scripts": {
     "dev": "nuxt dev --port 3630",

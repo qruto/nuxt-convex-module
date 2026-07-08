@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const siteUrl = config.backend.siteUrl
 
   if (!siteUrl) {
-    throw new Error('[nuxt-convex-kit] NUXT_PUBLIC_CONVEX_SITE_URL is not configured. Auth proxy cannot forward requests.')
+    throw new Error('[nuxt-convex-module] NUXT_PUBLIC_CONVEX_SITE_URL is not configured. Auth proxy cannot forward requests.')
   }
 
   return backendAuth(event, { convexSiteUrl: siteUrl }).handler()

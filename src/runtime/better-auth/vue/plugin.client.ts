@@ -12,7 +12,7 @@ export default defineNuxtPlugin<ConvexNuxtInjection>(async (nuxtApp) => {
   const url = useRuntimeConfig().public.backend.url
 
   if (!url) {
-    console.warn('[nuxt-convex-kit] No Convex URL configured for client plugin.')
+    console.warn('[nuxt-convex-module] No Convex URL configured for client plugin.')
     return { provide: {} }
   }
 

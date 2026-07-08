@@ -55,9 +55,9 @@ const sameNames = [
         <article class="ldp-plate">
           <header class="ldp-top mono">
             <span class="etched">VUE</span>
-            <span class="etched dim">nuxt-convex-kit</span>
+            <span class="etched dim">nuxt-convex-module</span>
           </header>
-          <pre class="ldp-code mono"><code><span class="ln tk-c">// Vue — nuxt-convex-kit</span><span class="ln tk-c">// composables auto-import in Nuxt</span><span class="ln"><span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#backend/api'</span></span><span class="ln" /><span class="ln hl"><span class="tk-k">const</span> messages = <span class="tk-f">useQuery</span>(api.messages.list, {})</span><span class="ln hl"><span class="tk-k">const</span> send = <span class="tk-f">useMutation</span>(api.messages.send)</span></code></pre>
+          <pre class="ldp-code mono"><code><span class="ln tk-c">// Vue — nuxt-convex-module</span><span class="ln tk-c">// composables auto-import in Nuxt</span><span class="ln"><span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#backend/api'</span></span><span class="ln" /><span class="ln hl"><span class="tk-k">const</span> messages = <span class="tk-f">useQuery</span>(api.messages.list, {})</span><span class="ln hl"><span class="tk-k">const</span> send = <span class="tk-f">useMutation</span>(api.messages.send)</span></code></pre>
         </article>
       </div>
 
