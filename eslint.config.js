@@ -18,8 +18,10 @@ export default createConfigForNuxt({
   .append(
     // `.agents/` holds AI tooling references (skill scripts, fetched examples),
     // not package source — exclude it from the project's lint rules.
+    // `.deepsec/` is the deepsec security-scanner workspace (its own
+    // package.json/lockfile) — not package source either.
     {
-      ignores: ['.agents/**'],
+      ignores: ['.agents/**', '.deepsec/**'],
     },
     // Playground demo components and DevTools panel pages use short,
     // single-word names by design.
