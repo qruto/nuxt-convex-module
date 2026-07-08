@@ -78,6 +78,19 @@ jobs:
             pnpm exec changelogen --release --"$RELEASE_TYPE"
           fi
 
+      # Guard against the publish/push race: the gate steps above take minutes,
+      # and if a commit lands on the release branch meanwhile, the push below
+      # would be rejected — after npm had already irrevocably consumed the
+      # version number. Fail here instead, before anything is published;
+      # re-running the release is then a clean recovery.
+      - name: Ensure the release branch has not moved
+        run: |
+          git fetch origin "$GITHUB_REF_NAME"
+          if ! git merge-base --is-ancestor "origin/$GITHUB_REF_NAME" HEAD; then
+            echo "::error::origin/$GITHUB_REF_NAME gained commits while the release was building — nothing was published; re-run the release."
+            exit 1
+          fi
+
       # Publish first; only mutate the remote once npm has accepted the release.
       # `npm publish` runs `prepack` (the build); on failure nothing has been pushed.
       - name: Publish to npm
