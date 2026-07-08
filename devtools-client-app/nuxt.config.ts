@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 // The DevTools panel app. Served inside the Nuxt DevTools iframe at
-// /__nuxt-convex-kit — via sirv from dist/devtools-client in the published
+// /__nuxt-convex-module — via sirv from dist/devtools-client in the published
 // package, or via the Vite dev proxy (port 3630, `pnpm dev:devtools-client`)
 // while developing this module.
 export default defineNuxtConfig({
@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: false },
   app: {
-    baseURL: '/__nuxt-convex-kit',
+    baseURL: '/__nuxt-convex-module',
   },
   compatibilityDate: 'latest',
   nitro: {

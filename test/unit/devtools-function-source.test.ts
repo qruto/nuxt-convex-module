@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { resolveFunctionSource } from '../../src/devtools/resolve-function-source'
 
-const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-convex-kit-fn-source-'))
+const rootDir = mkdtempSync(join(tmpdir(), 'nuxt-convex-module-fn-source-'))
 const functionsDir = 'convex'
 const base = join(rootDir, functionsDir)
 

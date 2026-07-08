@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
-  "name": "nuxt-convex-kit-website",
+  "name": "nuxt-convex-module-website",
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
@@ -11,7 +11,7 @@
   "dependencies": {
     "@convex-dev/polar": "^0.9.2",
     "@polar-sh/checkout": "^0.3.0",
-    "nuxt-convex-kit": "workspace:*",
+    "nuxt-convex-module": "workspace:*",
     "convex": "^1.41.0",
     "docus": "^5.12.2",
     "nuxt": "catalog:"

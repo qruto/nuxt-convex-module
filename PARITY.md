@@ -1,6 +1,6 @@
 # Upstream parity manifest
 
-`nuxt-convex-kit` is a **faithful Vue/Nuxt port** of Convex's official React/Next
+`nuxt-convex-module` is a **faithful Vue/Nuxt port** of Convex's official React/Next
 integration plus the opt-in `@convex-dev/better-auth` and `@convex-dev/polar` add-ons. It is
 kept **diffable against upstream** so new upstream releases can be tracked file-for-file —
 including by an automated sync agent (see [AGENTS.md](./AGENTS.md) for the translation rules).
@@ -58,7 +58,7 @@ dependency — not reimplemented: `convexClient` and `crossDomainClient` from
 override it (to choose plugins, e.g. add `crossDomainClient()` for cross-domain auth) by pointing
 `convex.betterAuth.authClient` at their own module; the runtime resolves it through the
 `#convex/auth-client` alias. Both Convex client plugins are also re-exported from
-`nuxt-convex-kit/better-auth/vue` for convenience.
+`nuxt-convex-module/better-auth/vue` for convenience.
 
 Nuxt-specific files with no single upstream origin (the Nuxt request lifecycle has no React
 equivalent): `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/proxy.ts` (the proxy delegates

@@ -153,7 +153,7 @@ Convex with Clerk.
 
 ```vue
 <script setup lang="ts">
-import { provideConvexAuthFromClerk } from 'nuxt-convex-kit/clerk/vue'
+import { provideConvexAuthFromClerk } from 'nuxt-convex-module/clerk/vue'
 provideConvexAuthFromClerk()
 </script>
 ```

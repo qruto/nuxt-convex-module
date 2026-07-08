@@ -5,7 +5,7 @@ import type { Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
-const logger = useLogger('nuxt-convex-kit')
+const logger = useLogger('nuxt-convex-module')
 
 /**
  * Configuration for the opt-in Better Auth integration.
@@ -78,7 +78,7 @@ declare module '@nuxt/schema' {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-convex-kit',
+    name: 'nuxt-convex-module',
     configKey: 'convex',
     // `moduleDependencies` (below) is a Nuxt >= 4.1 feature — fail fast with a
     // clear kit error on older Nuxt instead of silently skipping nuxt-security.
@@ -397,7 +397,7 @@ function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
   let notifiedMissing = false
 
   addPluginTemplate({
-    filename: 'nuxt-convex-kit-provide-api.mjs',
+    filename: 'nuxt-convex-module-provide-api.mjs',
     getContents: () => {
       if (!hasGeneratedApi(nuxt.options.rootDir, functionsDir)) {
         if (nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
@@ -477,13 +477,13 @@ export function backendTypeFallbackContents(hasApi: boolean, functionsDir: strin
 function registerBackendTypeFallback(nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
   addTypeTemplate({
-    filename: 'types/nuxt-convex-kit-backend.d.ts',
+    filename: 'types/nuxt-convex-module-backend.d.ts',
     getContents: () => backendTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
   }, { nuxt: true, nitro: true })
 }
 
 /** Templates that must re-render when `convex dev` emits `_generated/api`. */
-const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-kit-provide-api.mjs', 'types/nuxt-convex-kit-backend.d.ts']
+const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-backend.d.ts']
 
 /**
  * In dev, re-render the codegen-guarded templates the instant `convex dev`
@@ -690,7 +690,7 @@ export function convexResourceSrc(url?: string): string[] {
 }
 
 /**
- * Apply nuxt-convex-kit's secure-by-default, Convex-aware CSP onto a security config
+ * Apply nuxt-convex-module's secure-by-default, Convex-aware CSP onto a security config
  * object (mutated in place). This tightens the directives we can safely
  * pre-fill — locking network egress and Convex-served media to same-origin plus
  * the Convex deployment — while leaving every other directive (script/style/

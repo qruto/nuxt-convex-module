@@ -649,7 +649,7 @@ export function useConvexOrThrow(composableName: string): ConvexVueClient {
   if (client === undefined) {
     throw new Error(
       `Could not find Convex client! \`${composableName}\` must be used in the Vue component `
-      + 'tree where the Convex client has been provided — in Nuxt, install the `nuxt-convex-kit` '
+      + 'tree where the Convex client has been provided — in Nuxt, install the `nuxt-convex-module` '
       + 'module (or `provide(ConvexClientKey, client)`). Did you forget it? '
       + 'See https://docs.convex.dev/quick-start',
     )
