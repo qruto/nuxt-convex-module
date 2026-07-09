@@ -81,6 +81,11 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
 - `vue/composables/use-upload.ts`, `use-upload-queue.ts`, `use-storage-url.ts` — file-storage
   helpers (not in `convex/react`).
 - `vue/provide.ts` — `provideBackendApi` / `useBackendApi` app-API wiring.
+- `nuxt/composables/use-async-query.ts` — `useAsyncQuery` / `useConvexAsyncQuery`, the
+  Nuxt-idiomatic data layer (`useAsyncData`-style SSR fetch → payload hydration → live
+  subscription upgrade, returning `{ data, error, status, refresh }`). Lives under `runtime/nuxt/`
+  (imports `#app`), deliberately NOT in the ported `nuxt/index.ts` (which maps to upstream
+  `nextjs/index.ts`).
 - `vue/auth/index.ts` also exports `createScopedConvexAuthState` — the `EffectScope`-wrapped
   variant of `createConvexAuthState`, used by the Better Auth client plugin to dispose the auth
   watchers.

@@ -6,6 +6,7 @@
   "entryPoints": [
     "src/runtime/vue/index.ts",
     "src/runtime/nuxt/index.ts",
+    "src/runtime/nuxt/composables/use-async-query.ts",
     "src/runtime/clerk/vue/index.ts",
     "src/runtime/auth0/vue/index.ts",
     "src/runtime/better-auth/vue/index.ts",
