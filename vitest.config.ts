@@ -44,6 +44,26 @@ export default defineConfig({
           environment: 'node',
         },
       },
+      {
+        resolve: {
+          alias: {
+            '#imports': nuxtImportsTestAlias,
+            '#convex/auth-client': authClientTestAlias,
+          },
+        },
+        // `import.meta.server` is compile-time: the plain unit project compiles
+        // it falsy (client build), this project compiles it truthy the same way
+        // Nuxt's server bundle does — so SSR-only branches get real coverage.
+        define: {
+          'import.meta.server': 'true',
+          'import.meta.client': 'false',
+        },
+        test: {
+          name: 'unit-server',
+          include: ['test/unit-server/**/*.{test,spec}.ts'],
+          environment: 'node',
+        },
+      },
       await defineVitestProject({
         resolve: {
           alias: {

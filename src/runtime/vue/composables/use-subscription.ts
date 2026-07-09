@@ -61,6 +61,13 @@ export function useSubscription<Value>({
   // render/commit split, so a scope-bound `watchEffect` (torn down via
   // `onCleanup`/unmount) is the sanctioned analog.
   watchEffect((onCleanup) => {
+    // Upstream subscribes in a passive effect, which React never runs during
+    // SSR; Vue's watchEffect does run during SSR setup, so skip subscribing on
+    // the server (the initial `getCurrentValue()` read above already happened).
+    if (import.meta.server) {
+      return
+    }
+
     let didUnsubscribe = false
 
     const checkForUpdates = () => {
