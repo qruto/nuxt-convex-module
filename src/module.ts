@@ -536,6 +536,9 @@ function registerVueComposables(resolver: Resolver): void {
     { name: 'useBackendApi', from: resolver.resolve('./runtime/vue/provide') },
     { name: 'useBackendNamespace', from: resolver.resolve('./runtime/vue/provide') },
     { name: 'usePreloadedQuery', from: resolver.resolve('./runtime/vue/hydration') },
+    // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
+    { name: 'useAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
+    { name: 'useConvexAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
     { name: 'usePaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'useConvexPaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'usePaginatedQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },

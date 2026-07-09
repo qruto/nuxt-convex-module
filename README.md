@@ -36,6 +36,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 
 **Data**
 - `useQuery` / `useConvexQuery` — reactive live query (plus `useQuery_experimental`, the 1.39 result/error split)
+- `useAsyncQuery` / `useConvexAsyncQuery` — SSR-fetched, payload-hydrated live query with Nuxt's `{ data, error, status, refresh }` shape
 - `useQueries` / `useConvexQueries` — several live queries over one subscription
 - `useMutation` / `useConvexMutation` — call a Convex mutation
 - `useAction` / `useConvexAction` — call a Convex action
@@ -173,7 +174,8 @@ npx convex dev
 <script setup lang="ts">
 import { api } from '#backend/api'
 
-const messages = useQuery(api.messages.list, {})
+// SSR-rendered AND live-updating — Nuxt's { data, status, error } shape:
+const { data: messages } = useAsyncQuery(api.messages.list, {})
 const send = useMutation(api.messages.send)
 </script>
 
