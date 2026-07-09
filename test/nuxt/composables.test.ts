@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h, provide } from 'vue'
 import type { ConnectionState } from 'convex/browser'
-import { makeFunctionReference } from 'convex/server'
+import { getFunctionName, makeFunctionReference, type FunctionReference } from 'convex/server'
 import { ConvexClientKey, ConvexVueClient, useConvex } from '../../src/runtime/vue/client'
 import { mockAuthState, mountWithConvex } from '../helpers/vue_test_utils'
 import { silentConnectLogger } from '../helpers/silent-logger'
@@ -103,6 +103,18 @@ describe('useMutation', () => {
     await result({ text: 'New task' })
     expect(mutationSpy).toHaveBeenCalledWith(mutationRef, { text: 'New task' }, { optimisticUpdate: undefined })
   })
+
+  it('accepts a string function name and resolves it to a reference', async () => {
+    const mutationSpy = vi.spyOn(client, 'mutation').mockImplementation(async () => null as never)
+
+    const { result } = await mountWithConvex(client, () =>
+      useMutation('tasks:create' as unknown as FunctionReference<'mutation'>))
+
+    await result({ text: 'New task' })
+    const [calledRef, calledArgs] = mutationSpy.mock.calls[0]!
+    expect(getFunctionName(calledRef)).toBe('tasks:create')
+    expect(calledArgs).toEqual({ text: 'New task' })
+  })
 })
 
 describe('useAction', () => {
@@ -116,17 +128,43 @@ describe('useAction', () => {
     await result({ id: '123' })
     expect(actionSpy).toHaveBeenCalledWith(actionRef, { id: '123' })
   })
+
+  it('accepts a string function name and resolves it to a reference', async () => {
+    const actionSpy = vi.spyOn(client, 'action').mockImplementation(async () => null as never)
+
+    const { result } = await mountWithConvex(client, () =>
+      useAction('tasks:process' as unknown as FunctionReference<'action'>))
+
+    await result({ id: '123' })
+    const [calledRef, calledArgs] = actionSpy.mock.calls[0]!
+    expect(getFunctionName(calledRef)).toBe('tasks:process')
+    expect(calledArgs).toEqual({ id: '123' })
+  })
 })
 
 describe('useConvexConnectionState', () => {
   it('returns a reactive connection state ref', async () => {
-    vi.spyOn(client, 'connectionState').mockReturnValue(initialConnectionState)
-    vi.spyOn(client, 'subscribeToConnectionState').mockReturnValue(() => {})
+    let notifyChange: ((state: ConnectionState) => void) | undefined
+    const connectionStateSpy = vi
+      .spyOn(client, 'connectionState')
+      .mockReturnValue(initialConnectionState)
+    vi.spyOn(client, 'subscribeToConnectionState').mockImplementation((callback) => {
+      notifyChange = callback
+      return () => {}
+    })
 
     const { result } = await mountWithConvex(client, () => useConvexConnectionState())
 
     expect(result.value).toBeDefined()
     expect(result.value.isWebSocketConnected).toBe(true)
+
+    // A connection-state change notification re-reads the (now different)
+    // state and updates the returned ref.
+    const disconnectedState = { ...initialConnectionState, isWebSocketConnected: false }
+    connectionStateSpy.mockReturnValue(disconnectedState)
+    notifyChange!(disconnectedState)
+
+    expect(result.value.isWebSocketConnected).toBe(false)
   })
 })
 

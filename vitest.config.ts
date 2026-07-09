@@ -24,10 +24,10 @@ export default defineConfig({
       // climbs; the harder build-time/runtime files (module, auth plugins/
       // middleware) keep the global ceiling modest for now.
       thresholds: {
-        statements: 75,
-        branches: 68,
-        functions: 75,
-        lines: 75,
+        statements: 84,
+        branches: 77,
+        functions: 85,
+        lines: 85,
       },
     },
     projects: [
@@ -37,6 +37,13 @@ export default defineConfig({
             '#imports': nuxtImportsTestAlias,
             '#convex/auth-client': authClientTestAlias,
           },
+        },
+        // The plain unit project is the client build: `import.meta.client`
+        // compiles truthy (and `import.meta.server` stays undefined → falsy),
+        // so client-only branches — e.g. the base plugin's missing-URL warning
+        // — get real coverage. The unit-server project below inverts both.
+        define: {
+          'import.meta.client': 'true',
         },
         test: {
           name: 'unit',

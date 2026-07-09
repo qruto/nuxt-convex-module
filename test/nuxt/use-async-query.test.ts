@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { anyApi, type FunctionReference } from 'convex/server'
-import { defineComponent, h, nextTick, provide } from 'vue'
+import { defineComponent, h, nextTick, provide, ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { ConvexVueClient, ConvexClientKey } from '../../src/runtime/vue/client'
 import { defaultAsyncQueryKey, useAsyncQuery, type AsyncQueryReturn } from '../../src/runtime/nuxt/composables/use-async-query'
@@ -129,6 +129,61 @@ describe('useAsyncQuery', () => {
 
     expect(result.data.value).toBeUndefined()
     expect(result.status.value).toBe('idle')
+    expect(result.error.value).toBeNull()
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('flips status to error when the live subscription errors after success', async () => {
+    const client = testClient()
+    seed(client, { arg: 'e' }, { x: 1 })
+
+    const { mounted, result } = await mountAsyncQuery(client, () =>
+      useAsyncQuery(queryRef, { arg: 'e' }, { key: 'async-query:live-error' }),
+    )
+    await result
+    await nextTick()
+
+    expect(result.status.value).toBe('success')
+    expect(result.data.value).toStrictEqual({ x: 1 })
+
+    // The live subscription errors after the initial fetch succeeded.
+    seed(client, { arg: 'e' }, new Error('live boom'))
+    await nextTick()
+
+    expect(result.status.value).toBe('error')
+    expect(result.error.value).toBeInstanceOf(Error)
+    expect(String(result.error.value)).toContain('live boom')
+    // asyncData still holds the fetched payload, which `data` falls back to.
+    expect(result.data.value).toStrictEqual({ x: 1 })
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('refresh yields a null payload once args flip to skip', async () => {
+    const client = testClient()
+    seed(client, { arg: 'r' }, { x: 1 })
+    const args = ref<{ arg: string } | 'skip'>({ arg: 'r' })
+
+    const { mounted, result } = await mountAsyncQuery(client, () =>
+      useAsyncQuery(queryRef, args, { key: 'async-query:refresh-skip' }),
+    )
+    await result
+    await nextTick()
+
+    expect(result.data.value).toStrictEqual({ x: 1 })
+    expect(result.status.value).toBe('success')
+
+    args.value = 'skip'
+    await nextTick()
+    await result.refresh()
+    await nextTick()
+
+    // The handler saw 'skip' and returned a null payload; with the live
+    // subscription also gone, no data remains.
+    expect(result.data.value).toBeUndefined()
     expect(result.error.value).toBeNull()
 
     mounted.unmount()

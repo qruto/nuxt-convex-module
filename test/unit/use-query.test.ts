@@ -1,6 +1,14 @@
-import { describe, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
+import { createApp, effectScope } from 'vue'
 import { makeFunctionReference } from 'convex/server'
-import type { useQuery as useQueryReal } from '../../src/runtime/vue/composables/use-query'
+import type { Value } from 'convex/values'
+import {
+  useQuery as useQueryImpl,
+  useQuery_experimental,
+  type useQuery as useQueryReal,
+} from '../../src/runtime/vue/composables/use-query'
+import { ConvexClientKey, type ConvexVueClient } from '../../src/runtime/vue/client'
+import FakeWatch from '../fake-watch'
 
 // Intentional noop, we're only testing types.
 const useQuery = (() => {}) as unknown as typeof useQueryReal
@@ -28,6 +36,56 @@ describe('useQuery types', () => {
 
     // @ts-expect-error adding args is not allowed
     useQuery(noArgsQuery, { _arg: 1 })
+  })
+})
+
+// ── runtime error branches ───────────────────────────────────────────────────
+// Mirroring upstream's render-time throw, the composables' computed getters
+// throw (or return `status: 'error'`) when the observer stored an `Error` as
+// the query result. `app.runWithContext` stands in for a component tree so
+// `inject(ConvexClientKey)` resolves; the fake client's `watchQuery` hands
+// back a watch whose `localQueryResult` throws.
+
+function runWithThrowingWatch<T>(error: Error, fn: () => T): { result: T, stop: () => void } {
+  const watch = new FakeWatch<Value>()
+  watch.localQueryResult = () => {
+    throw error
+  }
+
+  const app = createApp({ render: () => null })
+  app.provide(ConvexClientKey, { watchQuery: () => watch } as unknown as ConvexVueClient)
+
+  const scope = effectScope()
+  const result = app.runWithContext(() => scope.run(fn))!
+  return { result, stop: () => scope.stop() }
+}
+
+describe('useQuery runtime error branches', () => {
+  test('useQuery throws the stored Error when the value is read', () => {
+    const error = new Error('server rejected the query')
+    const { result, stop } = runWithThrowingWatch(error, () =>
+      useQueryImpl(argsQuery, { _arg: 'asdf' }))
+
+    expect(() => result.value).toThrow(error)
+    stop()
+  })
+
+  test('useQuery_experimental with throwOnError throws when the value is read', () => {
+    const error = new Error('server rejected the query')
+    const { result, stop } = runWithThrowingWatch(error, () =>
+      useQuery_experimental({ query: argsQuery, args: { _arg: 'asdf' }, throwOnError: true }))
+
+    expect(() => result.value).toThrow(error)
+    stop()
+  })
+
+  test('useQuery_experimental returns the error result state by default', () => {
+    const error = new Error('server rejected the query')
+    const { result, stop } = runWithThrowingWatch(error, () =>
+      useQuery_experimental({ query: argsQuery, args: { _arg: 'asdf' } }))
+
+    expect(result.value).toStrictEqual({ error, status: 'error' })
+    stop()
   })
 })
 

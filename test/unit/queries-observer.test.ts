@@ -61,6 +61,56 @@ test('getLocalResults', () => {
   })
 })
 
+test('getLocalResults stores a thrown Error as the result value', () => {
+  // Callers distinguish errors from normal results by the value being an
+  // `Error` instance, so a throwing `localQueryResult` is collected, not thrown.
+  const error = new Error('query failed')
+  createWatch.mockImplementation(() => {
+    const watch = new FakeWatch<Value>()
+    watch.localQueryResult = () => {
+      throw error
+    }
+    return watch
+  })
+
+  const queries: RequestForQueries = {
+    query: {
+      query: anyApi.myQuery!.default!,
+      args: {},
+    },
+  }
+
+  const results = queriesObserver.getLocalResults(queries)
+  expect(results.query).toBe(error)
+})
+
+test('getLocalResults re-throws non-Error values', () => {
+  const nonError = { reason: 'not an Error instance' }
+  createWatch.mockImplementation(() => {
+    const watch = new FakeWatch<Value>()
+    watch.localQueryResult = () => {
+      throw nonError
+    }
+    return watch
+  })
+
+  const queries: RequestForQueries = {
+    query: {
+      query: anyApi.myQuery!.default!,
+      args: {},
+    },
+  }
+
+  let thrown: unknown
+  try {
+    queriesObserver.getLocalResults(queries)
+  }
+  catch (e) {
+    thrown = e
+  }
+  expect(thrown).toBe(nonError)
+})
+
 test('if the query changes, only stay subscribed to the second query', () => {
   queriesObserver.setQueries({
     query: {

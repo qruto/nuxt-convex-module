@@ -41,8 +41,27 @@ describe('base Convex client plugin', () => {
 
   it('no-ops when no Convex URL is configured', () => {
     runtimeConfig.public.backend.url = ''
+    // Drop the client-side warning (asserted separately below) from the output.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { provided, app } = fakeNuxtApp()
     runPlugin(app)
     expect(provided.size).toBe(0)
+    warnSpy.mockRestore()
+  })
+
+  it('warns on the client when no Convex URL is configured', () => {
+    // The unit project compiles `import.meta.client` truthy (client build), so
+    // the client-only warning branch is reachable here.
+    runtimeConfig.public.backend.url = ''
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const { provided, app } = fakeNuxtApp()
+    runPlugin(app)
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[nuxt-convex-module] No Convex URL configured; client not created.',
+    )
+    expect(provided.size).toBe(0)
+    warnSpy.mockRestore()
   })
 })

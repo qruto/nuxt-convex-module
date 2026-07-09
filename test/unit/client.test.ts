@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ws from 'ws'
 import { makeFunctionReference } from 'convex/server'
+import { BaseConvexClient } from 'convex/browser'
+import type { QueryJournal } from 'convex/browser'
 import { ConvexVueClient } from '../../src/runtime/vue/client'
 import { createMutation } from '../../src/runtime/vue/composables/use-mutation'
 import { silentConnectLogger } from '../helpers/silent-logger'
@@ -9,6 +11,14 @@ const address = 'https://127.0.0.1:3001'
 
 const testQuery = makeFunctionReference<'query'>('myQuery:default')
 const testMutation = makeFunctionReference<'mutation'>('myMutation:default')
+const testAction = makeFunctionReference<'action'>('myAction:default')
+
+// The published `BaseConvexClient` types omit these `@internal` members
+// (present at runtime) — mirror the cast the client itself uses.
+type SyncClientWithInternals = BaseConvexClient & {
+  setAdminAuth(token: string, identity?: unknown): void
+  localQueryLogs(udfPath: string, args?: Record<string, unknown>): string[] | undefined
+}
 
 // `address` is intentionally unreachable; `silentConnectLogger` drops the
 // underlying convex client's connection logs (irrelevant to these tests) while
@@ -84,6 +94,80 @@ describe('ConvexVueClient', () => {
 
       expect(typeof unsubscribe).toBe('function')
       unsubscribe()
+    })
+  })
+
+  describe('action', () => {
+    it('resolves the function name and forwards args to the sync client', async () => {
+      // Trigger lazy sync creation, then stub the underlying action so no
+      // request is actually sent to the (unreachable) backend.
+      void client.connectionState()
+      const sync = Reflect.get(client, 'cachedSync') as BaseConvexClient
+      const actionSpy = vi.spyOn(sync, 'action').mockResolvedValue('action result')
+
+      await expect(client.action(testAction, { num: 1 })).resolves.toBe('action result')
+      expect(actionSpy).toHaveBeenCalledWith('myAction:default', { num: 1 })
+    })
+  })
+
+  describe('setAdminAuth', () => {
+    it('stores admin credentials before sync exists and applies them at first sync access', () => {
+      const adminAuthSpy = vi
+        .spyOn(BaseConvexClient.prototype as SyncClientWithInternals, 'setAdminAuth')
+        .mockImplementation(() => {})
+      const identity = { name: 'Test Admin' }
+
+      // No sync client yet: the credentials are only stored.
+      client.setAdminAuth('admin-token', identity)
+      expect(adminAuthSpy).not.toHaveBeenCalled()
+
+      // First `sync` access (via connectionState) applies them lazily.
+      void client.connectionState()
+      expect(adminAuthSpy).toHaveBeenCalledWith('admin-token', identity)
+
+      adminAuthSpy.mockRestore()
+    })
+
+    it('forwards immediately when the sync client already exists', () => {
+      void client.connectionState()
+      const sync = Reflect.get(client, 'cachedSync') as SyncClientWithInternals
+      const adminAuthSpy = vi.spyOn(sync, 'setAdminAuth').mockImplementation(() => {})
+
+      client.setAdminAuth('admin-token')
+      expect(adminAuthSpy).toHaveBeenCalledWith('admin-token', undefined)
+
+      adminAuthSpy.mockRestore()
+    })
+
+    it('throws after the client has been closed', async () => {
+      await client.close()
+      expect(() => client!.setAdminAuth('admin-token')).toThrow(
+        'ConvexVueClient has already been closed.',
+      )
+      client = undefined as unknown as ConvexVueClient // already closed
+    })
+  })
+
+  describe('watch journal and localQueryLogs', () => {
+    it('return undefined before the sync client exists', () => {
+      const watch = client.watchQuery(testQuery, {})
+      expect(watch.journal()).toBeUndefined()
+      expect(watch.localQueryLogs()).toBeUndefined()
+    })
+
+    it('forward to the sync client once it exists', () => {
+      void client.connectionState()
+      const sync = Reflect.get(client, 'cachedSync') as SyncClientWithInternals
+      const journalSpy = vi
+        .spyOn(sync, 'queryJournal')
+        .mockReturnValue('query journal' as unknown as QueryJournal)
+      const logsSpy = vi.spyOn(sync, 'localQueryLogs').mockReturnValue(['log line'])
+
+      const watch = client.watchQuery(testQuery, {})
+      expect(watch.journal()).toBe('query journal')
+      expect(journalSpy).toHaveBeenCalledWith('myQuery:default', {})
+      expect(watch.localQueryLogs()).toEqual(['log line'])
+      expect(logsSpy).toHaveBeenCalledWith('myQuery:default', {})
     })
   })
 
@@ -169,6 +253,25 @@ describe('ConvexVueClient logger', () => {
     for (const level of ['logVerbose', 'log', 'warn', 'error'] as const) {
       expect(typeof client.logger[level]).toBe('function')
     }
+  })
+
+  it('default logger forwards log/warn/error arguments to the console', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const client = new ConvexVueClient(address)
+    client.logger.log('log line', 1)
+    client.logger.warn('warn line', { detail: true })
+    client.logger.error('error line', 'details')
+
+    expect(logSpy).toHaveBeenCalledWith('log line', 1)
+    expect(warnSpy).toHaveBeenCalledWith('warn line', { detail: true })
+    expect(errorSpy).toHaveBeenCalledWith('error line', 'details')
+
+    logSpy.mockRestore()
+    warnSpy.mockRestore()
+    errorSpy.mockRestore()
   })
 
   it('uses a noop logger when logger is false', () => {

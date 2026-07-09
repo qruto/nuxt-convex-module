@@ -56,6 +56,13 @@ export class FakeXhr {
     this.onload?.()
   }
 
+  /** Complete the request with a raw (possibly non-JSON) body. */
+  resolveWithBody(body: string, status = 200): void {
+    this.status = status
+    this.responseText = body
+    this.onload?.()
+  }
+
   /** Complete the request with a non-2xx status. */
   failWith(status: number, text = ''): void {
     this.status = status

@@ -303,6 +303,73 @@ describe('auth/nuxt/server', () => {
     expect(await response.text()).toBe('{"user":null}')
   })
 
+  it('throws when the Convex site URL is not set anywhere', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    // beforeEach cleared the option, runtime config, and env sources.
+    expect(() => backendAuth({ context: {} } as never)).toThrow(
+      'NUXT_PUBLIC_CONVEX_SITE_URL is not set.\n'
+      + 'This is automatically set in the Convex backend, but must be set in the Nuxt environment.\n'
+      + 'For local development, this can be set in the .env file, '
+      + 'or via the `backend.siteUrl` option in nuxt.config.',
+    )
+  })
+
+  it('rejects a .convex.cloud deployment URL where the .convex.site URL is expected', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    expect(() => backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://x.convex.cloud',
+    })).toThrow(
+      'NUXT_PUBLIC_CONVEX_SITE_URL should be set to your Convex Site URL, which ends in .convex.site.\n'
+      + 'Currently set to https://x.convex.cloud.',
+    )
+  })
+
+  it('rethrows fetch errors as-is when the jwt cache is disabled', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+    const failure = new Error('boom')
+
+    mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
+    mockFetchQuery.mockRejectedValue(failure)
+
+    const auth = backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+    })
+
+    await expect(auth.fetchAuthQuery(queryRef, {} as never)).rejects.toBe(failure)
+
+    // No second token fetch, no retry — the error surfaces untouched.
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
+    expect(mockFetchQuery).toHaveBeenCalledTimes(1)
+  })
+
+  // The flip side of the retry test above: the port's `callWithToken` only
+  // retries genuine auth errors (see the intentional-divergence comment in
+  // server.ts) — everything else is rethrown without a token refresh.
+  it('rethrows non-auth errors without refreshing even when the jwt cache is enabled', async () => {
+    const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+    const failure = new Error('validation failed')
+
+    mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
+    mockFetchQuery.mockRejectedValue(failure)
+
+    const auth = backendAuth({ context: {} } as never, {
+      convexSiteUrl: 'https://example.convex.site',
+      jwtCache: {
+        enabled: true,
+        isAuthError: () => false,
+      },
+    })
+
+    await expect(auth.fetchAuthQuery(queryRef, {} as never)).rejects.toBe(failure)
+
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
+    expect(mockFetchQuery).toHaveBeenCalledTimes(1)
+  })
+
   it('uses Nuxt runtime config for the Convex site URL when no override or env is set', async () => {
     const { backendAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
     setNuxtRuntimeConfigForTests({

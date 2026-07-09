@@ -109,6 +109,33 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     expect(getToken).toHaveBeenLastCalledWith({ skipCache: false })
   })
 
+  it('resolves a null token instead of throwing when Clerk getToken rejects', async () => {
+    const getToken = vi.fn(async () => {
+      throw new Error('clerk is down')
+    })
+    const useClerk: ClerkUseAuthOverride = () => ({
+      isLoaded: computed(() => true),
+      isSignedIn: computed(() => true),
+      getToken: computed(() => getToken),
+      orgId: computed(() => null),
+      orgRole: computed(() => null),
+      sessionClaims: computed(() => null),
+    }) as never
+
+    const { client, fetchToken } = makeClient()
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        return () => h('div')
+      },
+    })
+    await mountSuspended(Wrapper)
+    await nextTick()
+
+    await expect(fetchToken()({ forceRefreshToken: false })).resolves.toBeNull()
+    expect(getToken).toHaveBeenCalledTimes(1)
+  })
+
   it('re-runs setAuth when the active organization changes', async () => {
     const orgId = ref<string | null>('org-1')
     const useClerk: ClerkUseAuthOverride = () => ({
