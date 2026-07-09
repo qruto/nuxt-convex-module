@@ -6,6 +6,7 @@
     "node_modules",
     "website",
     "devtools-client-app",
+    "test/fixtures",
     ".deepsec"
   ]
 }
