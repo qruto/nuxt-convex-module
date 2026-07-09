@@ -27,25 +27,27 @@ Actions tab → "Release" → Run workflow   (.github/workflows/release.yml)
 npm Trusted Publishing can only be configured **after** a package exists on the registry, so the
 first version is published manually:
 
-1. **Publish `v1` manually** (one time only), then tag it so `changelogen` has a baseline:
+1. **Publish the first release manually** (one time only), then tag the version you actually
+   published (the current `version` in `package.json`, e.g. `v0.1.0`) so `changelogen` has a
+   baseline:
 
    ```sh
    npm login
    pnpm run build      # produces dist/
    npm publish         # uses publishConfig.access=public from package.json
-   git tag v1.0.0 && git push origin v1.0.0
+   git tag v0.1.0 && git push origin v0.1.0
    ```
 
 2. **Configure the trusted publisher** at
-   <https://www.npmjs.com/package/nuxt-backend/access> → **Trusted Publisher** →
+   <https://www.npmjs.com/package/nuxt-convex-module/access> → **Trusted Publisher** →
    *GitHub Actions*:
 
-   | Field               | Value           |
-   | ------------------- | --------------- |
-   | Organization / user | `qruto`         |
-   | Repository          | `nuxt-backend`  |
-   | Workflow filename   | `release.yml`   |
-   | Environment         | *(leave empty)* |
+   | Field               | Value                 |
+   | ------------------- | --------------------- |
+   | Organization / user | `qruto`               |
+   | Repository          | `nuxt-convex-module`  |
+   | Workflow filename   | `release.yml`         |
+   | Environment         | *(leave empty)*       |
 
    Optionally enable **"Require two-factor authentication and disallow tokens"** so the package
    can _only_ be published through this workflow.

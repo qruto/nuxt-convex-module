@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a new feature or enhancement for nuxt-backend
+description: Suggest a new feature or enhancement for nuxt-convex-module
 labels: ["enhancement"]
 body:
   - type: markdown
