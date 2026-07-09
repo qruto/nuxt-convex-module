@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // `useAction` returns a stable callable — a one-shot promise per call,
 // not a reactive subscription. This action runs in the Node runtime with

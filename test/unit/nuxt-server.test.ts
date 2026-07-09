@@ -97,7 +97,7 @@ describe('Nuxt server utilities', () => {
       delete process.env.NUXT_PUBLIC_CONVEX_URL
       setNuxtRuntimeConfigForTests({
         public: {
-          backend: {
+          convex: {
             url: 'https://runtime.convex.cloud',
           },
         },
@@ -240,7 +240,7 @@ describe('Nuxt server utilities', () => {
 
   // Kept last: it swaps the `#imports` mock and resets the module registry,
   // which would detach earlier tests from the shared nuxt-imports helper.
-  describe('getBackendRuntimeConfig', () => {
+  describe('getConvexRuntimeConfig', () => {
     it('returns {} when useRuntimeConfig throws (outside a Nuxt context)', async () => {
       vi.resetModules()
       vi.doMock('#imports', () => ({
@@ -249,8 +249,8 @@ describe('Nuxt server utilities', () => {
         },
       }))
 
-      const { getBackendRuntimeConfig } = await import('../../src/runtime/nuxt/config')
-      expect(getBackendRuntimeConfig()).toEqual({})
+      const { getConvexRuntimeConfig } = await import('../../src/runtime/nuxt/config')
+      expect(getConvexRuntimeConfig()).toEqual({})
 
       vi.doUnmock('#imports')
       vi.resetModules()

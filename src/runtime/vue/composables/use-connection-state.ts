@@ -26,7 +26,7 @@ import { useSubscription } from './use-subscription'
  * </template>
  * ```
  *
- * @returns The current {@link ConnectionState} with the Convex backend.
+ * @returns The current {@link ConnectionState} with the Convex deployment.
  *
  * @public
  */

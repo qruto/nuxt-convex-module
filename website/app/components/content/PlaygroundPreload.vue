@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { api } from '#backend/api'
+import type { api } from '#convex/api'
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import type { Preloaded } from 'nuxt-convex-module/vue'
 
@@ -22,7 +22,7 @@ const preloaded = computed(
       class="preload-offline"
     >
       <p class="preload-offline-text">
-        The server route couldn't reach the Convex backend during render.
+        The server route couldn't reach the Convex deployment during render.
         Start it with <code>npx convex dev</code> in <code>website/</code>, then retry.
       </p>
       <button

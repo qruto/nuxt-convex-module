@@ -100,7 +100,7 @@ describe('ConvexVueClient', () => {
   describe('action', () => {
     it('resolves the function name and forwards args to the sync client', async () => {
       // Trigger lazy sync creation, then stub the underlying action so no
-      // request is actually sent to the (unreachable) backend.
+      // request is actually sent to the (unreachable) deployment.
       void client.connectionState()
       const sync = Reflect.get(client, 'cachedSync') as BaseConvexClient
       const actionSpy = vi.spyOn(sync, 'action').mockResolvedValue('action result')

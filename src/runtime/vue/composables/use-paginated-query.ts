@@ -184,7 +184,7 @@ type UsePaginatedQueryInternalResult<Item>
  * ```vue
  * <script setup lang="ts">
  * import { usePaginatedQuery } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const { results, status, loadMore } = usePaginatedQuery(
  *   api.messages.list,

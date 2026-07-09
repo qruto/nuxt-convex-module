@@ -2,39 +2,39 @@ import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { createApp, defineComponent, h } from 'vue'
 import {
-  type BackendApi,
-  provideBackendApi,
-  useBackendApi,
-  useBackendNamespace,
+  type ConvexApi,
+  provideConvexApi,
+  useConvexApi,
+  useConvexNamespace,
 } from '../../src/runtime/vue/provide'
 
-const api: BackendApi = {
+const api: ConvexApi = {
   billing: { generateCheckoutLink: { _ref: 'billing' } },
   email: { getEmailStatus: { _ref: 'email' } },
 }
 
-describe('useBackendApi / useBackendNamespace', () => {
+describe('useConvexApi / useConvexNamespace', () => {
   it('returns undefined outside an injection context', () => {
-    expect(useBackendApi()).toBeUndefined()
-    expect(useBackendNamespace('billing')).toBeUndefined()
+    expect(useConvexApi()).toBeUndefined()
+    expect(useConvexNamespace('billing')).toBeUndefined()
   })
 
   it('exposes the provided api to descendant setups', async () => {
-    let injectedApi: BackendApi | undefined
+    let injectedApi: ConvexApi | undefined
     let billing: unknown
     let missing: unknown
 
     const Child = defineComponent({
       setup() {
-        injectedApi = useBackendApi()
-        billing = useBackendNamespace('billing')
-        missing = useBackendNamespace('missing')
+        injectedApi = useConvexApi()
+        billing = useConvexNamespace('billing')
+        missing = useConvexNamespace('missing')
         return () => h('div')
       },
     })
     const Parent = defineComponent({
       setup() {
-        provideBackendApi(api)
+        provideConvexApi(api)
         return () => h(Child)
       },
     })
@@ -50,13 +50,13 @@ describe('useBackendApi / useBackendNamespace', () => {
     let billing: unknown
     const Root = defineComponent({
       setup() {
-        billing = useBackendNamespace('billing')
+        billing = useConvexNamespace('billing')
         return () => h('div')
       },
     })
 
     const app = createApp(Root)
-    provideBackendApi(api, app)
+    provideConvexApi(api, app)
     const el = document.createElement('div')
     app.mount(el)
 

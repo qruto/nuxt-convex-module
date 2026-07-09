@@ -50,7 +50,7 @@ function createAction(
  * ```vue
  * <script setup lang="ts">
  * import { useAction } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const generate = useAction(api.ai.generateSummary)
  *

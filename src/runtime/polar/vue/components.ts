@@ -1,7 +1,7 @@
 import { defineComponent, h, mergeProps, type PropType, ref, watch } from 'vue'
 import type { FunctionReference } from 'convex/server'
 import { useAction } from '../../vue/composables/use-action'
-import { useBackendNamespace } from '../../vue/provide'
+import { useConvexNamespace } from '../../vue/provide'
 
 /**
  * Args of the Polar-generated `generateCheckoutLink` action. Mirrors the
@@ -55,7 +55,7 @@ export const CustomerPortalLink = defineComponent({
     returnUrl: { type: String, default: undefined },
   },
   setup(props, { slots, attrs }) {
-    const polarApi = props.polarApi ?? useBackendNamespace<PolarComponentApi>('billing')
+    const polarApi = props.polarApi ?? useConvexNamespace<PolarComponentApi>('billing')
     // The action may be absent from the auto-provided namespace, hence the guard.
     const generateCustomerPortalUrl = polarApi?.generateCustomerPortalUrl
       ? useAction(polarApi.generateCustomerPortalUrl)
@@ -114,7 +114,7 @@ export const CheckoutLink = defineComponent({
     lazy: { type: Boolean, default: false },
   },
   setup(props, { slots, attrs }) {
-    const polarApi = props.polarApi ?? useBackendNamespace<PolarComponentApi>('billing')
+    const polarApi = props.polarApi ?? useConvexNamespace<PolarComponentApi>('billing')
     // The action may be absent from the auto-provided namespace, hence the guard.
     const generateCheckoutLink = polarApi?.generateCheckoutLink
       ? useAction(polarApi.generateCheckoutLink)

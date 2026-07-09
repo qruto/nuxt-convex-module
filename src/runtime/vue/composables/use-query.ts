@@ -49,7 +49,7 @@ type UseQueryOptions<
  * ```vue
  * <script setup lang="ts">
  * import { useQuery } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * // Reactively loads tasks; the ref updates when data changes:
  * const tasks = useQuery(api.tasks.list, { completed: false })
@@ -127,7 +127,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
  * ```vue
  * <script setup lang="ts">
  * import { useQuery_experimental as useQuery } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const state = useQuery({ query: api.tasks.list, args: { completed: false } })
  * // state.value.status: 'pending' | 'success' | 'error'

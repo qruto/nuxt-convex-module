@@ -12,7 +12,7 @@ const { mockGetToken } = vi.hoisted(() => ({
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({
-  backendAuth: () => ({ getToken: mockGetToken }),
+  convexAuth: () => ({ getToken: mockGetToken }),
 }))
 
 async function loadPrefetch() {

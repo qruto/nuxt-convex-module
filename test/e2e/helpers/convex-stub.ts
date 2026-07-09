@@ -17,7 +17,7 @@ export interface ConvexStub {
 }
 
 /**
- * A minimal Convex-backend stand-in for e2e tests. Answers the HTTP client's
+ * A minimal Convex deployment stand-in for e2e tests. Answers the HTTP client's
  * `POST /api/query` with a canned successful result and echoes everything
  * else as JSON, recording each request for assertions.
  */

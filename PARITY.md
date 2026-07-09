@@ -46,7 +46,7 @@ changes, then update the version here.
 | `@convex-dev/better-auth` `src/react/index.tsx` (export surface) | `better-auth/vue/index.ts` (public barrel) |
 | `@convex-dev/better-auth` `src/react/index.tsx` (`AuthBoundary`, provider's `useUseAuthFromBetterAuth`) | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,use-auth}.ts` |
 | `@convex-dev/better-auth` `src/react/index.tsx` (provider's `?ott=` one-time-token `useEffect`) | `better-auth/vue/cross-domain.ts` (`consumeCrossDomainOneTimeToken`) |
-| `@convex-dev/better-auth` `src/nextjs/index.ts` (`convexBetterAuthNextJs`) | `better-auth/nuxt/server.ts` (`backendAuth`) |
+| `@convex-dev/better-auth` `src/nextjs/index.ts` (`convexBetterAuthNextJs`) | `better-auth/nuxt/server.ts` (`convexAuth`) |
 | `@convex-dev/better-auth` `src/nextjs/client.tsx` (`usePreloadedAuthQuery`) | `better-auth/vue/hydration.ts` |
 | `@convex-dev/polar` `src/react/index.tsx` (`CheckoutLink`, `CustomerPortalLink`) | `polar/vue/components.ts` |
 
@@ -62,10 +62,10 @@ override it (to choose plugins, e.g. add `crossDomainClient()` for cross-domain 
 
 Nuxt-specific files with no single upstream origin (the Nuxt request lifecycle has no React
 equivalent): `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/proxy.ts` (the proxy delegates
-to `backendAuth(event).handler()`, which strips hop-by-hop headers and rewrites forwarded-host
+to `convexAuth(event).handler()`, which strips hop-by-hop headers and rewrites forwarded-host
 headers exactly as `convexBetterAuthNextJs`'s `handler` does).
 
-Known behavioral divergence: `backendAuth`'s JWT-cache retry deliberately inverts upstream
+Known behavioral divergence: `convexAuth`'s JWT-cache retry deliberately inverts upstream
 v0.12.5's `callWithToken` predicate — upstream retries with a force-refreshed token only when
 `jwtCache.isAuthError(error)` is **false** (an apparent upstream bug); the port retries exactly
 when the cached JWT is rejected as an auth error. See AGENTS.md's known divergences; do not sync
@@ -80,7 +80,7 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
   alias to avoid name clashes.
 - `vue/composables/use-upload.ts`, `use-upload-queue.ts`, `use-storage-url.ts` — file-storage
   helpers (not in `convex/react`).
-- `vue/provide.ts` — `provideBackendApi` / `useBackendApi` app-API wiring.
+- `vue/provide.ts` — `provideConvexApi` / `useConvexApi` app-API wiring.
 - `nuxt/composables/use-async-query.ts` — `useAsyncQuery` / `useConvexAsyncQuery`, the
   Nuxt-idiomatic data layer (`useAsyncData`-style SSR fetch → payload hydration → live
   subscription upgrade, returning `{ data, error, status, refresh }`). Lives under `runtime/nuxt/`
@@ -118,7 +118,7 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
 
 | Upstream | Why |
 |---|---|
-| `@convex-dev/resend` | Backend-only Convex component — no client surface. Use it from your Convex backend and call it via `useMutation` / `useAction`. |
+| `@convex-dev/resend` | Server-only Convex component — no client surface. Use it from your Convex deployment and call it via `useMutation` / `useAction`. |
 | `convex/react-start`, `@convex-dev/better-auth` `src/react-start` | TanStack Start–specific (React framework adapter). |
 | `convexQueryOptions` (`convex/react` `index.ts`) | Marked `@internal` upstream (TanStack Query interop). The public `QueryOptions` type **is** re-exported. |
 | `includePage` / `page` symbols, `usePaginatedQueryInternal` export, `UsePaginatedQueryInternalResult` (`convex/react` `use_paginated_query.ts`) | All marked `@internal` upstream and **stripped from the published type declarations** (reachable at runtime via `export *`, but not importable in TypeScript — verified against convex 1.42.1's shipped d.ts). The public typed `usePaginatedQuery(query, args, { initialNumItems })` surface is fully ported; the port's `usePaginatedQueryInternal` is a private, Vue-shaped implementation detail (reactive inputs, `ComputedRef` result, no `throwOnError` param — the error variant is returned as data and thrown by the public shapers, per the computed-poisoning rule). |
@@ -133,7 +133,7 @@ same family);
 thin component wrappers kept for drop-in parity); Polar component props keep upstream names
 (`polarApi`, `productIds`) but `polarApi` is optional — it defaults to the auto-provided
 `api.billing` namespace. `NextjsOptions` → `NuxtOptions`; `convexBetterAuthNextJs` →
-`convexBetterAuthNuxt` (alias of `backendAuth`), taking the H3 `event` explicitly since Nitro
+`convexBetterAuthNuxt` (alias of `convexAuth`), taking the H3 `event` explicitly since Nitro
 has no `next/headers`-style ambient request context (its returned service keeps upstream's
 method names verbatim; `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }`
 route-handler pair). `ConvexAuthState` fields are `ComputedRef<boolean>`s (per the plain-value →

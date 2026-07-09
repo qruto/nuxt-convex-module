@@ -47,7 +47,7 @@ import type {
 import { getFunctionName } from 'convex/server'
 import { convexToJson, jsonToConvex } from 'convex/values'
 import type { Preloaded } from '../vue/index'
-import { getBackendRuntimeConfig } from './config'
+import { getConvexRuntimeConfig } from './config'
 
 /**
  * Options to {@link preloadQuery}, {@link fetchQuery}, {@link fetchMutation} and {@link fetchAction}.
@@ -75,7 +75,7 @@ export type NuxtOptions = {
    * Skip validating that the Convex deployment URL looks like
    * `https://happy-animal-123.convex.cloud` or localhost.
    *
-   * This can be useful if running a self-hosted Convex backend that uses a different
+   * This can be useful if running a self-hosted Convex deployment that uses a different
    * URL.
    *
    * The default value is `false`
@@ -232,7 +232,7 @@ function getConvexUrl(
   // paths as upstream. An explicitly passed `{ url: '' }` is NOT normalized:
   // it falls through to the verbatim upstream validation messages below.
   const url = deploymentUrl
-    ?? (getBackendRuntimeConfig().url || undefined)
+    ?? (getConvexRuntimeConfig().url || undefined)
     ?? (process.env.NUXT_PUBLIC_CONVEX_URL || undefined)
   const isFromEnv = deploymentUrl === undefined
   if (typeof url !== 'string') {

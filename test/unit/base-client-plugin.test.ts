@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 // client) is never exercised by the repo's own Nuxt test app, because
 // `@convex-dev/better-auth` is a devDep and so always auto-enables there. Drive
 // the plugin's setup directly with a stubbed `#app` to cover the no-auth path.
-const runtimeConfig = { public: { backend: { url: 'https://example.convex.cloud' } } }
+const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud' } } }
 
 vi.mock('#app', () => ({
   // Handles both plugin forms: the plugin under test uses the named object
@@ -29,7 +29,7 @@ function fakeNuxtApp() {
 }
 
 afterEach(() => {
-  runtimeConfig.public.backend.url = 'https://example.convex.cloud'
+  runtimeConfig.public.convex.url = 'https://example.convex.cloud'
 })
 
 describe('base Convex client plugin', () => {
@@ -40,7 +40,7 @@ describe('base Convex client plugin', () => {
   })
 
   it('no-ops when no Convex URL is configured', () => {
-    runtimeConfig.public.backend.url = ''
+    runtimeConfig.public.convex.url = ''
     // Drop the client-side warning (asserted separately below) from the output.
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { provided, app } = fakeNuxtApp()
@@ -52,7 +52,7 @@ describe('base Convex client plugin', () => {
   it('warns on the client when no Convex URL is configured', () => {
     // The unit project compiles `import.meta.client` truthy (client build), so
     // the client-only warning branch is reachable here.
-    runtimeConfig.public.backend.url = ''
+    runtimeConfig.public.convex.url = ''
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     const { provided, app } = fakeNuxtApp()

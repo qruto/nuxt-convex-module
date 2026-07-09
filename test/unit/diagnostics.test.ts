@@ -38,8 +38,8 @@ describe('formatStartupSummary', () => {
   })
 
   it('spells out the empty cases instead of hiding them', () => {
-    expect(formatStartupSummary('', 'backend', { betterAuth: false, clerk: false, auth0: false, polar: false }))
-      .toBe('Convex (no URL) · functions: backend/ · integrations: none')
+    expect(formatStartupSummary('', 'convex', { betterAuth: false, clerk: false, auth0: false, polar: false }))
+      .toBe('Convex (no URL) · functions: convex/ · integrations: none')
   })
 })
 

@@ -1,7 +1,7 @@
 /**
  * Server-side Better Auth + Convex integration for Nuxt.
  *
- * Provides {@link backendAuth} for Nuxt server handlers.
+ * Provides {@link convexAuth} for Nuxt server handlers.
  *
  * It accepts the H3
  * {@link H3Event} that is available in every Nuxt server route, API handler
@@ -20,19 +20,19 @@ import type {
   FunctionReturnType,
 } from 'convex/server'
 import type { Preloaded } from '../../vue/hydration'
-import { getBackendRuntimeConfig } from '../../nuxt/config'
+import { getConvexRuntimeConfig } from '../../nuxt/config'
 import { fetchAction, fetchMutation, fetchQuery, preloadQuery } from '../../nuxt/index'
 
 const parseConvexSiteUrl = (url: string | undefined) => {
   // Texts mirror upstream verbatim, modulo the sanctioned env-var/framework
-  // substitutions, plus an additive pointer at the Nuxt-only `backend.siteUrl`
+  // substitutions, plus an additive pointer at the Nuxt-only `convex.siteUrl`
   // config source.
   if (!url) {
     throw new Error(
       'NUXT_PUBLIC_CONVEX_SITE_URL is not set.\n'
-      + 'This is automatically set in the Convex backend, but must be set in the Nuxt environment.\n'
+      + 'This is automatically set in the Convex deployment, but must be set in the Nuxt environment.\n'
       + 'For local development, this can be set in the .env file, '
-      + 'or via the `backend.siteUrl` option in nuxt.config.',
+      + 'or via the `convex.siteUrl` option in nuxt.config.',
     )
   }
   if (url.endsWith('.convex.cloud')) {
@@ -115,14 +115,14 @@ const getArgsAndOptions = <FuncRef extends FunctionReference<any, any>>(
 }
 
 /**
- * Options for {@link backendAuth}.
+ * Options for {@link convexAuth}.
  *
  * Extends {@link GetTokenOptions} from `@convex-dev/better-auth/utils` with
  * an optional override for the Convex site URL.
  *
  * @public
  */
-export type BackendAuthOptions = GetTokenOptions & {
+export type ConvexAuthOptions = GetTokenOptions & {
   /**
    * Accepted for drop-in compatibility with upstream `convexBetterAuthNextJs`
    * option objects and ignored — upstream requires but never reads it either;
@@ -136,11 +136,11 @@ export type BackendAuthOptions = GetTokenOptions & {
 }
 
 /**
- * Per-request Better Auth + Convex helper returned by {@link backendAuth}.
+ * Per-request Better Auth + Convex helper returned by {@link convexAuth}.
  *
  * @public
  */
-export interface BackendAuthService {
+export interface ConvexAuthService {
   /** Convex JWT for the current user, or `undefined` when not authenticated. */
   getToken: () => Promise<string | undefined>
   /** Proxy a Better Auth route to the configured Convex site URL. */
@@ -176,7 +176,7 @@ export interface BackendAuthService {
  *
  * Call once at the top of a server route / event handler and destructure the
  * helpers you need. The auth token is fetched at most once per request — the
- * cache lives on `event.context`, so every `backendAuth(event)` instance for
+ * cache lives on `event.context`, so every `convexAuth(event)` instance for
  * the same request (server plugin, middleware, your route) shares one Better
  * Auth round-trip. Mirrors upstream's `React.cache`-wrapped `getToken`.
  *
@@ -184,7 +184,7 @@ export interface BackendAuthService {
  * ```ts
  * // server/api/profile.get.ts
  * export default defineEventHandler(async (event) => {
- *   const { fetchAuthQuery, isAuthenticated } = backendAuth(event)
+ *   const { fetchAuthQuery, isAuthenticated } = convexAuth(event)
  *   if (!await isAuthenticated()) {
  *     throw createError({ statusCode: 401 })
  *   }
@@ -197,26 +197,26 @@ export interface BackendAuthService {
  * // pages/profile.vue — preloading data for SSR
  * const { data } = await useAsyncData(async () => {
  *   const event = useRequestEvent()!
- *   return backendAuth(event).preloadAuthQuery(api.users.current)
+ *   return convexAuth(event).preloadAuthQuery(api.users.current)
  * })
  * ```
  *
  * @param event - The H3 event from a Nuxt server route or middleware.
- * @param opts  - Optional {@link BackendAuthOptions}.
+ * @param opts  - Optional {@link ConvexAuthOptions}.
  *
  * @public
  */
-export function backendAuth(event: H3Event, opts?: BackendAuthOptions): BackendAuthService {
+export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuthService {
   // Upstream requires `opts.convexSiteUrl`; Nuxt auto-provides it from runtime
   // config / env when the override is omitted.
   const siteUrl = parseConvexSiteUrl(
     opts?.convexSiteUrl
-    ?? getBackendRuntimeConfig().siteUrl
+    ?? getConvexRuntimeConfig().siteUrl
     ?? process.env.NUXT_PUBLIC_CONVEX_SITE_URL,
   )
 
   // Per-REQUEST token cache — memoized on `event.context` (keyed by site URL
-  // and token endpoint) so separate `backendAuth(event)` instances share one
+  // and token endpoint) so separate `convexAuth(event)` instances share one
   // fetch, the H3 analog of upstream wrapping `getToken` in `React.cache` on
   // a module-level singleton. The promise is cached (deduping concurrent
   // callers, and caching rejections for the request like `React.cache` does);
@@ -320,7 +320,7 @@ export function backendAuth(event: H3Event, opts?: BackendAuthOptions): BackendA
 }
 
 /**
- * Upstream-named alias of {@link backendAuth} — the mechanical rename target
+ * Upstream-named alias of {@link convexAuth} — the mechanical rename target
  * for `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs` (framework
  * suffix `NextJs` → `Nuxt`). Unlike upstream's module-level factory (which
  * reads request state ambiently via `next/headers`), Nitro has no ambient
@@ -328,4 +328,4 @@ export function backendAuth(event: H3Event, opts?: BackendAuthOptions): BackendA
  *
  * @public
  */
-export const convexBetterAuthNuxt = backendAuth
+export const convexBetterAuthNuxt = convexAuth

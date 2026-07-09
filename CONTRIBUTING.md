@@ -88,7 +88,7 @@ chore: bump dependencies
 Breaking changes must include `BREAKING CHANGE:` in the commit footer or use `!` after the type:
 
 ```
-feat!: rename createBackend to defineBackend
+feat!: rename createClient to defineClient
 ```
 
 Allowed types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`,

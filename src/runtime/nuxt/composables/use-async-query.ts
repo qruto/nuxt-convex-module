@@ -124,7 +124,7 @@ type AsyncQueryPayload = { value: ReturnType<typeof convexToJson> } | null
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * // SSR-rendered AND live:
  * const { data: tasks, status, error } = useAsyncQuery(api.tasks.list, { completed: false })
@@ -171,7 +171,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   // this well-known state key. Reading it by key (instead of importing the
   // integration) keeps the composable decoupled from the optional package:
   // without the integration the state simply defaults to `null`.
-  const initialToken = useState<string | null>('backend:initialToken', () => null)
+  const initialToken = useState<string | null>('convex:initialToken', () => null)
 
   // Captured at setup — `inject` is unavailable inside the async handler.
   // May be `undefined` (no plugin provided a client, e.g. missing URL).
@@ -181,7 +181,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   // (its `await`s drop the async-local store), where `useRuntimeConfig()` —
   // which `fetchQuery` falls back to — would throw.
   const deploymentUrl = import.meta.server
-    ? useRuntimeConfig().public.backend.url
+    ? useRuntimeConfig().public.convex.url
     : ''
 
   const resolveToken = async (): Promise<string | undefined> => {

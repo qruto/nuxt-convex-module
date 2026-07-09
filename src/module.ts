@@ -65,12 +65,12 @@ export interface ModuleOptions {
 
 declare module '@nuxt/schema' {
   interface RuntimeConfig {
-    backend: {
+    convex: {
       siteUrl: string
     }
   }
   interface PublicRuntimeConfig {
-    backend: {
+    convex: {
       url: string
       siteUrl: string
     }
@@ -118,17 +118,17 @@ export default defineNuxtModule<ModuleOptions>({
     for (const message of diagnostics.warnings) logger.warn(message)
     options.authRoute = diagnostics.authRoute
 
-    registerBackendAliases(nuxt)
+    registerConvexAliases(nuxt)
     registerAuthClientAlias(resolver, nuxt, options)
 
-    registerBackendApiPlugin(resolver, nuxt)
-    registerBackendTypeFallback(nuxt)
+    registerConvexApiPlugin(resolver, nuxt)
+    registerConvexTypeFallback(nuxt)
     registerVueComposables(resolver)
     registerAuthComponents(resolver)
     registerServerImports(resolver)
     const integrations = registerIntegrations(resolver, nuxt, options)
     applyConvexCsp(nuxt, url, siteUrl)
-    watchBackendCodegen(nuxt)
+    watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
       // Lazy import keeps @nuxt/devtools-kit out of production module evaluation.
@@ -386,7 +386,7 @@ function isPackageInstalled(id: string, rootDir: string): boolean {
 
 /**
  * Resolve the Convex deployment URL from module options or environment, and
- * publish `backend.url` / `backend.siteUrl` into Nuxt's runtime config.
+ * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
 function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string } {
   const url = nuxt.options._prepare
@@ -402,56 +402,56 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
 
   const siteUrl = options.siteUrl || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || ''
 
-  // Kit-blessed merge: publishes the resolved backend url/siteUrl while
+  // Kit-blessed merge: publishes the resolved convex url/siteUrl while
   // preserving any sibling keys a user already set, instead of overwriting the
-  // whole `backend` object as a direct assignment would.
+  // whole `convex` object as a direct assignment would.
   updateRuntimeConfig({
-    public: { backend: { url: url || '', siteUrl } },
-    backend: { siteUrl },
+    public: { convex: { url: url || '', siteUrl } },
+    convex: { siteUrl },
   })
 
   return { url: url || '', siteUrl }
 }
 
 /**
- * Build the ordered import-alias map for the Convex backend folder and its
+ * Build the ordered import-alias map for the Convex functions folder and its
  * generated modules, so user code and server routes can `import from
- * '#backend/...'` without spelling out `_generated`.
+ * '#convex/...'` without spelling out `_generated`.
  *
- * - `#backend/api`        -> _generated/api        (`api`, `internal`, `components`)
- * - `#backend/server`     -> _generated/server     (`query`, `mutation`, `action`, `*Ctx`, ...)
- * - `#backend/dataModel`  -> _generated/dataModel  (`DataModel`, `Doc`, `Id`, `TableNames`)
- * - `#backend/_generated` -> _generated            (long form, covers every generated file)
- * - `#backend`            -> <rootDir>/<functionsDir>
+ * - `#convex/api`        -> _generated/api        (`api`, `internal`, `components`)
+ * - `#convex/server`     -> _generated/server     (`query`, `mutation`, `action`, `*Ctx`, ...)
+ * - `#convex/dataModel`  -> _generated/dataModel  (`DataModel`, `Doc`, `Id`, `TableNames`)
+ * - `#convex/_generated` -> _generated            (long form, covers every generated file)
+ * - `#convex`            -> <rootDir>/<functionsDir>
  *
  * Order is significant: both Vite and Nitro resolve aliases with
- * `@rollup/plugin-alias`, which is first-match-wins and treats `#backend` as a
- * prefix of `#backend/api`. The specific generated-module aliases must come
- * before the catch-all `#backend`, otherwise `#backend/api` would resolve to
+ * `@rollup/plugin-alias`, which is first-match-wins and treats `#convex` as a
+ * prefix of `#convex/api`. The specific generated-module aliases must come
+ * before the catch-all `#convex`, otherwise `#convex/api` would resolve to
  * `<functionsDir>/api` instead of `<functionsDir>/_generated/api` (and would
  * shadow any user function file literally named `api.ts` / `server.ts`).
  */
-export function getBackendAliases(rootDir: string): Record<string, string> {
+export function getConvexAliases(rootDir: string): Record<string, string> {
   const functionsDir = resolveFunctionsDir(rootDir)
-  const backendDir = join(rootDir, functionsDir)
-  const generatedDir = join(backendDir, '_generated')
+  const convexDir = join(rootDir, functionsDir)
+  const generatedDir = join(convexDir, '_generated')
 
   return {
-    '#backend/api': join(generatedDir, 'api'),
-    '#backend/server': join(generatedDir, 'server'),
-    '#backend/dataModel': join(generatedDir, 'dataModel'),
-    '#backend/_generated': generatedDir,
-    '#backend': backendDir,
+    '#convex/api': join(generatedDir, 'api'),
+    '#convex/server': join(generatedDir, 'server'),
+    '#convex/dataModel': join(generatedDir, 'dataModel'),
+    '#convex/_generated': generatedDir,
+    '#convex': convexDir,
   }
 }
 
 /**
- * Register the backend import aliases for both Vite (`options.alias`) and Nitro
- * (`nitro.alias`). Iterates {@link getBackendAliases} in declaration order to
+ * Register the Convex import aliases for both Vite (`options.alias`) and Nitro
+ * (`nitro.alias`). Iterates {@link getConvexAliases} in declaration order to
  * preserve the specific-before-general ordering the alias resolvers depend on.
  */
-function registerBackendAliases(nuxt: Nuxt): void {
-  const aliases = getBackendAliases(nuxt.options.rootDir)
+function registerConvexAliases(nuxt: Nuxt): void {
+  const aliases = getConvexAliases(nuxt.options.rootDir)
 
   nuxt.options.nitro ||= {}
   nuxt.options.nitro.alias ||= {}
@@ -487,7 +487,7 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
 }
 
 /**
- * Auto-provide the generated Convex `api` (`#backend/api`) app-wide so the
+ * Auto-provide the generated Convex `api` (`#convex/api`) app-wide so the
  * composables and components that read from a namespace (e.g. the Polar
  * `<CheckoutLink>`) work with zero arguments — see `runtime/vue/provide.ts`.
  * Runs on both server and client.
@@ -497,7 +497,7 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
  * instead (features fall back to graceful no-ops). The plugin is regenerated
  * with the real wiring on the next build once codegen has run.
  */
-function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
+function registerConvexApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
   const provideModule = resolver.resolve('./runtime/vue/provide')
   // One-shot onboarding notice: point at `npx convex dev` while codegen is
@@ -520,10 +520,10 @@ function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
       }
       return [
         'import { defineNuxtPlugin } from \'#app\'',
-        'import { api } from \'#backend/api\'',
-        `import { provideBackendApi } from ${JSON.stringify(provideModule)}`,
+        'import { api } from \'#convex/api\'',
+        `import { provideConvexApi } from ${JSON.stringify(provideModule)}`,
         'export default defineNuxtPlugin((nuxtApp) => {',
-        '  provideBackendApi(api, nuxtApp.vueApp)',
+        '  provideConvexApi(api, nuxtApp.vueApp)',
         '})',
         '',
       ].join('\n')
@@ -533,13 +533,13 @@ function registerBackendApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
 
 /**
  * Contents of the fallback type template: placeholder (`any`-typed) ambient
- * declarations for the generated `#backend/*` modules while `convex dev`
+ * declarations for the generated `#convex/*` modules while `convex dev`
  * hasn't emitted codegen yet, so a fresh project typechecks instead of failing
- * on every `#backend/api` import. Once codegen exists the template goes empty
+ * on every `#convex/api` import. Once codegen exists the template goes empty
  * and the real generated types win via the tsconfig `paths` the aliases
  * already produce.
  */
-export function backendTypeFallbackContents(hasApi: boolean, functionsDir: string): string {
+export function convexTypeFallbackContents(hasApi: boolean, functionsDir: string): string {
   if (hasApi) {
     // Real codegen resolves through the tsconfig paths — declare nothing so
     // the generated types are the only source of truth.
@@ -547,12 +547,12 @@ export function backendTypeFallbackContents(hasApi: boolean, functionsDir: strin
   }
   return [
     `// Placeholder until \`npx convex dev\` generates ${functionsDir}/_generated.`,
-    'declare module \'#backend/api\' {',
+    'declare module \'#convex/api\' {',
     '  export const api: any',
     '  export const internal: any',
     '  export const components: any',
     '}',
-    'declare module \'#backend/server\' {',
+    'declare module \'#convex/server\' {',
     '  export const query: any',
     '  export const internalQuery: any',
     '  export const mutation: any',
@@ -566,7 +566,7 @@ export function backendTypeFallbackContents(hasApi: boolean, functionsDir: strin
     '  export type DatabaseReader = any',
     '  export type DatabaseWriter = any',
     '}',
-    'declare module \'#backend/dataModel\' {',
+    'declare module \'#convex/dataModel\' {',
     '  export type Doc<TableName extends string = string> = any',
     '  export type Id<TableName extends string = string> = string',
     '  export type DataModel = any',
@@ -578,20 +578,20 @@ export function backendTypeFallbackContents(hasApi: boolean, functionsDir: strin
 
 /**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
- * server routes import `#backend/api` too). Symmetric to
- * {@link registerBackendApiPlugin}'s runtime no-op guard, and re-rendered by
- * {@link watchBackendCodegen} the moment codegen lands.
+ * server routes import `#convex/api` too). Symmetric to
+ * {@link registerConvexApiPlugin}'s runtime no-op guard, and re-rendered by
+ * {@link watchConvexCodegen} the moment codegen lands.
  */
-function registerBackendTypeFallback(nuxt: Nuxt): void {
+function registerConvexTypeFallback(nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
   addTypeTemplate({
-    filename: 'types/nuxt-convex-module-backend.d.ts',
-    getContents: () => backendTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
+    filename: 'types/nuxt-convex-module-api-fallback.d.ts',
+    getContents: () => convexTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
   }, { nuxt: true, nitro: true })
 }
 
 /** Templates that must re-render when `convex dev` emits `_generated/api`. */
-const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-backend.d.ts']
+const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-api-fallback.d.ts']
 
 /**
  * In dev, re-render the codegen-guarded templates the instant `convex dev`
@@ -601,7 +601,7 @@ const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/
  * file watcher via the `builder:watch` hook — no watcher of our own to tear
  * down.
  */
-function watchBackendCodegen(nuxt: Nuxt): void {
+function watchConvexCodegen(nuxt: Nuxt): void {
   if (!nuxt.options.dev) return
   nuxt.hook('builder:watch', async (_event, path) => {
     if (!path.replace(/\\/g, '/').includes('_generated/api')) return
@@ -637,9 +637,9 @@ function registerVueComposables(resolver: Resolver): void {
     { name: 'useConvexStorageUrl', from: resolver.resolve('./runtime/vue/composables/use-storage-url') },
     { name: 'useConvexAuth', from: resolver.resolve('./runtime/vue/auth/index') },
     { name: 'provideConvexAuth', from: resolver.resolve('./runtime/vue/auth/index') },
-    { name: 'provideBackendApi', from: resolver.resolve('./runtime/vue/provide') },
-    { name: 'useBackendApi', from: resolver.resolve('./runtime/vue/provide') },
-    { name: 'useBackendNamespace', from: resolver.resolve('./runtime/vue/provide') },
+    { name: 'provideConvexApi', from: resolver.resolve('./runtime/vue/provide') },
+    { name: 'useConvexApi', from: resolver.resolve('./runtime/vue/provide') },
+    { name: 'useConvexNamespace', from: resolver.resolve('./runtime/vue/provide') },
     { name: 'usePreloadedQuery', from: resolver.resolve('./runtime/vue/hydration') },
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
     { name: 'useAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
@@ -678,7 +678,7 @@ function registerServerImports(resolver: Resolver): void {
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
  * `${authRoute}/**` same-origin proxy, the opt-in `auth` route middleware, the
- * `useAuth` / `usePreloadedAuthQuery` composables, and the `backendAuth(event)`
+ * `useAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
  * server helper.
  */
 function registerBetterAuth(resolver: Resolver, authRoute: string): void {
@@ -710,7 +710,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
   })
 
   addServerImports([
-    { name: 'backendAuth', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
+    { name: 'convexAuth', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
     { name: 'convexBetterAuthNuxt', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
   ])
 }
@@ -783,7 +783,7 @@ function uniq(values: Array<string | undefined>): string[] {
 }
 
 /**
- * CSP `connect-src` entries the browser needs to reach a Convex backend: the
+ * CSP `connect-src` entries the browser needs to reach a Convex deployment: the
  * deployment URL over both HTTPS and WebSocket (the realtime sync channel) and,
  * when configured, the `.site` URL that serves Convex HTTP actions. Returns
  * `[]` for empty or unparseable input.

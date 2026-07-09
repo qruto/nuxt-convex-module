@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The bench test: two clients subscribed to the same query, joined by a
-// sync bus. The sync is simulated in-page (no backend dependency on the
+// sync bus. The sync is simulated in-page (no server dependency on the
 // homepage) and says so — the playground runs the real thing.
 type Side = 'A' | 'B'
 interface Msg { id: number, who: Side, body: string }

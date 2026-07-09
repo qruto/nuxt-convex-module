@@ -47,7 +47,7 @@ const useConvexPreloadedQuery = <Query extends FunctionReference<'query'>>(
 
 /**
  * Auth-aware version of {@link usePreloadedQuery} for payloads returned by
- * `backendAuth(event).preloadAuthQuery(...)`.
+ * `convexAuth(event).preloadAuthQuery(...)`.
  *
  * A Vue/Nuxt port of `@convex-dev/better-auth`'s `usePreloadedAuthQuery`
  * (`src/nextjs/client.tsx`): show the preloaded server result until the preload

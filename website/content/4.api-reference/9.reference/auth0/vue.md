@@ -16,7 +16,7 @@ A Vue/Nuxt port of `convex/react-auth0`. The provider is exposed both as the
 
 ### ConvexProviderWithAuth0Options
 
-Defined in: [src/runtime/auth0/vue/index.ts:23](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/auth0/vue/index.ts#L23)
+Defined in: [src/runtime/auth0/vue/index.ts:23](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/auth0/vue/index.ts#L23)
 
 Options for [provideConvexAuthFromAuth0](#provideconvexauthfromauth0) / `<ConvexProviderWithAuth0>`.
 
@@ -24,7 +24,7 @@ Options for [provideConvexAuthFromAuth0](#provideconvexauthfromauth0) / `<Convex
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/vue#iconvexvueclient) | Convex client to authenticate. Defaults to the provided useConvex client. | [src/runtime/auth0/vue/index.ts:25](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/auth0/vue/index.ts#L25) |
+| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/vue#iconvexvueclient) | Convex client to authenticate. Defaults to the provided useConvex client. | [src/runtime/auth0/vue/index.ts:25](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/auth0/vue/index.ts#L25) |
 
 ## Variables
 
@@ -59,7 +59,7 @@ const ConvexProviderWithAuth0: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/auth0/vue/index.ts:68](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/auth0/vue/index.ts#L68)
+Defined in: [src/runtime/auth0/vue/index.ts:68](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/auth0/vue/index.ts#L68)
 
 A wrapper Vue component which provides a ConvexVueClient
 authenticated with Auth0 — the component form of
@@ -79,7 +79,7 @@ Convex with Auth0.
 function provideConvexAuthFromAuth0(options?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/auth0/vue/index.ts:48](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/auth0/vue/index.ts#L48)
+Defined in: [src/runtime/auth0/vue/index.ts:48](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/auth0/vue/index.ts#L48)
 
 The composable form of [ConvexProviderWithAuth0](#convexproviderwithauth0) — provides a
 ConvexVueClient authenticated with Auth0.

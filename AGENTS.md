@@ -41,7 +41,7 @@ baseline versions; **always start there.**
 | Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
 | Framework-qualified names (`NextjsOptions`, `convexBetterAuthNextJs`) | Substitute the framework part only: `NuxtOptions`, `convexBetterAuthNuxt` |
 | Ambient per-request context (`next/headers` + `React.cache`) | Explicit H3 `event` parameter (Nitro has no ambient request context) |
-| `React.cache` per-request memoization | Memoize on `event.context` (see `backendAuth`'s token cache) |
+| `React.cache` per-request memoization | Memoize on `event.context` (see `convexAuth`'s token cache) |
 | `fetchAccessToken` identity change between renders (re-auth trigger) | Pass the fetcher as a `Ref`/`ComputedRef` whose identity changes (or bump the port-only `authVersion` key) |
 
 Reuse the existing generic primitives instead of writing new auth cores: the Clerk/Auth0
@@ -74,12 +74,12 @@ as the upstream file; when a rule conflicts with a lint rule, scope the lint rul
   `@convex-dev/better-auth/client/plugins`, never reimplemented.
 - File-storage composables (`useUpload`, `useUploadQueue`, `useStorageUrl`) are Vue-only
   extensions.
-- `backendAuth`'s JWT-cache retry predicate deliberately inverts upstream v0.12.5's
+- `convexAuth`'s JWT-cache retry predicate deliberately inverts upstream v0.12.5's
   `callWithToken`: upstream retries with a force-refreshed token only when
   `jwtCache.isAuthError(error)` is **false** (almost certainly an upstream bug); the port
   retries exactly when the cached JWT is rejected as an auth error. See the comment in
   `src/runtime/better-auth/nuxt/server.ts` and its test — do not sync the condition back.
-- Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = backend-only,
+- Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = server-only,
   react-start = framework-specific, `convexQueryOptions` = `@internal`).
 
 ## Verification

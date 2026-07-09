@@ -94,7 +94,7 @@ export function createMutation(
  * ```vue
  * <script setup lang="ts">
  * import { useMutation } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const createTask = useMutation(api.tasks.create)
  *

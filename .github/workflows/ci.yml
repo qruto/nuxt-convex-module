@@ -85,7 +85,7 @@ jobs:
 
       # Type-checks the published surface (module + Convex code). The website app
       # typecheck is intentionally excluded — it imports the app's
-      # `backend/_generated` code, which only exists with a Convex deployment.
+      # `convex/_generated` code, which only exists with a Convex deployment.
       - name: Type check
         run: pnpm run test:types:lib
 

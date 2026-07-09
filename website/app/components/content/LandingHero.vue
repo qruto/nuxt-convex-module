@@ -100,7 +100,7 @@ const specs = [
 
         <div class="dev-screen">
           <pre class="dev-code mono"><code><span class="tk-c">// app.vue — data is live, everywhere</span>
-<span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#backend/api'</span>
+<span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#convex/api'</span>
 
 <span class="tk-k">const</span> messages = <span class="tk-f">useQuery</span>(api.messages.list, {})
 <span class="tk-k">const</span> send = <span class="tk-f">useMutation</span>(api.messages.send)</code></pre>

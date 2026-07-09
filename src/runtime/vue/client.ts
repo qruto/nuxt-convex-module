@@ -542,9 +542,9 @@ export class ConvexVueClient {
 
   /**
    * Get the current {@link ConnectionState} between the client and the Convex
-   * backend.
+   * deployment.
    *
-   * @returns The {@link ConnectionState} with the Convex backend.
+   * @returns The {@link ConnectionState} with the Convex deployment.
    */
   connectionState(): ConnectionState {
     return this.sync.connectionState()
@@ -552,7 +552,7 @@ export class ConvexVueClient {
 
   /**
    * Subscribe to the {@link ConnectionState} between the client and the Convex
-   * backend, calling a callback each time it changes.
+   * deployment, calling a callback each time it changes.
    *
    * Subscribed callbacks will be called when any part of ConnectionState changes.
    * ConnectionState may grow in future versions (e.g. to provide a array of

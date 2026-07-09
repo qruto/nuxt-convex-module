@@ -28,7 +28,7 @@ export type GetStorageUrl = FunctionReference<
  * ```vue
  * <script setup lang="ts">
  * import { useStorageUrl } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const { storageId } = useUpload(api.images.generateUploadUrl)
  * const url = useStorageUrl(api.images.getUrl, storageId)

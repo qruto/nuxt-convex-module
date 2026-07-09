@@ -6,29 +6,15 @@ import { useLogger } from '@nuxt/kit'
 const logger = useLogger('nuxt-convex-module')
 
 const DEFAULT_FUNCTIONS_DIR = 'convex'
-const ALT_FUNCTIONS_DIR = 'backend'
 
 /**
  * Resolve the Convex functions directory for a project, mirroring how the
- * Convex CLI resolves it: the `functions` field in `convex.json` wins, then a
- * `convex/` or `backend/` directory if present, otherwise the `convex/`
- * default. Used to build the `#backend/*` import aliases.
+ * Convex CLI resolves it: the `functions` field in `convex.json` wins,
+ * otherwise the `convex/` default. Used to build the `#convex/*` import
+ * aliases.
  */
 export function resolveFunctionsDir(rootDir: string): string {
-  const configured = readFunctionsDirFromConvexJson(join(rootDir, 'convex.json'))
-  if (configured) {
-    return configured
-  }
-
-  if (existsSync(join(rootDir, DEFAULT_FUNCTIONS_DIR))) {
-    return DEFAULT_FUNCTIONS_DIR
-  }
-
-  if (existsSync(join(rootDir, ALT_FUNCTIONS_DIR))) {
-    return ALT_FUNCTIONS_DIR
-  }
-
-  return DEFAULT_FUNCTIONS_DIR
+  return readFunctionsDirFromConvexJson(join(rootDir, 'convex.json')) ?? DEFAULT_FUNCTIONS_DIR
 }
 
 /**

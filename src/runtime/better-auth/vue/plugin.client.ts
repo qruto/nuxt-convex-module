@@ -11,7 +11,7 @@ type ConvexNuxtInjection = {
 export default defineNuxtPlugin<ConvexNuxtInjection>({
   name: 'nuxt-convex-module:better-auth:client',
   async setup(nuxtApp) {
-    const url = useRuntimeConfig().public.backend.url
+    const url = useRuntimeConfig().public.convex.url
 
     if (!url) {
       console.warn('[nuxt-convex-module] No Convex URL configured for client plugin.')
@@ -27,7 +27,7 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
 
     // Read the SSR-prefetched token from the Nuxt payload. Mirrors the React
     // integration's `initialToken={await getToken()}` prop.
-    const initialToken = useState<string | null>('backend:initialToken', () => null)
+    const initialToken = useState<string | null>('convex:initialToken', () => null)
 
     const { state, scope } = createScopedConvexAuthState({
       client,

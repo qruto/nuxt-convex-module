@@ -1,6 +1,6 @@
 import { defineEventHandler } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { backendAuth } from './server'
+import { convexAuth } from './server'
 
 /**
  * Proxy all /api/auth/* requests to the Convex site URL.
@@ -8,11 +8,11 @@ import { backendAuth } from './server'
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const siteUrl = config.backend.siteUrl
+  const siteUrl = config.convex.siteUrl
 
   if (!siteUrl) {
     throw new Error('[nuxt-convex-module] NUXT_PUBLIC_CONVEX_SITE_URL is not configured. Auth proxy cannot forward requests.')
   }
 
-  return backendAuth(event, { convexSiteUrl: siteUrl }).handler()
+  return convexAuth(event, { convexSiteUrl: siteUrl }).handler()
 })
