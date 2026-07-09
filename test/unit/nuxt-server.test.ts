@@ -3,12 +3,13 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { resetNuxtRuntimeConfigForTests, setNuxtRuntimeConfigForTests } from '../helpers/nuxt-imports'
 
 // Hoist mock functions so they're available before vi.mock factory runs
-const { mockClientUrls, mockQuery, mockMutation, mockAction, mockSetAuth, mockSetFetchOptions } = vi.hoisted(() => ({
+const { mockClientUrls, mockQuery, mockMutation, mockAction, mockSetAuth, mockSetAdminAuth, mockSetFetchOptions } = vi.hoisted(() => ({
   mockClientUrls: [] as string[],
   mockQuery: vi.fn(),
   mockMutation: vi.fn(),
   mockAction: vi.fn(),
   mockSetAuth: vi.fn(),
+  mockSetAdminAuth: vi.fn(),
   mockSetFetchOptions: vi.fn(),
 }))
 
@@ -17,6 +18,7 @@ type MockConvexHttpClientInstance = {
   mutation: typeof mockMutation
   action: typeof mockAction
   setAuth: typeof mockSetAuth
+  setAdminAuth: typeof mockSetAdminAuth
   setFetchOptions: typeof mockSetFetchOptions
 }
 
@@ -37,6 +39,7 @@ vi.mock('convex/browser', () => ({
     this.mutation = mockMutation
     this.action = mockAction
     this.setAuth = mockSetAuth
+    this.setAdminAuth = mockSetAdminAuth
     this.setFetchOptions = mockSetFetchOptions
   },
 }))
@@ -158,6 +161,69 @@ describe('Nuxt server utilities', () => {
     })
   })
 
+  describe('client setup', () => {
+    it('logs the deprecation error when url is explicitly undefined', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+      mockQuery.mockResolvedValue([])
+
+      // Explicit `{ url: undefined }` (e.g. an unset env var spread in) still
+      // works via the env fallback but must fire the deprecation warning.
+      await fetchQuery(queryRef, {}, { url: undefined })
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('deploymentUrl is undefined'))
+      expect(mockQuery).toHaveBeenCalled()
+      errorSpy.mockRestore()
+    })
+
+    it('passes adminToken to the client via setAdminAuth', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+      mockQuery.mockResolvedValue([])
+
+      await fetchQuery(queryRef, {}, { adminToken: 'admin-key' })
+
+      expect(mockSetAdminAuth).toHaveBeenCalledWith('admin-key')
+    })
+  })
+
+  describe('deployment URL validation', () => {
+    it('rejects a URL that is not http(s)', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+
+      await expect(fetchQuery(queryRef, {}, { url: 'ftp://x' }))
+        .rejects.toThrow(/Must start with "https:\/\/" or "http:\/\/"/)
+    })
+
+    it('rejects a malformed URL', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+
+      await expect(fetchQuery(queryRef, {}, { url: 'http://[' }))
+        .rejects.toThrow(/is not a valid URL/)
+    })
+
+    it('rejects a .convex.site URL (HTTP Actions domain)', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+
+      await expect(fetchQuery(queryRef, {}, { url: 'https://x.convex.site' }))
+        .rejects.toThrow(/ends with \.convex\.site/)
+    })
+
+    it('skips validation when skipConvexDeploymentUrlCheck is set', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const queryRef = mockFunctionReference<'query'>('api.tasks.list')
+      mockQuery.mockResolvedValue([])
+
+      await fetchQuery(queryRef, {}, { url: 'ftp://x', skipConvexDeploymentUrlCheck: true })
+
+      expect(mockClientUrls).toContain('ftp://x')
+    })
+  })
+
   describe('error handling', () => {
     it('throws when no URL is available', async () => {
       delete process.env.NUXT_PUBLIC_CONVEX_URL
@@ -169,6 +235,25 @@ describe('Nuxt server utilities', () => {
       const queryRef = mockFunctionReference<'query'>('api.tasks.list')
 
       await expect(fetchQuery(queryRef, {})).rejects.toThrow()
+    })
+  })
+
+  // Kept last: it swaps the `#imports` mock and resets the module registry,
+  // which would detach earlier tests from the shared nuxt-imports helper.
+  describe('getBackendRuntimeConfig', () => {
+    it('returns {} when useRuntimeConfig throws (outside a Nuxt context)', async () => {
+      vi.resetModules()
+      vi.doMock('#imports', () => ({
+        useRuntimeConfig: () => {
+          throw new Error('nuxt instance unavailable')
+        },
+      }))
+
+      const { getBackendRuntimeConfig } = await import('../../src/runtime/nuxt/config')
+      expect(getBackendRuntimeConfig()).toEqual({})
+
+      vi.doUnmock('#imports')
+      vi.resetModules()
     })
   })
 })

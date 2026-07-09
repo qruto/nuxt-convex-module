@@ -29,7 +29,7 @@ vi.mock('@auth0/auth0-vue', async () => {
   }
 })
 
-const { provideConvexAuthFromAuth0 } = await import('../../../../src/runtime/auth0/vue/index')
+const { provideConvexAuthFromAuth0, ConvexProviderWithAuth0 } = await import('../../../../src/runtime/auth0/vue/index')
 const { useConvexAuth } = await import('../../../../src/runtime/vue/auth/index')
 
 function makeClient() {
@@ -84,6 +84,62 @@ describe('ConvexProviderWithAuth0 (provideConvexAuthFromAuth0)', () => {
 
     await fetchToken()({ forceRefreshToken: false })
     expect(holder.getAccessTokenSilently).toHaveBeenLastCalledWith({
+      detailedResponse: true,
+      cacheMode: 'on',
+    })
+
+    wrapper.unmount()
+  })
+
+  it('the <ConvexProviderWithAuth0> component wires auth and renders its slot', async () => {
+    holder.isLoading.value = false
+    holder.isAuthenticated.value = true
+    const { client, confirmAuth } = makeClient()
+
+    const Child = defineComponent({
+      setup() {
+        const auth = useConvexAuth()
+        return () => h('span', auth.isAuthenticated.value ? 'In' : 'Out')
+      },
+    })
+    const Wrapper = defineComponent({
+      setup() {
+        return () => h(
+          ConvexProviderWithAuth0,
+          { client },
+          { default: () => h(Child) },
+        )
+      },
+    })
+
+    const wrapper = await mountSuspended(Wrapper)
+    await nextTick()
+    expect(client.setAuth).toHaveBeenCalledTimes(1)
+
+    confirmAuth()
+    await nextTick()
+    expect(wrapper.text()).toBe('In')
+
+    wrapper.unmount()
+  })
+
+  it('resolves a null token instead of throwing when getAccessTokenSilently rejects', async () => {
+    holder.isLoading.value = false
+    holder.isAuthenticated.value = true
+    holder.getAccessTokenSilently.mockRejectedValueOnce(new Error('auth0 is down'))
+    const { client, fetchToken } = makeClient()
+
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuthFromAuth0({ client })
+        return () => h('div')
+      },
+    })
+    const wrapper = await mountSuspended(Wrapper)
+    await nextTick()
+
+    await expect(fetchToken()({ forceRefreshToken: false })).resolves.toBeNull()
+    expect(holder.getAccessTokenSilently).toHaveBeenCalledWith({
       detailedResponse: true,
       cacheMode: 'on',
     })

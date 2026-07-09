@@ -7,24 +7,32 @@
 // @vitest-environment-options { "url": "https://nuxt-convex-module.localhost/" }
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetSession, mockUpdateSession, mockVerify } = vi.hoisted(() => ({
-  mockGetSession: vi.fn(),
-  mockUpdateSession: vi.fn(),
-  mockVerify: vi.fn(),
-}))
+const { mockGetSession, mockUpdateSession, mockVerify, mockAuthClient } = vi.hoisted(() => {
+  const mockGetSession = vi.fn()
+  const mockUpdateSession = vi.fn()
+  const mockVerify = vi.fn()
+  return {
+    mockGetSession,
+    mockUpdateSession,
+    mockVerify,
+    // Mutable so tests can uninstall `crossDomain` (the plugin is optional on
+    // the aliased client); `beforeEach` restores it.
+    mockAuthClient: {
+      getSession: mockGetSession,
+      // `updateSession` is a top-level action of the cross-domain client plugin
+      // (matches `convex/react`'s `authClientWithCrossDomain.updateSession()`).
+      updateSession: mockUpdateSession,
+      crossDomain: {
+        oneTimeToken: {
+          verify: mockVerify,
+        },
+      } as { oneTimeToken: { verify: typeof mockVerify } } | undefined,
+    },
+  }
+})
 
 vi.mock('#convex/auth-client', () => ({
-  authClient: {
-    getSession: mockGetSession,
-    // `updateSession` is a top-level action of the cross-domain client plugin
-    // (matches `convex/react`'s `authClientWithCrossDomain.updateSession()`).
-    updateSession: mockUpdateSession,
-    crossDomain: {
-      oneTimeToken: {
-        verify: mockVerify,
-      },
-    },
-  },
+  authClient: mockAuthClient,
 }))
 
 async function loadModule() {
@@ -34,6 +42,7 @@ async function loadModule() {
 describe('auth/vue/cross-domain', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAuthClient.crossDomain = { oneTimeToken: { verify: mockVerify } }
     window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile')
   })
 
@@ -74,5 +83,38 @@ describe('auth/vue/cross-domain', () => {
     expect(mockGetSession).not.toHaveBeenCalled()
     expect(mockUpdateSession).not.toHaveBeenCalled()
     expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
+  })
+
+  it('returns early when the cross-domain plugin is not installed on the auth client', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    mockAuthClient.crossDomain = undefined
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=orphan-token')
+
+    await consumeCrossDomainOneTimeToken()
+
+    expect(mockVerify).not.toHaveBeenCalled()
+    expect(mockGetSession).not.toHaveBeenCalled()
+    expect(mockUpdateSession).not.toHaveBeenCalled()
+    // The token is still scrubbed from the URL before the plugin guard runs.
+    expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
+  })
+
+  it('warns instead of throwing when the OTT exchange fails, so app bootstrap survives', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const failure = new Error('verify failed')
+    mockVerify.mockRejectedValue(failure)
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=bad-token')
+
+    await expect(consumeCrossDomainOneTimeToken()).resolves.toBeUndefined()
+
+    expect(mockVerify).toHaveBeenCalledWith({ token: 'bad-token' })
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[nuxt-convex-module] failed to consume cross-domain one-time token',
+      failure,
+    )
+    expect(mockGetSession).not.toHaveBeenCalled()
+    expect(mockUpdateSession).not.toHaveBeenCalled()
+    warnSpy.mockRestore()
   })
 })

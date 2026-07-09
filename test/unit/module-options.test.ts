@@ -48,6 +48,15 @@ describe('validateModuleOptions', () => {
       .toHaveLength(1)
   })
 
+  it('warns on urls that have an http(s) prefix but do not parse', () => {
+    const bareScheme = validateModuleOptions({ ...base, url: 'https://' })
+    expect(bareScheme.warnings).toHaveLength(1)
+    expect(bareScheme.warnings[0]).toContain('does not look like a valid http(s) URL')
+
+    expect(validateModuleOptions({ ...base, url: 'http://[' }).warnings)
+      .toHaveLength(1)
+  })
+
   it('normalizes authRoute: adds the leading slash with a warning, strips trailing slashes silently', () => {
     const missingSlash = validateModuleOptions({ ...base, authRoute: 'api/auth' })
     expect(missingSlash.authRoute).toBe('/api/auth')

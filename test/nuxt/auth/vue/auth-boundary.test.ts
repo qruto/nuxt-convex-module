@@ -76,4 +76,93 @@ describe('AuthBoundary (Better Auth)', () => {
 
     expect(onUnauth).not.toHaveBeenCalled()
   })
+
+  it('catches auth errors from the slot, unauths, and renders the fallback', async () => {
+    const onUnauth = vi.fn()
+    const authClient = makeAuthClient()
+    const authError = new Error('Unauthenticated')
+    const Thrower = defineComponent({
+      name: 'Thrower',
+      setup() {
+        return () => {
+          throw authError
+        }
+      },
+    })
+
+    // Authenticated state keeps the watch-based unauth path quiet, so every
+    // getSession/onUnauth call below comes from the error-boundary path.
+    const wrapper = await mountBoundary(
+      { isLoading: false, isAuthenticated: true },
+      {
+        authClient,
+        getAuthUserFn,
+        isAuthError: (error: unknown) => error === authError,
+        onUnauth,
+        renderFallback: () => h('div', { class: 'fallback' }, 'signed out'),
+      },
+      () => h(Thrower),
+    )
+    await nextTick()
+    await nextTick()
+
+    // Propagation stopped (`return false`): the mount above resolved instead
+    // of surfacing the slot error, and the boundary handled the unauth.
+    expect(authClient.getSession).toHaveBeenCalledTimes(1)
+    expect(onUnauth).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('.fallback').exists()).toBe(true)
+    expect(wrapper.text()).toBe('signed out')
+  })
+
+  it('renders null after an auth error when no renderFallback is given', async () => {
+    const onUnauth = vi.fn()
+    const authClient = makeAuthClient()
+    const authError = new Error('Unauthenticated')
+    const Thrower = defineComponent({
+      name: 'Thrower',
+      setup() {
+        return () => {
+          throw authError
+        }
+      },
+    })
+
+    const wrapper = await mountBoundary(
+      { isLoading: false, isAuthenticated: true },
+      { authClient, getAuthUserFn, isAuthError: () => true, onUnauth },
+      () => h(Thrower),
+    )
+    await nextTick()
+    await nextTick()
+
+    expect(onUnauth).toHaveBeenCalledTimes(1)
+    expect(wrapper.text()).toBe('')
+  })
+
+  it('lets non-auth errors propagate without unauthing', async () => {
+    const onUnauth = vi.fn()
+    const authClient = makeAuthClient()
+    const renderError = new Error('unrelated render failure')
+    const Thrower = defineComponent({
+      name: 'Thrower',
+      setup() {
+        return () => {
+          throw renderError
+        }
+      },
+    })
+
+    // `onErrorCaptured` does not return false for non-auth errors, so the
+    // error keeps propagating (and may reject the mount) — swallow it here.
+    await mountBoundary(
+      { isLoading: false, isAuthenticated: true },
+      { authClient, getAuthUserFn, isAuthError: () => false, onUnauth },
+      () => h(Thrower),
+    ).catch(() => {})
+    await nextTick()
+    await nextTick()
+
+    expect(authClient.getSession).not.toHaveBeenCalled()
+    expect(onUnauth).not.toHaveBeenCalled()
+  })
 })

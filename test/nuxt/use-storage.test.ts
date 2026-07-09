@@ -95,6 +95,30 @@ describe('useUpload', () => {
     expect(result.error.value).toBeInstanceOf(Error)
   })
 
+  it('resolves null with a browser-only error when XMLHttpRequest is unavailable', async () => {
+    const mutation = vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onError = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUpload(genUrlRef, { onError }))
+
+    // Simulate SSR: no XMLHttpRequest global at upload() time.
+    const host = globalThis as { XMLHttpRequest?: unknown }
+    const saved = host.XMLHttpRequest
+    host.XMLHttpRequest = undefined
+    try {
+      const id = await result.upload(new Blob(['data']))
+      expect(id).toBeNull()
+    }
+    finally {
+      host.XMLHttpRequest = saved
+    }
+
+    expect(result.error.value?.message).toMatch(/browser/i)
+    expect(onError).toHaveBeenCalledWith(expect.any(Error), expect.any(Blob))
+    expect(result.isUploading.value).toBe(false)
+    expect(mutation).not.toHaveBeenCalled()
+  })
+
   it('reset clears progress, error, and storage id', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 
@@ -141,6 +165,44 @@ describe('useUploadQueue', () => {
     expect(result.items.value.every(item => item.status === 'success')).toBe(true)
     expect(result.progress.value).toBe(1)
     expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('enqueues an array-like FileList (not a real Array or Blob)', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef))
+
+    const fileListLike = {
+      0: new Blob(['a']),
+      1: new Blob(['b']),
+      length: 2,
+    } as unknown as FileList
+    result.enqueue(fileListLike)
+
+    expect(result.items.value).toHaveLength(2)
+
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+
+    expect(result.items.value.map(item => item.storageId)).toEqual(['s0', 's1'])
+  })
+
+  it('remove aborts an in-flight item and drops it from the queue', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef))
+
+    result.enqueue(new Blob(['a']))
+    await waitFor(() => FakeXhr.instances.length === 1)
+    expect(result.items.value[0]!.status).toBe('uploading')
+
+    result.remove(result.items.value[0]!.id)
+
+    expect(FakeXhr.instances[0]!.aborted).toBe(true)
+    expect(result.items.value).toHaveLength(0)
+    expect(result.isUploading.value).toBe(false)
   })
 
   it('clear empties the queue', async () => {

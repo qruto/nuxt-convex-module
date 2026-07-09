@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -67,6 +67,37 @@ describe('setupDevtools', () => {
     expect(viteConfig.server?.proxy?.[DEVTOOLS_UI_ROUTE]).toMatchObject({
       changeOrigin: true,
     })
+  })
+
+  it('strips the devtools route prefix in the proxy rewrite', () => {
+    const { hooks, nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
+
+    setupDevtools(resolver as never, nuxt as never, info)
+
+    const viteConfig: {
+      server?: { proxy?: Record<string, { rewrite?: (path: string) => string }> }
+    } = {}
+    hooks.get('vite:extendConfig')!(viteConfig)
+
+    const rewrite = viteConfig.server!.proxy![DEVTOOLS_UI_ROUTE]!.rewrite!
+    expect(rewrite(`${DEVTOOLS_UI_ROUTE}/foo`)).toBe('/foo')
+  })
+
+  it('delegates the resolveFunctionSource RPC to the functions-dir lookup', () => {
+    const projectRoot = join(base, 'rpc-project')
+    mkdirSync(join(projectRoot, 'convex'), { recursive: true })
+    writeFileSync(join(projectRoot, 'convex', 'messages.ts'), '')
+    const { nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
+
+    setupDevtools(resolver as never, nuxt as never, { ...info, rootDir: projectRoot })
+    onDevToolsInitialized.mock.calls[0]![0]()
+
+    const rpc = extendServerRpc.mock.calls[0]![1] as {
+      resolveFunctionSource: (udfPath: string) => { filepath?: string }
+    }
+    expect(rpc.resolveFunctionSource('messages:list'))
+      .toEqual({ filepath: join(projectRoot, 'convex', 'messages.ts') })
+    expect(rpc.resolveFunctionSource('missing:list')).toEqual({})
   })
 
   it('registers the iframe tab and the server RPC', () => {

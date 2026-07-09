@@ -45,6 +45,14 @@ describe('uploadFile', () => {
     expect(onProgress).toHaveBeenLastCalledWith(1)
   })
 
+  it('rejects with the unexpected-response error on a 2xx non-JSON body', async () => {
+    restore = installFakeXhr()
+    const promise = uploadFile({ url: 'u', file: new Blob(['x']) })
+    // e.g. an HTML error page from a proxy in front of the deployment.
+    FakeXhr.instances[0]!.resolveWithBody('<html>proxy error</html>')
+    await expect(promise).rejects.toThrow(/unexpected response/)
+  })
+
   it('rejects on a non-2xx response', async () => {
     restore = installFakeXhr()
     const promise = uploadFile({ url: 'u', file: new Blob(['x']) })

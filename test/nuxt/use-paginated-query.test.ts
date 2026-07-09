@@ -10,13 +10,14 @@ import {
   type PaginationOptions,
   type PaginationResult,
 } from 'convex/server'
-import { compareValues, convexToJson, type Value } from 'convex/values'
+import { ConvexError, compareValues, convexToJson, type Value } from 'convex/values'
 import type { OptimisticLocalStore } from 'convex/browser'
 import { ConvexVueClient } from '../../src/runtime/vue/client'
 import {
   insertAtBottomIfLoaded,
   insertAtPosition,
   insertAtTop,
+  optimisticallyUpdateValueInPaginatedQuery,
   resetPaginationId,
   usePaginatedQuery,
   usePaginatedQuery_experimental,
@@ -76,10 +77,10 @@ function applyOptimisticQueryResult(
   })
 }
 
-function pushFirstPageError(
+function pushFirstPageFailure(
   client: ConvexVueClient,
   query: FunctionReference<'query'>,
-  message: string,
+  error: Error,
 ): void {
   void client.mutation(mutationRef, {}, {
     optimisticUpdate(localStore) {
@@ -92,10 +93,18 @@ function pushFirstPageError(
             id: 1,
           },
         },
-        new Error(message) as unknown as PaginationResult<unknown>,
+        error as unknown as PaginationResult<unknown>,
       )
     },
   })
+}
+
+function pushFirstPageError(
+  client: ConvexVueClient,
+  query: FunctionReference<'query'>,
+  message: string,
+): void {
+  pushFirstPageFailure(client, query, new Error(message))
 }
 
 describe('usePaginatedQuery', () => {
@@ -213,6 +222,83 @@ describe('usePaginatedQuery', () => {
       expect(() => result.results.value).toThrow('boom-positional')
       expect(() => result.status.value).toThrow('boom-positional')
 
+      await client.close()
+    })
+  })
+
+  // -- InvalidCursor recovery ---------------------------------------------------
+
+  it('warns and resets to LoadingFirstPage when the error message contains InvalidCursor', async () => {
+    await withInMemoryWebSocket(async ({ address }) => {
+      const warn = vi.fn()
+      const client = new ConvexVueClient(address, {
+        logger: { ...silentConnectLogger, warn },
+      })
+
+      const { result } = await mountWithConvex(
+        client,
+        () => usePaginatedQuery(queryRef, {}, { initialNumItems: 10 }),
+        { tick: true },
+      )
+
+      pushFirstPageFailure(
+        client,
+        queryRef,
+        new Error('InvalidCursor: cursor does not match the query'),
+      )
+      await nextTick()
+
+      // Instead of surfacing the error (positional forms would throw), the
+      // composable silently restarts pagination from a fresh first page.
+      expect(result.status.value).toBe('LoadingFirstPage')
+      expect(result.results.value).toEqual([])
+      expect(result.isLoading.value).toBe(true)
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('usePaginatedQuery hit error, resetting pagination state'),
+      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('InvalidCursor'))
+
+      // Let the fresh first-page subscription created by the reset attach
+      // before the client closes.
+      await nextTick()
+      await client.close()
+    })
+  })
+
+  it('resets pagination when a ConvexError flags an InvalidCursor system error', async () => {
+    await withInMemoryWebSocket(async ({ address }) => {
+      const warn = vi.fn()
+      const client = new ConvexVueClient(address, {
+        logger: { ...silentConnectLogger, warn },
+      })
+
+      const { result } = await mountWithConvex(
+        client,
+        () => usePaginatedQuery(queryRef, {}, { initialNumItems: 10 }),
+        { tick: true },
+      )
+
+      const error = new ConvexError({
+        isConvexSystemError: true,
+        paginationError: 'InvalidCursor',
+      })
+      // ConvexError derives its message from the data, which would trip the
+      // `message.includes('InvalidCursor')` shortcut. Blank it out so this
+      // test exercises the structural `data` check specifically.
+      error.message = 'paginated query failed'
+      pushFirstPageFailure(client, queryRef, error)
+      await nextTick()
+
+      expect(result.status.value).toBe('LoadingFirstPage')
+      expect(result.results.value).toEqual([])
+      expect(result.isLoading.value).toBe(true)
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('usePaginatedQuery hit error, resetting pagination state'),
+      )
+
+      // Let the fresh first-page subscription created by the reset attach
+      // before the client closes.
+      await nextTick()
       await client.close()
     })
   })
@@ -521,6 +607,95 @@ describe('usePaginatedQuery', () => {
 
         expect(status.value).toBe('Exhausted')
         expect(results.value).toEqual(['item1', 'item2'])
+
+        await client.close()
+      })
+    })
+
+    it('reports LoadingMore while the next page is in flight', async () => {
+      await withInMemoryWebSocket(async ({ address }) => {
+        const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+
+        const { result: { results, status, isLoading, loadMore } } = await mountWithConvex(
+          client,
+          () => usePaginatedQuery(queryRef, {}, { initialNumItems: 1 }),
+          { tick: true },
+        )
+
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 1, cursor: null, id: 1 } as PaginationOptions },
+          {
+            page: ['item1'],
+            continueCursor: 'abc',
+            isDone: false,
+            splitCursor: null,
+          } satisfies PaginationResult<unknown>,
+        )
+        await nextTick()
+
+        expect(status.value).toBe('CanLoadMore')
+
+        // Request the next page WITHOUT a seeded result: the composable sits
+        // in the intermediate LoadingMore state, keeping the loaded items.
+        loadMore(2)
+        await nextTick()
+
+        expect(status.value).toBe('LoadingMore')
+        expect(isLoading.value).toBe(true)
+        expect(results.value).toEqual(['item1'])
+
+        // Once the page arrives, loading completes as usual.
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 2, cursor: 'abc', id: 1 } as PaginationOptions },
+          {
+            page: ['item2'],
+            continueCursor: 'def',
+            isDone: true,
+            splitCursor: null,
+          } satisfies PaginationResult<unknown>,
+        )
+        await nextTick()
+
+        expect(status.value).toBe('Exhausted')
+        expect(results.value).toEqual(['item1', 'item2'])
+
+        await client.close()
+      })
+    })
+
+    it('halts accumulation at a page whose pageStatus is SplitRequired', async () => {
+      await withInMemoryWebSocket(async ({ address }) => {
+        const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+
+        const { result } = await mountWithConvex(
+          client,
+          () => usePaginatedQuery(queryRef, {}, { initialNumItems: 1 }),
+          { tick: true },
+        )
+
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 1, cursor: null, id: 1 } as PaginationOptions },
+          {
+            page: ['item1', 'item2'],
+            continueCursor: 'abc',
+            isDone: false,
+            splitCursor: null,
+            pageStatus: 'SplitRequired',
+          } satisfies PaginationResult<unknown>,
+        )
+        await nextTick()
+
+        // A SplitRequired page is treated as not-yet-loaded: its contents are
+        // NOT appended and the composable stays in the loading state.
+        expect(result.status.value).toBe('LoadingFirstPage')
+        expect(result.isLoading.value).toBe(true)
+        expect(result.results.value).toEqual([])
 
         await client.close()
       })
@@ -1174,6 +1349,104 @@ describe('insertAtBottomIfLoaded', () => {
   })
 })
 
+describe('optimisticallyUpdateValueInPaginatedQuery', () => {
+  type Item = { author: string, content: string }
+  type ChannelQuery = FunctionReference<
+    'query',
+    'public',
+    { paginationOpts: PaginationOptions, channel?: string },
+    PaginationResult<Item>
+  >
+  const paginatedQuery = anyApi.messages!.list as ChannelQuery
+
+  it('maps updateValue over every loaded page with matching args', () => {
+    const localQueryStore = new LocalQueryStoreFake()
+    setupPages({
+      localQueryStore,
+      paginatedQuery,
+      args: { channel: 'general' },
+      pages: [
+        [
+          { author: 'Alice', content: 'hi' },
+          { author: 'Bob', content: 'hi' },
+        ],
+        [{ author: 'Charlie', content: 'hi' }],
+      ],
+      isDone: false,
+    })
+
+    optimisticallyUpdateValueInPaginatedQuery(
+      localQueryStore,
+      paginatedQuery,
+      { channel: 'general' },
+      item => ({ ...item, content: 'edited' }),
+    )
+
+    expect(
+      getPaginatedQueryResults({
+        localQueryStore,
+        query: paginatedQuery,
+        argsToMatch: { channel: 'general' },
+      }),
+    ).toEqual([
+      { author: 'Alice', content: 'edited' },
+      { author: 'Bob', content: 'edited' },
+      { author: 'Charlie', content: 'edited' },
+    ])
+  })
+
+  it('skips pages with different args and unloaded pages', () => {
+    const localQueryStore = new LocalQueryStoreFake()
+    setupPages({
+      localQueryStore,
+      paginatedQuery,
+      args: { channel: 'general' },
+      pages: [[{ author: 'Alice', content: 'hi' }]],
+      isDone: false,
+    })
+    setupPages({
+      localQueryStore,
+      paginatedQuery,
+      args: { channel: 'marketing' },
+      pages: [[{ author: 'Dave', content: 'hi' }]],
+      isDone: false,
+    })
+    // A page of the matching query that has not loaded yet (value undefined).
+    const unloadedArgs = {
+      channel: 'general',
+      paginationOpts: { cursor: 'cursor0', id: 'unloaded', numItems: 10 },
+    }
+    localQueryStore.setQuery(paginatedQuery, unloadedArgs, undefined)
+
+    optimisticallyUpdateValueInPaginatedQuery(
+      localQueryStore,
+      paginatedQuery,
+      { channel: 'general' },
+      item => ({ ...item, content: 'edited' }),
+    )
+
+    // Matching loaded page updated… (read from the store directly: the
+    // helper walking the cursor chain would trip over the unloaded page)
+    const loadedGeneral = localQueryStore
+      .getAllQueries(paginatedQuery)
+      .find(q =>
+        (q.args as { channel?: string }).channel === 'general'
+        && q.value !== undefined,
+      )
+    expect(loadedGeneral?.value?.page).toEqual([{ author: 'Alice', content: 'edited' }])
+    // …page with different args untouched…
+    expect(
+      getPaginatedQueryResults({
+        localQueryStore,
+        query: paginatedQuery,
+        argsToMatch: { channel: 'marketing' },
+      }),
+    ).toEqual([{ author: 'Dave', content: 'hi' }])
+    // …and the unloaded page stays unloaded.
+    expect(localQueryStore.getQuery(paginatedQuery, unloadedArgs)).toBeUndefined()
+  })
+})
+
 describe('insertAtPosition', () => {
   const descPages = [
     [
@@ -1477,6 +1750,93 @@ describe('insertAtPosition', () => {
         { author: 'Charlie', rank: 30 },
         { author: 'Dave', rank: 40 },
       ])
+    })
+  })
+
+  describe('argsToMatch', () => {
+    type ChannelRankedQuery = FunctionReference<
+      'query',
+      'public',
+      { paginationOpts: PaginationOptions, channel?: string, tags?: string[] },
+      PaginationResult<Item>
+    >
+    const paginatedQuery = anyApi.messages!.list as ChannelRankedQuery
+
+    it('only inserts into query groups whose primitive args match strictly', () => {
+      const localQueryStore = new LocalQueryStoreFake()
+      setupPages({
+        localQueryStore,
+        paginatedQuery,
+        args: { channel: 'general' },
+        pages: ascPages,
+        isDone: false,
+      })
+      setupPages({
+        localQueryStore,
+        paginatedQuery,
+        args: { channel: 'random' },
+        pages: ascPages,
+        isDone: false,
+      })
+
+      insertAtPosition({
+        paginatedQuery,
+        localQueryStore,
+        argsToMatch: { channel: 'general' },
+        item: { author: 'Sarah', rank: 15 },
+        sortOrder: 'asc',
+        sortKeyFromItem: item => item.rank,
+      })
+
+      expect(
+        getPaginatedQueryResults({
+          localQueryStore,
+          query: paginatedQuery,
+          argsToMatch: { channel: 'general' },
+        }),
+      ).toEqual([
+        { author: 'Alice', rank: 10 },
+        { author: 'Sarah', rank: 15 },
+        { author: 'Bob', rank: 20 },
+        { author: 'Charlie', rank: 30 },
+        { author: 'Dave', rank: 40 },
+      ])
+      // The non-matching group is left untouched.
+      expect(
+        getPaginatedQueryResults({
+          localQueryStore,
+          query: paginatedQuery,
+          argsToMatch: { channel: 'random' },
+        }),
+      ).toEqual(ascPages.flat())
+    })
+
+    it('never matches object/array argsToMatch values (strict === , upstream parity)', () => {
+      const localQueryStore = new LocalQueryStoreFake()
+      setupPages({
+        localQueryStore,
+        paginatedQuery,
+        // Deep-equal but referentially distinct from the argsToMatch array
+        // below — `insertAtPosition` deliberately compares with `===` (unlike
+        // insertAtTop/insertAtBottomIfLoaded's structural compareValues).
+        args: { tags: ['a'] },
+        pages: ascPages,
+        isDone: false,
+      })
+
+      insertAtPosition({
+        paginatedQuery,
+        localQueryStore,
+        argsToMatch: { tags: ['a'] },
+        item: { author: 'Sarah', rank: 15 },
+        sortOrder: 'asc',
+        sortKeyFromItem: item => item.rank,
+      })
+
+      // No group matched, so nothing was inserted.
+      expect(
+        getPaginatedQueryResults({ localQueryStore, query: paginatedQuery }),
+      ).toEqual(ascPages.flat())
     })
   })
 })

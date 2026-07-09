@@ -21,6 +21,42 @@ const createClient = () =>
 
 const flushMicrotasks = () => new Promise<void>(resolve => setTimeout(resolve, 0))
 
+// A plausible ConnectionState for the fake sync client below.
+const fakeConnectionState = () => ({
+  isWebSocketConnected: false,
+  hasInflightRequests: false,
+  hasEverConnected: false,
+  connectionCount: 0,
+  connectionRetries: 0,
+  inflightMutations: 0,
+  inflightActions: 0,
+  timeOfOldestInflightRequest: null,
+})
+
+/**
+ * Install a minimal `BaseConvexClient` stand-in on the private `cachedSync`
+ * field so the bridge can read local query results without opening a
+ * WebSocket. Must run BEFORE `createConvexDevtoolsBridge` so its property trap
+ * adopts the fake on creation.
+ */
+const installFakeSync = (
+  client: ConvexVueClient,
+  localQueryResultByToken: (token: string) => unknown,
+) => {
+  Reflect.set(client, 'cachedSync', {
+    connectionState: fakeConnectionState,
+    subscribeToConnectionState: () => () => {},
+    close: async () => {},
+    localQueryResultByToken,
+  })
+}
+
+/** Register a raw listener token directly on the client's subscription map. */
+const addListenerToken = (client: ConvexVueClient, token: string) => {
+  const listeners = Reflect.get(client, 'listeners') as Map<string, Set<() => void>>
+  listeners.set(token, new Set([() => {}]))
+}
+
 describe('devtools bridge', () => {
   let client: ConvexVueClient
 
@@ -149,6 +185,74 @@ describe('devtools bridge', () => {
       const logs = bridge.getSnapshot().logs
       expect(logs[0]).toMatchObject({ level: 'warn', args: ['socket', '{"code":1006}'] })
       expect(logs[1]!.args[0]).toContain('boom')
+    })
+
+    it('degrades to the raw token when it is not JSON', () => {
+      const bridge = createConvexDevtoolsBridge(client)
+      addListenerToken(client, 'opaque-token')
+
+      const [query] = bridge.getSnapshot().queries
+      expect(query).toMatchObject({
+        udfPath: 'opaque-token',
+        args: undefined,
+        paginated: false,
+      })
+    })
+
+    it('serializes a defined local query result into the snapshot', () => {
+      installFakeSync(client, () => ({ channel: 'general', count: 2 }))
+      const bridge = createConvexDevtoolsBridge(client)
+      addListenerToken(client, JSON.stringify({ udfPath: 'myQuery:default', args: {} }))
+
+      const [query] = bridge.getSnapshot().queries
+      expect(query!.result).toEqual({ channel: 'general', count: 2 })
+      expect(query!.errorMessage).toBeUndefined()
+    })
+
+    it('falls back to String() for local results convexToJson cannot serialize', () => {
+      installFakeSync(client, () => () => {})
+      const bridge = createConvexDevtoolsBridge(client)
+      addListenerToken(client, JSON.stringify({ udfPath: 'myQuery:default', args: {} }))
+
+      const [query] = bridge.getSnapshot().queries
+      expect(typeof query!.result).toBe('string')
+      expect(query!.result).toContain('=>')
+    })
+
+    it('records an errorMessage when reading the local result throws', () => {
+      installFakeSync(client, () => {
+        throw new Error('query blew up')
+      })
+      const bridge = createConvexDevtoolsBridge(client)
+      addListenerToken(client, JSON.stringify({ udfPath: 'myQuery:default', args: {} }))
+
+      const [query] = bridge.getSnapshot().queries
+      expect(query!.errorMessage).toBe('query blew up')
+      expect(query!.result).toBeUndefined()
+    })
+
+    it('falls back to String() for log args JSON.stringify cannot handle', () => {
+      const bridge = createConvexDevtoolsBridge(client)
+      const circular: Record<string, unknown> = {}
+      circular.self = circular
+
+      client.logger.log(circular)
+
+      expect(bridge.getSnapshot().logs[0]).toMatchObject({
+        level: 'log',
+        args: ['[object Object]'],
+      })
+    })
+
+    it('stops delivering events after the unsubscribe returned by on() is called', () => {
+      const bridge = createConvexDevtoolsBridge(client)
+      const callback = vi.fn()
+
+      const off = bridge.on('log', callback)
+      off()
+      client.logger.warn('dropped')
+
+      expect(callback).not.toHaveBeenCalled()
     })
 
     it('publishes auth snapshots pushed by the plugin', () => {
