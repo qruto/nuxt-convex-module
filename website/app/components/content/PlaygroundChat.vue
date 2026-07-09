@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // Live chat: `useQuery` streams the message list over the WebSocket;
 // `useMutation` sends. Open the page in a second tab to see updates propagate.

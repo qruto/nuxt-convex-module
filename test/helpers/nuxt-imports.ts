@@ -1,9 +1,9 @@
 type TestRuntimeConfig = {
-  backend?: {
+  convex?: {
     siteUrl?: string
   }
   public?: {
-    backend?: {
+    convex?: {
       url?: string
       siteUrl?: string
     }

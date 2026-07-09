@@ -224,9 +224,9 @@ export function createConvexAuthState(
       if (toValue(authProviderAuthenticated)) {
         client.setAuth(
           fetchToken,
-          (backendReportsIsAuthenticated) => {
+          (convexReportsIsAuthenticated) => {
             if (isThisEffectRelevant) {
-              isConvexAuthenticated.value = backendReportsIsAuthenticated
+              isConvexAuthenticated.value = convexReportsIsAuthenticated
             }
           },
           // Upstream names this callback's parameter `isRefreshing` too; that

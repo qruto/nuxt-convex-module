@@ -28,9 +28,9 @@ beforeEach(() => {
 describe('resolveFunctionsDir', () => {
   it('normalizes the functions field from convex.json (leading ./ and trailing slash)', () => {
     const root = makeRoot()
-    writeFileSync(join(root, 'convex.json'), JSON.stringify({ functions: './src/backend/' }))
+    writeFileSync(join(root, 'convex.json'), JSON.stringify({ functions: './src/functions/' }))
 
-    expect(resolveFunctionsDir(root)).toBe('src/backend')
+    expect(resolveFunctionsDir(root)).toBe('src/functions')
   })
 
   it('falls back to the default and warns on malformed convex.json', () => {
@@ -49,10 +49,9 @@ describe('resolveFunctionsDir', () => {
     expect(warn).not.toHaveBeenCalled()
   })
 
-  it('resolves an existing backend/ dir when convex/ is absent', () => {
+  it('defaults to convex/ when no convex.json exists', () => {
     const root = makeRoot()
-    mkdirSync(join(root, 'backend'))
 
-    expect(resolveFunctionsDir(root)).toBe('backend')
+    expect(resolveFunctionsDir(root)).toBe('convex')
   })
 })

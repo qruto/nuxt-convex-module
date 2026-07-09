@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // `useConvexConnectionState` returns a ShallowRef<ConnectionState> that
 // updates whenever any part of the connection state changes. Upstream marks
@@ -31,7 +31,7 @@ async function ping() {
     await analyze({ input: 'connection state ping' })
   }
   catch {
-    // Backend offline — the grid already shows it.
+    // Deployment offline — the grid already shows it.
   }
   finally {
     pinging.value = false

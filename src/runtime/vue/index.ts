@@ -165,9 +165,9 @@ export {
 
 // App API wiring (provide/consume the generated Convex `api`).
 export {
-  provideBackendApi,
-  useBackendApi,
-  useBackendNamespace,
-  BackendApiKey,
-  type BackendApi,
+  provideConvexApi,
+  useConvexApi,
+  useConvexNamespace,
+  ConvexApiKey,
+  type ConvexApi,
 } from './provide'

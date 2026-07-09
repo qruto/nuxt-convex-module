@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Shared chrome for playground demos: frames the live example and surfaces the
-// WebSocket connection state so a stopped local backend reads as "offline"
+// WebSocket connection state so a stopped local deployment reads as "offline"
 // instead of a silently empty demo.
 withDefaults(defineProps<{ title?: string }>(), { title: 'Demo' })
 
@@ -18,7 +18,7 @@ const isConnected = computed(() => connectionState.value.isWebSocketConnected)
         :data-connected="isConnected"
       >
         <span class="playground-demo-status-dot" />
-        {{ isConnected ? 'Live' : 'Backend offline' }}
+        {{ isConnected ? 'Live' : 'Offline' }}
       </span>
     </div>
     <div class="playground-demo-body">

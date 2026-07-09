@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 // the Convex client and the scoped auth state, consuming the cross-domain
 // one-time token first.
 
-const runtimeConfig = { public: { backend: { url: 'https://example.convex.cloud' } } }
+const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud' } } }
 const initialTokenState = { value: null as string | null }
 
 vi.mock('#app', () => ({
@@ -59,7 +59,7 @@ function fakeNuxtApp() {
 
 afterEach(() => {
   vi.clearAllMocks()
-  runtimeConfig.public.backend.url = 'https://example.convex.cloud'
+  runtimeConfig.public.convex.url = 'https://example.convex.cloud'
 })
 
 describe('better-auth client plugin', () => {
@@ -77,7 +77,7 @@ describe('better-auth client plugin', () => {
   })
 
   it('warns and provides nothing when no Convex URL is configured', async () => {
-    runtimeConfig.public.backend.url = ''
+    runtimeConfig.public.convex.url = ''
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { provided, app } = fakeNuxtApp()
 

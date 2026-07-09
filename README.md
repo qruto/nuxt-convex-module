@@ -22,9 +22,9 @@ Every supported upstream package is ported or wired with the **same public API**
 | [`convex`](https://npmjs.com/package/convex) — `/react` + `/nextjs` | The whole data layer: composables, `ConvexVueClient`, auth helpers, SSR preload + server (Nitro) utils | **always on** | `…/vue`, `…/server` | `1.42` |
 | `convex` — [`/react-clerk`](https://docs.convex.dev/auth/clerk) | [Clerk](https://clerk.com) auth: `provideConvexAuthFromClerk()` · `<ConvexProviderWithClerk>` | `npm i @clerk/vue` | `…/clerk/vue` | `1.42` |
 | `convex` — [`/react-auth0`](https://docs.convex.dev/auth/auth0) | [Auth0](https://auth0.com) auth: `provideConvexAuthFromAuth0()` · `<ConvexProviderWithAuth0>` | `npm i @auth0/auth0-vue` | `…/auth0/vue` | `1.42` |
-| [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth) | [Better Auth](https://better-auth.com): `useAuth`, `/api/auth/**` proxy, SSR prefetch, `auth` middleware, `<AuthBoundary>`, `backendAuth` | `npm i @convex-dev/better-auth` | `…/better-auth/vue` | `0.12` |
+| [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth) | [Better Auth](https://better-auth.com): `useAuth`, `/api/auth/**` proxy, SSR prefetch, `auth` middleware, `<AuthBoundary>`, `convexAuth` | `npm i @convex-dev/better-auth` | `…/better-auth/vue` | `0.12` |
 | [`@convex-dev/polar`](https://github.com/get-convex/polar) | [Polar](https://polar.sh) billing: `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar` | `…/polar/vue` | `0.9` |
-| [`@convex-dev/resend`](https://github.com/get-convex/resend) | **Backend-only** — no client port needed; call its functions with `useMutation` / `useAction` | (use in your Convex backend) | — | — |
+| [`@convex-dev/resend`](https://github.com/get-convex/resend) | **Server-only** — no client port needed; call its functions with `useMutation` / `useAction` | (use in your Convex deployment) | — | — |
 
 Subpath = `nuxt-convex-module/<subpath>`. Pinned baselines and the file-by-file map: [`PARITY.md`](./PARITY.md).
 
@@ -54,7 +54,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 - `usePreloadedQuery` — hydrate an SSR-preloaded query on the client
 
 **App API wiring**
-- `provideBackendApi` / `useBackendApi` / `useBackendNamespace` — provide and consume the generated `api`
+- `provideConvexApi` / `useConvexApi` / `useConvexNamespace` — provide and consume the generated `api`
 
 ### Auto-imported components · `addComponent`
 
@@ -66,7 +66,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 
 - `fetchQuery` / `fetchMutation` / `fetchAction` — one-shot Convex calls
 - `preloadQuery` / `preloadedQueryResult` — SSR preload and the client hydration handoff
-- `backendAuth` — request-scoped authenticated server client (Better Auth only)
+- `convexAuth` — request-scoped authenticated server client (Better Auth only)
 
 ### Plugins, middleware & dev wiring
 
@@ -78,8 +78,8 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 
 ### Runtime config & import aliases
 
-- **Runtime config** (`backend` key, via `updateRuntimeConfig`): public `backend.url` / `backend.siteUrl`
-- **Aliases** (Vite + Nitro): `#backend`, `#backend/api`, `#backend/server`, `#backend/dataModel`, `#backend/_generated`
+- **Runtime config** (`convex` key, via `updateRuntimeConfig`): public `convex.url` / `convex.siteUrl`
+- **Aliases** (Vite + Nitro): `#convex`, `#convex/api`, `#convex/server`, `#convex/dataModel`, `#convex/_generated`
 
 ### Module dependency · `moduleDependencies`
 
@@ -97,7 +97,7 @@ Everything above is auto-imported in Nuxt, but each surface is also a real **sub
 | `nuxt-convex-module/clerk/vue` | `provideConvexAuthFromClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/vue` | `provideConvexAuthFromAuth0`, `<ConvexProviderWithAuth0>` |
 | `nuxt-convex-module/better-auth/vue` | `useAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
-| `nuxt-convex-module/better-auth/server` | Nitro/server: `backendAuth(event)` (auto-imported in server code; import explicitly for the `BackendAuthOptions` / `BackendAuthService` types) |
+| `nuxt-convex-module/better-auth/server` | Nitro/server: `convexAuth(event)` (auto-imported in server code; import explicitly for the `ConvexAuthOptions` / `ConvexAuthService` types) |
 | `nuxt-convex-module/polar/vue` | `<CheckoutLink>`, `<CustomerPortalLink>` |
 
 ## Integrations (auto-detected)
@@ -127,7 +127,7 @@ export default defineNuxtConfig({
 })
 ```
 
-- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useAuth` (session, sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `backendAuth(event)` for request-scoped server calls. Imported directly via `nuxt-convex-module/better-auth/vue`. Bring your own auth client (to choose plugins — e.g. add `crossDomainClient()` for cross-domain auth) by pointing `convex.betterAuth.authClient` at a module that exports `authClient`; otherwise the bundled default (`convexClient` + `emailOTPClient` + `passkeyClient`) is used.
+- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useAuth` (session, sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `convexAuth(event)` for request-scoped server calls. Imported directly via `nuxt-convex-module/better-auth/vue`. Bring your own auth client (to choose plugins — e.g. add `crossDomainClient()` for cross-domain auth) by pointing `convex.betterAuth.authClient` at a module that exports `authClient`; otherwise the bundled default (`convexClient` + `emailOTPClient` + `passkeyClient`) is used.
 - **Clerk** (when `@clerk/vue` is installed) — a Vue port of `convex/react-clerk`: `provideConvexAuthFromClerk()` and `<ConvexProviderWithClerk>`. Types via `nuxt-convex-module/clerk/vue`.
 - **Auth0** (when `@auth0/auth0-vue` is installed) — a Vue port of `convex/react-auth0`: `provideConvexAuthFromAuth0()` and `<ConvexProviderWithAuth0>`. Types via `nuxt-convex-module/auth0/vue`.
 - **Polar** (when `@convex-dev/polar` is installed) — a Vue port of `@convex-dev/polar/react`'s `<CheckoutLink>` and `<CustomerPortalLink>`. Types via `nuxt-convex-module/polar/vue`.
@@ -172,7 +172,7 @@ npx convex dev
 
 ```vue
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // SSR-rendered AND live-updating — Nuxt's { data, status, error } shape:
 const { data: messages } = useAsyncQuery(api.messages.list, {})

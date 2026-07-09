@@ -1,4 +1,4 @@
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // `preloadQuery` and `fetchQuery` are auto-imported in Nitro server code.
 // `preloadQuery` returns a JSON-serializable `Preloaded` payload for
@@ -14,9 +14,9 @@ export default defineEventHandler(async () => {
   catch {
     throw createError({
       statusCode: 503,
-      statusMessage: 'Convex backend unavailable',
+      statusMessage: 'Convex deployment unavailable',
       message:
-        'The local Convex backend is offline. Start it with `npx convex dev` in the website directory.',
+        'The local Convex deployment is offline. Start it with `npx convex dev` in the website directory.',
     })
   }
 })

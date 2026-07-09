@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // One composable end to end: fetched on the server during SSR, hydrated
 // through the Nuxt payload, then upgraded to a live WebSocket subscription —
@@ -14,7 +14,7 @@ const { data: messages, status, error, refresh } = useAsyncQuery(api.messages.li
       class="async-offline"
     >
       <p class="async-offline-text">
-        The SSR fetch couldn't reach the Convex backend.
+        The SSR fetch couldn't reach the Convex deployment.
         Start it with <code>npx convex dev</code> in <code>website/</code>, then retry.
       </p>
       <button

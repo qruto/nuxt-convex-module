@@ -20,7 +20,7 @@ import { ConvexVueClient, ConvexClientKey } from './client'
 export default defineNuxtPlugin({
   name: 'nuxt-convex-module:client',
   setup(nuxtApp) {
-    const url = useRuntimeConfig().public.backend.url
+    const url = useRuntimeConfig().public.convex.url
 
     if (!url) {
       if (import.meta.client) {

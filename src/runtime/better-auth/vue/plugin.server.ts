@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { setResponseHeader } from 'h3'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
-import { backendAuth } from '../nuxt/server'
+import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
 
 type ConvexNuxtInjection = {
@@ -23,7 +23,7 @@ export async function prefetchAuthToken(
   initialToken: ReturnType<typeof useState<string | null>>,
 ) {
   try {
-    const token = await backendAuth(event!).getToken()
+    const token = await convexAuth(event!).getToken()
     initialToken.value = token ?? null
     if (token && event) {
       // The token is serialized into the client-readable SSR payload
@@ -46,7 +46,7 @@ export async function prefetchAuthToken(
  * Mirrors the Next.js parity layer that calls `getToken()` from the root
  * server layout and passes it as `initialToken` to `ConvexBetterAuthProvider`.
  *
- * The token is stashed into a Nuxt `useState('backend:initialToken')` so the
+ * The token is stashed into a Nuxt `useState('convex:initialToken')` so the
  * client plugin can hand it to `useAuth(initialToken)` before the first
  * Convex `setAuth` call — avoiding an extra Better Auth round-trip on first
  * paint.
@@ -54,14 +54,14 @@ export async function prefetchAuthToken(
 export default defineNuxtPlugin<ConvexNuxtInjection>({
   name: 'nuxt-convex-module:better-auth:server',
   async setup(nuxtApp) {
-    const initialToken = useState<string | null>('backend:initialToken', () => null)
+    const initialToken = useState<string | null>('convex:initialToken', () => null)
 
     // Provide a Convex client on SSR so composables like `useMutation` /
     // `useAction` that call `useConvex()` during component setup don't throw.
     // The WebSocket is opened lazily on first subscription — `usePreloadedQuery`
     // and `usePreloadedAuthQuery` short-circuit on the server, so no
     // subscriptions are created during SSR.
-    const url = useRuntimeConfig().public.backend.url
+    const url = useRuntimeConfig().public.convex.url
     const ssrClient = url ? new ConvexVueClient(url) : undefined
     if (ssrClient) {
       nuxtApp.vueApp.provide(ConvexClientKey, ssrClient)

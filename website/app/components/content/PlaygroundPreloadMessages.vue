@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import type { Preloaded } from 'nuxt-convex-module/vue'
 

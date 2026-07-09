@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // SSR-rendered AND live: fetched on the server, hydrated through the Nuxt
 // payload, then upgraded to a realtime WebSocket subscription on the client.

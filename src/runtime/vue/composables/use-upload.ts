@@ -174,7 +174,7 @@ export interface VueUpload {
  * ```vue
  * <script setup lang="ts">
  * import { useUpload, useMutation } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const saveImage = useMutation(api.images.save)
  * const { upload, isUploading, progress, error } = useUpload(

@@ -1,23 +1,23 @@
 import { useRuntimeConfig } from '#imports'
 
-type BackendRuntimeConfig = {
-  backend?: {
+type ConvexRuntimeConfig = {
+  convex?: {
     siteUrl?: string
   }
   public?: {
-    backend?: {
+    convex?: {
       url?: string
       siteUrl?: string
     }
   }
 }
 
-export function getBackendRuntimeConfig() {
+export function getConvexRuntimeConfig() {
   try {
-    const config = useRuntimeConfig() as BackendRuntimeConfig
+    const config = useRuntimeConfig() as ConvexRuntimeConfig
     return {
-      url: config.public?.backend?.url,
-      siteUrl: config.backend?.siteUrl || config.public?.backend?.siteUrl,
+      url: config.public?.convex?.url,
+      siteUrl: config.convex?.siteUrl || config.public?.convex?.siteUrl,
     }
   }
   catch {

@@ -46,12 +46,12 @@ describe('createScopedConvexAuthState', () => {
     })
 
     // The watchers registered inside the scope: setAuth ran immediately, and
-    // the state is loading until the backend confirms the token.
+    // the state is loading until the deployment confirms the token.
     expect(client.setAuth).toHaveBeenCalledTimes(1)
     expect(state.isLoading.value).toBe(true)
     expect(state.isAuthenticated.value).toBe(false)
 
-    // Backend confirms the token → the state reacts.
+    // The deployment confirms the token → the state reacts.
     onAuthChange?.(true)
     await nextTick()
     expect(state.isLoading.value).toBe(false)

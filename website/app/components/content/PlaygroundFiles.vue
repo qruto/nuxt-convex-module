@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // File storage: `useUpload` for a single file, `useUploadQueue` for batches,
 // `useStorageUrl` to resolve a served URL from a (possibly null) storage id.

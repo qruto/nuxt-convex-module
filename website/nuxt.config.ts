@@ -8,7 +8,7 @@ try {
 }
 catch {
   // No local deployment configured yet — the site still builds; the
-  // playground pages show their "backend offline" state.
+  // playground pages show their "offline" state.
 }
 
 // The documentation site for `nuxt-convex-module` — one Nuxt app combining the
@@ -76,7 +76,7 @@ export default defineNuxtConfig({
     },
   },
   // The playground pages run against the local anonymous Convex deployment.
-  // Better Auth stays off (the docs deployment has no auth backend); Polar's
+  // Better Auth stays off (the docs deployment has no auth server); Polar's
   // components are enabled — the playground demos them against demo actions.
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,

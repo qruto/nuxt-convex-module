@@ -36,7 +36,7 @@ const UserSubscription = defineComponent({
  * -->
  * <script setup lang="ts">
  * import { AuthBoundary, authClient } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  * import { isAuthError } from '~/utils/auth'
  * </script>
  *

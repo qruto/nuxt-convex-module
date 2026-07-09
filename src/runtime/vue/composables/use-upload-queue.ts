@@ -99,7 +99,7 @@ function nextQueueItemId(): string {
  * ```vue
  * <script setup lang="ts">
  * import { useUploadQueue, useMutation } from '#imports'
- * import { api } from '#backend/api'
+ * import { api } from '#convex/api'
  *
  * const saveImage = useMutation(api.images.save)
  * const { items, enqueue, progress, isUploading } = useUploadQueue(

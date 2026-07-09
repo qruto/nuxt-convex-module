@@ -27,7 +27,7 @@
       </div>
       <p class="billing-note">
         Each link resolves its URL by calling a Convex action on mount and
-        renders once the URL arrives — with the backend offline the portal link
+        renders once the URL arrives — with the deployment offline the portal link
         stays hidden. Here both point at polar.sh sandbox pages.
       </p>
     </div>

@@ -1,7 +1,7 @@
 import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent } from '#app'
 import { watch } from 'vue'
 import { useAuth } from '../vue/use-auth'
-import { backendAuth } from './server'
+import { convexAuth } from './server'
 
 /**
  * Auth route middleware — protects pages from unauthenticated access.
@@ -22,7 +22,7 @@ export async function serverGuard(path: string) {
   // so a bare `navigateTo` afterwards throws "called outside of setup". Restore
   // it with runWithContext so the server-side redirect works on direct loads.
   const nuxtApp = useNuxtApp()
-  const authed = await backendAuth(event).isAuthenticated()
+  const authed = await convexAuth(event).isAuthenticated()
   if (!authed && path !== '/login') {
     return nuxtApp.runWithContext(() => navigateTo('/login'))
   }

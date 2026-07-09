@@ -102,7 +102,7 @@ describe('ConvexAuthState', () => {
     // setAuth fires despite the provider still loading...
     expect(client.setAuth).toHaveBeenCalledTimes(1)
     // ...but the surfaced state stays loading: the reconciliation keeps
-    // isConvexAuthenticated null while the provider loads, even if the backend
+    // isConvexAuthenticated null while the provider loads, even if the deployment
     // confirms the token in the meantime.
     expect(wrapper.text()).toBe('Loading...')
 

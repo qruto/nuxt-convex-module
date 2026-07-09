@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import type { RequestForQueries } from 'nuxt-convex-module/vue'
-import { api } from '#backend/api'
+import { api } from '#convex/api'
 
 // `useQueries` subscribes to a *dynamic* set of queries: the checkboxes below
 // add and remove entries from the request object, and the composable

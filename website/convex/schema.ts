@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
-// Backend for the docs playground — a small team-chat + tasks demo that
+// Convex functions for the docs playground — a small team-chat + tasks demo that
 // exercises every client feature: live queries, mutations (with optimistic
 // updates), actions, cursor pagination, and file storage.
 export default defineSchema({
