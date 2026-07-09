@@ -102,6 +102,18 @@ export function useQueriesHelper(
   // reactive `queries` input changes.
   watchEffect((onCleanup) => {
     const currentQueries = toValue(queries)
+
+    // Upstream subscribes inside a passive effect (useEffect), which React
+    // never runs during SSR — only the render-time `getLocalResults` read
+    // happens on the server. Vue's watchEffect *does* run during SSR setup, so
+    // mirror the upstream invariant here: read local results (always
+    // `undefined` — no sync client exists) and never subscribe, which would
+    // lazily instantiate the WebSocket client on the server.
+    if (import.meta.server) {
+      results.value = observer.getLocalResults(currentQueries)
+      return
+    }
+
     observer.setQueries(currentQueries)
 
     // Read the initial value synchronously.
