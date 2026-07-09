@@ -83,6 +83,21 @@ export default defineConfig({
           },
         },
       }),
+      {
+        // End-to-end: builds the fixture apps with @nuxt/test-utils/e2e and
+        // exercises the module against a real Nitro server. Each fixture build
+        // takes on the order of a minute, so the default scripts exclude this
+        // project (`--project '!e2e'`) — run it via `pnpm test:e2e` (own CI step).
+        test: {
+          name: 'e2e',
+          include: ['test/e2e/**/*.{test,spec}.ts'],
+          environment: 'node',
+          testTimeout: 120_000,
+          hookTimeout: 300_000,
+          // Fixture builds share .nuxt/dist paths per rootDir; keep files sequential.
+          fileParallelism: false,
+        },
+      },
     ],
   },
 })
