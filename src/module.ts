@@ -1,5 +1,6 @@
 import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
+import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
@@ -105,6 +106,18 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url)
 
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
+
+    const diagnostics = validateModuleOptions({
+      url,
+      siteUrl,
+      authRoute: options.authRoute || '/api/auth',
+      authClient: typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined,
+      rootDir: nuxt.options.rootDir,
+    })
+    for (const message of diagnostics.errors) logger.error(message)
+    for (const message of diagnostics.warnings) logger.warn(message)
+    options.authRoute = diagnostics.authRoute
+
     registerBackendAliases(nuxt)
     registerAuthClientAlias(resolver, nuxt, options)
 
@@ -171,6 +184,98 @@ export function resolveIntegrationState(
   return installed
     ? { enabled: true, missingPackage: false }
     : { enabled: false, missingPackage: true }
+}
+
+/** Result of {@link validateModuleOptions}: findings plus normalized values. */
+export interface ModuleOptionDiagnostics {
+  errors: string[]
+  warnings: string[]
+  /** `authRoute` with a leading slash ensured and any trailing slash stripped. */
+  authRoute: string
+}
+
+/**
+ * Validate the resolved module configuration, turning silent misconfiguration
+ * (swapped `.convex.cloud`/`.convex.site` URLs, malformed URLs, an `authRoute`
+ * that would produce a broken server-handler route, a `betterAuth.authClient`
+ * path that doesn't exist) into actionable messages. Pure — the caller logs
+ * the findings and applies the normalized `authRoute`. Exported for tests.
+ */
+export function validateModuleOptions(input: {
+  url: string
+  siteUrl: string
+  authRoute: string
+  authClient?: string
+  rootDir: string
+}): ModuleOptionDiagnostics {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  if (input.url && input.url.endsWith('.convex.site')) {
+    errors.push(
+      `\`convex.url\` ("${input.url}") ends with .convex.site, which is the HTTP Actions domain — deployment URLs end with .convex.cloud. Did you mean to set \`convex.siteUrl\`?`,
+    )
+  }
+  else if (input.url && !isHttpUrl(input.url)) {
+    warnings.push(
+      `\`convex.url\` ("${input.url}") does not look like a valid http(s) URL — Convex clients will fail to connect.`,
+    )
+  }
+
+  if (input.siteUrl && input.siteUrl.endsWith('.convex.cloud')) {
+    warnings.push(
+      `\`convex.siteUrl\` ("${input.siteUrl}") ends with .convex.cloud, which is the deployment domain — site URLs (HTTP Actions) end with .convex.site. Did you swap it with \`convex.url\`?`,
+    )
+  }
+  else if (input.siteUrl && !isHttpUrl(input.siteUrl)) {
+    warnings.push(
+      `\`convex.siteUrl\` ("${input.siteUrl}") does not look like a valid http(s) URL.`,
+    )
+  }
+
+  let authRoute = input.authRoute
+  if (!authRoute.startsWith('/')) {
+    authRoute = `/${authRoute}`
+    warnings.push(
+      `\`convex.authRoute\` ("${input.authRoute}") must start with "/" — using "${authRoute}".`,
+    )
+  }
+  if (authRoute.length > 1 && authRoute.endsWith('/')) {
+    authRoute = authRoute.replace(/\/+$/, '')
+  }
+
+  if (input.authClient && !authClientModuleExists(input.authClient, input.rootDir)) {
+    errors.push(
+      `\`convex.betterAuth.authClient\` points at "${input.authClient}", which does not exist (resolved against \`${input.rootDir}\`). The build would fail with an opaque import error — fix the path or remove the option to use the bundled client.`,
+    )
+  }
+
+  return { errors, warnings, authRoute }
+}
+
+function isHttpUrl(value: string): boolean {
+  if (!value.startsWith('http://') && !value.startsWith('https://')) {
+    return false
+  }
+  try {
+    new URL(value)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+/**
+ * Whether the custom `betterAuth.authClient` module exists on disk — probing
+ * the common module extensions since the option (an import specifier) may
+ * omit one.
+ */
+function authClientModuleExists(authClient: string, rootDir: string): boolean {
+  const base = isAbsolute(authClient) ? authClient : join(rootDir, authClient)
+  return ['', '.ts', '.js', '.mts', '.mjs', '/index.ts', '/index.js'].some(
+    suffix => existsSync(`${base}${suffix}`),
+  )
 }
 
 /**
