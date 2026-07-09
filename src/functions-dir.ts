@@ -1,5 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { useLogger } from '@nuxt/kit'
+
+/** Scoped, silenceable build-time logger (consola) for this module. */
+const logger = useLogger('nuxt-convex-module')
 
 const DEFAULT_FUNCTIONS_DIR = 'convex'
 const ALT_FUNCTIONS_DIR = 'backend'
@@ -50,7 +54,7 @@ function readFunctionsDirFromConvexJson(convexJsonPath: string): string | undefi
     return normalizeFunctionsDir(convexJson.functions)
   }
   catch (error) {
-    console.warn(`[nuxt-convex-module] Failed to parse convex.json: ${error instanceof Error ? error.message : String(error)}`)
+    logger.warn(`Failed to parse convex.json: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 

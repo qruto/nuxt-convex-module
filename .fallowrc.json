@@ -20,7 +20,7 @@
     "devtools-client-app/app/composables/**/*.ts",
     "website/nuxt.config.ts",
     "website/app.config.ts",
-    "website/app.css",
+    "website/app/app.css",
     "website/app/layouts/**/*.vue",
     "website/app/pages/**/*.vue",
     "website/app/components/**/*.vue",

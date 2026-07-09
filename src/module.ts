@@ -80,6 +80,9 @@ export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'nuxt-convex-module',
     configKey: 'convex',
+    // Surfaced by Nuxt DevTools and the nuxt/modules registry. Point at the
+    // deployed docs site once it ships.
+    docs: 'https://github.com/qruto/nuxt-convex-module#readme',
     // `moduleDependencies` (below) is a Nuxt >= 4.1 feature — fail fast with a
     // clear kit error on older Nuxt instead of silently skipping nuxt-security.
     compatibility: {
