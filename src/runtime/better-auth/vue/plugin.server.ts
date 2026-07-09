@@ -51,35 +51,38 @@ export async function prefetchAuthToken(
  * Convex `setAuth` call — avoiding an extra Better Auth round-trip on first
  * paint.
  */
-export default defineNuxtPlugin<ConvexNuxtInjection>(async (nuxtApp) => {
-  const initialToken = useState<string | null>('backend:initialToken', () => null)
+export default defineNuxtPlugin<ConvexNuxtInjection>({
+  name: 'nuxt-convex-module:better-auth:server',
+  async setup(nuxtApp) {
+    const initialToken = useState<string | null>('backend:initialToken', () => null)
 
-  // Provide a Convex client on SSR so composables like `useMutation` /
-  // `useAction` that call `useConvex()` during component setup don't throw.
-  // The WebSocket is opened lazily on first subscription — `usePreloadedQuery`
-  // and `usePreloadedAuthQuery` short-circuit on the server, so no
-  // subscriptions are created during SSR.
-  const url = useRuntimeConfig().public.backend.url
-  const ssrClient = url ? new ConvexVueClient(url) : undefined
-  if (ssrClient) {
-    nuxtApp.vueApp.provide(ConvexClientKey, ssrClient)
-  }
+    // Provide a Convex client on SSR so composables like `useMutation` /
+    // `useAction` that call `useConvex()` during component setup don't throw.
+    // The WebSocket is opened lazily on first subscription — `usePreloadedQuery`
+    // and `usePreloadedAuthQuery` short-circuit on the server, so no
+    // subscriptions are created during SSR.
+    const url = useRuntimeConfig().public.backend.url
+    const ssrClient = url ? new ConvexVueClient(url) : undefined
+    if (ssrClient) {
+      nuxtApp.vueApp.provide(ConvexClientKey, ssrClient)
+    }
 
-  // Provide a stub auth state for SSR so components calling `useConvexAuth`
-  // (e.g. via `usePreloadedAuthQuery`) don't throw. `isLoading: true` makes
-  // preloaded query helpers return the server-prefetched value during SSR
-  // and defer the live query to the client plugin.
-  const ssrAuthState: ConvexAuthState = {
-    isLoading: computed(() => true),
-    isAuthenticated: computed(() => false),
-    isRefreshing: computed(() => false),
-  }
-  nuxtApp.vueApp.provide(ConvexAuthStateKey, ssrAuthState)
+    // Provide a stub auth state for SSR so components calling `useConvexAuth`
+    // (e.g. via `usePreloadedAuthQuery`) don't throw. `isLoading: true` makes
+    // preloaded query helpers return the server-prefetched value during SSR
+    // and defer the live query to the client plugin.
+    const ssrAuthState: ConvexAuthState = {
+      isLoading: computed(() => true),
+      isAuthenticated: computed(() => false),
+      isRefreshing: computed(() => false),
+    }
+    nuxtApp.vueApp.provide(ConvexAuthStateKey, ssrAuthState)
 
-  const event = useRequestEvent()
-  if (event) {
-    await prefetchAuthToken(event, initialToken)
-  }
+    const event = useRequestEvent()
+    if (event) {
+      await prefetchAuthToken(event, initialToken)
+    }
 
-  return buildProvide(ssrClient)
+    return buildProvide(ssrClient)
+  },
 })

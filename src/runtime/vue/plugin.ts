@@ -17,22 +17,25 @@ import { ConvexVueClient, ConvexClientKey } from './client'
  * The WebSocket opens lazily on the first subscription; on the server the
  * preloaded-query helpers short-circuit, so no socket is opened during SSR.
  */
-export default defineNuxtPlugin((nuxtApp) => {
-  const url = useRuntimeConfig().public.backend.url
+export default defineNuxtPlugin({
+  name: 'nuxt-convex-module:client',
+  setup(nuxtApp) {
+    const url = useRuntimeConfig().public.backend.url
 
-  if (!url) {
-    if (import.meta.client) {
-      console.warn('[nuxt-convex-module] No Convex URL configured; client not created.')
+    if (!url) {
+      if (import.meta.client) {
+        console.warn('[nuxt-convex-module] No Convex URL configured; client not created.')
+      }
+      return
     }
-    return
-  }
 
-  const client = new ConvexVueClient(url)
-  nuxtApp.vueApp.provide(ConvexClientKey, client)
+    const client = new ConvexVueClient(url)
+    nuxtApp.vueApp.provide(ConvexClientKey, client)
 
-  // No teardown on `beforeunload` — upstream never closes the client there.
-  // The event is cancelable: it fires BEFORE the user answers the
-  // unsaved-changes dialog (the client's own `unsavedChangesWarning`), so
-  // closing here would drop in-flight mutations exactly when the user chose
-  // to stay. The browser tears the socket down on a real navigation anyway.
+    // No teardown on `beforeunload` — upstream never closes the client there.
+    // The event is cancelable: it fires BEFORE the user answers the
+    // unsaved-changes dialog (the client's own `unsavedChangesWarning`), so
+    // closing here would drop in-flight mutations exactly when the user chose
+    // to stay. The browser tears the socket down on a real navigation anyway.
+  },
 })

@@ -7,7 +7,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 const runtimeConfig = { public: { backend: { url: 'https://example.convex.cloud' } } }
 
 vi.mock('#app', () => ({
-  defineNuxtPlugin: (fn: unknown) => fn,
+  // Handles both plugin forms: the plugin under test uses the named object
+  // form, so unwrap its `setup`.
+  defineNuxtPlugin: (plugin: unknown) =>
+    typeof plugin === 'function' ? plugin : (plugin as { setup: unknown }).setup,
   useRuntimeConfig: () => runtimeConfig,
 }))
 
