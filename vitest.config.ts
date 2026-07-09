@@ -24,10 +24,10 @@ export default defineConfig({
       // climbs; the harder build-time/runtime files (module, auth plugins/
       // middleware) keep the global ceiling modest for now.
       thresholds: {
-        statements: 70,
-        branches: 65,
-        functions: 70,
-        lines: 70,
+        statements: 75,
+        branches: 68,
+        functions: 75,
+        lines: 75,
       },
     },
     projects: [
