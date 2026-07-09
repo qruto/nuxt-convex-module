@@ -185,6 +185,8 @@ const send = useMutation(api.messages.send)
 </template>
 ```
 
+A runnable version lives in [`examples/minimal`](examples/minimal) — or open it directly in [StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/minimal).
+
 ## Relationship to upstream
 
 This package is intentionally kept **diffable against the upstream React/Next sources** so it can track new Convex / Better Auth / Polar releases. Each file mirrors its origin:

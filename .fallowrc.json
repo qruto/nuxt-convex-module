@@ -37,6 +37,7 @@
     ".nuxt/**",
     "website/.nuxt/**",
     "website/convex/_generated/**",
+    "examples/**",
     "src/runtime/vue/index.ts"
   ],
   "ignoreDependencies": [

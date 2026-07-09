@@ -57,6 +57,19 @@ first version is published manually:
    (Settings → Branches → branch protection → *Allow specified actors to bypass*), otherwise the
    push step fails. With no protection, nothing extra is needed.
 
+## After the first publish
+
+- **Submit to the [nuxt/modules](https://github.com/nuxt/modules) registry** (requires the
+  package on npm): in a clone of that repo run
+  `pnpm sync nuxt-convex-module qruto/nuxt-convex-module`, add an SVG icon under `icons/`, set
+  `category` (Database) and `type: 3rd-party` in the generated
+  `modules/nuxt-convex-module.yml`, point `website` at the docs site, and open a PR. npm
+  stats, description, and maintainers auto-sync afterwards.
+- **Add GitHub repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`,
+  `realtime`.
+- The README's StackBlitz link (`examples/minimal`) starts working as soon as the package is
+  installable from npm.
+
 ## Cutting a release
 
 1. Merge your work to `main` (Conventional Commit messages drive the version + changelog).

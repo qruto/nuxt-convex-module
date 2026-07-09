@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "nuxt-convex-minimal-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "convex": "convex dev"
+  },
+  "dependencies": {
+    "convex": "^1.42.1",
+    "nuxt": "^4.4.8",
+    "nuxt-convex-module": "latest"
+  }
+}
