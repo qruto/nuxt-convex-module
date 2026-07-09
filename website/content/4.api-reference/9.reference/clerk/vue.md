@@ -16,7 +16,7 @@ A Vue/Nuxt port of `convex/react-clerk`. The provider is exposed both as the
 
 ### ConvexProviderWithClerkOptions
 
-Defined in: src/runtime/clerk/vue/index.ts:43
+Defined in: [src/runtime/clerk/vue/index.ts:43](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L43)
 
 Options for [provideConvexAuthFromClerk](#provideconvexauthfromclerk) / `<ConvexProviderWithClerk>`.
 
@@ -24,8 +24,8 @@ Options for [provideConvexAuthFromClerk](#provideconvexauthfromclerk) / `<Convex
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/vue#iconvexvueclient) | Convex client to authenticate. Defaults to the provided useConvex client. | src/runtime/clerk/vue/index.ts:45 |
-| <a id="useauth-1"></a> `useAuth?` | [`UseAuth`](#useauth) | Clerk's `useAuth` composable. Defaults to `useAuth` from `@clerk/vue`. | src/runtime/clerk/vue/index.ts:47 |
+| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/vue#iconvexvueclient) | Convex client to authenticate. Defaults to the provided useConvex client. | [src/runtime/clerk/vue/index.ts:45](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L45) |
+| <a id="useauth-1"></a> `useAuth?` | [`UseAuth`](#useauth) | Clerk's `useAuth` composable. Defaults to `useAuth` from `@clerk/vue`. | [src/runtime/clerk/vue/index.ts:47](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L47) |
 
 ## Type Aliases
 
@@ -42,7 +42,7 @@ type UseAuth = () => {
 };
 ```
 
-Defined in: src/runtime/clerk/vue/index.ts:24
+Defined in: [src/runtime/clerk/vue/index.ts:24](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L24)
 
 #### Returns
 
@@ -59,12 +59,12 @@ Defined in: src/runtime/clerk/vue/index.ts:24
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `isLoaded` | `ComputedRef`\<`boolean`\> | src/runtime/clerk/vue/index.ts:25 |
-| `isSignedIn` | `ComputedRef`\<`boolean` \| `undefined`\> | src/runtime/clerk/vue/index.ts:26 |
-| `getToken` | `ComputedRef`\<(`options`) => `Promise`\<`string` \| `null`\>\> | src/runtime/clerk/vue/index.ts:27 |
-| `orgId` | `ComputedRef`\<`string` \| `undefined` \| `null`\> | src/runtime/clerk/vue/index.ts:32 |
-| `orgRole` | `ComputedRef`\<`string` \| `undefined` \| `null`\> | src/runtime/clerk/vue/index.ts:33 |
-| `sessionClaims` | `ComputedRef`\<`Record`\<`string`, `unknown`\> \| `undefined` \| `null`\> | src/runtime/clerk/vue/index.ts:37 |
+| `isLoaded` | `ComputedRef`\<`boolean`\> | [src/runtime/clerk/vue/index.ts:25](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L25) |
+| `isSignedIn` | `ComputedRef`\<`boolean` \| `undefined`\> | [src/runtime/clerk/vue/index.ts:26](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L26) |
+| `getToken` | `ComputedRef`\<(`options`) => `Promise`\<`string` \| `null`\>\> | [src/runtime/clerk/vue/index.ts:27](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L27) |
+| `orgId` | `ComputedRef`\<`string` \| `undefined` \| `null`\> | [src/runtime/clerk/vue/index.ts:32](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L32) |
+| `orgRole` | `ComputedRef`\<`string` \| `undefined` \| `null`\> | [src/runtime/clerk/vue/index.ts:33](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L33) |
+| `sessionClaims` | `ComputedRef`\<`Record`\<`string`, `unknown`\> \| `undefined` \| `null`\> | [src/runtime/clerk/vue/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L37) |
 
 ## Variables
 
@@ -108,7 +108,7 @@ const ConvexProviderWithClerk: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: src/runtime/clerk/vue/index.ts:93
+Defined in: [src/runtime/clerk/vue/index.ts:93](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L93)
 
 A wrapper Vue component which provides a ConvexVueClient
 authenticated with Clerk — the component form of
@@ -124,7 +124,7 @@ slot once Convex auth is wired.
 function provideConvexAuthFromClerk(options?): ConvexAuthState;
 ```
 
-Defined in: src/runtime/clerk/vue/index.ts:74
+Defined in: [src/runtime/clerk/vue/index.ts:74](https://github.com/qruto/nuxt-convex-module/blob/5830febd6a44f7207bddcffd607be9384aa631b0/src/runtime/clerk/vue/index.ts#L74)
 
 A composable which provides a ConvexVueClient
 authenticated with Clerk, exposing the reactive auth state to descendants
