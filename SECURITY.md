@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest release of `nuxt-backend` receives security fixes.
+Only the latest release of `nuxt-convex-module` receives security fixes.
 
 | Version | Supported |
 | ------- | --------- |
@@ -12,7 +12,7 @@ Only the latest release of `nuxt-backend` receives security fixes.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Email **razum@qruto.to** with the subject line `[nuxt-backend] Security Vulnerability`.
+Email **razum@qruto.to** with the subject line `[nuxt-convex-module] Security Vulnerability`.
 
 Include:
 - A description of the vulnerability and its potential impact

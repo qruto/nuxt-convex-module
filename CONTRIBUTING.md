@@ -1,4 +1,4 @@
-# Contributing to nuxt-backend
+# Contributing to nuxt-convex-module
 
 Thank you for your interest in contributing! This guide covers everything you need to get started.
 
@@ -17,13 +17,13 @@ This project follows our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it b
 
 ## Development Setup
 
-**Prerequisites:** Node.js 20+, pnpm 11+ (Git 2.54+ optional — enables the local commit-message
-hook; CI enforces it either way)
+**Prerequisites:** Node.js 24.11+ (latest LTS, matching `engines` in `package.json`), pnpm 11+
+(Git 2.54+ optional — enables the local commit-message hook; CI enforces it either way)
 
 ```bash
 # Clone the repository
-git clone https://github.com/qruto/nuxt-backend.git
-cd nuxt-backend
+git clone https://github.com/qruto/nuxt-convex-module.git
+cd nuxt-convex-module
 
 # Install dependencies
 pnpm install
