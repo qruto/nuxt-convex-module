@@ -1,3 +1,9 @@
+/**
+ * Vue ports of `@convex-dev/polar/react`'s billing components —
+ * {@link CheckoutLink} and {@link CustomerPortalLink}.
+ *
+ * @module polar/client
+ */
 import { defineComponent, h, mergeProps, type PropType, ref, watch } from 'vue'
 import type { FunctionReference } from 'convex/server'
 import { useAction } from '../../vue/composables/use-action'

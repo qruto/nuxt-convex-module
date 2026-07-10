@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { api } from '#convex/api'
 // fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
-import type { Preloaded } from 'nuxt-convex-module/vue'
+import type { Preloaded } from 'nuxt-convex-module/client'
 
 // Server preload: the Nitro route runs `preloadQuery` (plus a one-shot
 // `fetchQuery` count) and returns the JSON-serializable `Preloaded` payload.

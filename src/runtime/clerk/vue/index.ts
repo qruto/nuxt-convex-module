@@ -7,7 +7,7 @@
  * `useAuth()` into the generic Convex auth provider
  * ({@link provideConvexAuth}) — no new auth core, just the SDK shim.
  *
- * @module
+ * @module clerk/client
  */
 import { useAuth as useClerkAuth } from '@clerk/vue'
 import { defineComponent, toValue, type ComputedRef, type PropType } from 'vue'
@@ -64,7 +64,7 @@ export interface ConvexProviderWithClerkOptions {
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { provideConvexAuthFromClerk } from 'nuxt-convex-module/clerk/vue'
+ * import { provideConvexAuthFromClerk } from 'nuxt-convex-module/clerk/client'
  * provideConvexAuthFromClerk()
  * </script>
  * ```

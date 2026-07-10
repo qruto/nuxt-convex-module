@@ -2,7 +2,7 @@
 navigation: true
 ---
 
-# vue
+# client
 
 Tools to integrate Convex into Vue applications.
 
@@ -18,7 +18,7 @@ This module contains:
 ### Creating the client
 
 ```typescript
-import { ConvexVueClient } from "nuxt-convex-module/vue";
+import { ConvexVueClient } from "nuxt-convex-module/client";
 
 // typically loaded from an environment variable
 const address = "https://small-mouse-123.convex.cloud"
@@ -28,7 +28,7 @@ const convex = new ConvexVueClient(address);
 ### Storing the client in Vue context
 
 ```typescript
-import { ConvexClientKey } from "nuxt-convex-module/vue";
+import { ConvexClientKey } from "nuxt-convex-module/client";
 
 // (the Nuxt module registers a plugin that does this automatically)
 app.provide(ConvexClientKey, convex);
@@ -37,7 +37,7 @@ app.provide(ConvexClientKey, convex);
 ### Using the auth helpers
 
 ```typescript
-import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "nuxt-convex-module/vue";
+import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "nuxt-convex-module/client";
 
 <Authenticated>
   Logged in
@@ -56,7 +56,7 @@ import { Authenticated, Unauthenticated, AuthLoading, AuthRefreshing } from "nux
 ### Using Vue composables
 
 ```typescript
-import { useQuery, useMutation } from "nuxt-convex-module/vue";
+import { useQuery, useMutation } from "nuxt-convex-module/client";
 import { api } from "../convex/_generated/api";
 
 // In your component's <script setup>:
@@ -69,7 +69,7 @@ const increment = useMutation(api.incrementCounter.default);
 
 ### ConvexVueClient
 
-Defined in: [src/runtime/vue/client.ts:191](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L191)
+Defined in: [src/runtime/vue/client.ts:191](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L191)
 
 A Convex client for use within Vue.
 
@@ -86,7 +86,7 @@ available via the [useConvex](#useconvex) composable or `useNuxtApp().$convex`.
 new ConvexVueClient(address, options?): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L212)
+Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L212)
 
 ###### Parameters
 
@@ -109,7 +109,7 @@ Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex
 get url(): string;
 ```
 
-Defined in: [src/runtime/vue/client.ts:250](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L250)
+Defined in: [src/runtime/vue/client.ts:250](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L250)
 
 Return the address for this client, useful for creating a new client.
 
@@ -128,7 +128,7 @@ it may be canonicalized.
 get logger(): Logger;
 ```
 
-Defined in: [src/runtime/vue/client.ts:582](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L582)
+Defined in: [src/runtime/vue/client.ts:582](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L582)
 
 Get the logger for this client.
 
@@ -149,7 +149,7 @@ setAuth(
    onRefreshChange?): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:292](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L292)
+Defined in: [src/runtime/vue/client.ts:292](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L292)
 
 Set the authentication token to be used for subsequent queries and mutations.
 `fetchToken` will be called automatically again if a token expires.
@@ -174,7 +174,7 @@ when the user's rights were permanently revoked.
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:316](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L316)
+Defined in: [src/runtime/vue/client.ts:316](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L316)
 
 Clear the current authentication token if set.
 
@@ -188,7 +188,7 @@ Clear the current authentication token if set.
 watchQuery<Query>(query, ...argsAndOptions): Watch<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:350](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L350)
+Defined in: [src/runtime/vue/client.ts:350](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L350)
 
 Construct a new [Watch](#watch) on a Convex query function.
 
@@ -222,7 +222,7 @@ The [Watch](#watch) object.
 prewarmQuery<Query>(queryOptions): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:428](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L428)
+Defined in: [src/runtime/vue/client.ts:428](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L428)
 
 Indicates likely future interest in a query subscription.
 
@@ -254,7 +254,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 mutation<Mutation>(mutation, ...argsAndOptions): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:485](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L485)
+Defined in: [src/runtime/vue/client.ts:485](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L485)
 
 Execute a mutation function.
 
@@ -283,7 +283,7 @@ A promise of the mutation's result.
 action<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:506](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L506)
+Defined in: [src/runtime/vue/client.ts:506](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L506)
 
 Execute an action function.
 
@@ -312,7 +312,7 @@ A promise of the action's result.
 query<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:526](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L526)
+Defined in: [src/runtime/vue/client.ts:526](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L526)
 
 Fetch a query result once.
 
@@ -344,7 +344,7 @@ A promise of the query's result.
 connectionState(): ConnectionState;
 ```
 
-Defined in: [src/runtime/vue/client.ts:555](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L555)
+Defined in: [src/runtime/vue/client.ts:555](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L555)
 
 Get the current [ConnectionState](#connectionstate) between the client and the Convex
 deployment.
@@ -361,7 +361,7 @@ The [ConnectionState](#connectionstate) with the Convex deployment.
 subscribeToConnectionState(cb): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:571](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L571)
+Defined in: [src/runtime/vue/client.ts:571](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L571)
 
 Subscribe to the [ConnectionState](#connectionstate) between the client and the Convex
 deployment, calling a callback each time it changes.
@@ -390,7 +390,7 @@ An unsubscribe function to stop listening.
 close(): Promise<void>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:594](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L594)
+Defined in: [src/runtime/vue/client.ts:594](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L594)
 
 Close any network handles associated with this client and stop all subscriptions.
 
@@ -407,7 +407,7 @@ A `Promise` fulfilled when the connection has been completely closed.
 
 ### ConvexAuthProviderOptions
 
-Defined in: [src/runtime/vue/auth/index.ts:74](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L74)
+Defined in: [src/runtime/vue/auth/index.ts:74](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L74)
 
 Options for [provideConvexAuth](#provideconvexauth) — the Vue translation of the props of
 upstream's `ConvexProviderWithAuth` component.
@@ -416,14 +416,14 @@ upstream's `ConvexProviderWithAuth` component.
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L75) |
-| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L76) |
+| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L75) |
+| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L76) |
 
 ***
 
 ### Watch
 
-Defined in: [src/runtime/vue/client.ts:51](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L51)
+Defined in: [src/runtime/vue/client.ts:51](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L51)
 
 A watch on the output of a Convex query function.
 
@@ -535,7 +535,7 @@ ConvexWatch.journal
 
 ### PaginatedWatch
 
-Defined in: [src/runtime/vue/client.ts:63](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L63)
+Defined in: [src/runtime/vue/client.ts:63](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L63)
 
 A watch on the output of a paginated Convex query function.
 
@@ -553,7 +553,7 @@ A watch on the output of a paginated Convex query function.
 onUpdate(callback): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:73](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L73)
+Defined in: [src/runtime/vue/client.ts:73](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L73)
 
 Initiate a watch on the output of a paginated query.
 
@@ -584,7 +584,7 @@ localQueryResult():
   | undefined;
 ```
 
-Defined in: [src/runtime/vue/client.ts:80](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L80)
+Defined in: [src/runtime/vue/client.ts:80](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L80)
 
 Get the current result of a paginated query.
 
@@ -603,7 +603,7 @@ The current results, status, and loadMore function, or `undefined` if not loaded
 
 ### WatchQueryOptions
 
-Defined in: [src/runtime/vue/client.ts:95](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L95)
+Defined in: [src/runtime/vue/client.ts:95](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L95)
 
 Options for [ConvexVueClient.watchQuery](#watchquery).
 
@@ -611,13 +611,13 @@ Options for [ConvexVueClient.watchQuery](#watchquery).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="journal-1"></a> `journal?` | [`QueryJournal`](#queryjournal) | An (optional) journal produced from a previous execution of this query function. If there is an existing subscription to a query function with the same name and arguments, this journal will have no effect. | [src/runtime/vue/client.ts:103](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L103) |
+| <a id="journal-1"></a> `journal?` | [`QueryJournal`](#queryjournal) | An (optional) journal produced from a previous execution of this query function. If there is an existing subscription to a query function with the same name and arguments, this journal will have no effect. | [src/runtime/vue/client.ts:103](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L103) |
 
 ***
 
 ### MutationOptions
 
-Defined in: [src/runtime/vue/client.ts:116](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L116)
+Defined in: [src/runtime/vue/client.ts:116](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L116)
 
 Options for [ConvexVueClient.mutation](#mutation).
 
@@ -631,13 +631,13 @@ Options for [ConvexVueClient.mutation](#mutation).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="optimisticupdate-1"></a> `optimisticUpdate?` | [`OptimisticUpdate`](#optimisticupdate)\<`Args`\> | An optimistic update to apply along with this mutation. An optimistic update locally updates queries while a mutation is pending. Once the mutation completes, the update will be rolled back. | [src/runtime/vue/client.ts:123](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L123) |
+| <a id="optimisticupdate-1"></a> `optimisticUpdate?` | [`OptimisticUpdate`](#optimisticupdate)\<`Args`\> | An optimistic update to apply along with this mutation. An optimistic update locally updates queries while a mutation is pending. Once the mutation completes, the update will be rolled back. | [src/runtime/vue/client.ts:123](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L123) |
 
 ***
 
 ### ConvexVueClientOptions
 
-Defined in: [src/runtime/vue/client.ts:140](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L140)
+Defined in: [src/runtime/vue/client.ts:140](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L140)
 
 Options for [ConvexVueClient](#convexvueclient).
 
@@ -669,7 +669,7 @@ Options for [ConvexVueClient](#convexvueclient).
 
 ### VueAction()
 
-Defined in: [src/runtime/vue/composables/use-action.ts:11](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-action.ts#L11)
+Defined in: [src/runtime/vue/composables/use-action.ts:11](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-action.ts#L11)
 
 An interface to execute a Convex action on the server.
 
@@ -683,7 +683,7 @@ An interface to execute a Convex action on the server.
 VueAction(...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-action.ts:19](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-action.ts#L19)
+Defined in: [src/runtime/vue/composables/use-action.ts:19](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-action.ts#L19)
 
 Execute the function on the server, returning a `Promise` of its return value.
 
@@ -703,7 +703,7 @@ The return value of the server-side function call.
 
 ### VueMutation()
 
-Defined in: [src/runtime/vue/composables/use-mutation.ts:14](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-mutation.ts#L14)
+Defined in: [src/runtime/vue/composables/use-mutation.ts:14](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-mutation.ts#L14)
 
 An interface to execute a Convex mutation function on the server.
 
@@ -717,7 +717,7 @@ An interface to execute a Convex mutation function on the server.
 VueMutation(...args): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-mutation.ts:21](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-mutation.ts#L21)
+Defined in: [src/runtime/vue/composables/use-mutation.ts:21](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-mutation.ts#L21)
 
 Execute the mutation on the server, returning a `Promise` of its return value.
 
@@ -741,7 +741,7 @@ The return value of the server-side function call.
 withOptimisticUpdate<T>(optimisticUpdate): VueMutation<Mutation>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-mutation.ts:44](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-mutation.ts#L44)
+Defined in: [src/runtime/vue/composables/use-mutation.ts:44](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-mutation.ts#L44)
 
 Define an optimistic update to apply as part of this mutation.
 
@@ -780,7 +780,7 @@ A new `VueMutation` with the update configured.
 
 ### UploadQueueItem
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:17](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L17)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:17](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L17)
 
 A single entry in the queue managed by [useUploadQueue](#useuploadqueue).
 
@@ -788,18 +788,18 @@ A single entry in the queue managed by [useUploadQueue](#useuploadqueue).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="id"></a> `id` | `string` | Stable id for this queue entry (not the storage id). | [src/runtime/vue/composables/use-upload-queue.ts:19](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L19) |
-| <a id="file"></a> `file` | `Blob` | The file or blob being uploaded. | [src/runtime/vue/composables/use-upload-queue.ts:21](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L21) |
-| <a id="status-1"></a> `status` | [`UploadItemStatus`](#uploaditemstatus) | Current upload status. | [src/runtime/vue/composables/use-upload-queue.ts:23](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L23) |
-| <a id="progress"></a> `progress` | `number` | Upload progress for this item, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:25](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L25) |
-| <a id="storageid"></a> `storageId` | [`StorageId`](#storageid-1) \| `null` | The storage id once the upload succeeds, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:27](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L27) |
-| <a id="error"></a> `error` | `Error` \| `null` | The error if this item failed, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:29](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L29) |
+| <a id="id"></a> `id` | `string` | Stable id for this queue entry (not the storage id). | [src/runtime/vue/composables/use-upload-queue.ts:19](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L19) |
+| <a id="file"></a> `file` | `Blob` | The file or blob being uploaded. | [src/runtime/vue/composables/use-upload-queue.ts:21](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L21) |
+| <a id="status-1"></a> `status` | [`UploadItemStatus`](#uploaditemstatus) | Current upload status. | [src/runtime/vue/composables/use-upload-queue.ts:23](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L23) |
+| <a id="progress"></a> `progress` | `number` | Upload progress for this item, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:25](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L25) |
+| <a id="storageid"></a> `storageId` | [`StorageId`](#storageid-1) \| `null` | The storage id once the upload succeeds, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:27](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L27) |
+| <a id="error"></a> `error` | `Error` \| `null` | The error if this item failed, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:29](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L29) |
 
 ***
 
 ### UseUploadQueueOptions
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:37](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L37)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:37](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L37)
 
 Options for [useUploadQueue](#useuploadqueue).
 
@@ -807,16 +807,16 @@ Options for [useUploadQueue](#useuploadqueue).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="concurrency"></a> `concurrency?` | `number` | Maximum number of uploads to run at once. Defaults to `3`. | [src/runtime/vue/composables/use-upload-queue.ts:39](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L39) |
-| <a id="onitemsuccess"></a> `onItemSuccess?` | (`storageId`, `item`) => `void` \| `Promise`\<`void`\> | Called when an individual item finishes uploading. | [src/runtime/vue/composables/use-upload-queue.ts:41](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L41) |
-| <a id="onitemerror"></a> `onItemError?` | (`error`, `item`) => `void` | Called when an individual item fails. | [src/runtime/vue/composables/use-upload-queue.ts:43](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L43) |
-| <a id="oncomplete"></a> `onComplete?` | (`items`) => `void` | Called once every queued item has settled (succeeded or failed). | [src/runtime/vue/composables/use-upload-queue.ts:45](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L45) |
+| <a id="concurrency"></a> `concurrency?` | `number` | Maximum number of uploads to run at once. Defaults to `3`. | [src/runtime/vue/composables/use-upload-queue.ts:39](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L39) |
+| <a id="onitemsuccess"></a> `onItemSuccess?` | (`storageId`, `item`) => `void` \| `Promise`\<`void`\> | Called when an individual item finishes uploading. | [src/runtime/vue/composables/use-upload-queue.ts:41](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L41) |
+| <a id="onitemerror"></a> `onItemError?` | (`error`, `item`) => `void` | Called when an individual item fails. | [src/runtime/vue/composables/use-upload-queue.ts:43](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L43) |
+| <a id="oncomplete"></a> `onComplete?` | (`items`) => `void` | Called once every queued item has settled (succeeded or failed). | [src/runtime/vue/composables/use-upload-queue.ts:45](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L45) |
 
 ***
 
 ### VueUploadQueue
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:56](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L56)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:56](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L56)
 
 The reactive queue returned by [useUploadQueue](#useuploadqueue).
 
@@ -824,21 +824,21 @@ The reactive queue returned by [useUploadQueue](#useuploadqueue).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="items"></a> `items` | `Readonly`\<`Ref`\<[`UploadQueueItem`](#uploadqueueitem)[]\>\> | Reactive list of queued items, in insertion order. | [src/runtime/vue/composables/use-upload-queue.ts:58](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L58) |
-| <a id="enqueue"></a> `enqueue` | (`files`) => `void` | Add one or more files to the queue; uploading starts automatically. | [src/runtime/vue/composables/use-upload-queue.ts:60](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L60) |
-| <a id="isuploading"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while any item is pending or uploading. | [src/runtime/vue/composables/use-upload-queue.ts:62](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L62) |
-| <a id="progress-1"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Aggregate progress across all items, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:64](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L64) |
-| <a id="pendingcount"></a> `pendingCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items waiting to start. | [src/runtime/vue/composables/use-upload-queue.ts:66](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L66) |
-| <a id="activecount"></a> `activeCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items currently uploading. | [src/runtime/vue/composables/use-upload-queue.ts:68](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L68) |
-| <a id="cancel"></a> `cancel` | () => `void` | Abort all in-flight uploads (queued items stay `pending`). | [src/runtime/vue/composables/use-upload-queue.ts:70](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L70) |
-| <a id="remove"></a> `remove` | (`id`) => `void` | Remove an item by id, aborting it first if it is uploading. | [src/runtime/vue/composables/use-upload-queue.ts:72](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L72) |
-| <a id="clear"></a> `clear` | () => `void` | Abort everything and empty the queue. | [src/runtime/vue/composables/use-upload-queue.ts:74](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L74) |
+| <a id="items"></a> `items` | `Readonly`\<`Ref`\<[`UploadQueueItem`](#uploadqueueitem)[]\>\> | Reactive list of queued items, in insertion order. | [src/runtime/vue/composables/use-upload-queue.ts:58](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L58) |
+| <a id="enqueue"></a> `enqueue` | (`files`) => `void` | Add one or more files to the queue; uploading starts automatically. | [src/runtime/vue/composables/use-upload-queue.ts:60](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L60) |
+| <a id="isuploading"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while any item is pending or uploading. | [src/runtime/vue/composables/use-upload-queue.ts:62](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L62) |
+| <a id="progress-1"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Aggregate progress across all items, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:64](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L64) |
+| <a id="pendingcount"></a> `pendingCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items waiting to start. | [src/runtime/vue/composables/use-upload-queue.ts:66](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L66) |
+| <a id="activecount"></a> `activeCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items currently uploading. | [src/runtime/vue/composables/use-upload-queue.ts:68](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L68) |
+| <a id="cancel"></a> `cancel` | () => `void` | Abort all in-flight uploads (queued items stay `pending`). | [src/runtime/vue/composables/use-upload-queue.ts:70](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L70) |
+| <a id="remove"></a> `remove` | (`id`) => `void` | Remove an item by id, aborting it first if it is uploading. | [src/runtime/vue/composables/use-upload-queue.ts:72](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L72) |
+| <a id="clear"></a> `clear` | () => `void` | Abort everything and empty the queue. | [src/runtime/vue/composables/use-upload-queue.ts:74](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L74) |
 
 ***
 
 ### UploadFileOptions
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:32](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L32)
+Defined in: [src/runtime/vue/composables/use-upload.ts:32](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L32)
 
 Options for the low-level [uploadFile](#uploadfile) helper.
 
@@ -846,16 +846,16 @@ Options for the low-level [uploadFile](#uploadfile) helper.
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="url-1"></a> `url` | `string` | The one-time Convex upload URL from a `generateUploadUrl` mutation. | [src/runtime/vue/composables/use-upload.ts:34](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L34) |
-| <a id="file-1"></a> `file` | `Blob` | The file or blob to upload. | [src/runtime/vue/composables/use-upload.ts:36](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L36) |
-| <a id="onprogress"></a> `onProgress?` | (`progress`) => `void` | Receives upload progress as a fraction from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:38](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L38) |
-| <a id="signal"></a> `signal?` | `AbortSignal` | Abort signal to cancel the in-flight upload. | [src/runtime/vue/composables/use-upload.ts:40](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L40) |
+| <a id="url-1"></a> `url` | `string` | The one-time Convex upload URL from a `generateUploadUrl` mutation. | [src/runtime/vue/composables/use-upload.ts:34](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L34) |
+| <a id="file-1"></a> `file` | `Blob` | The file or blob to upload. | [src/runtime/vue/composables/use-upload.ts:36](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L36) |
+| <a id="onprogress"></a> `onProgress?` | (`progress`) => `void` | Receives upload progress as a fraction from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:38](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L38) |
+| <a id="signal"></a> `signal?` | `AbortSignal` | Abort signal to cancel the in-flight upload. | [src/runtime/vue/composables/use-upload.ts:40](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L40) |
 
 ***
 
 ### UseUploadOptions
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:125](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L125)
+Defined in: [src/runtime/vue/composables/use-upload.ts:125](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L125)
 
 Options for [useUpload](#useupload).
 
@@ -863,15 +863,15 @@ Options for [useUpload](#useupload).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="onprogress-1"></a> `onProgress?` | (`progress`) => `void` | Called with upload progress as a fraction from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:127](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L127) |
-| <a id="onsuccess"></a> `onSuccess?` | (`storageId`, `file`) => `void` \| `Promise`\<`void`\> | Called once the file is stored, with the new storage id and the file. | [src/runtime/vue/composables/use-upload.ts:129](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L129) |
-| <a id="onerror"></a> `onError?` | (`error`, `file`) => `void` | Called if generating the upload URL or the upload itself fails. | [src/runtime/vue/composables/use-upload.ts:131](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L131) |
+| <a id="onprogress-1"></a> `onProgress?` | (`progress`) => `void` | Called with upload progress as a fraction from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:127](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L127) |
+| <a id="onsuccess"></a> `onSuccess?` | (`storageId`, `file`) => `void` \| `Promise`\<`void`\> | Called once the file is stored, with the new storage id and the file. | [src/runtime/vue/composables/use-upload.ts:129](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L129) |
+| <a id="onerror"></a> `onError?` | (`error`, `file`) => `void` | Called if generating the upload URL or the upload itself fails. | [src/runtime/vue/composables/use-upload.ts:131](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L131) |
 
 ***
 
 ### VueUpload
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:139](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L139)
+Defined in: [src/runtime/vue/composables/use-upload.ts:139](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L139)
 
 The reactive uploader returned by [useUpload](#useupload).
 
@@ -879,13 +879,13 @@ The reactive uploader returned by [useUpload](#useupload).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="upload"></a> `upload` | (`file`) => `Promise`\<[`StorageId`](#storageid-1) \| `null`\> | Upload a file or blob, resolving to its [StorageId](#storageid-1). Resolves to `null` (instead of throwing) if the upload fails or is called outside the browser — inspect [VueUpload.error](#error-1) for the reason. | [src/runtime/vue/composables/use-upload.ts:146](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L146) |
-| <a id="isuploading-1"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while an upload is in flight. | [src/runtime/vue/composables/use-upload.ts:148](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L148) |
-| <a id="progress-2"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Upload progress of the current/last upload, from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:150](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L150) |
-| <a id="error-1"></a> `error` | `Readonly`\<`Ref`\<`Error` \| `null`\>\> | The error from the most recent failed upload, or `null`. | [src/runtime/vue/composables/use-upload.ts:152](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L152) |
-| <a id="storageid-2"></a> `storageId` | `Readonly`\<`Ref`\<[`StorageId`](#storageid-1) \| `null`\>\> | The storage id from the most recent successful upload, or `null`. | [src/runtime/vue/composables/use-upload.ts:154](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L154) |
-| <a id="cancel-1"></a> `cancel` | () => `void` | Abort the in-flight upload, if any. | [src/runtime/vue/composables/use-upload.ts:156](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L156) |
-| <a id="reset"></a> `reset` | () => `void` | Reset `progress`, `error`, and `storageId` back to their initial values. | [src/runtime/vue/composables/use-upload.ts:158](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L158) |
+| <a id="upload"></a> `upload` | (`file`) => `Promise`\<[`StorageId`](#storageid-1) \| `null`\> | Upload a file or blob, resolving to its [StorageId](#storageid-1). Resolves to `null` (instead of throwing) if the upload fails or is called outside the browser — inspect [VueUpload.error](#error-1) for the reason. | [src/runtime/vue/composables/use-upload.ts:146](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L146) |
+| <a id="isuploading-1"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while an upload is in flight. | [src/runtime/vue/composables/use-upload.ts:148](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L148) |
+| <a id="progress-2"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Upload progress of the current/last upload, from `0` to `1`. | [src/runtime/vue/composables/use-upload.ts:150](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L150) |
+| <a id="error-1"></a> `error` | `Readonly`\<`Ref`\<`Error` \| `null`\>\> | The error from the most recent failed upload, or `null`. | [src/runtime/vue/composables/use-upload.ts:152](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L152) |
+| <a id="storageid-2"></a> `storageId` | `Readonly`\<`Ref`\<[`StorageId`](#storageid-1) \| `null`\>\> | The storage id from the most recent successful upload, or `null`. | [src/runtime/vue/composables/use-upload.ts:154](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L154) |
+| <a id="cancel-1"></a> `cancel` | () => `void` | Abort the in-flight upload, if any. | [src/runtime/vue/composables/use-upload.ts:156](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L156) |
+| <a id="reset"></a> `reset` | () => `void` | Reset `progress`, `error`, and `storageId` back to their initial values. | [src/runtime/vue/composables/use-upload.ts:158](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L158) |
 
 ## Type Aliases
 
@@ -1448,7 +1448,7 @@ type IConvexVueClient = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:8](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L8)
+Defined in: [src/runtime/vue/auth/index.ts:8](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L8)
 
 #### Methods
 
@@ -1461,7 +1461,7 @@ setAuth(
    onRefreshChange?): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L9)
+Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L9)
 
 ###### Parameters
 
@@ -1481,7 +1481,7 @@ Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-conv
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:14](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L14)
+Defined in: [src/runtime/vue/auth/index.ts:14](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L14)
 
 ###### Returns
 
@@ -1499,7 +1499,7 @@ type ConvexAuthState = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:34](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L34)
+Defined in: [src/runtime/vue/auth/index.ts:34](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L34)
 
 Type representing the state of an auth integration with Convex.
 
@@ -1519,9 +1519,9 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:35](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L35) |
-| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L36) |
-| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L37) |
+| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:35](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L35) |
+| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L36) |
+| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L37) |
 
 ***
 
@@ -1531,7 +1531,7 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 type VueMutationOptions<Args> = MutationOptions<Args>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L129)
+Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L129)
 
 #### Type Parameters
 
@@ -1547,7 +1547,7 @@ Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex
 type ConvexLogger = Exclude<BaseConvexClientOptions["logger"], boolean | undefined>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:148](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L148)
+Defined in: [src/runtime/vue/client.ts:148](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L148)
 
 The logger type accepted by [ConvexVueClientOptions.logger](#logger) — the
 public shape of convex's non-exported `Logger`.
@@ -1565,7 +1565,7 @@ type UsePaginatedQueryReturnType<Query> = {
 };
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:526](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L526)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:526](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L526)
 
 Return shape of [usePaginatedQuery](#usepaginatedquery) — the fields of upstream's
 `UsePaginatedQueryResult` as `ComputedRef`s plus a *stable* `loadMore`
@@ -1588,10 +1588,10 @@ keep compiling. The plain union stays available as
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="results"></a> `results` | `ComputedRef`\<[`PaginatedQueryItem`](#paginatedqueryitem)\<`Query`\>[]\> | - | [src/runtime/vue/composables/use-paginated-query.ts:527](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L527) |
-| <a id="status"></a> `status` | `ComputedRef`\<[`PaginationStatus`](#paginationstatus)\> | - | [src/runtime/vue/composables/use-paginated-query.ts:528](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L528) |
-| <a id="isloading-1"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/vue/composables/use-paginated-query.ts:529](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L529) |
-| <a id="loadmore"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more results. Stable across state changes; only fetches when `status` is `'CanLoadMore'` (matching the documented semantics). | [src/runtime/vue/composables/use-paginated-query.ts:534](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L534) |
+| <a id="results"></a> `results` | `ComputedRef`\<[`PaginatedQueryItem`](#paginatedqueryitem)\<`Query`\>[]\> | - | [src/runtime/vue/composables/use-paginated-query.ts:527](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L527) |
+| <a id="status"></a> `status` | `ComputedRef`\<[`PaginationStatus`](#paginationstatus)\> | - | [src/runtime/vue/composables/use-paginated-query.ts:528](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L528) |
+| <a id="isloading-1"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/vue/composables/use-paginated-query.ts:529](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L529) |
+| <a id="loadmore"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more results. Stable across state changes; only fetches when `status` is `'CanLoadMore'` (matching the documented semantics). | [src/runtime/vue/composables/use-paginated-query.ts:534](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L534) |
 
 ***
 
@@ -1601,7 +1601,7 @@ keep compiling. The plain union stays available as
 type OptionalRestArgsOrSkip<FuncRef> = FuncRef["_args"] extends Record<string, never> ? [MaybeRefOrGetter<Record<string, never> | "skip">] : [MaybeRefOrGetter<FuncRef["_args"] | "skip">];
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-query.ts#L16)
+Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-query.ts#L16)
 
 #### Type Parameters
 
@@ -1617,7 +1617,7 @@ Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qru
 type UseQueryResult<QueryResult, ThrowOnError> = ConvexUseQueryResult<QueryResult, ThrowOnError>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:26](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-query.ts#L26)
+Defined in: [src/runtime/vue/composables/use-query.ts:26](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-query.ts#L26)
 
 Result returned by object-form [useQuery\_experimental](#usequery_experimental).
 
@@ -1638,7 +1638,7 @@ type GetStorageUrl = FunctionReference<"query", "public", {
 }, string | null>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-storage-url.ts:12](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-storage-url.ts#L12)
+Defined in: [src/runtime/vue/composables/use-storage-url.ts:12](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-storage-url.ts#L12)
 
 A `getUrl` query: takes `{ storageId }` and returns the file's served URL,
 or `null` if the file no longer exists (`await ctx.storage.getUrl(id)`).
@@ -1651,7 +1651,7 @@ or `null` if the file no longer exists (`await ctx.storage.getUrl(id)`).
 type UploadItemStatus = "pending" | "uploading" | "success" | "error";
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:10](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L10)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:10](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L10)
 
 Lifecycle status of a single item in an upload queue.
 
@@ -1663,7 +1663,7 @@ Lifecycle status of a single item in an upload queue.
 type GenerateUploadUrl = FunctionReference<"mutation", "public", Record<string, never>, string>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:12](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L12)
+Defined in: [src/runtime/vue/composables/use-upload.ts:12](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L12)
 
 A `generateUploadUrl` mutation: takes no arguments and returns a one-time
 Convex upload URL string (`await ctx.storage.generateUploadUrl()`).
@@ -1676,7 +1676,7 @@ Convex upload URL string (`await ctx.storage.generateUploadUrl()`).
 type StorageId = GenericId<"_storage">;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:25](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L25)
+Defined in: [src/runtime/vue/composables/use-upload.ts:25](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L25)
 
 A Convex file storage id (`Id<'_storage'>`), branded so it is directly
 assignable to mutation/query args validated with `v.id('_storage')`.
@@ -1694,7 +1694,7 @@ type Preloaded<Query> = {
 };
 ```
 
-Defined in: [src/runtime/vue/hydration.ts:14](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L14)
+Defined in: [src/runtime/vue/hydration.ts:14](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L14)
 
 The preloaded query payload, which should be passed to a client component
 and passed to [usePreloadedQuery](#usepreloadedquery).
@@ -1709,10 +1709,10 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="__type-10"></a> `__type` | `Query` | [src/runtime/vue/hydration.ts:15](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L15) |
-| <a id="_name"></a> `_name` | `string` | [src/runtime/vue/hydration.ts:16](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L16) |
-| <a id="_argsjson"></a> `_argsJSON` | `string` | [src/runtime/vue/hydration.ts:17](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L17) |
-| <a id="_valuejson"></a> `_valueJSON` | `string` | [src/runtime/vue/hydration.ts:18](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L18) |
+| <a id="__type-10"></a> `__type` | `Query` | [src/runtime/vue/hydration.ts:15](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L15) |
+| <a id="_name"></a> `_name` | `string` | [src/runtime/vue/hydration.ts:16](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L16) |
+| <a id="_argsjson"></a> `_argsJSON` | `string` | [src/runtime/vue/hydration.ts:17](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L17) |
+| <a id="_valuejson"></a> `_valueJSON` | `string` | [src/runtime/vue/hydration.ts:18](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L18) |
 
 ***
 
@@ -1722,7 +1722,7 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 type ConvexApi = Record<string, Record<string, unknown>>;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:9](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/provide.ts#L9)
+Defined in: [src/runtime/vue/provide.ts:9](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/provide.ts#L9)
 
 The consumer's generated Convex `api` object (`#convex/api`). Its exact shape
 is app-specific, so it's kept loose here — composables and components cast the
@@ -1754,7 +1754,7 @@ const Authenticated: DefineComponent<{
 }, any>;
 ```
 
-Defined in: [src/runtime/vue/auth/helpers.ts:16](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/helpers.ts#L16)
+Defined in: [src/runtime/vue/auth/helpers.ts:16](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/helpers.ts#L16)
 
 Renders the default slot if the client is authenticated.
 
@@ -1791,7 +1791,7 @@ const Unauthenticated: DefineComponent<{
 }, any>;
 ```
 
-Defined in: [src/runtime/vue/auth/helpers.ts:41](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/helpers.ts#L41)
+Defined in: [src/runtime/vue/auth/helpers.ts:41](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/helpers.ts#L41)
 
 Renders the default slot if the client is using authentication but is not authenticated.
 
@@ -1828,7 +1828,7 @@ const AuthLoading: DefineComponent<{
 }, any>;
 ```
 
-Defined in: [src/runtime/vue/auth/helpers.ts:67](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/helpers.ts#L67)
+Defined in: [src/runtime/vue/auth/helpers.ts:67](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/helpers.ts#L67)
 
 Renders the default slot if the client isn't using authentication or is in the process
 of authenticating.
@@ -1866,7 +1866,7 @@ const AuthRefreshing: DefineComponent<{
 }, any>;
 ```
 
-Defined in: [src/runtime/vue/auth/helpers.ts:98](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/helpers.ts#L98)
+Defined in: [src/runtime/vue/auth/helpers.ts:98](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/helpers.ts#L98)
 
 Renders the default slot while the client is refreshing the auth token for an
 already-authenticated session (the server rejected the current token and
@@ -1892,7 +1892,7 @@ rendered if the user is authenticated.
 const ConvexAuthStateKey: InjectionKey<ConvexAuthState>;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:41](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L41)
+Defined in: [src/runtime/vue/auth/index.ts:41](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L41)
 
 ***
 
@@ -1902,7 +1902,7 @@ Defined in: [src/runtime/vue/auth/index.ts:41](https://github.com/qruto/nuxt-con
 const ConvexClientKey: InjectionKey<ConvexVueClient>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:625](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L625)
+Defined in: [src/runtime/vue/client.ts:625](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L625)
 
 Vue injection key for the [ConvexVueClient](#convexvueclient).
 
@@ -1914,7 +1914,7 @@ Vue injection key for the [ConvexVueClient](#convexvueclient).
 const useConvexAction: <Action>(action) => VueAction<Action> = useAction;
 ```
 
-Defined in: [src/runtime/vue/composables/use-action.ts:90](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-action.ts#L90)
+Defined in: [src/runtime/vue/composables/use-action.ts:90](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-action.ts#L90)
 
 Construct a new [VueAction](#vueaction).
 
@@ -1979,7 +1979,7 @@ async function handleClick() {
 const useConvexMutation: <Mutation>(mutation) => VueMutation<Mutation> = useMutation;
 ```
 
-Defined in: [src/runtime/vue/composables/use-mutation.ts:129](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-mutation.ts#L129)
+Defined in: [src/runtime/vue/composables/use-mutation.ts:129](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-mutation.ts#L129)
 
 Construct a new [VueMutation](#vuemutation).
 
@@ -2034,7 +2034,7 @@ async function handleClick() {
 const useConvexPaginatedQuery: <Query>(query, args, options) => UsePaginatedQueryReturnType<Query> = usePaginatedQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:542](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L542)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:542](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L542)
 
 Load data reactively from a paginated query to create a growing list.
 
@@ -2087,7 +2087,7 @@ const { results, status, loadMore } = usePaginatedQuery(
 const useConvexQueries: (queries) => ShallowRef<Record<string, any>> = useQueries;
 ```
 
-Defined in: [src/runtime/vue/composables/use-queries.ts:140](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-queries.ts#L140)
+Defined in: [src/runtime/vue/composables/use-queries.ts:140](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-queries.ts#L140)
 
 Load a variable number of reactive Convex queries.
 
@@ -2152,7 +2152,7 @@ loading, or an `Error` if it threw an exception.
 const useConvexQuery: <Query>(query, ...args) => ComputedRef<Query["_returnType"] | undefined> = useQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:207](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-query.ts#L207)
+Defined in: [src/runtime/vue/composables/use-query.ts:207](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-query.ts#L207)
 
 Load a reactive query within a Vue component.
 
@@ -2211,7 +2211,7 @@ const profile = useQuery(
 const useConvexStorageUrl: (getUrl, storageId) => ComputedRef<string | null | undefined> = useStorageUrl;
 ```
 
-Defined in: [src/runtime/vue/composables/use-storage-url.ts:61](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-storage-url.ts#L61)
+Defined in: [src/runtime/vue/composables/use-storage-url.ts:61](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-storage-url.ts#L61)
 
 Reactively resolve the served URL for a Convex stored file.
 
@@ -2258,7 +2258,7 @@ const url = useStorageUrl(api.images.getUrl, storageId)
 const useConvexUploadQueue: (generateUploadUrl, options) => VueUploadQueue = useUploadQueue;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:253](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L253)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:253](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L253)
 
 Upload many files to Convex file storage with bounded concurrency and
 per-item reactive progress.
@@ -2318,7 +2318,7 @@ function onPick(event: Event) {
 const useConvexUpload: (generateUploadUrl, options) => VueUpload = useUpload;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:281](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L281)
+Defined in: [src/runtime/vue/composables/use-upload.ts:281](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L281)
 
 Upload files to Convex file storage from a component, with reactive
 progress, error, and cancellation state.
@@ -2378,7 +2378,7 @@ async function onPick(event: Event) {
 const ConvexApiKey: InjectionKey<ConvexApi>;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:13](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/provide.ts#L13)
+Defined in: [src/runtime/vue/provide.ts:13](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/provide.ts#L13)
 
 ## Functions
 
@@ -2392,7 +2392,7 @@ function useConvexAuth(): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:53](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L53)
+Defined in: [src/runtime/vue/auth/index.ts:53](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L53)
 
 Get the [ConvexAuthState](#convexauthstate) within a Vue component.
 
@@ -2413,9 +2413,9 @@ The current [ConvexAuthState](#convexauthstate).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L54) |
-| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L55) |
-| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L56) |
+| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L54) |
+| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L55) |
+| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L56) |
 
 ***
 
@@ -2425,7 +2425,7 @@ The current [ConvexAuthState](#convexauthstate).
 function provideConvexAuth(options): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:131](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L131)
+Defined in: [src/runtime/vue/auth/index.ts:131](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L131)
 
 A replacement for the plain Convex client provide (upstream's
 `ConvexProvider`) which additionally provides [ConvexAuthState](#convexauthstate) to
@@ -2472,7 +2472,7 @@ const authState = provideConvexAuth({ client, useAuth })
 function createConvexAuthState(options, scope?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:151](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L151)
+Defined in: [src/runtime/vue/auth/index.ts:151](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L151)
 
 Build reactive [ConvexAuthState](#convexauthstate) and wire watchers between the
 external auth provider and the Convex client, without calling `provide()` —
@@ -2506,7 +2506,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:281](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L281)
+Defined in: [src/runtime/vue/auth/index.ts:281](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L281)
 
 Create a fresh EffectScope and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2528,8 +2528,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:283](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L283) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:283](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/auth/index.ts#L283) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:283](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L283) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:283](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/auth/index.ts#L283) |
 
 ***
 
@@ -2539,7 +2539,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 function useConvex(): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:637](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/client.ts#L637)
+Defined in: [src/runtime/vue/client.ts:637](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/client.ts#L637)
 
 Get the [ConvexVueClient](#convexvueclient) within a Vue component.
 
@@ -2560,7 +2560,7 @@ The active [ConvexVueClient](#convexvueclient) object, or `undefined`.
 function useAction<Action>(action): VueAction<Action>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-action.ts:74](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-action.ts#L74)
+Defined in: [src/runtime/vue/composables/use-action.ts:74](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-action.ts#L74)
 
 Construct a new [VueAction](#vueaction).
 
@@ -2625,7 +2625,7 @@ async function handleClick() {
 function useConvexConnectionState(): ShallowRef<ConnectionState>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-connection-state.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-connection-state.ts#L33)
+Defined in: [src/runtime/vue/composables/use-connection-state.ts:33](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-connection-state.ts#L33)
 
 Vue composable to get the current [ConnectionState](#connectionstate) and subscribe to changes.
 
@@ -2664,7 +2664,7 @@ const conn = useConvexConnectionState()
 function useMutation<Mutation>(mutation): VueMutation<Mutation>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-mutation.ts:113](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-mutation.ts#L113)
+Defined in: [src/runtime/vue/composables/use-mutation.ts:113](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-mutation.ts#L113)
 
 Construct a new [VueMutation](#vuemutation).
 
@@ -2722,7 +2722,7 @@ function usePaginatedQuery<Query>(
 options): UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:204](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L204)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:204](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L204)
 
 Load data reactively from a paginated query to create a growing list.
 
@@ -2779,7 +2779,7 @@ function optimisticallyUpdateValueInPaginatedQuery<Query>(
    updateValue): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:549](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L549)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:549](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L549)
 
 Optimistically update values in a paginated list.
 
@@ -2810,7 +2810,7 @@ Optimistically update values in a paginated list.
 function insertAtTop<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:591](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L591)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:591](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L591)
 
 Insert an item at the top of a paginated list, regardless of sort order.
 
@@ -2845,7 +2845,7 @@ would flash in/out once the real first page arrives.
 function insertAtBottomIfLoaded<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:619](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L619)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:619](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L619)
 
 Insert an item at the bottom of a paginated list, but only if the final
 page has loaded (otherwise it would pop out when the server responds).
@@ -2878,7 +2878,7 @@ page has loaded (otherwise it would pop out when the server responds).
 function insertAtPosition<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:658](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L658)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:658](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L658)
 
 Insert an item at its sorted position across loaded pages of a paginated
 query, given a sort order and a function deriving the sort key.
@@ -2918,7 +2918,7 @@ function usePaginatedQuery_experimental<Query>(
 options): UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:860](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L860)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:860](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L860)
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -2962,7 +2962,7 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 function usePaginatedQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UsePaginatedQueryObjectReturnType<Query, ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:866](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-paginated-query.ts#L866)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:866](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-paginated-query.ts#L866)
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -3006,7 +3006,7 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 function useQueries(queries): ShallowRef<Record<string, any>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-queries.ts:60](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-queries.ts#L60)
+Defined in: [src/runtime/vue/composables/use-queries.ts:60](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-queries.ts#L60)
 
 Load a variable number of reactive Convex queries.
 
@@ -3071,7 +3071,7 @@ loading, or an `Error` if it threw an exception.
 function useQuery<Query>(query, ...args): ComputedRef<Query["_returnType"] | undefined>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:77](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-query.ts#L77)
+Defined in: [src/runtime/vue/composables/use-query.ts:77](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-query.ts#L77)
 
 Load a reactive query within a Vue component.
 
@@ -3130,7 +3130,7 @@ const profile = useQuery(
 function useQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UseQueryResult<Query["_returnType"], ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:143](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-query.ts#L143)
+Defined in: [src/runtime/vue/composables/use-query.ts:143](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-query.ts#L143)
 
 Load a reactive query within a Vue component using an options object.
 
@@ -3182,7 +3182,7 @@ const state = useQuery({ query: api.tasks.list, args: { completed: false } })
 function useStorageUrl(getUrl, storageId): ComputedRef<string | null | undefined>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-storage-url.ts:50](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-storage-url.ts#L50)
+Defined in: [src/runtime/vue/composables/use-storage-url.ts:50](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-storage-url.ts#L50)
 
 Reactively resolve the served URL for a Convex stored file.
 
@@ -3229,7 +3229,7 @@ const url = useStorageUrl(api.images.getUrl, storageId)
 function useUploadQueue(generateUploadUrl, options?): VueUploadQueue;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:133](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload-queue.ts#L133)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:133](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload-queue.ts#L133)
 
 Upload many files to Convex file storage with bounded concurrency and
 per-item reactive progress.
@@ -3289,7 +3289,7 @@ function onPick(event: Event) {
 function uploadFile(options): Promise<StorageId>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:58](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L58)
+Defined in: [src/runtime/vue/composables/use-upload.ts:58](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L58)
 
 Upload a single file to a Convex upload URL, resolving to its storage id.
 
@@ -3320,7 +3320,7 @@ A promise of the new [StorageId](#storageid-1).
 function useUpload(generateUploadUrl, options?): VueUpload;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload.ts:205](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/composables/use-upload.ts#L205)
+Defined in: [src/runtime/vue/composables/use-upload.ts:205](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/composables/use-upload.ts#L205)
 
 Upload files to Convex file storage from a component, with reactive
 progress, error, and cancellation state.
@@ -3380,7 +3380,7 @@ async function onPick(event: Event) {
 function usePreloadedQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"]>;
 ```
 
-Defined in: [src/runtime/vue/hydration.ts:51](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/hydration.ts#L51)
+Defined in: [src/runtime/vue/hydration.ts:51](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/hydration.ts#L51)
 
 Load a reactive query within a Vue component using a `Preloaded` payload
 from the server returned by preloadQuery.
@@ -3431,7 +3431,7 @@ const tasks = usePreloadedQuery(props.preloaded)
 function provideConvexApi(api, app?): void;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:30](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/provide.ts#L30)
+Defined in: [src/runtime/vue/provide.ts:30](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/provide.ts#L30)
 
 Make the generated Convex `api` available to every `nuxt-convex-module` composable
 and component, so `useBilling()`, `<CheckoutLink>`, `useEmailStatus()`, … work
@@ -3466,7 +3466,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 function useConvexApi(): ConvexApi | undefined;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:40](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/provide.ts#L40)
+Defined in: [src/runtime/vue/provide.ts:40](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/provide.ts#L40)
 
 The injected generated `api`, or `undefined` when it hasn't been provided
 (e.g. outside a setup context, or before Convex codegen has run). Prefer
@@ -3484,7 +3484,7 @@ The injected generated `api`, or `undefined` when it hasn't been provided
 function useConvexNamespace<T>(name): T | undefined;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:52](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/vue/provide.ts#L52)
+Defined in: [src/runtime/vue/provide.ts:52](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/vue/provide.ts#L52)
 
 The named function group from the generated `api` (e.g. `'billing'`,
 `'email'`), or `undefined` when billing/email isn't scaffolded — letting the
