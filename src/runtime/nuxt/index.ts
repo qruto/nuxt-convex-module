@@ -35,7 +35,7 @@
  * </script>
  * ```
  *
- * @module
+ * @module server
  */
 
 import { ConvexHttpClient } from 'convex/browser'

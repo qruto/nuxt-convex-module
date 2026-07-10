@@ -34,6 +34,10 @@
       "types": "./dist/types.d.ts",
       "import": "./dist/module.js"
     },
+    "./client": {
+      "types": "./dist/runtime/vue/index.d.ts",
+      "import": "./dist/runtime/vue/index.js"
+    },
     "./vue": {
       "types": "./dist/runtime/vue/index.d.ts",
       "import": "./dist/runtime/vue/index.js"
@@ -42,7 +46,7 @@
       "types": "./dist/runtime/nuxt/index.d.ts",
       "import": "./dist/runtime/nuxt/index.js"
     },
-    "./better-auth/vue": {
+    "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
     },
@@ -50,13 +54,25 @@
       "types": "./dist/runtime/better-auth/nuxt/server.d.ts",
       "import": "./dist/runtime/better-auth/nuxt/server.js"
     },
+    "./polar/client": {
+      "types": "./dist/runtime/polar/vue/components.d.ts",
+      "import": "./dist/runtime/polar/vue/components.js"
+    },
     "./polar/vue": {
       "types": "./dist/runtime/polar/vue/components.d.ts",
       "import": "./dist/runtime/polar/vue/components.js"
     },
+    "./clerk/client": {
+      "types": "./dist/runtime/clerk/vue/index.d.ts",
+      "import": "./dist/runtime/clerk/vue/index.js"
+    },
     "./clerk/vue": {
       "types": "./dist/runtime/clerk/vue/index.d.ts",
       "import": "./dist/runtime/clerk/vue/index.js"
+    },
+    "./auth0/client": {
+      "types": "./dist/runtime/auth0/vue/index.d.ts",
+      "import": "./dist/runtime/auth0/vue/index.js"
     },
     "./auth0/vue": {
       "types": "./dist/runtime/auth0/vue/index.d.ts",
@@ -69,23 +85,35 @@
       ".": [
         "./dist/types.d.ts"
       ],
+      "client": [
+        "./dist/runtime/vue/index.d.ts"
+      ],
       "vue": [
         "./dist/runtime/vue/index.d.ts"
       ],
       "server": [
         "./dist/runtime/nuxt/index.d.ts"
       ],
-      "better-auth/vue": [
+      "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"
       ],
       "better-auth/server": [
         "./dist/runtime/better-auth/nuxt/server.d.ts"
       ],
+      "polar/client": [
+        "./dist/runtime/polar/vue/components.d.ts"
+      ],
       "polar/vue": [
         "./dist/runtime/polar/vue/components.d.ts"
       ],
+      "clerk/client": [
+        "./dist/runtime/clerk/vue/index.d.ts"
+      ],
       "clerk/vue": [
         "./dist/runtime/clerk/vue/index.d.ts"
+      ],
+      "auth0/client": [
+        "./dist/runtime/auth0/vue/index.d.ts"
       ],
       "auth0/vue": [
         "./dist/runtime/auth0/vue/index.d.ts"

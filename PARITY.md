@@ -58,7 +58,7 @@ dependency — not reimplemented: `convexClient` and `crossDomainClient` from
 override it (to choose plugins, e.g. add `crossDomainClient()` for cross-domain auth) by pointing
 `convex.betterAuth.authClient` at their own module; the runtime resolves it through the
 `#convex/auth-client` alias. Both Convex client plugins are also re-exported from
-`nuxt-convex-module/better-auth/vue` for convenience.
+`nuxt-convex-module/better-auth/client` for convenience.
 
 Nuxt-specific files with no single upstream origin (the Nuxt request lifecycle has no React
 equivalent): `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/proxy.ts` (the proxy delegates

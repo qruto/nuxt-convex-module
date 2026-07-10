@@ -10,11 +10,11 @@ description: Auto-generated TypeScript API reference for every public nuxt-conve
 
 | Module | Description |
 | ------ | ------ |
-| [auth0/vue](/api-reference/reference/auth0/vue) | Vue login component for use with Auth0. |
-| [better-auth/nuxt/server](/api-reference/reference/better-auth/nuxt/server) | Server-side Better Auth + Convex integration for Nuxt. |
-| [better-auth/vue](/api-reference/reference/better-auth/vue) | Public Vue API for the opt-in Better Auth integration — a Vue/Nuxt port of `@convex-dev/better-auth`'s `react` integration. |
-| [clerk/vue](/api-reference/reference/clerk/vue) | Vue login component for use with Clerk. |
+| [auth0/client](/api-reference/reference/auth0/client) | Vue login component for use with Auth0. |
+| [better-auth/server](/api-reference/reference/better-auth/server) | Server-side Better Auth + Convex integration for Nuxt. |
+| [better-auth/client](/api-reference/reference/better-auth/client) | Public client-side API for the opt-in Better Auth integration — a Vue/Nuxt port of `@convex-dev/better-auth`'s `react` integration. |
+| [clerk/client](/api-reference/reference/clerk/client) | Vue login component for use with Clerk. |
 | [nuxt/composables/use-async-query](/api-reference/reference/nuxt/composables/use-async-query) | Nuxt-idiomatic data fetching for Convex queries. |
-| [nuxt](/api-reference/reference/nuxt) | Helpers for integrating Convex into Nuxt applications using server rendering. |
-| [polar/vue/components](/api-reference/reference/polar/vue/components) | - |
-| [vue](/api-reference/reference/vue) | Tools to integrate Convex into Vue applications. |
+| [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |
+| [polar/client](/api-reference/reference/polar/client) | Vue ports of `@convex-dev/polar/react`'s billing components — [CheckoutLink](/api-reference/reference/polar/client#checkoutlink) and [CustomerPortalLink](/api-reference/reference/polar/client#customerportallink). |
+| [client](/api-reference/reference/client) | Tools to integrate Convex into Vue applications. |

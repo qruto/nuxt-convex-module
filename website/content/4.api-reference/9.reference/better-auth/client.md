@@ -2,28 +2,28 @@
 navigation: true
 ---
 
-# better-auth/vue
+# better-auth/client
 
-Public Vue API for the opt-in Better Auth integration — a Vue/Nuxt port of
-`@convex-dev/better-auth`'s `react` integration.
+Public client-side API for the opt-in Better Auth integration — a Vue/Nuxt
+port of `@convex-dev/better-auth`'s `react` integration.
 
 ## Interfaces
 
 ### UseAuthService
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:35](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L35)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:35](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L35)
 
 #### Properties
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:37](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L37) |
-| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:38](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L38) |
-| <a id="fetchaccesstoken"></a> `fetchAccessToken` | [`AuthTokenFetcher`](/api-reference/reference/vue#authtokenfetcher) | - | [src/runtime/better-auth/vue/use-auth.ts:39](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L39) |
-| <a id="client"></a> `client` | `VueAuthClient` | - | [src/runtime/better-auth/vue/use-auth.ts:43](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L43) |
-| <a id="session"></a> `session` | [`AuthSession`](#authsession) | - | [src/runtime/better-auth/vue/use-auth.ts:44](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L44) |
-| <a id="user"></a> `user` | `ComputedRef`\<[`AuthUser`](#authuser) \| `null`\> | The current user, or `null` when signed out / still loading. | [src/runtime/better-auth/vue/use-auth.ts:46](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L46) |
-| <a id="authversion"></a> `authVersion` | `ComputedRef`\<`string` \| `null`\> | - | [src/runtime/better-auth/vue/use-auth.ts:47](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L47) |
+| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:37](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L37) |
+| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:38](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L38) |
+| <a id="fetchaccesstoken"></a> `fetchAccessToken` | [`AuthTokenFetcher`](/api-reference/reference/client#authtokenfetcher) | - | [src/runtime/better-auth/vue/use-auth.ts:39](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L39) |
+| <a id="client"></a> `client` | `VueAuthClient` | - | [src/runtime/better-auth/vue/use-auth.ts:43](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L43) |
+| <a id="session"></a> `session` | [`AuthSession`](#authsession) | - | [src/runtime/better-auth/vue/use-auth.ts:44](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L44) |
+| <a id="user"></a> `user` | `ComputedRef`\<[`AuthUser`](#authuser) \| `null`\> | The current user, or `null` when signed out / still loading. | [src/runtime/better-auth/vue/use-auth.ts:46](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L46) |
+| <a id="authversion"></a> `authVersion` | `ComputedRef`\<`string` \| `null`\> | - | [src/runtime/better-auth/vue/use-auth.ts:47](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L47) |
 
 ## Type Aliases
 
@@ -33,7 +33,7 @@ Defined in: [src/runtime/better-auth/vue/use-auth.ts:35](https://github.com/qrut
 type AuthClient = typeof authClient;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:18](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/client.ts#L18)
+Defined in: [src/runtime/better-auth/vue/client.ts:18](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/client.ts#L18)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:18](https://github.com/qruto/
 type AuthSession = ReturnType<typeof useClientSession>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:30](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L30)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:30](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L30)
 
 ***
 
@@ -57,7 +57,7 @@ type AuthUser = {
 } & Record<string, unknown>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L33)
 
 The signed-in user (loose — exact fields depend on your auth schema).
 
@@ -65,9 +65,9 @@ The signed-in user (loose — exact fields depend on your auth schema).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `id` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
-| `email` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
-| `name` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `id` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `email` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `name` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L33) |
 
 ## Variables
 
@@ -247,7 +247,7 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:66](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/auth-boundary.ts#L66)
+Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:66](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/auth-boundary.ts#L66)
 
 _Experimental_
 
@@ -432,7 +432,7 @@ const authClient: VueAuthClient<{
 }>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/client.ts#L9)
+Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/client.ts#L9)
 
 ## Functions
 
@@ -442,7 +442,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/n
 function consumeCrossDomainOneTimeToken(): Promise<void>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/cross-domain.ts:29](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/cross-domain.ts#L29)
+Defined in: [src/runtime/better-auth/vue/cross-domain.ts:29](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/cross-domain.ts#L29)
 
 Exchange a `?ott=...` one-time token (set by the Better Auth cross-domain
 plugin when redirecting from an auth origin) for a full session — the Vue
@@ -463,7 +463,7 @@ parameter or the cross-domain plugin is not installed on the auth client.
 function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"] | null | undefined>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/hydration.ts#L64)
+Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/hydration.ts#L64)
 
 Auth-aware version of usePreloadedQuery for payloads returned by
 `convexAuth(event).preloadAuthQuery(...)`.
@@ -482,13 +482,13 @@ compiling.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](/api-reference/reference/vue#functionreference)\<`"query"`\> |
+| `Query` *extends* [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> |
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `preloadedQuery` | `MaybeRefOrGetter`\<[`Preloaded`](/api-reference/reference/vue#preloaded)\<`Query`\>\> |
+| `preloadedQuery` | `MaybeRefOrGetter`\<[`Preloaded`](/api-reference/reference/client#preloaded)\<`Query`\>\> |
 
 #### Returns
 
@@ -502,7 +502,7 @@ compiling.
 function useAuth(initialToken?): UseAuthService;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:59](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L59)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:59](https://github.com/qruto/nuxt-convex-module/blob/4ddae9765ecc9b44c8fa8b16fe4307bac4c95246/src/runtime/better-auth/vue/use-auth.ts#L59)
 
 Unified Better Auth service for the Vue/Nuxt runtime.
 

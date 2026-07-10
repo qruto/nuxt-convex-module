@@ -1,8 +1,8 @@
 /**
- * Public Vue API for the opt-in Better Auth integration — a Vue/Nuxt port of
- * `@convex-dev/better-auth`'s `react` integration.
+ * Public client-side API for the opt-in Better Auth integration — a Vue/Nuxt
+ * port of `@convex-dev/better-auth`'s `react` integration.
  *
- * @module
+ * @module better-auth/client
  */
 
 export { useAuth, type UseAuthService, type AuthSession, type AuthUser } from './use-auth'

@@ -7,7 +7,7 @@
  * `@auth0/auth0-vue`'s `useAuth0()` into the generic Convex auth provider
  * ({@link provideConvexAuth}) — no new auth core, just the SDK shim.
  *
- * @module
+ * @module auth0/client
  */
 import { useAuth0 } from '@auth0/auth0-vue'
 import { defineComponent, type PropType } from 'vue'
@@ -38,7 +38,7 @@ export interface ConvexProviderWithAuth0Options {
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { provideConvexAuthFromAuth0 } from 'nuxt-convex-module/auth0/vue'
+ * import { provideConvexAuthFromAuth0 } from 'nuxt-convex-module/auth0/client'
  * provideConvexAuthFromAuth0()
  * </script>
  * ```

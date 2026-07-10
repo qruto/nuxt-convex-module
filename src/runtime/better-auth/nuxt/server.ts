@@ -7,7 +7,7 @@
  * {@link H3Event} that is available in every Nuxt server route, API handler
  * and server middleware.
  *
- * @module
+ * @module better-auth/server
  */
 
 import type { H3Event } from 'h3'
