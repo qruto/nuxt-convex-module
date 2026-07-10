@@ -8,6 +8,8 @@ import { type App, hasInjectionContext, inject, type InjectionKey, provide } fro
  */
 export type ConvexApi = Record<string, Record<string, unknown>>
 
+// Public API: exported for downstream apps that inject the key directly; no in-repo consumer.
+// fallow-ignore-next-line unused-export
 export const ConvexApiKey: InjectionKey<ConvexApi> = Symbol('nuxt-convex-module:api')
 
 /**

@@ -434,7 +434,12 @@ describe.sequential('auth websocket tests', () => {
         modifications: [],
       })
 
-      await new Promise(resolve => setTimeout(resolve, 0))
+      // Wait until the client processes the Transition confirming the fresh
+      // token — a single macrotask flush is not always enough for the socket
+      // round trip, so poll like the other tests do.
+      await waitForAssertion(() => {
+        expect(onChange).toHaveBeenCalledTimes(2)
+      })
       await client.close()
 
       expect(onChange).toHaveBeenCalledTimes(2)
@@ -635,7 +640,11 @@ describe.sequential('auth websocket tests', () => {
         modifications: [],
       })
 
-      await new Promise(resolve => setTimeout(resolve, 0))
+      // Same socket-round-trip caveat as above: poll until the client has
+      // processed the confirming Transition instead of a single flush.
+      await waitForAssertion(() => {
+        expect(onChange).toHaveBeenCalledTimes(2)
+      })
       await client.close()
 
       expect(tokenFetcher).toHaveBeenCalledTimes(3)

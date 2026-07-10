@@ -1,8 +1,8 @@
 // Unit coverage for the generic Vue auth wiring that doesn't need a mounted
-// component tree: the missing-provider guard of `useConvexAuth` and the
-// scoped variant `createScopedConvexAuthState` (used when installing auth
-// state at the Nuxt app level). Component-tree behavior lives in
-// test/nuxt/vue/convex-auth-state.test.ts.
+// component tree: the client's `setAuth` call signature, the missing-provider
+// guard of `useConvexAuth` and the scoped variant `createScopedConvexAuthState`
+// (used when installing auth state at the Nuxt app level). Component-tree
+// behavior lives in test/nuxt/vue/convex-auth-state.test.ts.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick, ref } from 'vue'
 import type { AuthTokenFetcher } from 'convex/browser'
@@ -11,6 +11,29 @@ import {
   useConvexAuth,
   type IConvexVueClient,
 } from '../../../src/runtime/vue/auth'
+import { ConvexVueClient } from '../../../src/runtime/vue/client'
+import { nodeWebSocket, withInMemoryWebSocket } from '../../helpers/in_memory_web_socket'
+import { silentConnectLogger } from '../../helpers/silent-logger'
+
+describe('ConvexVueClient.setAuth', () => {
+  // Ported from convex-js `react/ConvexAuthState.test.tsx` ("setAuth legacy
+  // signature typechecks and doesn't throw"): calling `setAuth` with only a
+  // token fetcher — no `onChange` callback — must typecheck and not throw.
+  // Upstream's test `await`s the call because older clients returned a
+  // backwards-compatibility Promise; convex 1.42.1 (the pinned baseline) and
+  // this port both declare `setAuth(): void`, so there is nothing to await.
+  it('setAuth legacy signature typechecks and does not throw', async () => {
+    await withInMemoryWebSocket(async ({ address }) => {
+      const client = new ConvexVueClient(address, {
+        webSocketConstructor: nodeWebSocket,
+        unsavedChangesWarning: false,
+        logger: silentConnectLogger,
+      })
+      expect(() => client.setAuth(async () => 'foo')).not.toThrow()
+      await client.close()
+    })
+  })
+})
 
 describe('useConvexAuth', () => {
   it('throws when no auth provider is above in the tree', () => {
