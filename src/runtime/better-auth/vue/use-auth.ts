@@ -37,26 +37,14 @@ export interface UseAuthService {
   isLoading: ComputedRef<boolean>
   isAuthenticated: ComputedRef<boolean>
   fetchAccessToken: AuthTokenFetcher
-  // Vue-only service extensions (documented in PARITY.md).
+  // Vue-only service extensions (documented in PARITY.md). Auth *flows*
+  // (sign-in, sign-out, OTP, passkeys, ...) are not wrapped here — call them
+  // on `client`, which is fully typed by the plugins your auth client installs.
   client: AuthClient
   session: AuthSession
   /** The current user, or `null` when signed out / still loading. */
   user: ComputedRef<AuthUser | null>
   authVersion: ComputedRef<string | null>
-  /** Sign the current user out. */
-  signOut: () => Promise<unknown>
-  /** Send a sign-in / verification OTP code to an email. */
-  sendOtp: (email: string, type?: 'sign-in' | 'email-verification' | 'forget-password') => Promise<unknown>
-  /** Complete sign-in (or passwordless sign-up) with an emailed OTP code. */
-  signInWithOtp: (args: { email: string, otp: string, name?: string }) => Promise<unknown>
-  /** Sign in with a passkey (WebAuthn). */
-  signInWithPasskey: () => Promise<unknown>
-  /** Register a passkey — pass `{ email, name }` (JSON) for pre-auth registration. */
-  registerPasskey: (context?: string) => Promise<unknown>
-  /** Change the account email (confirmed via email). */
-  changeEmail: (newEmail: string, callbackURL?: string) => Promise<unknown>
-  /** Delete the account (confirmed via email). */
-  deleteAccount: () => Promise<unknown>
 }
 
 /**
@@ -129,20 +117,6 @@ export function useAuth(initialToken?: string | null): UseAuthService {
     return pendingToken
   }
 
-  // Thin ergonomic wrappers over the Better Auth client. The client is fully
-  // typed and remains exposed for everything else; these cover the common flows.
-  const c = client as unknown as {
-    signOut: () => Promise<unknown>
-    emailOtp: { sendVerificationOtp: (args: { email: string, type: string }) => Promise<unknown> }
-    signIn: {
-      emailOtp: (args: { email: string, otp: string, name?: string }) => Promise<unknown>
-      passkey: () => Promise<unknown>
-    }
-    passkey: { addPasskey: (args: { context?: string }) => Promise<unknown> }
-    changeEmail: (args: { newEmail: string, callbackURL?: string }) => Promise<unknown>
-    deleteUser: (args: Record<string, never>) => Promise<unknown>
-  }
-
   return {
     isLoading: computed(() => session.value.isPending && !cachedToken.value),
     // Diverges from upstream's `Boolean(session?.session) || cachedToken !== null`:
@@ -161,13 +135,6 @@ export function useAuth(initialToken?: string | null): UseAuthService {
       return data?.user ?? null
     }),
     authVersion,
-    signOut: () => c.signOut(),
-    sendOtp: (email, type = 'sign-in') => c.emailOtp.sendVerificationOtp({ email, type }),
-    signInWithOtp: args => c.signIn.emailOtp(args),
-    signInWithPasskey: () => c.signIn.passkey(),
-    registerPasskey: context => c.passkey.addPasskey({ context }),
-    changeEmail: (newEmail, callbackURL) => c.changeEmail({ newEmail, callbackURL }),
-    deleteAccount: () => c.deleteUser({}),
   }
 }
 

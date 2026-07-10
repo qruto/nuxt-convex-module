@@ -18,9 +18,11 @@ export interface BetterAuthModuleOptions {
    * Path (relative to the Nuxt `rootDir`, or absolute) to a module that exports
    * your configured Better Auth client as `authClient` — and, ideally, its type
    * as `AuthClient`. Mirrors `convex/react`'s "you own the `authClient`" model:
-   * include whatever client plugins you need, e.g. `crossDomainClient()` from
+   * include whatever client plugins you need, e.g. `emailOTPClient()`,
+   * `passkeyClient()`, or `crossDomainClient()` from
    * `@convex-dev/better-auth/client/plugins` for cross-domain auth. Defaults to
-   * the bundled client (`convexClient` + `emailOTPClient` + `passkeyClient`).
+   * a minimal bundled client carrying only `convexClient()` — the one plugin
+   * the integration itself requires.
    *
    * @example './app/convex-auth-client'
    */

@@ -133,7 +133,6 @@
   },
   "peerDependencies": {
     "@auth0/auth0-vue": ">=2.0.0",
-    "@better-auth/passkey": ">=1.6.0",
     "@clerk/vue": ">=2.0.0",
     "@convex-dev/better-auth": ">=0.12.0",
     "@convex-dev/polar": ">=0.9.0",
@@ -144,9 +143,6 @@
   },
   "peerDependenciesMeta": {
     "@auth0/auth0-vue": {
-      "optional": true
-    },
-    "@better-auth/passkey": {
       "optional": true
     },
     "@clerk/vue": {
@@ -167,7 +163,6 @@
   },
   "devDependencies": {
     "@auth0/auth0-vue": "^2.7.0",
-    "@better-auth/passkey": "~1.6.18",
     "@clerk/vue": "2.4.9",
     "@codecov/nuxt-plugin": "^2.0.1",
     "@commitlint/cli": "^21.0.2",

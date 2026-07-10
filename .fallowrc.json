@@ -48,7 +48,6 @@
     "nuxt-security",
     "@convex-dev/better-auth",
     "@convex-dev/polar",
-    "@better-auth/passkey",
     "better-auth",
     "@polar-sh/checkout",
     "@clerk/vue",
