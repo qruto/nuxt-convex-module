@@ -952,6 +952,64 @@ describe('usePaginatedQuery_experimental', () => {
     usePaginated({ query: queryRef, args: {}, initialNumItems: 10 })
   })
 
+  // Upstream's describe.each runs the options-validation and skip tests
+  // against BOTH implementations (hook-based and client-based). Our
+  // experimental composable shares `usePaginatedQueryInternal` with the stable
+  // one, but it is a separate public entry point with its own overload
+  // dispatch, so its positional form gets the same negative-path coverage.
+  it.each([
+    {
+      options: undefined,
+      expectedError: '`options.initialNumItems` must be a positive number. Received `undefined`.',
+    },
+    {
+      options: {},
+      expectedError: '`options.initialNumItems` must be a positive number. Received `undefined`.',
+    },
+    {
+      options: { initialNumItems: -1 },
+      expectedError: '`options.initialNumItems` must be a positive number. Received `-1`.',
+    },
+    {
+      options: { initialNumItems: 'wrongType' },
+      expectedError: '`options.initialNumItems` must be a positive number. Received `wrongType`.',
+    },
+  ])('positional form throws an error when options is $options', async ({ options, expectedError }) => {
+    const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+    await expect(
+      mountWithConvex(
+        client,
+        () =>
+          usePaginatedQuery_experimental(
+            queryRef,
+            {},
+            options as { initialNumItems: number },
+          ),
+        { expectSetupThrow: true },
+      ),
+    ).rejects.toThrow(expectedError)
+    await client.close()
+  })
+
+  it('positional form returns nothing when args are skip', async () => {
+    const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+    const watchPaginatedSpy = vi.spyOn(client, 'watchPaginatedQuery')
+    const watchQuerySpy = vi.spyOn(client, 'watchQuery')
+
+    const { result: { results, status, isLoading } } = await mountWithConvex(
+      client,
+      () => usePaginatedQuery_experimental(queryRef, 'skip', { initialNumItems: 10 }),
+    )
+
+    expect(watchPaginatedSpy).not.toHaveBeenCalled()
+    expect(watchQuerySpy).not.toHaveBeenCalled()
+    expect(isLoading.value).toBe(true)
+    expect(results.value).toEqual([])
+    expect(status.value).toBe('LoadingFirstPage')
+
+    await client.close()
+  })
+
   it('positional form paginates like the stable hook (destructured refs + loadMore)', async () => {
     await withInMemoryWebSocket(async ({ address }) => {
       resetPaginationId()

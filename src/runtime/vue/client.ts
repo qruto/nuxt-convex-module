@@ -450,6 +450,12 @@ export class ConvexVueClient {
    * escape hatch); doing so throws this error to fail loudly rather than
    * silently mis-subscribe.
    *
+   * Upstream wires {@link usePaginatedQuery_experimental} to this method's
+   * `PaginatedQueryClient`; the port re-bases that hook on the same manual
+   * page-management engine as {@link usePaginatedQuery}, so both hooks work
+   * without ever calling this method (only the experimental single-request
+   * network path is not reproduced).
+   *
    * @internal
    */
   watchPaginatedQuery<Query extends FunctionReference<'query'>>(

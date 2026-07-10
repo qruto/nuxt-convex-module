@@ -145,6 +145,9 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
  * When `scope` is provided, all watchers are created inside that
  * {@link EffectScope} so callers can dispose them later.
  */
+// Public API (documented): installs auth state at the Nuxt app level; the two
+// wrappers below are the only in-repo callers.
+// fallow-ignore-next-line unused-export
 export function createConvexAuthState(
   options: ConvexAuthProviderOptions,
   scope?: EffectScope,
