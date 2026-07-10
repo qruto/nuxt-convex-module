@@ -10,26 +10,13 @@ const tokenMock = vi.fn<
   (opts: { fetchOptions: { throw: boolean } }) => Promise<{ data?: { token?: string | null } | null }>
 >()
 
-// Spies backing the ergonomic wrappers `useAuth` layers over the client.
-const signOutMock = vi.fn().mockResolvedValue({ ok: true })
-const sendVerificationOtpMock = vi.fn().mockResolvedValue({ ok: true })
-const signInEmailOtpMock = vi.fn().mockResolvedValue({ ok: true })
-const signInPasskeyMock = vi.fn().mockResolvedValue({ ok: true })
-const addPasskeyMock = vi.fn().mockResolvedValue({ ok: true })
-const changeEmailMock = vi.fn().mockResolvedValue({ ok: true })
-const deleteUserMock = vi.fn().mockResolvedValue({ ok: true })
-
+// `useAuth` only consumes the session and the Convex token plugin — auth
+// flows (sign-in/out, plugins) live on the exposed `client`, untouched here.
 const mockAuthClient = {
   useSession: () => sessionRef,
   get convex() {
     return { token: tokenMock }
   },
-  signOut: signOutMock,
-  emailOtp: { sendVerificationOtp: sendVerificationOtpMock },
-  signIn: { emailOtp: signInEmailOtpMock, passkey: signInPasskeyMock },
-  passkey: { addPasskey: addPasskeyMock },
-  changeEmail: changeEmailMock,
-  deleteUser: deleteUserMock,
 }
 
 vi.mock('#convex/auth-client', () => ({
@@ -46,17 +33,6 @@ describe('useAuth (Better Auth + Convex)', () => {
   beforeEach(() => {
     sessionRef.value = { data: null, isPending: true }
     tokenMock.mockReset()
-    for (const wrapperMock of [
-      signOutMock,
-      sendVerificationOtpMock,
-      signInEmailOtpMock,
-      signInPasskeyMock,
-      addPasskeyMock,
-      changeEmailMock,
-      deleteUserMock,
-    ]) {
-      wrapperMock.mockClear()
-    }
   })
 
   it('exposes the Better Auth client and session from one service', async () => {
@@ -165,82 +141,6 @@ describe('useAuth (Better Auth + Convex)', () => {
 
     sessionRef.value = { data: null, isPending: false }
     expect(user.value).toBeNull()
-  })
-
-  it('forwards signOut to the Better Auth client', async () => {
-    const { useAuth } = await loadUseAuth()
-
-    await useAuth().signOut()
-
-    expect(signOutMock).toHaveBeenCalledTimes(1)
-  })
-
-  it('sends an OTP with the sign-in type by default and forwards an explicit type', async () => {
-    const { useAuth } = await loadUseAuth()
-    const { sendOtp } = useAuth()
-
-    await sendOtp('user@example.com')
-    expect(sendVerificationOtpMock).toHaveBeenLastCalledWith({
-      email: 'user@example.com',
-      type: 'sign-in',
-    })
-
-    await sendOtp('user@example.com', 'email-verification')
-    expect(sendVerificationOtpMock).toHaveBeenLastCalledWith({
-      email: 'user@example.com',
-      type: 'email-verification',
-    })
-  })
-
-  it('signs in with an emailed OTP code', async () => {
-    const { useAuth } = await loadUseAuth()
-
-    await useAuth().signInWithOtp({ email: 'user@example.com', otp: '123456', name: 'User One' })
-
-    expect(signInEmailOtpMock).toHaveBeenCalledWith({
-      email: 'user@example.com',
-      otp: '123456',
-      name: 'User One',
-    })
-  })
-
-  it('signs in with a passkey', async () => {
-    const { useAuth } = await loadUseAuth()
-
-    await useAuth().signInWithPasskey()
-
-    expect(signInPasskeyMock).toHaveBeenCalledTimes(1)
-  })
-
-  it('registers a passkey, forwarding the pre-auth context', async () => {
-    const { useAuth } = await loadUseAuth()
-    const { registerPasskey } = useAuth()
-
-    const context = JSON.stringify({ email: 'user@example.com', name: 'User One' })
-    await registerPasskey(context)
-    expect(addPasskeyMock).toHaveBeenLastCalledWith({ context })
-
-    await registerPasskey()
-    expect(addPasskeyMock).toHaveBeenLastCalledWith({ context: undefined })
-  })
-
-  it('changes the account email, forwarding the callback URL', async () => {
-    const { useAuth } = await loadUseAuth()
-
-    await useAuth().changeEmail('new@example.com', '/profile')
-
-    expect(changeEmailMock).toHaveBeenCalledWith({
-      newEmail: 'new@example.com',
-      callbackURL: '/profile',
-    })
-  })
-
-  it('deletes the account through the Better Auth client', async () => {
-    const { useAuth } = await loadUseAuth()
-
-    await useAuth().deleteAccount()
-
-    expect(deleteUserMock).toHaveBeenCalledWith({})
   })
 
   it('invalidates the cached token when the Better Auth session changes', async () => {

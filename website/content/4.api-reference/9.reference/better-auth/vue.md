@@ -11,36 +11,29 @@ Public Vue API for the opt-in Better Auth integration — a Vue/Nuxt port of
 
 ### UseAuthService
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:35](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L35)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:35](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L35)
 
 #### Properties
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:37](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L37) |
-| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:38](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L38) |
-| <a id="fetchaccesstoken"></a> `fetchAccessToken` | [`AuthTokenFetcher`](/api-reference/reference/vue#authtokenfetcher) | - | [src/runtime/better-auth/vue/use-auth.ts:39](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L39) |
-| <a id="client"></a> `client` | [`AuthClient`](#authclient) | - | [src/runtime/better-auth/vue/use-auth.ts:41](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L41) |
-| <a id="session"></a> `session` | [`AuthSession`](#authsession) | - | [src/runtime/better-auth/vue/use-auth.ts:42](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L42) |
-| <a id="user"></a> `user` | `ComputedRef`\<[`AuthUser`](#authuser) \| `null`\> | The current user, or `null` when signed out / still loading. | [src/runtime/better-auth/vue/use-auth.ts:44](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L44) |
-| <a id="authversion"></a> `authVersion` | `ComputedRef`\<`string` \| `null`\> | - | [src/runtime/better-auth/vue/use-auth.ts:45](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L45) |
-| <a id="signout"></a> `signOut` | () => `Promise`\<`unknown`\> | Sign the current user out. | [src/runtime/better-auth/vue/use-auth.ts:47](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L47) |
-| <a id="sendotp"></a> `sendOtp` | (`email`, `type?`) => `Promise`\<`unknown`\> | Send a sign-in / verification OTP code to an email. | [src/runtime/better-auth/vue/use-auth.ts:49](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L49) |
-| <a id="signinwithotp"></a> `signInWithOtp` | (`args`) => `Promise`\<`unknown`\> | Complete sign-in (or passwordless sign-up) with an emailed OTP code. | [src/runtime/better-auth/vue/use-auth.ts:51](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L51) |
-| <a id="signinwithpasskey"></a> `signInWithPasskey` | () => `Promise`\<`unknown`\> | Sign in with a passkey (WebAuthn). | [src/runtime/better-auth/vue/use-auth.ts:53](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L53) |
-| <a id="registerpasskey"></a> `registerPasskey` | (`context?`) => `Promise`\<`unknown`\> | Register a passkey — pass `{ email, name }` (JSON) for pre-auth registration. | [src/runtime/better-auth/vue/use-auth.ts:55](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L55) |
-| <a id="changeemail"></a> `changeEmail` | (`newEmail`, `callbackURL?`) => `Promise`\<`unknown`\> | Change the account email (confirmed via email). | [src/runtime/better-auth/vue/use-auth.ts:57](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L57) |
-| <a id="deleteaccount"></a> `deleteAccount` | () => `Promise`\<`unknown`\> | Delete the account (confirmed via email). | [src/runtime/better-auth/vue/use-auth.ts:59](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L59) |
+| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:37](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L37) |
+| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | - | [src/runtime/better-auth/vue/use-auth.ts:38](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L38) |
+| <a id="fetchaccesstoken"></a> `fetchAccessToken` | [`AuthTokenFetcher`](/api-reference/reference/vue#authtokenfetcher) | - | [src/runtime/better-auth/vue/use-auth.ts:39](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L39) |
+| <a id="client"></a> `client` | `VueAuthClient` | - | [src/runtime/better-auth/vue/use-auth.ts:43](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L43) |
+| <a id="session"></a> `session` | [`AuthSession`](#authsession) | - | [src/runtime/better-auth/vue/use-auth.ts:44](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L44) |
+| <a id="user"></a> `user` | `ComputedRef`\<[`AuthUser`](#authuser) \| `null`\> | The current user, or `null` when signed out / still loading. | [src/runtime/better-auth/vue/use-auth.ts:46](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L46) |
+| <a id="authversion"></a> `authVersion` | `ComputedRef`\<`string` \| `null`\> | - | [src/runtime/better-auth/vue/use-auth.ts:47](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L47) |
 
 ## Type Aliases
 
 ### AuthClient
 
 ```ts
-type AuthClient = AuthClientWithPlugins<[ConvexPlugin, EmailOTPPlugin, PasskeyPlugin]>;
+type AuthClient = typeof authClient;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:13](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/client.ts#L13)
+Defined in: [src/runtime/better-auth/vue/client.ts:18](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/client.ts#L18)
 
 ***
 
@@ -50,7 +43,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:13](https://github.com/qruto/
 type AuthSession = ReturnType<typeof useClientSession>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:30](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L30)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:30](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L30)
 
 ***
 
@@ -64,7 +57,7 @@ type AuthUser = {
 } & Record<string, unknown>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L33)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33)
 
 The signed-in user (loose — exact fields depend on your auth schema).
 
@@ -72,9 +65,9 @@ The signed-in user (loose — exact fields depend on your auth schema).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `id` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L33) |
-| `email` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L33) |
-| `name` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `id` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `email` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
+| `name` | `string` | [src/runtime/better-auth/vue/use-auth.ts:33](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L33) |
 
 ## Variables
 
@@ -142,7 +135,32 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
      required: true;
   };
   authClient: {
-     type: PropType<AuthClient>;
+     type: PropType<VueAuthClient<{
+        plugins: {
+           id: "convex";
+           version: string;
+           $InferServerPlugin: {
+              id: "convex";
+              version: string;
+              init: (ctx) => ...;
+              hooks: {
+                 before: ...;
+                 after: ...;
+              };
+              endpoints: {
+                 getOpenIdConfig: ...;
+                 getJwks: ...;
+                 getLatestJwks: ...;
+                 rotateKeys: ...;
+                 getToken: ...;
+              };
+              schema: {
+                 jwks: ...;
+                 user: ...;
+              };
+           };
+        }[];
+     }>>;
      required: true;
   };
   renderFallback: {
@@ -183,7 +201,20 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
      required: true;
   };
   authClient: {
-     type: PropType<AuthClient>;
+     type: PropType<VueAuthClient<{
+        plugins: {
+           id: "convex";
+           version: string;
+           $InferServerPlugin: {
+              id: ...;
+              version: ...;
+              init: ...;
+              hooks: ...;
+              endpoints: ...;
+              schema: ...;
+           };
+        }[];
+     }>>;
      required: true;
   };
   renderFallback: {
@@ -216,7 +247,7 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:66](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/auth-boundary.ts#L66)
+Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:66](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/auth-boundary.ts#L66)
 
 _Experimental_
 
@@ -288,10 +319,120 @@ Function to check if the error is auth related.
 ### authClient
 
 ```ts
-const authClient: AuthClient;
+const authClient: VueAuthClient<{
+  plugins: {
+     id: "convex";
+     version: string;
+     $InferServerPlugin: {
+        id: "convex";
+        version: string;
+        init: (ctx) => void;
+        hooks: {
+           before: (
+              | {
+              matcher: boolean;
+              handler: (inputContext) => Promise<...>;
+            }
+              | {
+              matcher: (ctx) => boolean;
+              handler: (inputContext) => Promise<...>;
+           })[];
+           after: {
+              matcher: (context) => boolean;
+              handler: (inputContext) => Promise<unknown>;
+           }[];
+        };
+        endpoints: {
+           getOpenIdConfig: StrictEndpoint<"/convex/.well-known/openid-configuration", {
+              method: "GET";
+              metadata: {
+                 isAction: false;
+              };
+           }, OIDCMetadata>;
+           getJwks: StrictEndpoint<"/convex/jwks", {
+              method: "GET";
+              metadata: {
+                 openapi: {
+                    description: string;
+                    responses: {
+                       200: ...;
+                    };
+                 };
+              };
+           }, JSONWebKeySet>;
+           getLatestJwks: StrictEndpoint<"/convex/latest-jwks", {
+              isAction: boolean;
+              method: "POST";
+              metadata: {
+                 SERVER_ONLY: true;
+                 openapi: {
+                    description: string;
+                 };
+              };
+           }, any[]>;
+           rotateKeys: StrictEndpoint<"/convex/rotate-keys", {
+              isAction: boolean;
+              method: "POST";
+              metadata: {
+                 SERVER_ONLY: true;
+                 openapi: {
+                    description: string;
+                 };
+              };
+           }, any[]>;
+           getToken: StrictEndpoint<"/convex/token", {
+              method: "GET";
+              requireHeaders: true;
+              use: (inputContext) => Promise<...>[];
+              metadata: {
+                 openapi: {
+                    description: string;
+                    responses: {
+                       200: ...;
+                    };
+                 };
+              };
+            }, {
+              token: string;
+           }>;
+        };
+        schema: {
+           jwks: {
+              fields: {
+                 publicKey: {
+                    type: "string";
+                    required: true;
+                 };
+                 privateKey: {
+                    type: "string";
+                    required: true;
+                 };
+                 createdAt: {
+                    type: "date";
+                    required: true;
+                 };
+                 expiresAt: {
+                    type: "date";
+                    required: false;
+                 };
+              };
+           };
+           user: {
+              fields: {
+                 userId: {
+                    type: "string";
+                    required: false;
+                    input: false;
+                 };
+              };
+           };
+        };
+     };
+  }[];
+}>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:15](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/client.ts#L15)
+Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/client.ts#L9)
 
 ## Functions
 
@@ -301,7 +442,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:15](https://github.com/qruto/
 function consumeCrossDomainOneTimeToken(): Promise<void>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/cross-domain.ts:29](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/cross-domain.ts#L29)
+Defined in: [src/runtime/better-auth/vue/cross-domain.ts:29](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/cross-domain.ts#L29)
 
 Exchange a `?ott=...` one-time token (set by the Better Auth cross-domain
 plugin when redirecting from an auth origin) for a full session — the Vue
@@ -322,7 +463,7 @@ parameter or the cross-domain plugin is not installed on the auth client.
 function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"] | null | undefined>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/hydration.ts#L64)
+Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/hydration.ts#L64)
 
 Auth-aware version of usePreloadedQuery for payloads returned by
 `convexAuth(event).preloadAuthQuery(...)`.
@@ -361,7 +502,7 @@ compiling.
 function useAuth(initialToken?): UseAuthService;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-auth.ts:71](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/vue/use-auth.ts#L71)
+Defined in: [src/runtime/better-auth/vue/use-auth.ts:59](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/vue/use-auth.ts#L59)
 
 Unified Better Auth service for the Vue/Nuxt runtime.
 

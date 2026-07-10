@@ -1,13 +1,33 @@
 <script setup lang="ts">
-// The hero's signature: a machined titanium field device. The live-query
-// example renders on an inset display well carved into the plate; the
-// markings are the kit's real spec (model, material, baselines).
+// The hero's signature: one instrument panel where the source well renders
+// into the output well beneath it. A beat after load, a third message
+// arrives "over the wire" and the document count ticks — the live query
+// demonstrated, not claimed. No fake hardware: the EDC feel is carried by
+// material (bevel, depth, etched type), not by screws.
 const specs = [
   { label: 'V0.1.0' },
   { label: 'MIT' },
   { label: 'NUXT ≥ 4.1' },
   { label: 'CONVEX 1.42' },
 ]
+
+interface Msg { id: number, who: string, body: string }
+
+const messages = ref<Msg[]>([
+  { id: 1, who: 'ada', body: 'ship it' },
+  { id: 2, who: 'lin', body: 'rendered on the server' },
+])
+
+// One-shot arrival — not a loop. Under reduced motion the entry animation
+// is disabled globally, so the row simply appears.
+onMounted(() => {
+  setTimeout(() => {
+    messages.value = [
+      ...messages.value,
+      { id: 3, who: 'rex', body: 'pushed from another client' },
+    ]
+  }, 1400)
+})
 </script>
 
 <template>
@@ -68,51 +88,53 @@ const specs = [
       </div>
 
       <figure
-        class="dev noise"
-        aria-label="A titanium field device showing a live Convex query in Vue"
+        class="hp noise"
+        aria-label="A live Convex query in Vue: the source above renders the output below"
       >
-        <span
-          class="dev-screw tl"
-          aria-hidden="true"
-        />
-        <span
-          class="dev-screw tr"
-          aria-hidden="true"
-        />
-        <span
-          class="dev-screw bl"
-          aria-hidden="true"
-        />
-        <span
-          class="dev-screw br"
-          aria-hidden="true"
-        />
-        <span
-          class="dev-grip"
-          aria-hidden="true"
-        />
-
-        <header class="dev-top mono">
-          <span class="dev-etch etched">NCK-01</span>
-          <span class="dev-etch etched dim">TI-6AL-4V</span>
-          <span class="dev-led"><i aria-hidden="true" />LIVE</span>
+        <header class="hp-top mono">
+          <span class="hp-file etched">app.vue</span>
+          <span class="hp-led"><i aria-hidden="true" />LIVE</span>
         </header>
 
-        <div class="dev-screen">
-          <pre class="dev-code mono"><code><span class="tk-c">// app.vue — data is live, everywhere</span>
-<span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#convex/api'</span>
+        <div class="hp-well hp-src">
+          <pre class="hp-code mono"><code><span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#convex/api'</span>
 
 <span class="tk-k">const</span> messages = <span class="tk-f">useQuery</span>(api.messages.list, {})
 <span class="tk-k">const</span> send = <span class="tk-f">useMutation</span>(api.messages.send)</code></pre>
         </div>
 
-        <figcaption class="dev-foot mono">
-          <span class="dev-etch etched dim"><i
-            class="dev-dot ok"
+        <div
+          class="hp-link mono etched"
+          aria-hidden="true"
+        >
+          <span class="hp-link-line" />
+          <span class="hp-link-label">RENDERS</span>
+          <span class="hp-link-line" />
+        </div>
+
+        <div class="hp-well hp-out">
+          <ul
+            class="hp-list mono"
+            aria-live="polite"
+          >
+            <li
+              v-for="m in messages"
+              :key="m.id"
+              class="hp-msg"
+            >
+              <span class="hp-who">{{ m.who }}</span>
+              {{ m.body }}
+            </li>
+          </ul>
+        </div>
+
+        <figcaption class="hp-foot mono">
+          <span class="hp-stat etched dim"><i
+            class="hp-dot ok"
             aria-hidden="true"
           />WS OPEN</span>
-          <span class="dev-etch etched dim">2 SUBSCRIPTIONS</span>
-          <span class="dev-etch etched dim">SSR HYDRATED</span>
+          <span class="hp-stat etched dim">{{ messages.length }} DOCUMENTS</span>
+          <span class="hp-stat etched dim">SSR HYDRATED</span>
         </figcaption>
       </figure>
     </div>
@@ -120,7 +142,7 @@ const specs = [
 </template>
 
 <style scoped>
-/* ── Hero ground — brushed titanium grain + a whisper of anodize glow.
+/* ── Hero ground — brushed grain + a whisper of accent glow.
    Full-bleed: the section owns its stretch of the canvas. */
 .lh {
   background-image:
@@ -204,8 +226,8 @@ const specs = [
   color: var(--ink-faint);
 }
 
-/* ── The device — a chamfered, milled titanium plate ──────────── */
-.dev {
+/* ── The instrument panel — a chamfered plate, no hardware ────── */
+.hp {
   position: relative;
   margin: 0;
   border: 1px solid transparent;
@@ -214,67 +236,18 @@ const specs = [
     var(--grad-surface) padding-box,
     var(--grad-bevel) border-box;
   box-shadow: var(--elev-3);
-  padding: 1.35rem 3.1rem 1.25rem 1.5rem;
-  animation: dev-settle 0.7s var(--ease-out) both;
+  padding: 1.25rem 1.5rem 1.2rem;
+  animation: hp-settle 0.7s var(--ease-out) both;
   animation-delay: 160ms;
 }
-@keyframes dev-settle {
+@keyframes hp-settle {
   from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Corner fasteners — recessed torx-style screws. */
-.dev-screw {
-  position: absolute;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 32% 28%,
-    light-dark(#ffffff, #3d3d3d),
-    light-dark(#c6c6c6, #0f0f0f)
-  );
-  box-shadow:
-    inset 0 1px 2px light-dark(rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.75)),
-    0 1px 0 light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.06));
-}
-.dev-screw::before {
-  content: '';
-  position: absolute;
-  left: 2.5px;
-  right: 2.5px;
-  top: 5.5px;
-  height: 2px;
-  border-radius: 2px;
-  background: light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.85));
-  transform: rotate(45deg);
-}
-.dev-screw.tl { top: 10px; left: 10px; }
-.dev-screw.tr { top: 10px; right: 10px; }
-.dev-screw.bl { bottom: 10px; left: 10px; }
-.dev-screw.br { bottom: 10px; right: 10px; }
-.dev-screw.tr::before { transform: rotate(-45deg); }
-.dev-screw.bl::before { transform: rotate(-45deg); }
-
-/* Milled grip grooves along the right flank. */
-.dev-grip {
-  position: absolute;
-  top: 2rem;
-  bottom: 2rem;
-  right: 1.05rem;
-  width: 13px;
-  border-radius: 7px;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0 5px,
-    light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.55)) 5px 7px,
-    light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.07)) 7px 8px
-  );
-}
-
-/* Etched markings row. */
-.dev-top,
-.dev-foot {
+/* Markings row. */
+.hp-top,
+.hp-foot {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -282,20 +255,20 @@ const specs = [
   font-weight: 600;
   letter-spacing: 0.13em;
 }
-.dev-top { margin-bottom: 0.85rem; }
-.dev-foot { margin-top: 0.8rem; flex-wrap: wrap; row-gap: 0.35rem; }
-.dev-etch { color: var(--ink-dim); }
-.dev-etch.dim { color: var(--ink-faint); }
-.dev-foot .dev-etch { display: inline-flex; align-items: center; gap: 0.4rem; }
+.hp-top { margin-bottom: 0.85rem; }
+.hp-foot { margin-top: 0.85rem; flex-wrap: wrap; row-gap: 0.35rem; }
+.hp-file { color: var(--ink-dim); text-transform: none; letter-spacing: 0.08em; }
+.hp-stat { display: inline-flex; align-items: center; gap: 0.4rem; }
+.etched.dim { color: var(--ink-faint); }
 
-.dev-dot {
+.hp-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
 }
-.dev-dot.ok { background: var(--ok); box-shadow: var(--glow-ok); }
+.hp-dot.ok { background: var(--ok); box-shadow: var(--glow-ok); }
 
-.dev-led {
+.hp-led {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
@@ -305,7 +278,7 @@ const specs = [
   letter-spacing: 0.14em;
   color: var(--accent-soft);
 }
-.dev-led i {
+.hp-led i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -314,33 +287,87 @@ const specs = [
   animation: pulse-ring 2.4s ease-in-out infinite;
 }
 
-/* Inset display well — the readout carved into the plate. */
-.dev-screen {
+/* Inset wells — source and rendered output, carved a hair below. */
+.hp-well {
   background: var(--sink);
   border-radius: 14px;
   box-shadow: var(--inset-2);
   padding: 1rem 1.15rem;
   overflow-x: auto;
 }
-.dev-code {
+.hp-code {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.75;
   color: var(--ink);
   white-space: pre;
 }
-.tk-c { color: var(--ink-faint); }
 .tk-k { color: var(--accent-soft); }
 .tk-f { color: var(--accent); font-weight: 600; }
 .tk-s { color: var(--ink-dim); }
 
+/* The connector — source feeds the output. */
+.hp-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block: 0.6rem;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.hp-link-label { flex: none; }
+.hp-link-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--edge-hi) 30%, var(--edge-hi) 70%, transparent);
+}
+.hp-link .hp-link-line:first-child {
+  background: linear-gradient(90deg, transparent, var(--accent-glow));
+}
+.hp-link .hp-link-line:last-child {
+  background: linear-gradient(90deg, var(--accent-glow), transparent);
+}
+
+/* Rendered readout — the query result as UI. */
+.hp-out { padding-block: 0.85rem; }
+.hp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+.hp-msg {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--ink);
+  animation: fade-up 0.3s var(--ease-out) both;
+  overflow-wrap: anywhere;
+}
+.hp-who {
+  flex: none;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border: 1px solid var(--edge-hi);
+  border-radius: 5px;
+  padding: 0.05rem 0.3rem;
+}
+.hp-msg:last-child .hp-who { color: var(--accent-soft); border-color: var(--accent-glow); }
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 960px) {
   .lh-inner { grid-template-columns: minmax(0, 1fr); }
-  .dev { max-width: min(34rem, 100%); }
+  .hp { max-width: min(34rem, 100%); }
 }
 @media (max-width: 480px) {
-  .dev { padding-right: 2.6rem; }
-  .dev-top, .dev-foot { gap: 0.7rem; }
+  .hp { padding-inline: 1.1rem; }
+  .hp-top, .hp-foot { gap: 0.7rem; }
 }
 </style>

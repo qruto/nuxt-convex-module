@@ -16,7 +16,7 @@ and server middleware.
 
 ### ConvexAuthService
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:143](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L143)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:143](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L143)
 
 Per-request Better Auth + Convex helper returned by [convexAuth](#convexauth).
 
@@ -24,13 +24,13 @@ Per-request Better Auth + Convex helper returned by [convexAuth](#convexauth).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="gettoken"></a> `getToken` | () => `Promise`\<`string` \| `undefined`\> | Convex JWT for the current user, or `undefined` when not authenticated. | [src/runtime/better-auth/nuxt/server.ts:145](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L145) |
-| <a id="handler"></a> `handler` | () => `Promise`\<`Response`\> | Proxy a Better Auth route to the configured Convex site URL. | [src/runtime/better-auth/nuxt/server.ts:147](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L147) |
-| <a id="isauthenticated"></a> `isAuthenticated` | () => `Promise`\<`boolean`\> | `true` when the current request has a valid Convex auth token. | [src/runtime/better-auth/nuxt/server.ts:149](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L149) |
-| <a id="preloadauthquery"></a> `preloadAuthQuery` | \<`Query`\>(`query`, ...`args`) => `Promise`\<[`Preloaded`](/api-reference/reference/vue#preloaded)\<`Query`\>\> | Preload a Convex query with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:151](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L151) |
-| <a id="fetchauthquery"></a> `fetchAuthQuery` | \<`Query`\>(`query`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Query`\>\> | Execute a Convex query with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:156](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L156) |
-| <a id="fetchauthmutation"></a> `fetchAuthMutation` | \<`Mutation`\>(`mutation`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Mutation`\>\> | Execute a Convex mutation with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:161](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L161) |
-| <a id="fetchauthaction"></a> `fetchAuthAction` | \<`Action`\>(`action`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Action`\>\> | Execute a Convex action with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:166](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L166) |
+| <a id="gettoken"></a> `getToken` | () => `Promise`\<`string` \| `undefined`\> | Convex JWT for the current user, or `undefined` when not authenticated. | [src/runtime/better-auth/nuxt/server.ts:145](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L145) |
+| <a id="handler"></a> `handler` | () => `Promise`\<`Response`\> | Proxy a Better Auth route to the configured Convex site URL. | [src/runtime/better-auth/nuxt/server.ts:147](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L147) |
+| <a id="isauthenticated"></a> `isAuthenticated` | () => `Promise`\<`boolean`\> | `true` when the current request has a valid Convex auth token. | [src/runtime/better-auth/nuxt/server.ts:149](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L149) |
+| <a id="preloadauthquery"></a> `preloadAuthQuery` | \<`Query`\>(`query`, ...`args`) => `Promise`\<[`Preloaded`](/api-reference/reference/vue#preloaded)\<`Query`\>\> | Preload a Convex query with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:151](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L151) |
+| <a id="fetchauthquery"></a> `fetchAuthQuery` | \<`Query`\>(`query`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Query`\>\> | Execute a Convex query with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:156](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L156) |
+| <a id="fetchauthmutation"></a> `fetchAuthMutation` | \<`Mutation`\>(`mutation`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Mutation`\>\> | Execute a Convex mutation with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:161](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L161) |
+| <a id="fetchauthaction"></a> `fetchAuthAction` | \<`Action`\>(`action`, ...`args`) => `Promise`\<[`FunctionReturnType`](/api-reference/reference/vue#functionreturntype)\<`Action`\>\> | Execute a Convex action with the current user's auth token. | [src/runtime/better-auth/nuxt/server.ts:166](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L166) |
 
 ## Type Aliases
 
@@ -43,7 +43,7 @@ type ConvexAuthOptions = GetTokenOptions & {
 };
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:125](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L125)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:125](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L125)
 
 Options for [convexAuth](#convexauth).
 
@@ -54,8 +54,8 @@ an optional override for the Convex site URL.
 
 | Name | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| `convexUrl?` | `string` | Accepted for drop-in compatibility with upstream `convexBetterAuthNextJs` option objects and ignored — upstream requires but never reads it either; the deployment URL comes from runtime config. | [src/runtime/better-auth/nuxt/server.ts:131](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L131) |
-| `convexSiteUrl?` | `string` | Override the Convex site URL. Defaults to `NUXT_PUBLIC_CONVEX_SITE_URL`. | [src/runtime/better-auth/nuxt/server.ts:135](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L135) |
+| `convexUrl?` | `string` | Accepted for drop-in compatibility with upstream `convexBetterAuthNextJs` option objects and ignored — upstream requires but never reads it either; the deployment URL comes from runtime config. | [src/runtime/better-auth/nuxt/server.ts:131](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L131) |
+| `convexSiteUrl?` | `string` | Override the Convex site URL. Defaults to `NUXT_PUBLIC_CONVEX_SITE_URL`. | [src/runtime/better-auth/nuxt/server.ts:135](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L135) |
 
 ## Variables
 
@@ -65,7 +65,7 @@ an optional override for the Convex site URL.
 const convexBetterAuthNuxt: (event, opts?) => ConvexAuthService = convexAuth;
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:331](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L331)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:331](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L331)
 
 Upstream-named alias of [convexAuth](#convexauth) — the mechanical rename target
 for `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs` (framework
@@ -123,7 +123,7 @@ const { data } = await useAsyncData(async () => {
 function convexAuth(event, opts?): ConvexAuthService;
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:209](https://github.com/qruto/nuxt-convex-module/blob/59ccdc4dfc6db70ba57565d2ff93bf533456f929/src/runtime/better-auth/nuxt/server.ts#L209)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:209](https://github.com/qruto/nuxt-convex-module/blob/484ca468e2d3c00a20aaeb41691e748a7c8e6d5f/src/runtime/better-auth/nuxt/server.ts#L209)
 
 Create a per-request Better Auth + Convex helper for Nuxt server code.
 

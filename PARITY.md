@@ -91,11 +91,11 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
   watchers.
 - `better-auth/vue/use-auth.ts` service extension: beyond upstream's `{ isLoading,
   isAuthenticated, fetchAccessToken }`, the returned service exposes the raw `client`, the
-  `session` ref, a `user` computed, and ergonomic wrappers (`signOut`, `sendOtp`,
-  `signInWithOtp`, `signInWithPasskey`, `registerPasskey`, `changeEmail`, `deleteAccount`), plus
-  the `AuthUser` / `UseAuthService` / `AuthSession` types. The OTP/passkey wrappers require the
-  corresponding Better Auth client plugins (present in the bundled default client,
-  `better-auth/vue/client.ts`).
+  `session` ref, a `user` computed and an `authVersion` computed, plus the `AuthUser` /
+  `UseAuthService` / `AuthSession` types. Auth *flows* (sign-in/out, OTP, passkeys, ...) are
+  deliberately not wrapped — like upstream, they are called on the app's own `authClient`
+  (exposed as `client`), typed by whatever plugins that client installs. The bundled default
+  client (`better-auth/vue/client.ts`) carries only `convexClient()`.
 - `vue/index.ts` barrel type conveniences beyond the upstream index surface: `PaginatedWatch`
   (the return type of `client.watchPaginatedQuery`) and `ConvexLogger` (backs
   `ConvexVueClientOptions.logger`) from the client module, plus type re-exports of
