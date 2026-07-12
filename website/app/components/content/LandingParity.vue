@@ -37,7 +37,7 @@ const sameNames = [
       </header>
 
       <div class="ldp-pair">
-        <article class="ldp-plate">
+        <article class="ldp-plate sheen">
           <header class="ldp-top mono">
             <span class="etched">REACT</span>
             <span class="etched dim">convex/react</span>
@@ -52,7 +52,7 @@ const sameNames = [
           <span class="mono">1:1</span>
         </div>
 
-        <article class="ldp-plate">
+        <article class="ldp-plate sheen">
           <header class="ldp-top mono">
             <span class="etched">VUE</span>
             <span class="etched dim">nuxt-convex-module</span>
@@ -113,7 +113,7 @@ const sameNames = [
 .ldp-code {
   margin: 0;
   padding: 0.85rem 1rem;
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 12px;
   box-shadow: var(--inset-2);
   font-size: 0.76rem;

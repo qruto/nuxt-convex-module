@@ -83,7 +83,7 @@ const steps = [
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 1.1rem;
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: var(--r-lg);
   box-shadow: var(--inset-2);
 }
@@ -119,7 +119,7 @@ const steps = [
   font-size: 0.78rem;
   line-height: 1.5;
   color: var(--ink);
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 10px;
   box-shadow: var(--inset-1);
   padding: 0.55rem 0.75rem;

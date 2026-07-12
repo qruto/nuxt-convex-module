@@ -209,7 +209,7 @@ function send(who: Side) {
   justify-content: flex-end;
   gap: 0.35rem;
   overflow: hidden;
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 12px;
   box-shadow: var(--inset-2);
   font-size: 0.78rem;
