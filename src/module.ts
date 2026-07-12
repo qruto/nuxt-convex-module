@@ -107,6 +107,13 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
 
+    // The built runtime imports `#convex/*` aliases (e.g. the Better Auth
+    // runtime resolves the app's auth client via `#convex/auth-client`).
+    // Aliases only apply to files the bundler transforms — an externalized
+    // node_modules .js import would hit Node's resolver and fail — so the
+    // runtime must always be transpiled.
+    nuxt.options.build.transpile.push(resolver.resolve('./runtime'))
+
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
 
     const diagnostics = validateModuleOptions({
@@ -120,8 +127,12 @@ export default defineNuxtModule<ModuleOptions>({
     for (const message of diagnostics.warnings) logger.warn(message)
     options.authRoute = diagnostics.authRoute
 
-    registerConvexAliases(nuxt)
+    // Order matters: alias resolution is first-match-wins and `#convex` is a
+    // prefix of `#convex/auth-client`, so the auth-client alias must be
+    // registered BEFORE the functions-dir catch-all or it resolves to
+    // `<functionsDir>/auth-client` (which doesn't exist).
     registerAuthClientAlias(resolver, nuxt, options)
+    registerConvexAliases(nuxt)
 
     registerConvexApiPlugin(resolver, nuxt)
     registerConvexTypeFallback(nuxt)

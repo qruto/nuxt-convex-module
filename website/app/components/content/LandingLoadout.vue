@@ -169,7 +169,7 @@ onUnmounted(() => {
         <div
           :id="`kit-panel-${active}`"
           :key="active"
-          class="kit-panel fade-up"
+          class="kit-panel fade-up sheen"
           role="tabpanel"
           :aria-labelledby="`kit-tab-${active}`"
         >
@@ -561,7 +561,7 @@ convex: { devtools: <span class="tk-n">false</span> }</code></pre>
 .kit-code {
   margin: 0;
   padding: 0.9rem 1rem;
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 12px;
   box-shadow: var(--inset-2);
   font-size: 0.76rem;
@@ -584,7 +584,7 @@ convex: { devtools: <span class="tk-n">false</span> }</code></pre>
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.9rem 1rem;
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 12px;
   box-shadow: var(--inset-2);
 }

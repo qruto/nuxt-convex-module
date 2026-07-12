@@ -88,7 +88,7 @@ onMounted(() => {
       </div>
 
       <figure
-        class="hp noise"
+        class="hp noise sheen"
         aria-label="A live Convex query in Vue: the source above renders the output below"
       >
         <header class="hp-top mono">
@@ -289,7 +289,7 @@ onMounted(() => {
 
 /* Inset wells — source and rendered output, carved a hair below. */
 .hp-well {
-  background: var(--sink);
+  background: var(--grad-sink);
   border-radius: 14px;
   box-shadow: var(--inset-2);
   padding: 1rem 1.15rem;
