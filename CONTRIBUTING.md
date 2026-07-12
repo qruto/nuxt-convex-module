@@ -35,11 +35,13 @@ pnpm test
 pnpm build
 ```
 
-The `website/` directory is a full Nuxt app (product homepage · docs · interactive playground) wired to the local package. Start it with:
+The `website/` directory is a full Nuxt app (product homepage · docs · interactive playground) wired to the local package **and a real Convex dev deployment**. Start it with:
 
 ```bash
 pnpm dev
 ```
+
+That runs `convex dev` in `website/` with the Nuxt dev server supervised via `--start`, so function push, codegen, the WebSocket sync protocol, SSR fetching, and the interactive playground pages all run against a live deployment. On first run `convex dev` walks you through picking a deployment — a free anonymous local one works fine (no account needed); it stores the choice in `website/.env.local`.
 
 To work on the **Nuxt DevTools panel** (`devtools-client-app/`), also start its dev server — in-repo the panel iframe is proxied to it (the published package serves the prebuilt `dist/devtools-client` instead):
 
