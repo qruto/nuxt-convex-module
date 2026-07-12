@@ -19,7 +19,7 @@
       ]
     },
     "nuxt-docs": {
-      "type": "sse",
+      "type": "http",
       "url": "https://nuxt.com/mcp"
     },
     "better-auth-docs": {

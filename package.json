@@ -134,7 +134,7 @@
     "prepack": "pnpm run build",
     "build": "nuxt-module-build build && node scripts/normalize-module-ext.js && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",
-    "dev": "pnpm run dev:prepare && portless run nuxt dev website",
+    "dev": "pnpm run dev:prepare && pnpm --dir website exec convex dev --start 'portless run nuxt dev'",
     "dev:devtools-client": "nuxt dev devtools-client-app --port 3630",
     "start": "pnpm run dev",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && node scripts/normalize-module-ext.js && nuxt prepare website",
