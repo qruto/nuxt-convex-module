@@ -16,8 +16,16 @@ const UserSubscription = defineComponent({
   setup(props) {
     // Narrow to the zero-args reference `AuthBoundary` accepts so `useQuery`
     // takes no args, matching upstream's bare `useQuery(getAuthUserFn)`.
-    useQuery(props.getAuthUserFn as FunctionReference<'query', 'public', EmptyObject>)
-    return () => null
+    const user = useQuery(props.getAuthUserFn as FunctionReference<'query', 'public', EmptyObject>)
+    // Upstream discards the hook result because convex/react's `useQuery`
+    // throws inside the hook call itself. This port's `useQuery` returns a
+    // lazy computed that only throws when `.value` is read — so read it during
+    // render, where a query auth error propagates to `AuthBoundary`'s
+    // `onErrorCaptured` (and re-renders reactively on result changes).
+    return () => {
+      void user.value
+      return null
+    }
   },
 })
 

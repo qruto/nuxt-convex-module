@@ -11,7 +11,7 @@ type ConvexNuxtInjection = {
 export default defineNuxtPlugin<ConvexNuxtInjection>({
   name: 'nuxt-convex-module:better-auth:client',
   async setup(nuxtApp) {
-    const url = useRuntimeConfig().public.convex.url
+    const { url, crossDomainCallbackRoute } = useRuntimeConfig().public.convex
 
     if (!url) {
       console.warn('[nuxt-convex-module] No Convex URL configured for client plugin.')
@@ -23,7 +23,9 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
 
     // Hydrate the session before wiring auth so Convex sees a valid token
     // on the very first `setAuth()` call after a cross-domain redirect.
-    await consumeCrossDomainOneTimeToken()
+    await consumeCrossDomainOneTimeToken({
+      callbackRoute: crossDomainCallbackRoute || undefined,
+    })
 
     // Read the SSR-prefetched token from the Nuxt payload. Mirrors the React
     // integration's `initialToken={await getToken()}` prop.

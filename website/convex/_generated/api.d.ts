@@ -10,6 +10,7 @@
 
 import type * as analyze from "../analyze.js";
 import type * as billing from "../billing.js";
+import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as messages from "../messages.js";
 import type * as tasks from "../tasks.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   analyze: typeof analyze;
   billing: typeof billing;
+  crons: typeof crons;
   files: typeof files;
   messages: typeof messages;
   tasks: typeof tasks;

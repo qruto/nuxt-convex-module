@@ -27,6 +27,17 @@ export interface BetterAuthModuleOptions {
    * @example './app/convex-auth-client'
    */
   authClient?: string
+  /**
+   * Restrict cross-domain one-time-token (`?ott=`) sign-in completion to one
+   * app route, e.g. `'/auth/callback'`. Only meaningful when your auth client
+   * installs `crossDomainClient()`. By default a token completes sign-in on
+   * whatever page receives it, since the protocol cannot bind it to the
+   * browser that started the flow. With this set, tokens are exchanged only
+   * on the given route and scrubbed everywhere else; point every sign-in
+   * `callbackURL` at it. Off by default, mirroring upstream
+   * `ConvexBetterAuthProvider`.
+   */
+  crossDomainCallbackRoute?: string
 }
 
 export interface ModuleOptions {
@@ -75,6 +86,7 @@ declare module '@nuxt/schema' {
     convex: {
       url: string
       siteUrl: string
+      crossDomainCallbackRoute: string
     }
   }
 }
@@ -415,11 +427,17 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
 
   const siteUrl = options.siteUrl || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || ''
 
+  // Published even when empty so NUXT_PUBLIC_CONVEX_CROSS_DOMAIN_CALLBACK_ROUTE
+  // can override it; path normalization happens at the consumption site
+  // (`consumeCrossDomainOneTimeToken`), which plain-Vue callers reach directly.
+  const crossDomainCallbackRoute
+    = (typeof options.betterAuth === 'object' && options.betterAuth.crossDomainCallbackRoute) || ''
+
   // Kit-blessed merge: publishes the resolved convex url/siteUrl while
   // preserving any sibling keys a user already set, instead of overwriting the
   // whole `convex` object as a direct assignment would.
   updateRuntimeConfig({
-    public: { convex: { url: url || '', siteUrl } },
+    public: { convex: { url: url || '', siteUrl, crossDomainCallbackRoute } },
     convex: { siteUrl },
   })
 
