@@ -79,6 +79,10 @@ as the upstream file; when a rule conflicts with a lint rule, scope the lint rul
   `jwtCache.isAuthError(error)` is **false** (almost certainly an upstream bug); the port
   retries exactly when the cached JWT is rejected as an auth error. See the comment in
   `src/runtime/better-auth/nuxt/server.ts` and its test — do not sync the condition back.
+- `consumeCrossDomainOneTimeToken` accepts a port-only `callbackRoute` option (module option
+  `convex.betterAuth.crossDomainCallbackRoute`) restricting `?ott=` consumption to a dedicated
+  route — upstream consumes the token on any URL, a login-CSRF surface (see PARITY.md's
+  security note). Off by default for parity; keep the guard when syncing.
 - Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = server-only,
   react-start = framework-specific, `convexQueryOptions` = `@internal`).
 

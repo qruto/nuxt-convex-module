@@ -11,7 +11,7 @@ export { useAuth, type UseAuthService, type AuthSession, type AuthUser } from '.
 // through the same alias keeps a single client instance across the app.
 export { authClient, type AuthClient } from '#convex/auth-client'
 export { usePreloadedAuthQuery } from './hydration'
-export { consumeCrossDomainOneTimeToken } from './cross-domain'
+export { consumeCrossDomainOneTimeToken, type ConsumeCrossDomainOneTimeTokenOptions } from './cross-domain'
 export { AuthBoundary } from './auth-boundary'
 
 // Convex-specific Better Auth client plugins, re-exported so you can assemble a

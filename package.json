@@ -123,18 +123,18 @@
   "files": [
     "dist"
   ],
-  "packageManager": "pnpm@11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c51a4d59e951b401e764d3b6ca751cbf51bc50ed7001a6bcb4935e684c34882",
+  "packageManager": "pnpm@11.13.1+sha512.b2fc7683b8a6525414e7d13e1ba28caaddde96bf66ec540bfaeb7e702b81f3e0be4d1f295edf7f9fe0396740a8dce4509c582ddf79891f4543fea32d37645f25",
   "engines": {
     "node": ">=24.11.0",
     "pnpm": ">=11.6.0"
   },
   "scripts": {
-    "preinstall": "npx -y only-allow pnpm",
+    "preinstall": "npx only-allow pnpm",
     "prepare": "git config hook.commitlint.event commit-msg && git config hook.commitlint.command 'pnpm exec commitlint --edit' || true",
     "prepack": "pnpm run build",
     "build": "nuxt-module-build build && node scripts/normalize-module-ext.js && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",
-    "dev": "pnpm run dev:prepare && pnpm --dir website exec convex dev --start 'portless run nuxt dev'",
+    "dev": "pnpm run dev:prepare && pnpm --dir website exec convex dev --start 'portless run --name nuxt-convex-module nuxt dev'",
     "dev:devtools-client": "nuxt dev devtools-client-app --port 3630",
     "start": "pnpm run dev",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && node scripts/normalize-module-ext.js && nuxt prepare website",

@@ -99,6 +99,34 @@ describe('auth/vue/cross-domain', () => {
     expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
   })
 
+  it('consumes the token on the configured callback route, ignoring trailing slashes', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/auth/callback/?ott=one-time-token')
+
+    await consumeCrossDomainOneTimeToken({ callbackRoute: '/auth/callback' })
+
+    expect(mockVerify).toHaveBeenCalledWith({ token: 'one-time-token' })
+    expect(mockUpdateSession).toHaveBeenCalledTimes(1)
+    expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
+  })
+
+  it('scrubs but does not exchange the token outside the configured callback route (login-CSRF guard)', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=attacker-token')
+
+    await consumeCrossDomainOneTimeToken({ callbackRoute: '/auth/callback' })
+
+    expect(mockVerify).not.toHaveBeenCalled()
+    expect(mockGetSession).not.toHaveBeenCalled()
+    expect(mockUpdateSession).not.toHaveBeenCalled()
+    // Still scrubbed so the ignored token never lingers in history/referrers.
+    expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('restricted to "/auth/callback"'))
+    warnSpy.mockRestore()
+  })
+
   it('warns instead of throwing when the OTT exchange fails, so app bootstrap survives', async () => {
     const { consumeCrossDomainOneTimeToken } = await loadModule()
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})

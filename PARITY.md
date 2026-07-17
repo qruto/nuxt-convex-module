@@ -71,6 +71,16 @@ v0.12.5's `callWithToken` predicate — upstream retries with a force-refreshed 
 when the cached JWT is rejected as an auth error. See AGENTS.md's known divergences; do not sync
 the condition back.
 
+Port-only security guard: `consumeCrossDomainOneTimeToken` accepts an optional `callbackRoute`
+(wired from `convex.betterAuth.crossDomainCallbackRoute`) restricting `?ott=` exchange to one
+dedicated route. Upstream's provider consumes the token on **any** URL with no state/origin
+binding, so a crafted `/any-page?ott=<attacker-token>` link silently signs the visitor into the
+link author's session (login CSRF / session fixation). The upstream protocol deliberately isn't
+bound to the initiating browser (magic-link flows finish in another browsing context —
+`skipStateCookieCheck` in the server plugin), so a client-side state nonce would break legit
+flows; the route restriction is the additive mitigation. Off by default for parity — do not
+sync away.
+
 ## Vue-only additions (no upstream origin — keep, do not "sync away")
 
 These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:

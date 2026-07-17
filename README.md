@@ -121,6 +121,7 @@ export default defineNuxtConfig({
   convex: {
     // betterAuth: false,
     // betterAuth: { authClient: './app/convex-auth-client' }, // bring your own client
+    // betterAuth: { crossDomainCallbackRoute: '/auth/callback' }, // login-CSRF guard for crossDomainClient()
     // polar: false,
     // authRoute: '/api/auth',
   },

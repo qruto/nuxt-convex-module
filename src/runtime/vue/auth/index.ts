@@ -212,6 +212,16 @@ export function createConvexAuthState(
     // first/last-child ordering guarantees relative to sibling components'
     // query subscriptions have no Vue watcher-scheduling equivalent).
     watchEffect((onCleanup) => {
+      // Upstream runs this in a passive effect (useEffect), which React never
+      // executes during SSR. Vue *does* run a watchEffect body once during SSR
+      // setup — and `onCleanup` never fires there — so `setAuth` would lazily
+      // instantiate the sync client and open a WebSocket on the server that
+      // nothing ever closes, once per request. Mirror the SSR short-circuit in
+      // `use-queries.ts`; the reconciliation watcher above still runs so SSR
+      // renders `isLoading: true`.
+      if (import.meta.server) {
+        return
+      }
       let isThisEffectRelevant = true
       // The loading flag is read only for dependency tracking (the effect
       // re-registers when it flips, mirroring upstream's effect deps) — it

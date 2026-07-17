@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 // the Convex client and the scoped auth state, consuming the cross-domain
 // one-time token first.
 
-const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud' } } }
+const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud', crossDomainCallbackRoute: '' } } }
 const initialTokenState = { value: null as string | null }
 
 vi.mock('#app', () => ({
@@ -20,9 +20,9 @@ vi.mock('#app', () => ({
   },
 }))
 
-const consumeCrossDomainOneTimeToken = vi.fn(async () => {})
+const consumeCrossDomainOneTimeToken = vi.fn(async (..._args: unknown[]) => {})
 vi.mock('../../../../src/runtime/better-auth/vue/cross-domain', () => ({
-  consumeCrossDomainOneTimeToken: () => consumeCrossDomainOneTimeToken(),
+  consumeCrossDomainOneTimeToken: (...args: unknown[]) => consumeCrossDomainOneTimeToken(...args),
 }))
 
 const useAuth = vi.fn()
@@ -60,6 +60,7 @@ function fakeNuxtApp() {
 afterEach(() => {
   vi.clearAllMocks()
   runtimeConfig.public.convex.url = 'https://example.convex.cloud'
+  runtimeConfig.public.convex.crossDomainCallbackRoute = ''
 })
 
 describe('better-auth client plugin', () => {
@@ -72,8 +73,19 @@ describe('better-auth client plugin', () => {
     expect(result.provide.convex).toBe(provided.get(ConvexClientKey))
 
     expect(consumeCrossDomainOneTimeToken).toHaveBeenCalledTimes(1)
+    // Unset in runtime config → no route restriction (upstream parity).
+    expect(consumeCrossDomainOneTimeToken).toHaveBeenCalledWith({ callbackRoute: undefined })
     expect(consumeCrossDomainOneTimeToken.mock.invocationCallOrder[0]!)
       .toBeLessThan(createScopedConvexAuthState.mock.invocationCallOrder[0]!)
+  })
+
+  it('forwards the configured cross-domain callback route to the token consumer', async () => {
+    runtimeConfig.public.convex.crossDomainCallbackRoute = '/auth/callback'
+    const { app } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(consumeCrossDomainOneTimeToken).toHaveBeenCalledWith({ callbackRoute: '/auth/callback' })
   })
 
   it('warns and provides nothing when no Convex URL is configured', async () => {
