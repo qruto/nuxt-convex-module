@@ -20,7 +20,7 @@ describe('ConvexVueClient.setAuth', () => {
   // signature typechecks and doesn't throw"): calling `setAuth` with only a
   // token fetcher — no `onChange` callback — must typecheck and not throw.
   // Upstream's test `await`s the call because older clients returned a
-  // backwards-compatibility Promise; convex 1.42.1 (the pinned baseline) and
+  // backwards-compatibility Promise; convex 1.42.3 (the pinned baseline) and
   // this port both declare `setAuth(): void`, so there is nothing to await.
   it('setAuth legacy signature typechecks and does not throw', async () => {
     await withInMemoryWebSocket(async ({ address }) => {

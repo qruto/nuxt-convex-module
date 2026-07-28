@@ -31,6 +31,7 @@ export type UseAuth = () => {
   // We don't use these properties but they should trigger a new token fetch.
   orgId: ComputedRef<string | undefined | null>
   orgRole: ComputedRef<string | undefined | null>
+  sessionId: ComputedRef<string | undefined | null>
   // `Record<string, unknown>` mirrors upstream verbatim — anything narrower is
   // a TS "weak type" that Clerk's real `ComputedRef<JwtPayload>` fails to
   // satisfy, breaking the documented `useAuth` wiring at compile time.
@@ -106,7 +107,7 @@ export const ConvexProviderWithClerk = defineComponent({
 // wrapper is unnecessary (`provideConvexAuth` invokes `useAuth` once in
 // `setup`), so only the inner `useAuthFromClerk` composable is ported.
 function useAuthFromClerk(useAuth: UseAuth) {
-  const { isLoaded, isSignedIn, getToken, orgId, orgRole, sessionClaims } = useAuth()
+  const { isLoaded, isSignedIn, getToken, orgId, orgRole, sessionId, sessionClaims } = useAuth()
   const fetchAccessToken: AuthTokenFetcher = async ({ forceRefreshToken }) => {
     try {
       if (toValue(sessionClaims)?.aud === 'convex') {
@@ -133,8 +134,8 @@ function useAuthFromClerk(useAuth: UseAuth) {
     fetchAccessToken,
     // The `authVersion` key triggers setAuth() whenever these change — the Vue
     // translation of upstream rebuilding `fetchAccessToken` with dependencies
-    // `[orgId, orgRole]`. Anything else from the JWT Clerk wants to be
-    // reactive goes here too.
-    authVersion: () => `${toValue(orgId) ?? ''}:${toValue(orgRole) ?? ''}`,
+    // `[orgId, orgRole, sessionId]`. Anything else from the JWT Clerk wants to
+    // be reactive goes here too.
+    authVersion: () => `${toValue(orgId) ?? ''}:${toValue(orgRole) ?? ''}:${toValue(sessionId) ?? ''}`,
   }
 }

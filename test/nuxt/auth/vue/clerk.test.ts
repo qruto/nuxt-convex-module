@@ -166,6 +166,40 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     wrapper.unmount()
   })
 
+  // Ported from the convex 1.42.2 fix: `ConvexProviderWithClerk` ignored
+  // session changes because `sessionId` was missing from the token-refetch
+  // dependencies (upstream `[orgId, orgRole, sessionId]`, here `authVersion`).
+  it('re-runs setAuth when the Clerk session changes', async () => {
+    const sessionId = ref<string | null>('sess-1')
+    const useClerk: ClerkUseAuthOverride = () => ({
+      isLoaded: computed(() => true),
+      isSignedIn: computed(() => true),
+      getToken: computed(() => vi.fn(async () => 'jwt')),
+      orgId: computed(() => null),
+      orgRole: computed(() => null),
+      sessionId: computed(() => sessionId.value),
+      sessionClaims: computed(() => null),
+    }) as never
+
+    const { client } = makeClient()
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        return () => h('div')
+      },
+    })
+    const wrapper = await mountSuspended(Wrapper)
+    await nextTick()
+    expect(client.setAuth).toHaveBeenCalledTimes(1)
+
+    sessionId.value = 'sess-2'
+    await nextTick()
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
+    expect(client.setAuth).toHaveBeenCalledTimes(2)
+
+    wrapper.unmount()
+  })
+
   it('the <ConvexProviderWithClerk> component wires auth and renders its slot', async () => {
     const useClerk: ClerkUseAuthOverride = () => ({
       isLoaded: computed(() => true),
