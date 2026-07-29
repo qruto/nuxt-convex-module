@@ -78,6 +78,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends —
+      # required by the test run and by the build that `pnpm publish`
+      # triggers via `prepack`.
+      - name: Prepare
+        run: pnpm run dev:prepare
+
       # Gate: never tag or publish a broken state.
       - name: Lint
         run: pnpm run lint
