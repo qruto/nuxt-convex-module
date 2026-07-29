@@ -70,6 +70,13 @@
     ]
   },
   "health": {
+    "thresholdOverrides": [
+      {
+        "files": ["src/runtime/devtools/bridge.ts"],
+        "maxCrap": 40,
+        "reason": "Dev-only devtools snapshot callback sits at ~37 estimated CRAP (no coverage mapping); refactor tracked, not release-blocking."
+      }
+    ],
     "ignore": [
       "test/**",
       "**/_generated/**",
