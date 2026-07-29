@@ -9,9 +9,13 @@ export default createConfigForNuxt({
     // Rules for formatting
     stylistic: true,
   },
+  // Every Nuxt app in the repo, so the Nuxt-aware rules know which auto-imports
+  // and components exist in each (nuxt/starter#module-devtools registers its
+  // `client/` app the same way).
   dirs: {
     src: [
       './website',
+      './devtools-client-app',
     ],
   },
 })

@@ -17,4 +17,14 @@ export default defineNuxtConfig({
       publicDir: fileURLToPath(new URL('../dist/devtools-client', import.meta.url)),
     },
   },
+  vite: {
+    server: {
+      hmr: {
+        // The panel is served through the module's Vite proxy, which can't carry
+        // the HMR websocket — point the client straight at this app's own port
+        // instead. Same fix as nuxt/starter#module-devtools.
+        clientPort: Number(process.env.PORT || 3630),
+      },
+    },
+  },
 })
