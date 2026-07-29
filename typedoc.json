@@ -17,6 +17,9 @@
 
   "out": "website/content/4.api-reference/9.reference",
   "readme": "none",
+  // Pin source links to the branch, not the current commit SHA — otherwise
+  // every commit drifts the generated reference and the CI drift gate fails.
+  "gitRevision": "main",
   "githubPages": false,
   "hideGenerator": true,
   "skipErrorChecking": true,
