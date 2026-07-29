@@ -1,0 +1,13 @@
+# zizmor (workflow static analysis) — accepted findings.
+# https://docs.zizmor.sh/configuration/
+rules:
+  artipacked:
+    ignore:
+      # The release checkout must persist credentials: the workflow pushes the
+      # release commit + tag back to main with the ephemeral GITHUB_TOKEN.
+      - release.yml
+  use-trusted-publishing:
+    ignore:
+      # pkg.pr.new authenticates via its GitHub App, not a registry token —
+      # npm trusted publishing does not apply to it.
+      - preview.yml

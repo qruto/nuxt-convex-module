@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -50,6 +52,7 @@ jobs:
         with:
           # Full history so commitlint can read every commit in the PR range.
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -70,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -104,6 +109,8 @@ jobs:
         node: [lts/*]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -149,6 +156,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -175,6 +184,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -198,10 +209,25 @@ jobs:
           pnpm run docs:api
           git diff --exit-code -- website/content/4.api-reference
 
-  build:
+      # Static analysis of the workflows themselves (template injection,
+      # unpinned actions, credential persistence, …). Accepted findings live
+      # in .github/zizmor.yml.
+      - name: Workflow lint (zizmor)
+        uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
+        with:
+          advanced-security: false
+
+  # Publishable-package gate: build the real tarball (`pnpm pack` rewrites
+  # `catalog:` ranges exactly like `pnpm publish`), lint its shape, then
+  # install it into the minimal example with plain npm — the consumer path
+  # (registry-shaped install, lifecycle scripts, engines) that repo-internal
+  # jobs never exercise.
+  pack:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -220,5 +246,29 @@ jobs:
       - name: Prepare
         run: pnpm run dev:prepare
 
-      - name: Build
-        run: pnpm run prepack
+      # Runs `prepack` (the full build) and produces the exact artifact a
+      # release would publish.
+      - name: Pack
+        run: pnpm pack
+
+      - name: Package shape (publint)
+        run: pnpm exec publint run ./nuxt-convex-module-*.tgz
+
+      # internal-resolution-error is ignored because `#convex/auth-client` in
+      # the Better Auth runtime types is a Nuxt alias for the app's own auth
+      # client, resolved at app build time — unresolvable outside a Nuxt app
+      # by design. Real resolution regressions surface in the smoke test below.
+      - name: Type resolution (arethetypeswrong)
+        run: pnpm exec attw ./nuxt-convex-module-*.tgz --profile esm-only --ignore-rules internal-resolution-error
+
+      - name: Consumer smoke test (npm install + build)
+        env:
+          NUXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
+        # Lockfile-less install on purpose: simulates a fresh consumer.
+        run: | # zizmor: ignore[adhoc-packages]
+          TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
+          SMOKE="$RUNNER_TEMP/smoke"
+          cp -R examples/minimal "$SMOKE"
+          cd "$SMOKE"
+          npm install --no-audit --no-fund "$TARBALL"
+          npm run build
