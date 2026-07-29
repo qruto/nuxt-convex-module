@@ -1,7 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./.nuxt/tsconfig.json",
-  "exclude": [
-    "convex"
+  // TypeScript project references, one per Nuxt type context — the setup Nuxt
+  // documents for an app. The legacy single `.nuxt/tsconfig.json` is slated for
+  // removal in a future Nuxt version, so it is deliberately not extended here.
+  // https://nuxt.com/docs/4.x/guide/directory-structure/tsconfig
+  //
+  // `convex/` needs no exclude: none of the four contexts include it, and it is
+  // type-checked by its own `convex/tsconfig.json` (Convex owns those settings).
+  //
+  // The module root's own tsconfig.json stays on `extends` — at the repo root
+  // Nuxt has no `app/` dir, so the generated app context globs `../**/*` and
+  // would pull in website/, devtools-client-app/ and examples/.
+  "files": [],
+  "references": [
+    { "path": "./.nuxt/tsconfig.app.json" },
+    { "path": "./.nuxt/tsconfig.server.json" },
+    { "path": "./.nuxt/tsconfig.shared.json" },
+    { "path": "./.nuxt/tsconfig.node.json" }
   ]
 }
