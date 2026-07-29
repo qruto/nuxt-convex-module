@@ -7,20 +7,27 @@ You trigger a release from the GitHub **Actions** tab; the workflow does everyth
 
 ```
 Actions tab → "Release" → Run workflow   (.github/workflows/release.yml)
-└─ gate: lint + test + typecheck
-   ├─ changelogen  → bump version, write CHANGELOG.md (with contributors), commit + tag
-   ├─ npm publish  → Trusted Publishing (OIDC) + automatic provenance
+└─ assert this commit's ci run is green
+   ├─ gate: lint + test + typecheck
+   ├─ changelogen   → bump version, write CHANGELOG.md (with contributors), commit + tag
+   ├─ pnpm publish  → Trusted Publishing (OIDC) + automatic provenance
    ├─ push commit + tag back to main
    └─ changelogithub → GitHub Release (conventional grouping + contributor thanks)
 ```
 
 - **One button.** Pick the bump (`auto` / `patch` / `minor` / `major`) and run.
   `auto` derives the version from your Conventional Commits since the last tag.
+- **Rehearsable.** Check **dry-run** to run everything except the publish and the push —
+  the run summary shows the version and changelog that a real release would produce.
 - **No secrets.** npm uses OIDC (no `NPM_TOKEN`); the GitHub Release and the push back to
   `main` use the ephemeral Actions `GITHUB_TOKEN`.
+- **Environment-gated.** The job runs in the `release` GitHub Environment; the npm Trusted
+  Publisher is bound to it, and any required-reviewer rule on the environment becomes a
+  one-click approval step before anything can publish.
 - **Publish before push.** npm is published first; the release commit and tag are pushed only
-  after npm accepts it, so a failed build (run via `prepack` during `npm publish`) leaves the
-  remote untouched.
+  after npm accepts it, so a failed build (run via `prepack` during `pnpm publish`) leaves the
+  remote untouched. pnpm (not npm) publishes so `catalog:` ranges are rewritten in the
+  published manifest.
 
 ## One-time setup (before the first OIDC release)
 
@@ -28,14 +35,13 @@ npm Trusted Publishing can only be configured **after** a package exists on the 
 first version is published manually:
 
 1. **Publish the first release manually** (one time only), then tag the version you actually
-   published (the current `version` in `package.json`, e.g. `v0.1.0`) so `changelogen` has a
+   published (the current `version` in `package.json`, e.g. `v0.0.0`) so `changelogen` has a
    baseline:
 
    ```sh
    npm login
-   pnpm run build      # produces dist/
-   npm publish         # uses publishConfig.access=public from package.json
-   git tag v0.1.0 && git push origin v0.1.0
+   pnpm publish        # runs prepack (the build); publishConfig.access=public
+   git tag v0.0.0 && git push origin v0.0.0
    ```
 
 2. **Configure the trusted publisher** at
@@ -47,12 +53,20 @@ first version is published manually:
    | Organization / user | `qruto`               |
    | Repository          | `nuxt-convex-module`  |
    | Workflow filename   | `release.yml`         |
-   | Environment         | *(leave empty)*       |
+   | Environment         | `release`             |
 
    Optionally enable **"Require two-factor authentication and disallow tokens"** so the package
    can _only_ be published through this workflow.
 
-3. **Allow the workflow to push to `main`.** The release commit + tag are pushed by
+3. **Create the `release` GitHub Environment** (Settings → Environments → *New environment* →
+   `release`). Optionally add yourself as a required reviewer — every release run then pauses
+   for a one-click approval before it can publish.
+
+4. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** on the
+   repository so the `preview` workflow can publish continuous preview builds
+   (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`).
+
+5. **Allow the workflow to push to `main`.** The release commit + tag are pushed by
    `github-actions[bot]`. If `main` has branch protection, add a bypass for GitHub Actions
    (Settings → Branches → branch protection → *Allow specified actors to bypass*), otherwise the
    push step fails. With no protection, nothing extra is needed.
