@@ -39,6 +39,8 @@ interface SyncInternals {
 
 type ParsedToken = { udfPath: string, args: unknown, paginated: boolean }
 
+type QueryStats = { updates: number, lastUpdatedAt: number }
+
 function parseQueryToken(token: string): ParsedToken {
   try {
     const parsed = JSON.parse(token) as { udfPath?: string, args?: unknown, type?: string }
@@ -109,7 +111,7 @@ export function createConvexDevtoolsBridge(client: ConvexVueClient): ConvexDevto
   }
 
   let closed = false
-  const queryStats = new Map<string, { updates: number, lastUpdatedAt: number }>()
+  const queryStats = new Map<string, QueryStats>()
   const logs: DevtoolsLogEntry[] = []
   let auth: DevtoolsAuthSnapshot = { available: false }
 
