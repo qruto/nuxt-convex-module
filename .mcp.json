@@ -32,6 +32,14 @@
         "mcp-remote",
         "https://mcp.polar.sh/mcp/polar-sandbox"
       ]
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
     }
   }
 }
