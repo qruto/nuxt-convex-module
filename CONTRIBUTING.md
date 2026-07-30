@@ -5,6 +5,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Reporting Security Issues](#reporting-security-issues)
 - [Development Setup](#development-setup)
 - [Project Structure](#project-structure)
 - [Submitting Changes](#submitting-changes)
@@ -14,6 +15,15 @@ Thank you for your interest in contributing! This guide covers everything you ne
 ## Code of Conduct
 
 This project follows our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it before participating.
+
+## Reporting Security Issues
+
+Security vulnerabilities never go in a public issue, discussion, or pull request. Report them
+privately through GitHub's
+[private vulnerability reporting](https://github.com/qruto/nuxt-convex-module/security/advisories/new)
+(**Security** tab → **Report a vulnerability**), which opens a draft advisory visible only to you
+and the maintainers. [SECURITY.md](SECURITY.md) covers scope, response times, and what happens
+after you report.
 
 ## Development Setup
 
@@ -42,6 +52,12 @@ pnpm dev
 ```
 
 That runs `convex dev` in `website/` with the Nuxt dev server supervised via `--start`, so function push, codegen, the WebSocket sync protocol, SSR fetching, and the interactive playground pages all run against a live deployment. On first run `convex dev` walks you through picking a deployment — a free anonymous local one works fine (no account needed); it stores the choice in `website/.env.local`.
+
+The docs site also wants to know its own public origin — Docus feeds it to `site.url`, `llms.domain`, canonical URLs and OG images. Deployments pick it up from the host (`VERCEL_*`/`URL`); locally, add it to the same `website/.env.local` to silence the `nuxt-llms require a domain to be set` warning:
+
+```bash
+NUXT_SITE_URL=https://nuxt-convex-module.local  # the host `pnpm dev` serves on
+```
 
 To work on the **Nuxt DevTools panel** (`devtools-client-app/`), also start its dev server — in-repo the panel iframe is proxied to it (the published package serves the prebuilt `dist/devtools-client` instead):
 

@@ -214,6 +214,10 @@ The authoritative file-by-file map, pinned upstream baseline versions, and out-o
 
 We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASING.md](./RELEASING.md).
 
+## Security
+
+Found a vulnerability? Report it privately via [GitHub Security Advisories](https://github.com/qruto/nuxt-convex-module/security/advisories/new) — not in a public issue. See [SECURITY.md](./SECURITY.md).
+
 ## License
 
 [MIT](./LICENSE)
