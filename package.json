@@ -149,8 +149,7 @@
     "test:e2e": "vitest --run --project e2e",
     "test:quality": "fallow",
     "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
-    "bump": "pnpm exec taze major -w",
-    "bump:actions": "pnpm update --latest --include-github-actions 'actions/*' 'pnpm/*' 'codecov/*' 'step-security/*' 'zizmorcore/*'"
+    "bump": "pnpm exec taze major -w"
   },
   "dependencies": {
     "@nuxt/devtools-kit": "^3.3.1",
