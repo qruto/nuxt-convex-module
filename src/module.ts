@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, createResolver, useLogger, updateRuntimeConfig, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, createResolver, useLogger, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -434,13 +434,24 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
   const crossDomainCallbackRoute
     = (typeof options.betterAuth === 'object' && options.betterAuth.crossDomainCallbackRoute) || ''
 
-  // Kit-blessed merge: publishes the resolved convex url/siteUrl while
-  // preserving any sibling keys a user already set, instead of overwriting the
-  // whole `convex` object as a direct assignment would.
-  updateRuntimeConfig({
-    public: { convex: { url: url || '', siteUrl, crossDomainCallbackRoute } },
-    convex: { siteUrl },
-  })
+  // Publish the resolved convex url/siteUrl while preserving any sibling keys a
+  // user already set, instead of overwriting the whole `convex` object.
+  //
+  // Kit's `updateRuntimeConfig()` performs the same merge, but then also pushes
+  // the change into the live Nitro instance — which does not exist yet during
+  // module setup. That `useNitro()` call reports `NUXT_B8003` to the console
+  // before throwing, and kit swallows only the throw, so every build/dev run
+  // printed the warning. `nuxt.options.runtimeConfig` is portal-linked to
+  // `nitro.runtimeConfig` (see Nuxt's `createPortalProperties`), so writing here
+  // reaches Nitro all the same.
+  const runtimeConfig = nuxt.options.runtimeConfig
+  runtimeConfig.public.convex = {
+    ...runtimeConfig.public.convex,
+    url: url || '',
+    siteUrl,
+    crossDomainCallbackRoute,
+  }
+  runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
   return { url: url || '', siteUrl }
 }
