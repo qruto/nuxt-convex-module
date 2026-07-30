@@ -41,6 +41,38 @@ allowBuilds:
 # satisfies the range AND clears the cooldown. https://pnpm.io/settings#minimumreleaseage
 minimumReleaseAge: 1440
 
+# Waived for first-party frameworks: a compromised @nuxt/* or convex release is
+# caught within minutes by a large user base, and we want same-day access to
+# fixes in our own stack. Mirrored by `cooldown.exclude` in .github/dependabot.yml —
+# keep the two lists in sync, or Dependabot proposes versions pnpm refuses to
+# resolve.
+minimumReleaseAgeExclude:
+  - nuxt
+  - 'nuxt-*'
+  - '@nuxt/*'
+  - '@nuxtjs/*'
+  - convex
+  - convex-helpers
+  - '@convex-dev/*'
+
+# Refuse transitive dependencies pulled from exotic sources (git repos, raw
+# tarball URLs) — those bypass registry auditing entirely.
+blockExoticSubdeps: true
+
+# Refuse an install when a package's trust level drops versus prior releases
+# (e.g. provenance/attestation disappears) — a compromised-account tell.
+trustPolicy: no-downgrade
+
+# `no-downgrade` compares by publish date across a package's whole history: a
+# version fails if any earlier-published one carried stronger trust evidence.
+# A late maintenance release on an old major therefore reads as a downgrade
+# once the current major has moved to signed releases.
+trustPolicyExclude:
+  # Hand-published backport on the 6.x branch (2023-07-10, no attestation);
+  # semver 7.x was already publishing with provenance via CI by then. Pulled in
+  # by @babel/core and two @babel/helper-* packages, which pin semver ^6.
+  - semver@6.3.1
+
 # --- Integrity ---------------------------------------------------------------
 # Warn (without blocking) when node_modules is out of sync with the lockfile
 # before running a script, so stale installs are caught early.
