@@ -24,7 +24,6 @@ changelog:
     - title: '📝 Documentation'
       labels:
         - docs
-        - documentation
     - title: '🔧 Maintenance & Chores'
       labels:
         - chore

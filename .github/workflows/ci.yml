@@ -1,5 +1,10 @@
 name: ci
 
+# Every job is two steps: checkout, then `pnpm/setup` — one action that
+# installs pnpm (version pinned by `packageManager` in package.json), downloads
+# the Node LTS runtime through it (`pnpm runtime`, so no actions/setup-node),
+# restores the pnpm store cache, and runs `pnpm install` — which pnpm switches
+# to frozen-lockfile mode automatically because CI is set.
 on:
   push:
     branches:
@@ -25,17 +30,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       - name: Lint
         run: pnpm run lint
@@ -54,17 +53,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       - name: Lint PR commit messages
         run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
@@ -76,17 +69,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       # Type-checks the published surface (module + Convex code). The website app
       # typecheck is intentionally excluded — it imports the app's
@@ -103,26 +90,20 @@ jobs:
         # (alias maps, watcher path normalization) — the class of bug that
         # only ships to Windows users.
         os: [ubuntu-latest, windows-latest]
-        # The project tracks the current LTS everywhere via the `lts/*` alias, so
-        # it follows new LTS lines without manual bumps. Kept as a matrix so an
+        # The project tracks the current LTS everywhere via the `lts` tag, so it
+        # follows new LTS lines without manual bumps. Kept as a matrix so an
         # extra line can be slotted in later without restructuring.
-        node: [lts/*]
+        node: [lts]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: ${{ matrix.node }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@${{ matrix.node }}
+          cache: true
 
       - name: Prepare
         run: pnpm run dev:prepare
@@ -130,9 +111,9 @@ jobs:
       - name: Test
         run: pnpm run test:coverage
 
-      # Upload coverage once (from the ubuntu lts/* leg) to keep the Codecov badge fed.
+      # Upload coverage once (from the ubuntu lts leg) to keep the Codecov badge fed.
       - name: Upload coverage to Codecov
-        if: matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest'
+        if: matrix.node == 'lts' && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ./coverage/lcov.info
@@ -142,7 +123,7 @@ jobs:
       # Upload test results (run times, failure/flaky detection) to Codecov Test
       # Analytics. Runs even when tests fail so failures are captured.
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() && matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ !cancelled() && matrix.node == 'lts' && matrix.os == 'ubuntu-latest' }}
         uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           files: ./test-report.junit.xml
@@ -159,17 +140,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       - name: Prepare
         run: pnpm run dev:prepare
@@ -187,17 +162,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       - name: Quality (fallow)
         run: pnpm run test:quality
@@ -229,17 +198,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-      - name: Install node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@5d160c5bc68a09337ad0d5654e237e03253b5879 # v1.0.0
         with:
-          node-version: lts/*
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@lts
+          cache: true
 
       # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends. Without
       # it, `nuxt-module-build` can't resolve compiler options and prepack fails.
@@ -264,7 +227,10 @@ jobs:
       - name: Consumer smoke test (npm install + build)
         env:
           NUXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
-        # Lockfile-less install on purpose: simulates a fresh consumer.
+        # Lockfile-less install on purpose: simulates a fresh consumer. `npm`
+        # comes from the runner image — pnpm's Node runtime deliberately ships
+        # without the bundled npm/npx (pnpm 11+), and a stock runner npm is
+        # exactly the consumer path this job is meant to exercise.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
           SMOKE="$RUNNER_TEMP/smoke"
