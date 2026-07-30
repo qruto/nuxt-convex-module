@@ -123,7 +123,7 @@
   "files": [
     "dist"
   ],
-  "packageManager": "pnpm@11.13.1+sha512.b2fc7683b8a6525414e7d13e1ba28caaddde96bf66ec540bfaeb7e702b81f3e0be4d1f295edf7f9fe0396740a8dce4509c582ddf79891f4543fea32d37645f25",
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72",
   "engines": {
     "node": ">=24.11.0",
     "pnpm": ">=11.6.0"
@@ -149,7 +149,8 @@
     "test:e2e": "vitest --run --project e2e",
     "test:quality": "fallow",
     "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
-    "bump": "pnpm exec taze major -w"
+    "bump": "pnpm exec taze major -w",
+    "bump:actions": "pnpm update --latest --include-github-actions 'actions/*' 'pnpm/*' 'codecov/*' 'step-security/*' 'zizmorcore/*'"
   },
   "dependencies": {
     "@nuxt/devtools-kit": "^3.3.1",
