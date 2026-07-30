@@ -12,10 +12,6 @@ packages:
 catalog:
   nuxt: ^4.5.1
 
-# --- Node module layout ------------------------------------------------------
-# Nuxt/Vite + Convex codegen expect a flat node_modules; keep the hoisted linker.
-nodeLinker: hoisted
-
 # --- Supply-chain security ---------------------------------------------------
 # Lifecycle (postinstall) scripts are blocked for every dependency by default
 # (pnpm 10+). Only the packages explicitly set to `true` here may run them;
@@ -72,8 +68,14 @@ trustPolicyExclude:
   # semver 7.x was already publishing with provenance via CI by then. Pulled in
   # by @babel/core and two @babel/helper-* packages, which pin semver ^6.
   - semver@6.3.1
+  # Final release on undici's EOL 5.x maintenance branch (2025-03-19), published
+  # by the lead maintainer from nodejs/undici with a valid registry signature but
+  # no provenance — the 5.x branch predates undici's provenance CI, which 7.x has.
+  # Pulled in by @ai-sdk/provider-utils (via docus -> @ai-sdk/gateway), which pins
+  # undici ^5.29.0, so no 5.x version with attestation exists to resolve to.
+  - undici@5.29.0
 
 # --- Integrity ---------------------------------------------------------------
-# Warn (without blocking) when node_modules is out of sync with the lockfile
-# before running a script, so stale installs are caught early.
-verifyDepsBeforeRun: warn
+# Fail a script outright when node_modules is out of sync with the lockfile, so
+# a stale install can never silently produce a passing build or test run.
+verifyDepsBeforeRun: error
