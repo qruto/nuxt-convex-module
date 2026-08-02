@@ -29,6 +29,20 @@ Actions tab → "Release" → Run workflow   (.github/workflows/release.yml)
   remote untouched. pnpm (not npm) publishes so `catalog:` ranges are rewritten in the
   published manifest.
 
+## Repository controls (already configured)
+
+Nothing to do here — recorded so the guarantees are auditable:
+
+- **`release` environment** — requires a maintainer's approval before the job starts, and accepts
+  runs from `main` only. The branch policy matters: `workflow_dispatch` can be triggered from any
+  branch, and npm's Trusted Publisher binds the workflow *filename* and environment, not the
+  file's contents — without it, a modified `release.yml` on a scratch branch could publish.
+- **`main-guard` ruleset** — blocks deletion and force-push on `main`. Deliberately no require-PR
+  rule: `release.yml` pushes the release commit directly, and adding one would need a bypass actor.
+- **`tag-guard` ruleset** — `v*` tags can never be deleted, re-pointed, or force-updated, so
+  published release history is immutable. Tag *creation* is unrestricted, so the workflow still tags.
+- **Dependabot alerts + automated security fixes** — enabled.
+
 ## One-time setup (before the first OIDC release)
 
 npm Trusted Publishing can only be configured **after** a package exists on the registry, so the
@@ -58,18 +72,9 @@ first version is published manually:
    Optionally enable **"Require two-factor authentication and disallow tokens"** so the package
    can _only_ be published through this workflow.
 
-3. **Create the `release` GitHub Environment** (Settings → Environments → *New environment* →
-   `release`). Optionally add yourself as a required reviewer — every release run then pauses
-   for a one-click approval before it can publish.
-
-4. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** on the
+3. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** on the
    repository so the `preview` workflow can publish continuous preview builds
    (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`).
-
-5. **Allow the workflow to push to `main`.** The release commit + tag are pushed by
-   `github-actions[bot]`. If `main` has branch protection, add a bypass for GitHub Actions
-   (Settings → Branches → branch protection → *Allow specified actors to bypass*), otherwise the
-   push step fails. With no protection, nothing extra is needed.
 
 ## After the first publish
 
@@ -110,7 +115,18 @@ explicit `patch` / `minor` / `major` when running the workflow.
 
 ## Dependencies
 
-Dependency updates are automated by [Renovate](./renovate.json) using the official
-[`nuxt/renovate-config-nuxt`](https://github.com/nuxt/renovate-config-nuxt) preset (Monday
-schedule, grouped non-major updates, release-age cooldown); non-major devDependency updates
-automerge once CI passes.
+Dependency updates are automated by [Dependabot](./.github/dependabot.yml) — npm version
+updates, GitHub Actions digest bumps (preserving the `@<sha> # vX.Y.Z` pinning convention), and
+CVE security updates. No third-party app holds write access to the repo.
+
+- **Monday schedule, grouped.** Non-major npm updates arrive as one grouped PR; Actions bumps
+  as another.
+- **Cooldown mirrors pnpm.** Dependabot's `cooldown` (2 days) is kept one day wider than pnpm's
+  `minimumReleaseAge` (24 h, `pnpm-workspace.yaml`), so Dependabot never proposes a version pnpm
+  refuses to resolve. Security updates skip the cooldown by design.
+- **Keep the exclude lists in sync.** `cooldown.exclude` in `.github/dependabot.yml` must match
+  `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` (first-party Nuxt/Convex packages are
+  waived), or Dependabot proposes versions pnpm won't install.
+- **Inspected at PR time.** ci's `dependency-review` job fails any PR whose dependency delta
+  introduces a known CVE (moderate or higher) or a package GitHub has flagged as malicious.
+  pnpm's cooldown only *delays* a new version — it never looks at what's inside it.
