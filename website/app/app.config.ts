@@ -29,10 +29,8 @@ export default defineAppConfig({
     },
   },
 
-  socials: {
-    github: 'https://github.com/qruto/nuxt-convex-module',
-  },
-
+  // No `socials.github` — Docus's footer renders one button per social AND
+  // another for `github.url`, so listing GitHub in both shows the mark twice.
   github: {
     url: 'https://github.com/qruto/nuxt-convex-module',
     branch: 'main',

@@ -7,15 +7,19 @@ interface Msg { id: number, who: Side, body: string }
 
 const sides: Side[] = ['A', 'B']
 
+// Seeded to the well's full height (4 + one sent = the 5-row cap), so the
+// readout reads as a running log instead of a mostly-empty box at rest.
 const messages = ref<Msg[]>([
   { id: 1, who: 'A', body: 'hi' },
   { id: 2, who: 'B', body: 'seen by every subscriber' },
+  { id: 3, who: 'A', body: 'no refetch, no cache keys' },
+  { id: 4, who: 'B', body: 'both lists update on one tick' },
 ])
 const drafts = reactive<Record<Side, string>>({ A: '', B: '' })
 const sender = ref<Side | null>(null)
 const phase = ref<'idle' | 'tx' | 'commit'>('idle')
 const rtt = ref<number | null>(null)
-let nextId = 3
+let nextId = 5
 
 function send(who: Side) {
   if (phase.value !== 'idle') return
