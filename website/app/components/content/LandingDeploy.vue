@@ -18,6 +18,25 @@ const steps = [
     note: 'Run Convex beside Nuxt and read live data with useQuery.',
   },
 ]
+
+// These are the commands people actually retype, so they get a copy button.
+const copied = ref<string | null>(null)
+let clear: ReturnType<typeof setTimeout> | undefined
+
+async function copy(step: (typeof steps)[number]) {
+  try {
+    await navigator.clipboard.writeText(step.cmd)
+    copied.value = step.id
+    clearTimeout(clear)
+    clear = setTimeout(() => (copied.value = null), 1600)
+  }
+  catch {
+    // Clipboard blocked (insecure context, denied permission) — the command
+    // is selectable text either way, so there's nothing to recover from.
+  }
+}
+
+onBeforeUnmount(() => clearTimeout(clear))
 </script>
 
 <template>
@@ -43,7 +62,17 @@ const steps = [
           :key="step.id"
           class="dp-step"
         >
-          <span class="dp-id mono etched">{{ step.id }}</span>
+          <div class="dp-top">
+            <span class="dp-id mono etched">{{ step.id }}</span>
+            <button
+              type="button"
+              class="dp-copy mono"
+              :aria-label="`Copy the ${step.id.toLowerCase()} command`"
+              @click="copy(step)"
+            >
+              {{ copied === step.id ? 'COPIED' : 'COPY' }}
+            </button>
+          </div>
           <code class="dp-cmd mono">{{ step.cmd }}</code>
           <p class="dp-note">
             {{ step.note }}
@@ -114,19 +143,51 @@ const steps = [
   opacity: 0.85;
 }
 
+/* COPY sits on the label row, not beside the command, so the command well
+   keeps the card's full width — at three columns the install line only just
+   fits, and stealing 50px for the button forced a mid-token wrap. */
+.dp-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* The command well wraps rather than scrolling: a horizontally-clipped
+   command reads as a short one — people copy what they can see. */
 .dp-cmd {
   display: block;
-  font-size: 0.78rem;
+  /* Sized so the longest step (`npx nuxi module add nuxt-convex-module`)
+     clears a three-column tray on one line — a package name split across
+     two lines reads as broken in a command people copy. */
+  font-size: 0.74rem;
   line-height: 1.5;
   color: var(--ink);
   background: var(--grad-sink);
   border-radius: 10px;
   box-shadow: var(--inset-1);
-  padding: 0.55rem 0.75rem;
+  padding: 0.55rem 0.6rem;
   margin-bottom: 0.7rem;
-  overflow-x: auto;
-  white-space: nowrap;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
+
+.dp-copy {
+  flex: none;
+  padding: 0.12rem 0.4rem;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  background: var(--grad-surface);
+  border: 0;
+  border-radius: 6px;
+  box-shadow: var(--elev-0);
+  cursor: pointer;
+  transition: color var(--transition), box-shadow var(--transition);
+}
+.dp-copy:hover { color: var(--accent); box-shadow: var(--elev-1); }
+.dp-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .dp-note {
   font-family: var(--font);

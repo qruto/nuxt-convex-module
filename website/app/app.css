@@ -112,7 +112,11 @@ html.light { color-scheme: light; }
   --accent-soft:  light-dark(#c63307, #ffb992);  /* readable text shade */
   --accent-dim:   light-dark(rgb(240 66 10 / 0.12), rgb(255 90 31 / 0.20));
   --accent-glow:  light-dark(rgb(240 66 10 / 0.30), rgb(255 90 31 / 0.38));
-  --on-accent:    #ffffff;
+  /* Dark lifts --accent to a much brighter orange so accent TEXT stays legible
+     on near-black; white label on that fill is only 2.6:1, under even the 3:1
+     UI floor. Filled surfaces in dark therefore take a near-black label
+     (~7:1) instead of inheriting the light-mode white. */
+  --on-accent:    light-dark(#ffffff, #241108);
 
   /* ── Semantic ring colors (status, not fills) ───────────────── */
   --ok:       light-dark(#16a34a, #4ade80);
@@ -739,13 +743,48 @@ pre.shiki {
 }
 kbd { box-shadow: var(--elev-0); }
 
-/* The search trigger in the header → a lifted control. */
+/* ── The search trigger → a CONVEX plate ─────────────────────────
+   It looks like a field, but it's a BUTTON that opens the search modal — and
+   in this system controls are domed while only real text inputs are wells. So
+   it takes the full convex treatment rather than the inset one: the
+   lit-crown/shaded-base gradient plus the elevation ladder — lifting a step on
+   hover, pressing into a well on :active. It previously carried --elev-1 over
+   Nuxt UI's flat `bg-elevated`, which read as a recessed field wearing a
+   raised shadow.
+
+   Nuxt UI's `bg-elevated` / `hover:bg-accented` utilities only set a flat
+   background-color; the opaque gradient layer here paints over them, so the
+   dome survives every state. Both triggers match: the wide desktop one and the
+   compact icon button that replaces it below `lg`.
+
+   No real border — this follows `.btn`, not `.depth-border`. The ladder's
+   own `inset 0 1px 0` crown and `inset 0 -1px 0` base ARE the 1px bevel, and
+   they cost no layout; an actual 1px border grew the control from 32px to
+   34px and pushed it out of line with the icon buttons beside it. */
 header button:has(kbd),
 header [role="button"]:has(kbd) {
+  border: 0;
+  background: var(--grad-surface);
   box-shadow: var(--elev-1);
-  transition: box-shadow var(--transition);
+  transition: box-shadow var(--transition), transform var(--press) var(--ease-out);
 }
-header button:has(kbd):hover { box-shadow: var(--elev-2); }
+header button:has(kbd):hover,
+header [role="button"]:has(kbd):hover {
+  box-shadow: var(--elev-2);
+}
+/* Pressed: the crown flattens into a dish. */
+header button:has(kbd):active,
+header [role="button"]:has(kbd):active {
+  background: var(--grad-sink);
+  box-shadow: var(--inset-1);
+  transform: translateY(0.5px);
+}
+/* Match the site's focus ring rather than Nuxt UI's default outline. */
+header button:has(kbd):focus-visible,
+header [role="button"]:has(kbd):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* MDC ::card / ::card-group tiles. This theme renders docs content WITHOUT a
    `.prose` wrapper, so target Nuxt UI's card classes directly: a bordered,
