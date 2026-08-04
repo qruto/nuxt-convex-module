@@ -1420,13 +1420,14 @@ type Value =
   | boolean
   | string
   | ArrayBuffer
+  | CommitTsPlaceholder
   | Value[]
   | {
 [key: string]: Value | undefined;
 };
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/values/value.d.ts:44
+Defined in: node\_modules/convex/dist/esm-types/values/value.d.ts:45
 
 A value supported by Convex.
 
