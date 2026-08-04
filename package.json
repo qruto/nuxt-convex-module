@@ -217,7 +217,7 @@
     "eslint": "^10.8.0",
     "fallow": "^2.104.0",
     "happy-dom": "^20.11.1",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.3",
     "nuxt": "catalog:",
     "oxc-parser": "^0.135.0",
     "portless": "0.15.0",
