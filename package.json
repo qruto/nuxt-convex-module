@@ -215,7 +215,7 @@
     "convex": "^1.42.3",
     "convex-helpers": "^0.1.120",
     "eslint": "^10.8.0",
-    "fallow": "^2.104.0",
+    "fallow": "^3.11.0",
     "happy-dom": "^20.11.1",
     "npm-run-all2": "^9.0.3",
     "nuxt": "catalog:",
