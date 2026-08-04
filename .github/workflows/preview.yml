@@ -34,6 +34,11 @@ jobs:
           runtime: node@lts
           cache: true
 
+      # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends. Without
+      # it, `nuxt-module-build` can't resolve compiler options and prepack fails.
+      - name: Prepare
+        run: pnpm run dev:prepare
+
       # --pnpm packs with `pnpm pack` so `catalog:` ranges are rewritten,
       # exactly like a real `pnpm publish`. Packing runs `prepack` (the build).
       - name: Publish preview
