@@ -130,8 +130,8 @@ onUnmounted(() => {
           The whole kit, demonstrated
         </h2>
         <p class="ld-sub">
-          Every surface of the port with a working readout. The readouts are
-          simulated in-page — the
+          Every surface of the client with a working readout. The readouts here
+          are simulated in-page — the
           <NuxtLink
             to="/playground"
             class="lo-link"

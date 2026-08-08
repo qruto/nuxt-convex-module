@@ -56,8 +56,9 @@ const columns = computed<FooterColumn[]>(() => [
             Nuxt Convex
           </p>
           <p class="af-tag">
-            Convex for Vue &amp; Nuxt — a faithful port of the official
-            React/Next integration, with opt-in Better Auth and Polar.
+            The Convex client for Vue &amp; Nuxt — live queries, mutations,
+            actions, pagination, file storage and SSR, with opt-in Better Auth
+            and Polar.
           </p>
         </div>
 

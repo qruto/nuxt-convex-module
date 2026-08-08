@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module",
   "version": "0.0.0",
-  "description": "Convex for Vue & Nuxt — a faithful port of Convex's official React/Next integration (queries, mutations, actions, pagination, file storage, SSR) with opt-in Better Auth and Polar",
+  "description": "The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR, with opt-in Better Auth and Polar",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qruto/nuxt-convex-module.git"
