@@ -1,33 +1,75 @@
 <script setup lang="ts">
+import { api } from '#convex/api'
+
 // The hero's signature: one instrument panel where the source well renders
-// into the output well beneath it. A beat after load, a third message
-// arrives "over the wire" and the document count ticks — the live query
-// demonstrated, not claimed. No fake hardware: the EDC feel is carried by
-// material (bevel, depth, etched type), not by screws.
-const specs = [
-  { label: 'V0.1.0' },
-  { label: 'MIT' },
-  { label: 'NUXT ≥ 4.1' },
-  { label: 'CONVEX 1.42' },
-]
+// into the output well beneath it — and the source is not a screenshot. The
+// four lines printed on the plate are the four lines running the plate. The
+// rows underneath come off a real Convex deployment over a real WebSocket,
+// and the composer writes to it. Type into the hero and it lands in the table;
+// leave the tab open and someone else's message lands in yours.
+//
+// `useAsyncQuery` (not `useQuery`) so the rows are in the server-rendered HTML
+// on first paint — no loading flicker in the most-looked-at box on the site —
+// and upgrade to a live subscription on hydration. The panel therefore
+// demonstrates the SSR story and the live story in one object.
+// Destructured as `data` (not renamed) so the snippet printed on the plate is
+// character-for-character the code behind it.
+const { data, error } = await useAsyncQuery(api.messages.list, {})
 
-interface Msg { id: number, who: string, body: string }
+// The published version, read off the npm registry (cached server-side for an
+// hour) rather than pinned in the markup — a hardcoded number is wrong from
+// the next release onward. Unresolvable → the chip is simply omitted.
+const { data: npm } = await useFetch('/api/npm-version', { default: () => ({ version: null }) })
+const npmVersion = computed(() => npm.value?.version ?? null)
+const send = useMutation(api.messages.send)
+const connection = useConvexConnectionState()
 
-const messages = ref<Msg[]>([
-  { id: 1, who: 'ada', body: 'ship it' },
-  { id: 2, who: 'lin', body: 'rendered on the server' },
-])
+// Only the tail fits the well; the panel is a readout, not the archive.
+const VISIBLE = 4
+const shown = computed(() => (data.value ?? []).slice(-VISIBLE))
 
-// One-shot arrival — not a loop. Under reduced motion the entry animation
-// is disabled globally, so the row simply appears.
+const online = computed(() => !error.value && connection.value?.isWebSocketConnected !== false)
+
+// A per-visitor handle so your own rows are distinguishable from everyone
+// else's. Generated after mount — a random value at SSR time would mismatch
+// on hydration.
+const handle = ref('you')
 onMounted(() => {
-  setTimeout(() => {
-    messages.value = [
-      ...messages.value,
-      { id: 3, who: 'rex', body: 'pushed from another client' },
-    ]
-  }, 1400)
+  handle.value = `you-${Math.random().toString(36).slice(2, 5)}`
 })
+
+const draft = ref('')
+const sending = ref(false)
+const rtt = ref<number | null>(null)
+const rejection = ref<string | null>(null)
+
+async function submit() {
+  const body = draft.value.trim()
+  if (!body || sending.value) return
+  sending.value = true
+  rejection.value = null
+  const t0 = performance.now()
+  try {
+    await send({ author: handle.value, body })
+    // Real round trip: mutation dispatched → server committed → resolved.
+    rtt.value = Math.round(performance.now() - t0)
+    draft.value = ''
+  }
+  catch (e) {
+    // The table is public, so the mutation moderates every write. A rejection
+    // is a legitimate outcome to render, not a crash — and it arrives as a
+    // ConvexError payload, so the actual reason is showable.
+    rejection.value = reasonFor(e)
+  }
+  finally {
+    sending.value = false
+  }
+}
+
+function reasonFor(error: unknown): string {
+  const data = (error as { data?: unknown })?.data
+  return typeof data === 'string' ? data : 'Message rejected.'
+}
 </script>
 
 <template>
@@ -39,51 +81,57 @@ onMounted(() => {
             class="ld-tick"
             aria-hidden="true"
           />
-          NUXT MODULE · PORT OF CONVEX/REACT
+          NUXT MODULE · CONVEX CLIENT LIBRARY
         </p>
         <h1 class="lh-title">
           Convex for Vue&nbsp;&amp;&nbsp;Nuxt,
           <span class="lh-title-accent text-grad">machined to match upstream.</span>
         </h1>
         <p class="lh-lead">
-          nuxt-convex-module ports Convex's official React and Next.js integration
-          to Vue with the same public API — live queries, mutations, actions,
-          pagination, file storage, and SSR. Better Auth and Polar wire
-          themselves up when installed.
+          The Convex client for Vue and Nuxt — reactive live queries, mutations,
+          actions, cursor pagination, file storage and SSR, auto-imported and
+          typed against your deployment. Better Auth and Polar wire themselves
+          up when installed.
         </p>
         <div class="lh-cta">
           <NuxtLink
             to="/getting-started/introduction"
             class="btn primary lh-btn"
           >
-            Get started
+            get started
             <span aria-hidden="true">→</span>
           </NuxtLink>
           <a
             href="https://github.com/qruto/nuxt-convex-module"
             target="_blank"
             rel="noopener"
-            class="btn lh-btn"
+            class="lh-link"
           >
-            Star on GitHub
+            <UIcon
+              name="i-simple-icons-github"
+              class="lh-link-icon"
+              aria-hidden="true"
+            />
+            github
+            <span aria-hidden="true">↗</span>
           </a>
           <a
             href="#operation"
-            class="lh-more"
+            class="lh-link"
           >
-            See it run ↓
+            see it run
+            <span aria-hidden="true">↓</span>
           </a>
         </div>
         <ul
           class="lh-spec mono etched"
           aria-label="Kit baselines"
         >
-          <li
-            v-for="spec in specs"
-            :key="spec.label"
-          >
-            {{ spec.label }}
+          <li v-if="npmVersion">
+            V{{ npmVersion }}
           </li>
+          <li>NUXT ≥ 4.1</li>
+          <li>CONVEX 1.42</li>
         </ul>
       </div>
 
@@ -93,13 +141,16 @@ onMounted(() => {
       >
         <header class="hp-top mono">
           <span class="hp-file etched">app.vue</span>
-          <span class="hp-led"><i aria-hidden="true" />LIVE</span>
+          <span
+            class="hp-led"
+            :class="{ off: !online }"
+          ><i aria-hidden="true" />{{ online ? 'LIVE' : 'OFFLINE' }}</span>
         </header>
 
         <div class="hp-well hp-src">
           <pre class="hp-code mono"><code><span class="tk-k">import</span> { api } <span class="tk-k">from</span> <span class="tk-s">'#convex/api'</span>
 
-<span class="tk-k">const</span> messages = <span class="tk-f">useQuery</span>(api.messages.list, {})
+<span class="tk-k">const</span> { data } = <span class="tk-k">await</span> <span class="tk-f">useAsyncQuery</span>(api.messages.list, {})
 <span class="tk-k">const</span> send = <span class="tk-f">useMutation</span>(api.messages.send)</code></pre>
         </div>
 
@@ -118,23 +169,75 @@ onMounted(() => {
             aria-live="polite"
           >
             <li
-              v-for="m in messages"
-              :key="m.id"
+              v-for="m in shown"
+              :key="m._id"
               class="hp-msg"
             >
-              <span class="hp-who">{{ m.who }}</span>
-              {{ m.body }}
+              <span
+                class="hp-who"
+                :class="{ self: m.author === handle }"
+              >{{ m.author }}</span>
+              <span class="hp-body">{{ m.body }}</span>
+            </li>
+            <li
+              v-if="!shown.length"
+              class="hp-msg hp-empty"
+            >
+              {{ error ? 'deployment unreachable' : 'the table is empty — write the first row ↓' }}
             </li>
           </ul>
         </div>
 
+        <form
+          class="hp-send"
+          @submit.prevent="submit"
+        >
+          <label
+            class="hp-send-field"
+            :class="{ busy: sending }"
+          >
+            <span class="sr-only">Write a message to the live Convex table</span>
+            <span
+              class="hp-send-handle mono"
+              aria-hidden="true"
+            >{{ handle }}</span>
+            <input
+              v-model="draft"
+              class="hp-send-input mono"
+              :disabled="!!error"
+              maxlength="140"
+              placeholder="write a row…"
+            >
+          </label>
+          <button
+            class="btn primary hp-send-btn"
+            type="submit"
+            :disabled="sending || !draft.trim() || !!error"
+          >
+            {{ sending ? 'sending' : 'send' }}
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
         <figcaption class="hp-foot mono">
           <span class="hp-stat etched dim"><i
-            class="hp-dot ok"
+            class="hp-dot"
+            :class="online ? 'ok' : 'off'"
             aria-hidden="true"
-          />WS OPEN</span>
-          <span class="hp-stat etched dim">{{ messages.length }} DOCUMENTS</span>
-          <span class="hp-stat etched dim">SSR HYDRATED</span>
+          />{{ online ? 'WS OPEN' : 'NO SOCKET' }}</span>
+          <span class="hp-stat etched dim">{{ (data ?? []).length }} DOCUMENTS</span>
+          <span
+            v-if="rejection"
+            class="hp-stat etched hp-fail"
+          >{{ rejection }}</span>
+          <span
+            v-else-if="rtt !== null"
+            class="hp-stat etched hp-rtt"
+          >COMMIT {{ rtt }} MS</span>
+          <span
+            v-else
+            class="hp-stat etched dim"
+          >SSR HYDRATED</span>
         </figcaption>
       </figure>
     </div>
@@ -160,9 +263,22 @@ onMounted(() => {
   margin-inline: auto;
   padding: clamp(3rem, 9vh, 5.5rem) 1.5rem clamp(3rem, 8vh, 5rem);
   display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  /* Tilted toward the panel: the copy caps itself at 34rem anyway, and the
+     source well needs every pixel to seat its longest line without clipping. */
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
   gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ── Copy column — staggered settle on load ───────────────────── */
@@ -194,19 +310,26 @@ onMounted(() => {
   margin: 0 0 1.6rem;
 }
 
-.lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin: 0 0 1.5rem; }
+.lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; margin: 0 0 1.5rem; }
 .lh-btn { padding: 0.65rem 1.25rem; font-size: 0.95rem; }
-.lh-more {
-  margin-left: 0.35rem;
+
+/* Secondary actions sit ON the canvas — no plate. Only the primary action
+   gets material; giving GitHub a raised surface too made two peers out of a
+   destination and a detour. */
+.lh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-family: var(--font);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--ink-dim);
   text-decoration: none;
   transition: color var(--transition);
 }
-.lh-more:hover { color: var(--accent); }
-.lh-more:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lh-link:hover { color: var(--accent); }
+.lh-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.lh-link-icon { width: 1.05em; height: 1.05em; flex: none; }
 
 .lh-spec {
   display: flex;
@@ -260,6 +383,15 @@ onMounted(() => {
 .hp-file { color: var(--ink-dim); text-transform: none; letter-spacing: 0.08em; }
 .hp-stat { display: inline-flex; align-items: center; gap: 0.4rem; }
 .etched.dim { color: var(--ink-faint); }
+.hp-rtt { color: var(--accent-soft); }
+/* A rejection reason is a sentence, not a code — let it take the row and
+   drop the tracking so it stays readable at 0.64rem. */
+.hp-fail {
+  color: var(--err);
+  flex: 1 1 100%;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
 
 .hp-dot {
   width: 6px;
@@ -267,6 +399,7 @@ onMounted(() => {
   border-radius: 50%;
 }
 .hp-dot.ok { background: var(--ok); box-shadow: var(--glow-ok); }
+.hp-dot.off { background: var(--ink-faint); }
 
 .hp-led {
   margin-left: auto;
@@ -286,8 +419,10 @@ onMounted(() => {
   box-shadow: var(--glow-accent-soft);
   animation: pulse-ring 2.4s ease-in-out infinite;
 }
+.hp-led.off { color: var(--ink-faint); }
+.hp-led.off i { background: var(--ink-faint); box-shadow: none; animation: none; }
 
-/* Inset wells — source and rendered output, carved a hair below. */
+/* Inset wells — source and rendered output, dished below the plate. */
 .hp-well {
   background: var(--grad-sink);
   border-radius: 14px;
@@ -295,9 +430,15 @@ onMounted(() => {
   padding: 1rem 1.15rem;
   overflow-x: auto;
 }
+.hp-src { container-type: inline-size; }
 .hp-code {
   margin: 0;
-  font-size: 0.8rem;
+  /* The snippet is fixed, known text — 59 characters at its widest, in a
+     monospace whose advance is 0.61em. Rather than let it clip mid-token (or
+     scroll, which reads as an accident on a hero), the type is sized off the
+     well itself so the block always seats exactly, at any panel width. 0.62
+     is the advance plus a hair of slack. */
+  font-size: min(0.8rem, calc(100cqi / 59 / 0.62));
   line-height: 1.75;
   color: var(--ink);
   white-space: pre;
@@ -329,14 +470,21 @@ onMounted(() => {
   background: linear-gradient(90deg, var(--accent-glow), transparent);
 }
 
-/* Rendered readout — the query result as UI. */
-.hp-out { padding-block: 0.85rem; }
+/* Rendered readout — the query result as UI. Fixed height so an arriving row
+   pushes the log up instead of resizing the whole panel under the reader. */
+.hp-out { padding-block: 0.85rem; overflow: hidden; }
 .hp-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Bottom-anchored like a log. Bounded rather than fixed: a hard height left
+     a dead void above the rows on a near-empty table, while an unbounded one
+     would resize the whole panel every time a row lands. */
+  min-height: 3.3rem;
+  max-height: 6.6rem;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 0.4rem;
   font-size: 0.78rem;
 }
@@ -346,10 +494,20 @@ onMounted(() => {
   gap: 0.5rem;
   color: var(--ink);
   animation: fade-up 0.3s var(--ease-out) both;
-  overflow-wrap: anywhere;
+  min-width: 0;
 }
+.hp-body {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hp-empty { color: var(--ink-faint); }
 .hp-who {
   flex: none;
+  max-width: 7ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -359,7 +517,52 @@ onMounted(() => {
   border-radius: 5px;
   padding: 0.05rem 0.3rem;
 }
-.hp-msg:last-child .hp-who { color: var(--accent-soft); border-color: var(--accent-glow); }
+.hp-who.self { color: var(--accent-soft); border-color: var(--accent-glow); }
+
+/* Composer — the write half of the demo. */
+.hp-send {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+.hp-send-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--r-sm);
+  background: var(--grad-sink);
+  box-shadow: var(--inset-1);
+  transition: box-shadow var(--transition);
+}
+.hp-send-field:focus-within { box-shadow: var(--inset-1), 0 0 0 2px var(--accent); }
+.hp-send-field.busy { opacity: 0.65; }
+.hp-send-handle {
+  flex: none;
+  max-width: 8ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+}
+.hp-send-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 0.78rem;
+  padding: 0.2rem 0;
+}
+.hp-send-input:focus { outline: none; }
+.hp-send-input::placeholder { color: var(--ink-faint); }
+.hp-send-btn { flex: none; padding: 0.45rem 0.9rem; font-size: 0.8rem; }
 
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 960px) {
@@ -369,5 +572,6 @@ onMounted(() => {
 @media (max-width: 480px) {
   .hp { padding-inline: 1.1rem; }
   .hp-top, .hp-foot { gap: 0.7rem; }
+  .hp-send { flex-wrap: wrap; }
 }
 </style>

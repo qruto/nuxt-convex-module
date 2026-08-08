@@ -1,15 +1,17 @@
 import { api } from './_generated/api'
 import { mutation, query } from './_generated/server'
-import { v } from 'convex/values'
+import { LIMITS, rejectMessage } from './moderation'
+import { ConvexError, v } from 'convex/values'
 
-// Live chat — powers the `useQuery` / `useMutation` playground demos.
+// Live chat — powers the `useQuery` / `useMutation` playground demos AND the
+// two live panels on the marketing homepage.
 
-// Shared-deployment guardrails: the chat is public and unauthenticated, so
-// inputs are length-capped and `send` evicts the oldest messages beyond the
-// cap, keeping every full-table read below Convex's per-query limits.
+// Shared-deployment guardrails: the chat is public and unauthenticated, and
+// its rows are on the homepage, so every write goes through `rejectMessage`
+// (length, links, profanity — see ./moderation) and `send` evicts the oldest
+// messages beyond the cap, keeping every full-table read below Convex's
+// per-query limits.
 const MAX_MESSAGES = 100
-const MAX_BODY_LENGTH = 500
-const MAX_AUTHOR_LENGTH = 60
 const CLEAR_BATCH = 500
 
 export const list = query({
@@ -32,16 +34,16 @@ export const count = query({
 export const send = mutation({
   args: { author: v.string(), body: v.string() },
   handler: async (ctx, { author, body }) => {
-    const trimmedBody = body.trim()
-    if (trimmedBody === '') {
-      throw new Error('Message body must not be empty.')
-    }
-    if (trimmedBody.length > MAX_BODY_LENGTH) {
-      throw new Error(`Message body must be at most ${MAX_BODY_LENGTH} characters.`)
+    const rejection = rejectMessage(author, body)
+    if (rejection) {
+      // `ConvexError`, not a plain `Error`: only ConvexError's payload reaches
+      // the client on a production deployment (plain messages are redacted),
+      // and the demo panels show the reason rather than a bare "rejected".
+      throw new ConvexError(rejection)
     }
     await ctx.db.insert('messages', {
-      author: author.trim().slice(0, MAX_AUTHOR_LENGTH) || 'Anonymous',
-      body: trimmedBody,
+      author: author.trim().slice(0, LIMITS.author) || 'Anonymous',
+      body: body.trim(),
     })
     // Keep the demo table bounded: evict the oldest messages beyond the cap.
     const newest = await ctx.db.query('messages').order('desc').take(MAX_MESSAGES + 25)

@@ -7,9 +7,11 @@
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-[Convex](https://convex.dev) for [Vue](https://vuejs.org) & [Nuxt](https://nuxt.com) — a faithful Vue/Nuxt port of Convex's official React/Next integration.
+The [Convex](https://convex.dev) client for [Vue](https://vuejs.org) & [Nuxt](https://nuxt.com) — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR preloading, auto-imported and typed against your deployment.
 
-`nuxt-convex-module` mirrors the upstream `convex/react` + `convex/nextjs` surface composable-for-hook: reactive live queries, mutations, actions, cursor pagination, file storage, connection state, and SSR preloading — adapted to Vue with [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns). Authentication is **provider-agnostic** like upstream: the core ships the generic `ConvexProviderWithAuth` equivalent (`provideConvexAuth`) plus Vue ports of Convex's [Clerk](https://clerk.com) and [Auth0](https://auth0.com) adapters, while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
+Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns) while keeping the public API Convex already documents — same names, same arguments, same return shapes, so Convex's own docs and examples translate line for line. Authentication is **provider-agnostic**: the core ships the generic `provideConvexAuth` plumbing plus Vue adapters for [Clerk](https://clerk.com) and [Auth0](https://auth0.com), while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
+
+Coverage is complete rather than partial: `convex/react` and `convex/nextjs` are ported in full, hook-for-composable, and the port is kept diffable against upstream so new Convex releases can be tracked file-for-file — see [Relationship to upstream](#relationship-to-upstream) and [`PARITY.md`](./PARITY.md).
 
 > 📖 **Full documentation:** the **[docs site](./website)** (homepage · docs · playground, one Nuxt app) covers installation, the integration guide, every composable and server helper, and the complete API reference.
 

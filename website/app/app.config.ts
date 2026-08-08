@@ -17,14 +17,20 @@ export default defineAppConfig({
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:
-      'Convex for Vue & Nuxt — a faithful port of Convex\'s official React/Next integration, with opt-in Better Auth and Polar.',
+      'The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, with opt-in Better Auth and Polar.',
   },
 
   header: {
     title: 'Nuxt Convex',
+    // The wordless mark (transparent, no plate). The header renders at ~30px,
+    // where the full artwork's shadow copies and glows collapse into smears —
+    // so it gets `logo-small.svg`, the flat companion (same paths and
+    // gradients, no lighting rig). `logo.svg` is the full-size artwork for
+    // large placements. One asset for both schemes: the Nuxt peak and the
+    // Convex swirl carry their own color.
     logo: {
-      light: '/favicon.svg',
-      dark: '/favicon.svg',
+      light: '/logo-small.svg',
+      dark: '/logo-small.svg',
       alt: 'Nuxt Convex',
     },
   },

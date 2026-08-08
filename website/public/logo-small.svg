@@ -1,6 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="Nuxt Convex">
-<rect width="1000" height="1000" rx="220" ry="220" fill="#161616"/>
-<svg x="120" y="200.2" width="760" height="632.2" viewBox="0 0 385.4 320.6" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 385.4 320.6" fill="none" role="img" aria-label="Nuxt Convex">
 <!-- Flat small-size companion to logo.svg: same paths, same gradients, but
      none of the drop-shadow copies, inner glows, or blur overlays. Those
      effects collapse into dark smears below ~64px — the header and the
@@ -47,5 +45,4 @@
 <stop offset="1" stop-color="#F6BF45" style="stop-color:#F6BF45;stop-color:color(display-p3 0.9638 0.7477 0.2703);stop-opacity:1;"/>
 </linearGradient>
 </defs>
-</svg>
 </svg>

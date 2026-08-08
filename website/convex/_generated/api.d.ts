@@ -13,6 +13,7 @@ import type * as billing from "../billing.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as messages from "../messages.js";
+import type * as moderation from "../moderation.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   files: typeof files;
   messages: typeof messages;
+  moderation: typeof moderation;
   tasks: typeof tasks;
 }>;
 

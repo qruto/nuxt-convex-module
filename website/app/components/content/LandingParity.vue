@@ -30,9 +30,9 @@ const sameNames = [
           The API you already know
         </h2>
         <p class="ld-sub">
-          The port keeps upstream's public API, so Convex's own docs and
-          examples translate line for line — the data layer reads the same
-          in both frameworks.
+          Same names, same arguments, same return shapes as Convex's official
+          clients — so Convex's own docs and examples translate line for line,
+          and the data layer reads identically in either framework.
         </p>
       </header>
 
