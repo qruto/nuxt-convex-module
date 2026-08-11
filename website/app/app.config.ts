@@ -114,7 +114,7 @@ export default defineAppConfig({
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:
-      'The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, with opt-in Better Auth and Polar.',
+      'The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment.',
   },
 
   header: {

@@ -20,10 +20,24 @@ async function submit() {
     body.value = ''
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
+    // Moderation and rate-limit rejections arrive as ConvexError payloads —
+    // render the reason, not the raw server-error dump.
+    error.value = demoRejectionReason(e)
   }
   finally {
     sending.value = false
+  }
+}
+
+async function reset() {
+  error.value = undefined
+  try {
+    await clear({})
+  }
+  catch (e) {
+    // The reset rides a one-per-minute cooldown server-side; a rejection
+    // here is expected traffic, not a crash.
+    error.value = demoRejectionReason(e)
   }
 }
 </script>
@@ -82,7 +96,7 @@ async function submit() {
         color="neutral"
         variant="outline"
         :disabled="!messages || messages.length === 0"
-        @click="clear({})"
+        @click="reset"
       >
         Clear
       </UButton>

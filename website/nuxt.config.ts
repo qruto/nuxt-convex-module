@@ -1,3 +1,5 @@
+import { signalDark, signalLight } from './shiki-themes'
+
 // The playground runs against a local anonymous Convex deployment
 // (`npx convex dev` in this directory). The Convex CLI stores its URLs in
 // `.env.local`, which Nuxt doesn't load on its own — surface them here.
@@ -49,6 +51,20 @@ export default defineNuxtConfig({
   // `better-sqlite3` native addon. Requires Node >= 22.5 at build & runtime.
   content: {
     experimental: { sqliteConnector: 'native' },
+    build: {
+      markdown: {
+        highlight: {
+          // The site's own palette (see shiki-themes.ts). Nuxt Content hands
+          // theme OBJECTS straight to shiki, keyed by these map keys — the
+          // `--shiki-default` / `--shiki-dark` CSS variables the rendered
+          // spans carry come from the keys, not the theme names.
+          theme: {
+            default: signalLight,
+            dark: signalDark,
+          },
+        },
+      },
+    },
   },
   compatibilityDate: 'latest',
   hooks: {
