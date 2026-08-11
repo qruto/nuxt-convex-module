@@ -56,151 +56,54 @@ async function submit(side: Side, body: string) {
 </script>
 
 <template>
-  <section
-    id="operation"
-    class="ldm ld-sect"
-  >
-    <div class="ld-inner">
-      <header class="ldm-head">
-        <p class="ld-eyebrow etched">
-          <span
-            class="ld-tick"
-            aria-hidden="true"
-          />
-          <span class="ld-index">01</span>
-          LIVE OPERATION
-        </p>
-        <h2 class="ld-title">
-          One table, every client
-        </h2>
-        <p class="ld-sub">
-          Nothing below is mocked. Each pane is its own component opening its own
-          <code class="inline">useQuery</code> against a real Convex deployment —
-          no props between them, no refetch, no cache keys. Send from either side
-          and both lists move on the same tick. Open this page in a second tab
-          and it moves there too.
-        </p>
-      </header>
+  <div class="grid grid-cols-1 items-stretch gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+    <DemoClientPane
+      v-for="side in sides"
+      :key="side"
+      :side="side"
+      :handle="handles[side]"
+      :busy="busy === side"
+      :online="online"
+      :style="{ order: side === 'A' ? 1 : 3 }"
+      @send="body => submit(side, body)"
+    />
 
-      <div class="ldm-bench">
-        <DemoClientPane
-          v-for="side in sides"
-          :key="side"
-          :side="side"
-          :handle="handles[side]"
-          :busy="busy === side"
-          :online="online"
-          :style="{ order: side === 'A' ? 1 : 3 }"
-          @send="body => submit(side, body)"
+    <!-- The sync bus — an etched channel with a hub LED between the clients. -->
+    <div class="order-2 flex min-w-[118px] flex-col items-center gap-2 self-center max-md:w-full max-md:min-w-0">
+      <span class="etched font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap text-toned">CONVEX SYNC</span>
+      <div
+        class="flex w-full items-center"
+        aria-hidden="true"
+      >
+        <span
+          class="h-0.5 flex-1 rounded-full transition-[background,box-shadow] duration-150 ease-out"
+          :class="(busy === 'A' || inflight) ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-border-accented)'"
         />
-
-        <div class="ldm-bus">
-          <span class="ldm-bus-label mono etched">CONVEX SYNC</span>
-          <div
-            class="ldm-channel"
-            aria-hidden="true"
-          >
-            <span
-              class="ldm-line"
-              :class="{ on: busy === 'A' || inflight }"
-            />
-            <span
-              class="ldm-hub"
-              :class="{ on: !!busy || inflight }"
-            ><i /></span>
-            <span
-              class="ldm-line"
-              :class="{ on: busy === 'B' || inflight }"
-            />
-          </div>
-          <span
-            class="ldm-rtt mono etched"
-            :class="{ bad: rejection || !online }"
-          >{{
-            rejection ? 'REJECTED' : !online ? 'NO SOCKET' : rtt === null ? 'WS OPEN' : `${rtt} MS`
-          }}</span>
-          <p
-            v-if="rejection"
-            class="ldm-reason"
-          >
-            {{ rejection }}
-          </p>
-        </div>
+        <span class="mx-1 grid size-[26px] flex-none place-items-center rounded-full bg-(image:--grad-surface) shadow-(--elev-1)">
+          <i
+            class="size-2 rounded-full transition-[background,box-shadow] duration-150 ease-out"
+            :class="(!!busy || inflight) ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-text-dimmed)'"
+          />
+        </span>
+        <span
+          class="h-0.5 flex-1 rounded-full transition-[background,box-shadow] duration-150 ease-out"
+          :class="(busy === 'B' || inflight) ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-border-accented)'"
+        />
       </div>
+      <span
+        class="etched min-h-[1em] font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap"
+        :class="(rejection || !online) ? 'text-error' : 'text-primary-700 dark:text-primary-300'"
+      >{{
+        rejection ? 'REJECTED' : !online ? 'NO SOCKET' : rtt === null ? 'WS OPEN' : `${rtt} MS`
+      }}</span>
+      <!-- The moderation reason — a sentence, so it drops the mono/tracking
+           of the readouts above it and is allowed to wrap. -->
+      <p
+        v-if="rejection"
+        class="m-0 max-w-60 text-center text-[0.7rem] leading-[1.4] text-error"
+      >
+        {{ rejection }}
+      </p>
     </div>
-  </section>
+  </div>
 </template>
-
-<style scoped>
-.ldm-head { margin-bottom: 2rem; }
-
-.ldm-bench {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 1.2rem;
-  align-items: stretch;
-}
-
-/* The sync bus — an etched channel with a hub LED between the clients. */
-.ldm-bus {
-  order: 2;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-  min-width: 118px;
-}
-.ldm-bus-label,
-.ldm-rtt {
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  white-space: nowrap;
-}
-.ldm-rtt { color: var(--accent-soft); min-height: 1em; }
-.ldm-rtt.bad { color: var(--err); }
-/* The moderation reason — a sentence, so it drops the mono/tracking of the
-   readouts above it and is allowed to wrap. */
-.ldm-reason {
-  margin: 0;
-  max-width: 15rem;
-  font-size: 0.7rem;
-  line-height: 1.4;
-  text-align: center;
-  color: var(--err);
-}
-.ldm-channel { display: flex; align-items: center; width: 100%; }
-.ldm-line {
-  flex: 1;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--edge-hi);
-  transition: background 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
-}
-.ldm-line.on { background: var(--accent); box-shadow: var(--glow-accent-soft); }
-.ldm-hub {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  margin-inline: 4px;
-  border-radius: 50%;
-  background: var(--grad-surface);
-  box-shadow: var(--elev-1);
-}
-.ldm-hub i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ink-faint);
-  transition: background 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
-}
-.ldm-hub.on i { background: var(--accent); box-shadow: var(--glow-accent-soft); }
-
-@media (max-width: 860px) {
-  .ldm-bench { grid-template-columns: minmax(0, 1fr); }
-  .ldm-bus { width: 100%; min-width: 0; }
-}
-</style>

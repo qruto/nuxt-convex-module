@@ -3,7 +3,7 @@
 import type { RequestForQueries } from 'nuxt-convex-module/client'
 import { api } from '#convex/api'
 
-// `useQueries` subscribes to a *dynamic* set of queries: the checkboxes below
+// `useQueries` subscribes to a *dynamic* set of queries: the switches below
 // add and remove entries from the request object, and the composable
 // subscribes/unsubscribes on the fly — something a fixed list of `useQuery`
 // calls can't do without violating the rules of composables.
@@ -47,121 +47,52 @@ function formatValue(key: string, value: unknown): string {
 
 <template>
   <PlaygroundDemo title="Dynamic queries — useQueries">
-    <div class="queries">
-      <div class="queries-toggles">
-        <label class="queries-toggle">
-          <input
-            v-model="watchMessages"
-            type="checkbox"
-          >
-          Message count
-        </label>
-        <label class="queries-toggle">
-          <input
-            v-model="watchTasks"
-            type="checkbox"
-          >
-          Task stats
-        </label>
-      </div>
-
-      <p
-        v-if="activeKeys.length === 0"
-        class="queries-empty"
-      >
-        No active subscriptions — check a box to subscribe.
-      </p>
-      <ul
-        v-else
-        class="queries-list"
-      >
-        <li
-          v-for="key in activeKeys"
-          :key="key"
-          class="queries-item"
-        >
-          <span class="queries-label">{{ labels[key] }}</span>
-          <span
-            v-if="results[key] === undefined"
-            class="queries-loading"
-          >
-            loading…
-          </span>
-          <span
-            v-else-if="isError(results[key])"
-            class="queries-error"
-          >
-            {{ results[key].message }}
-          </span>
-          <span
-            v-else
-            class="queries-value"
-          >
-            {{ formatValue(key, results[key]) }}
-          </span>
-        </li>
-      </ul>
+    <div class="mb-4 flex flex-wrap gap-5">
+      <USwitch
+        v-model="watchMessages"
+        label="Message count"
+      />
+      <USwitch
+        v-model="watchTasks"
+        label="Task stats"
+      />
     </div>
+
+    <p
+      v-if="activeKeys.length === 0"
+      class="m-0 text-sm text-muted"
+    >
+      No active subscriptions — flip a switch to subscribe.
+    </p>
+    <ul
+      v-else
+      class="m-0 flex list-none flex-col gap-1.5 p-0"
+    >
+      <li
+        v-for="key in activeKeys"
+        :key="key"
+        class="raised flex items-baseline justify-between gap-3 px-2.5 py-1.5 text-sm [--raised-elev:var(--elev-0)] [--raised-radius:10px]"
+      >
+        <span class="font-medium text-default">{{ labels[key] }}</span>
+        <span
+          v-if="results[key] === undefined"
+          class="text-muted"
+        >
+          loading…
+        </span>
+        <span
+          v-else-if="isError(results[key])"
+          class="text-xs text-error"
+        >
+          {{ results[key].message }}
+        </span>
+        <span
+          v-else
+          class="text-default tabular-nums"
+        >
+          {{ formatValue(key, results[key]) }}
+        </span>
+      </li>
+    </ul>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.queries-toggles {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.queries-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.queries-empty {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.queries-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.queries-item {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg);
-  font-size: 0.875rem;
-}
-
-.queries-label {
-  font-weight: 500;
-}
-
-.queries-loading {
-  color: var(--ui-text-muted);
-}
-
-.queries-error {
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-
-.queries-value {
-  font-variant-numeric: tabular-nums;
-}
-</style>

@@ -29,154 +29,72 @@ function submit() {
 </script>
 
 <template>
-  <article class="pane">
-    <header class="pane-top mono">
-      <span class="etched">CLIENT {{ side }}</span>
+  <article class="plate flex flex-col gap-3 px-5 pt-4.5 pb-5">
+    <header class="flex items-center justify-between font-mono text-[0.65rem] font-semibold tracking-[0.13em]">
+      <span class="etched text-toned">CLIENT {{ side }}</span>
       <span
-        class="pane-conn"
-        :class="{ tx: busy, off: !online }"
+        class="inline-flex items-center gap-1.5"
+        :class="busy ? 'text-primary' : 'text-dimmed'"
       >
-        <i aria-hidden="true" />
+        <i
+          aria-hidden="true"
+          class="size-1.5 rounded-full"
+          :class="busy
+            ? 'bg-primary shadow-(--glow-primary-soft)'
+            : online ? 'bg-success shadow-(--glow-success)' : 'bg-(--ui-text-dimmed)'"
+        />
         {{ busy ? 'TX' : online ? 'SUBSCRIBED' : 'OFFLINE' }}
       </span>
     </header>
 
+    <!-- The readout well — latest at the bottom like a log. Bounded, not
+         fixed: a hard height leaves a dead void while the table fills up. -->
     <ul
-      class="pane-list mono"
+      class="well m-0 flex min-h-[4.4rem] max-h-[9.2rem] list-none flex-col justify-end gap-1.5 overflow-hidden px-4 py-3 font-mono text-xs"
       aria-live="polite"
     >
       <li
         v-for="m in log"
         :key="m._id"
-        class="pane-msg"
+        class="flex min-w-0 items-baseline gap-2 text-default motion-safe:animate-fade-up [animation-duration:240ms]"
       >
         <span
-          class="pane-who"
-          :class="{ self: m.author === handle }"
+          class="max-w-[8ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em]"
+          :class="m.author === handle
+            ? 'text-primary-700 border-primary/40 dark:text-primary-300'
+            : 'text-muted border-accented'"
         >{{ m.author }}</span>
-        <span class="pane-body">{{ m.body }}</span>
+        <span class="min-w-0 truncate">{{ m.body }}</span>
       </li>
       <li
         v-if="!log.length"
-        class="pane-msg pane-empty"
+        class="text-muted"
       >
         {{ messages === undefined ? 'subscribing…' : 'no rows yet' }}
       </li>
     </ul>
 
     <form
-      class="pane-send"
+      class="flex gap-2.5"
       @submit.prevent="submit"
     >
+      <!-- The composer input — a concave well carved into the plate. -->
       <input
         v-model="draft"
-        class="input pane-input"
         :disabled="!online"
         maxlength="140"
         placeholder="send({ body: '…' })"
         :aria-label="`Message from client ${side}`"
+        class="w-full min-w-0 rounded-md border-0 bg-(image:--grad-sink) px-3 py-2.5 font-mono text-[0.8rem] text-highlighted shadow-(--inset-1) transition-shadow duration-180 ease-out placeholder:text-dimmed focus:ring-2 focus:ring-primary focus:outline-none"
       >
-      <button
-        class="btn primary"
+      <UButton
         type="submit"
+        color="primary"
+        class="flex-none"
         :disabled="busy || !online"
       >
         {{ busy ? 'sending' : 'send' }}
-      </button>
+      </UButton>
     </form>
   </article>
 </template>
-
-<style scoped>
-/* A client unit: raised plate with a recessed readout well. */
-.pane {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  border: 1px solid transparent;
-  border-radius: var(--r-lg);
-  background:
-    var(--grad-surface) padding-box,
-    var(--grad-bevel) border-box;
-  box-shadow: var(--elev-1);
-  padding: 1.1rem 1.2rem 1.2rem;
-}
-
-.pane-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.13em;
-}
-.pane-conn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--ink-faint);
-}
-.pane-conn i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: var(--glow-ok);
-}
-.pane-conn.tx { color: var(--accent-soft); }
-.pane-conn.tx i { background: var(--accent); box-shadow: var(--glow-accent-soft); }
-.pane-conn.off i { background: var(--ink-faint); box-shadow: none; }
-
-/* The readout well — fixed height, latest at the bottom like a log. */
-.pane-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.8rem 0.95rem;
-  /* Bounded, not fixed — see the same note in LandingHero: a hard height
-     leaves a dead void above the rows while the table is still filling up. */
-  min-height: 4.4rem;
-  max-height: 9.2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.35rem;
-  overflow: hidden;
-  background: var(--grad-sink);
-  border-radius: 12px;
-  box-shadow: var(--inset-2);
-  font-size: 0.78rem;
-}
-.pane-msg {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  color: var(--ink);
-  animation: fade-up 0.24s var(--ease-out) both;
-  min-width: 0;
-}
-.pane-body {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pane-empty { color: var(--ink-faint); }
-.pane-who {
-  flex: none;
-  max-width: 8ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--ink-faint);
-  border: 1px solid var(--edge-hi);
-  border-radius: 5px;
-  padding: 0.05rem 0.3rem;
-}
-.pane-who.self { color: var(--accent-soft); border-color: var(--accent-glow); }
-
-.pane-send { display: flex; gap: 0.6rem; }
-.pane-input { font-family: var(--mono); font-size: 0.8rem; }
-.pane-send .btn { flex: none; }
-</style>

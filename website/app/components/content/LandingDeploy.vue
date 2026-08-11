@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // The deployment tray: a case-foam cutout (recessed well) with each step
-// seated in it like a tool. Steps are the real ones from the install guide.
+// seated in it like a tool. Steps are the real ones from the install guide;
+// the section's CTA links live in content/index.md.
 const steps = [
   {
     id: 'MODULE',
@@ -40,163 +41,37 @@ onBeforeUnmount(() => clearTimeout(clear))
 </script>
 
 <template>
-  <section class="dp">
-    <div class="ld-inner dp-inner">
-      <header class="dp-head">
-        <p class="ld-eyebrow etched">
-          <span
-            class="ld-tick"
-            aria-hidden="true"
-          />
-          <span class="ld-index">04</span>
-          DEPLOYMENT
-        </p>
-        <h2 class="ld-title">
-          In your pocket in three moves
-        </h2>
+  <!-- The case-foam tray — a well carved into the ground itself; each step
+       sits in the foam like a tool. -->
+  <ol class="well m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(270px,1fr))] gap-4.5 p-4.5 [--well-radius:22px]">
+    <li
+      v-for="step in steps"
+      :key="step.id"
+      class="raised px-5 pt-4.5 pb-5"
+    >
+      <!-- COPY sits on the label row, not beside the command, so the command
+           well keeps the card's full width — at three columns the install
+           line only just fits. -->
+      <header class="flex items-start justify-between gap-3">
+        <span class="etched mb-3 inline-block font-mono text-[0.65rem] font-bold tracking-[0.16em] text-toned after:mt-1 after:block after:h-0.5 after:w-full after:rounded-full after:bg-primary/85 after:content-['']">{{ step.id }}</span>
+        <UButton
+          size="xs"
+          color="neutral"
+          variant="outline"
+          class="font-mono text-[0.56rem] font-bold tracking-[0.12em]"
+          :aria-label="`Copy the ${step.id.toLowerCase()} command`"
+          @click="copy(step)"
+        >
+          {{ copied === step.id ? 'COPIED' : 'COPY' }}
+        </UButton>
       </header>
-
-      <ol class="dp-tray">
-        <li
-          v-for="step in steps"
-          :key="step.id"
-          class="dp-step"
-        >
-          <div class="dp-top">
-            <span class="dp-id mono etched">{{ step.id }}</span>
-            <button
-              type="button"
-              class="dp-copy mono"
-              :aria-label="`Copy the ${step.id.toLowerCase()} command`"
-              @click="copy(step)"
-            >
-              {{ copied === step.id ? 'COPIED' : 'COPY' }}
-            </button>
-          </div>
-          <code class="dp-cmd mono">{{ step.cmd }}</code>
-          <p class="dp-note">
-            {{ step.note }}
-          </p>
-        </li>
-      </ol>
-
-      <div class="dp-cta">
-        <NuxtLink
-          to="/getting-started/installation"
-          class="btn primary dp-btn"
-        >
-          Install the kit
-          <span aria-hidden="true">→</span>
-        </NuxtLink>
-        <NuxtLink
-          to="/playground"
-          class="btn dp-btn"
-        >
-          Try the live playground
-        </NuxtLink>
-      </div>
-    </div>
-  </section>
+      <!-- The command well wraps rather than scrolling: a horizontally-
+           clipped command reads as a short one — people copy what they
+           can see. -->
+      <code class="well mb-3 block px-2.5 py-2 font-mono text-[0.74rem] leading-normal wrap-break-word whitespace-pre-wrap text-highlighted [--well-inset:var(--inset-1)] [--well-radius:10px]">{{ step.cmd }}</code>
+      <p class="m-0 text-sm leading-relaxed text-toned">
+        {{ step.note }}
+      </p>
+    </li>
+  </ol>
 </template>
-
-<style scoped>
-.dp-inner { padding-bottom: clamp(4rem, 10vh, 6rem); }
-
-.dp-head { margin-bottom: 2rem; }
-
-/* The case-foam tray — a well carved into the ground itself. */
-.dp-tray {
-  list-style: none;
-  margin: 0 0 2.2rem;
-  padding: 1.1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  gap: 1.1rem;
-  background: var(--grad-sink);
-  border-radius: var(--r-lg);
-  box-shadow: var(--inset-2);
-}
-
-/* Each step sits in the foam like a tool. */
-.dp-step {
-  background: var(--grad-surface);
-  border-radius: var(--r);
-  box-shadow: var(--elev-1);
-  padding: 1.15rem 1.25rem 1.2rem;
-}
-
-.dp-id {
-  display: inline-block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  margin-bottom: 0.75rem;
-}
-.dp-id::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 2px;
-  margin-top: 0.3rem;
-  border-radius: 1px;
-  background: var(--accent);
-  opacity: 0.85;
-}
-
-/* COPY sits on the label row, not beside the command, so the command well
-   keeps the card's full width — at three columns the install line only just
-   fits, and stealing 50px for the button forced a mid-token wrap. */
-.dp-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-/* The command well wraps rather than scrolling: a horizontally-clipped
-   command reads as a short one — people copy what they can see. */
-.dp-cmd {
-  display: block;
-  /* Sized so the longest step (`npx nuxi module add nuxt-convex-module`)
-     clears a three-column tray on one line — a package name split across
-     two lines reads as broken in a command people copy. */
-  font-size: 0.74rem;
-  line-height: 1.5;
-  color: var(--ink);
-  background: var(--grad-sink);
-  border-radius: 10px;
-  box-shadow: var(--inset-1);
-  padding: 0.55rem 0.6rem;
-  margin-bottom: 0.7rem;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-}
-
-.dp-copy {
-  flex: none;
-  padding: 0.12rem 0.4rem;
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--ink-faint);
-  background: var(--grad-surface);
-  border: 0;
-  border-radius: 6px;
-  box-shadow: var(--elev-0);
-  cursor: pointer;
-  transition: color var(--transition), box-shadow var(--transition);
-}
-.dp-copy:hover { color: var(--accent); box-shadow: var(--elev-1); }
-.dp-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-.dp-note {
-  font-family: var(--font);
-  font-size: 0.85rem;
-  line-height: 1.55;
-  color: var(--ink-dim);
-  margin: 0;
-}
-
-.dp-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.dp-btn { padding: 0.65rem 1.25rem; font-size: 0.95rem; }
-</style>

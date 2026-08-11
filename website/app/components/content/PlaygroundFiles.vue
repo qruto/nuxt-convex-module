@@ -22,12 +22,14 @@ const { upload, isUploading, progress, error, storageId } = useUpload(
   },
 )
 
-async function onPickOne(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file) await upload(file)
-  input.value = ''
-}
+// UFileUpload owns the picker; the v-model watch hands the file to `upload`
+// and clears the model so the same file can be picked again.
+const pickedOne = ref<File | null>(null)
+watch(pickedOne, async (file) => {
+  if (!file) return
+  await upload(file)
+  pickedOne.value = null
+})
 
 // 3) `useStorageUrl` skips the query while `storageId` is still null, so it is
 // safe to bind before anything has been uploaded.
@@ -47,11 +49,12 @@ const {
   },
 })
 
-function onPickMany(event: Event) {
-  const input = event.target as HTMLInputElement
-  enqueue(input.files)
-  input.value = ''
-}
+const pickedMany = ref<File[]>([])
+watch(pickedMany, (picked) => {
+  if (!picked?.length) return
+  enqueue(picked)
+  pickedMany.value = []
+})
 
 function formatSize(size: number) {
   return size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`
@@ -60,46 +63,48 @@ function formatSize(size: number) {
 
 <template>
   <PlaygroundDemo title="File storage — useUpload + useUploadQueue + useStorageUrl">
-    <div class="files">
+    <div class="flex flex-col gap-4 text-sm">
       <section>
-        <h4 class="files-heading">
-          Single upload — <code>useUpload</code>
+        <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+          Single upload — <ProseCode>useUpload</ProseCode>
         </h4>
-        <div class="files-row">
-          <input
-            type="file"
+        <div class="flex flex-wrap items-center gap-2.5">
+          <UFileUpload
+            v-model="pickedOne"
             accept="image/*"
-            class="files-input"
+            variant="button"
             :disabled="isUploading"
             aria-label="Upload one image"
-            @change="onPickOne"
-          >
-          <progress
+          />
+          <UProgress
             v-if="isUploading"
-            class="files-progress"
-            :value="progress"
-            max="1"
+            size="sm"
+            class="w-32"
+            :model-value="progress"
+            :max="1"
+            :ui="{ base: 'bg-default shadow-(--inset-1)' }"
           />
         </div>
         <p
           v-if="error"
-          class="files-error"
+          class="m-0 mt-1.5 text-xs text-error"
         >
           {{ error.message }}
         </p>
         <p
           v-else-if="storageId"
-          class="files-note"
+          class="m-0 mt-1.5 wrap-anywhere text-xs text-muted"
         >
-          Stored as <code>{{ storageId }}</code> —
+          Stored as <ProseCode>{{ storageId }}</ProseCode> —
           <template v-if="latestUrl === undefined">
-            resolving URL via <code>useStorageUrl</code>…
+            resolving URL via <ProseCode>useStorageUrl</ProseCode>…
           </template>
           <a
             v-else-if="latestUrl"
             :href="latestUrl"
             target="_blank"
             rel="noopener"
+            class="text-primary underline underline-offset-2"
           >served URL</a>
           <template v-else>
             file no longer exists
@@ -107,52 +112,57 @@ function formatSize(size: number) {
         </p>
         <p
           v-else
-          class="files-note"
+          class="m-0 mt-1.5 text-xs text-muted"
         >
-          No upload yet — <code>useStorageUrl</code> skips its query while the id is <code>null</code>.
+          No upload yet — <ProseCode>useStorageUrl</ProseCode> skips its query while the id is <ProseCode>null</ProseCode>.
         </p>
       </section>
 
       <section>
-        <h4 class="files-heading">
-          Batch upload — <code>useUploadQueue</code>
+        <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+          Batch upload — <ProseCode>useUploadQueue</ProseCode>
         </h4>
-        <div class="files-row">
-          <input
-            type="file"
+        <div class="flex flex-wrap items-center gap-2.5">
+          <UFileUpload
+            v-model="pickedMany"
             accept="image/*"
             multiple
-            class="files-input"
             aria-label="Upload several images"
-            @change="onPickMany"
-          >
-          <progress
-            v-if="queueBusy"
-            class="files-progress"
-            :value="queueProgress"
-            max="1"
+            class="min-h-24 w-full"
           />
-          <button
+          <UProgress
+            v-if="queueBusy"
+            size="sm"
+            class="w-32"
+            :model-value="queueProgress"
+            :max="1"
+            :ui="{ base: 'bg-default shadow-(--inset-1)' }"
+          />
+          <UButton
             v-if="items.length > 0 && !queueBusy"
-            class="files-button files-button-subtle"
             type="button"
+            size="xs"
+            color="neutral"
+            variant="outline"
             @click="clearQueue"
           >
             Clear list
-          </button>
+          </UButton>
         </div>
         <ul
           v-if="items.length > 0"
-          class="files-queue"
+          class="m-0 mt-2 flex list-none flex-col gap-1 p-0 text-xs"
         >
           <li
             v-for="item in items"
             :key="item.id"
+            class="flex justify-between gap-3"
           >
-            <span class="files-queue-name">{{ fileMeta(item.file).name }}</span>
+            <span class="truncate text-default">{{ fileMeta(item.file).name }}</span>
             <span
-              class="files-queue-status"
-              :data-status="item.status"
+              class="flex-none tabular-nums"
+              :class="item.status === 'success' ? 'text-success'
+                : item.status === 'error' ? 'text-error' : 'text-muted'"
             >
               {{ item.status === 'uploading' ? `${Math.round(item.progress * 100)}%` : item.status }}
             </span>
@@ -161,213 +171,58 @@ function formatSize(size: number) {
       </section>
 
       <section>
-        <h4 class="files-heading">
-          Gallery — live <code>useQuery</code> with resolved URLs
+        <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+          Gallery — live <ProseCode>useQuery</ProseCode> with resolved URLs
         </h4>
         <p
           v-if="files === undefined"
-          class="files-note"
+          class="m-0 text-xs text-muted"
         >
           Loading files…
         </p>
         <p
           v-else-if="files.length === 0"
-          class="files-note"
+          class="m-0 text-xs text-muted"
         >
           Nothing stored yet — upload a small image above.
         </p>
         <ul
           v-else
-          class="files-gallery"
+          class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2.5 p-0"
         >
           <li
             v-for="file in files"
             :key="file._id"
-            class="files-card"
+            class="raised relative flex flex-col gap-1 p-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]"
           >
             <img
               v-if="file.type.startsWith('image/') && file.url"
               :src="file.url"
               :alt="file.name"
-              class="files-thumb"
+              class="h-18 w-full rounded-sm bg-default object-cover"
             >
             <span
               v-else
-              class="files-thumb files-thumb-generic"
+              class="flex h-18 w-full items-center justify-center rounded-sm bg-default text-2xl"
             >📄</span>
             <span
-              class="files-card-name"
+              class="truncate text-xs text-default"
               :title="file.name"
             >{{ file.name }}</span>
-            <span class="files-card-size">{{ formatSize(file.size) }}</span>
-            <button
-              class="files-remove"
-              type="button"
+            <span class="text-[0.6875rem] text-muted">{{ formatSize(file.size) }}</span>
+            <UButton
+              icon="i-lucide-x"
+              size="xs"
+              color="neutral"
+              variant="outline"
+              square
+              class="absolute top-1 right-1"
               :aria-label="`Remove ${file.name}`"
               @click="removeFile({ id: file._id })"
-            >
-              ×
-            </button>
+            />
           </li>
         </ul>
       </section>
     </div>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.files {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-
-.files-heading {
-  margin: 0 0 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.files-row {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-}
-
-.files-input {
-  font-size: 0.8125rem;
-  max-width: 100%;
-}
-
-.files-progress {
-  width: 8rem;
-  height: 0.5rem;
-}
-
-.files-button {
-  padding: 0.25rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.files-button-subtle {
-  color: var(--ui-text-muted);
-}
-
-.files-note {
-  margin: 0.375rem 0 0;
-  color: var(--ui-text-muted);
-  font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-}
-
-.files-error {
-  margin: 0.375rem 0 0;
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-
-.files-queue {
-  margin: 0.5rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8125rem;
-}
-
-.files-queue li {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.files-queue-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.files-queue-status {
-  color: var(--ui-text-muted);
-}
-
-.files-queue-status[data-status='success'] {
-  color: var(--ui-color-success-500, #22c55e);
-}
-
-.files-queue-status[data-status='error'] {
-  color: var(--ui-color-error-500, #ef4444);
-}
-
-.files-gallery {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: 0.625rem;
-}
-
-.files-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-muted);
-}
-
-.files-thumb {
-  width: 100%;
-  height: 4.5rem;
-  object-fit: cover;
-  border-radius: 0.25rem;
-  background: var(--ui-bg);
-}
-
-.files-thumb-generic {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.files-card-name {
-  font-size: 0.75rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.files-card-size {
-  font-size: 0.6875rem;
-  color: var(--ui-text-muted);
-}
-
-.files-remove {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--ui-border);
-  border-radius: 9999px;
-  background: var(--ui-bg-elevated);
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-  line-height: 1;
-  cursor: pointer;
-}
-</style>

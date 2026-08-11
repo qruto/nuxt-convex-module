@@ -19,19 +19,20 @@ const preloaded = computed(
   <PlaygroundDemo title="SSR preload — preloadQuery + usePreloadedQuery">
     <div
       v-if="error || !preloaded || !data"
-      class="preload-offline"
+      class="flex flex-wrap items-center gap-3"
     >
-      <p class="preload-offline-text">
+      <p class="m-0 text-sm text-muted">
         The server route couldn't reach the Convex deployment during render.
-        Start it with <code>npx convex dev</code> in <code>website/</code>, then retry.
+        Start it with <ProseCode>npx convex dev</ProseCode> in <ProseCode>website/</ProseCode>, then retry.
       </p>
-      <button
-        class="preload-button"
+      <UButton
         type="button"
+        color="neutral"
+        variant="outline"
         @click="refresh()"
       >
         Retry
-      </button>
+      </UButton>
     </div>
     <PlaygroundPreloadMessages
       v-else
@@ -40,28 +41,3 @@ const preloaded = computed(
     />
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.preload-offline {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.preload-offline-text {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.preload-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-</style>
