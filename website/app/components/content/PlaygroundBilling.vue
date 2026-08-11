@@ -4,64 +4,34 @@
 // is installed). They resolve their actions from the auto-provided `api.billing`
 // namespace — on the playground those are demo stand-ins returning polar.sh
 // sandbox URLs, so `:embed="false"` keeps the checkout a plain link.
+//
+// They render plain <a> elements and spread attrs onto them, so the depth
+// treatment is applied as classes directly — wrapping them in UButton would
+// hide the components the demo is about.
 </script>
 
 <template>
   <PlaygroundDemo title="Billing — CheckoutLink + CustomerPortalLink">
-    <div class="billing">
-      <div class="billing-links">
-        <CheckoutLink
-          :product-ids="['demo-product']"
-          :embed="false"
-          class="billing-link billing-link-primary"
-          target="_blank"
-        >
-          Buy demo product
-        </CheckoutLink>
-        <CustomerPortalLink
-          return-url="/playground/billing"
-          class="billing-link"
-        >
-          Manage subscription
-        </CustomerPortalLink>
-      </div>
-      <p class="billing-note">
-        Each link resolves its URL by calling a Convex action on mount and
-        renders once the URL arrives — with the deployment offline the portal link
-        stays hidden. Here both point at polar.sh sandbox pages.
-      </p>
+    <div class="mb-3 flex flex-wrap gap-2">
+      <CheckoutLink
+        :product-ids="['demo-product']"
+        :embed="false"
+        target="_blank"
+        class="raised inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-primary-700 no-underline transition-[color,box-shadow] duration-150 ease-out [--raised-radius:10px] hover:text-primary active:shadow-(--inset-1) dark:text-primary-300"
+      >
+        Buy demo product
+      </CheckoutLink>
+      <CustomerPortalLink
+        return-url="/playground/billing"
+        class="raised inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-default no-underline transition-[color,box-shadow] duration-150 ease-out [--raised-radius:10px] hover:text-primary active:shadow-(--inset-1)"
+      >
+        Manage subscription
+      </CustomerPortalLink>
     </div>
+    <p class="m-0 text-xs text-muted">
+      Each link resolves its URL by calling a Convex action on mount and
+      renders once the URL arrives — with the deployment offline the portal link
+      stays hidden. Here both point at polar.sh sandbox pages.
+    </p>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.billing-links {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.75rem;
-}
-
-.billing-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.billing-link-primary {
-  background: var(--ui-bg-muted);
-}
-
-.billing-note {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.8125rem;
-}
-</style>

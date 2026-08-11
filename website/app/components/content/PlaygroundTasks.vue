@@ -88,187 +88,86 @@ async function seed() {
 
 <template>
   <PlaygroundDemo title="Task list — usePaginatedQuery + optimistic updates">
-    <div class="tasks">
-      <form
-        class="tasks-form"
-        @submit.prevent="submit"
+    <form
+      class="mb-3 flex gap-2"
+      @submit.prevent="submit"
+    >
+      <UInput
+        v-model="text"
+        placeholder="Add a task"
+        aria-label="New task"
+        class="min-w-32 flex-1"
+      />
+      <UButton
+        type="submit"
+        color="primary"
+        :disabled="!text.trim()"
       >
-        <input
-          v-model="text"
-          class="tasks-input"
-          placeholder="Add a task"
-          aria-label="New task"
-        >
-        <button
-          class="tasks-button"
-          type="submit"
-          :disabled="!text.trim()"
-        >
-          Add
-        </button>
-      </form>
+        Add
+      </UButton>
+    </form>
 
-      <p
-        v-if="status === 'LoadingFirstPage'"
-        class="tasks-note"
+    <p
+      v-if="status === 'LoadingFirstPage'"
+      class="m-0 mb-3 text-sm text-muted"
+    >
+      Loading tasks…
+    </p>
+    <ul
+      v-else-if="results.length > 0"
+      class="m-0 mb-3 flex max-h-64 list-none flex-col gap-1 overflow-y-auto p-0"
+    >
+      <li
+        v-for="task in results"
+        :key="task._id"
+        class="rounded-md px-1.5 py-1 transition-colors hover:bg-elevated"
       >
-        Loading tasks…
+        <UCheckbox
+          :model-value="task.completed"
+          :label="task.text"
+          :ui="{ label: task.completed ? 'text-muted line-through' : '' }"
+          @update:model-value="toggle(task._id)"
+        />
+      </li>
+    </ul>
+    <div
+      v-else
+      class="mb-3 flex flex-wrap items-center gap-3"
+    >
+      <p class="m-0 text-sm text-muted">
+        No tasks yet.
       </p>
-      <ul
-        v-else-if="results.length > 0"
-        class="tasks-list"
+      <UButton
+        type="button"
+        color="neutral"
+        variant="outline"
+        :loading="seeding"
+        @click="seed"
       >
-        <li
-          v-for="task in results"
-          :key="task._id"
-        >
-          <label
-            class="tasks-item"
-            :data-completed="task.completed"
-          >
-            <input
-              type="checkbox"
-              :checked="task.completed"
-              @change="toggle(task._id)"
-            >
-            <span>{{ task.text }}</span>
-          </label>
-        </li>
-      </ul>
-      <div
-        v-else
-        class="tasks-empty"
-      >
-        <p class="tasks-note">
-          No tasks yet.
-        </p>
-        <button
-          class="tasks-button"
-          type="button"
-          :disabled="seeding"
-          @click="seed"
-        >
-          {{ seeding ? 'Seeding…' : 'Seed sample tasks' }}
-        </button>
-      </div>
-
-      <div class="tasks-footer">
-        <button
-          class="tasks-button"
-          type="button"
-          :disabled="status !== 'CanLoadMore'"
-          @click="loadMore(5)"
-        >
-          {{ status === 'LoadingMore' ? 'Loading…' : 'Load 5 more' }}
-        </button>
-        <span class="tasks-status">
-          status: <code>{{ status }}</code> · isLoading: <code>{{ isLoading }}</code>
-        </span>
-      </div>
-      <p
-        v-if="error"
-        class="tasks-error"
-      >
-        {{ error }}
-      </p>
+        Seed sample tasks
+      </UButton>
     </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <UButton
+        type="button"
+        color="neutral"
+        variant="outline"
+        :disabled="status !== 'CanLoadMore'"
+        :loading="status === 'LoadingMore'"
+        @click="loadMore(5)"
+      >
+        Load 5 more
+      </UButton>
+      <span class="text-xs text-muted">
+        status: <ProseCode>{{ status }}</ProseCode> · isLoading: <ProseCode>{{ isLoading }}</ProseCode>
+      </span>
+    </div>
+    <p
+      v-if="error"
+      class="m-0 mt-2 text-xs text-error"
+    >
+      {{ error }}
+    </p>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.tasks-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.tasks-input {
-  flex: 1;
-  min-width: 8rem;
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg);
-  font-size: 0.875rem;
-}
-
-.tasks-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.tasks-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.tasks-list {
-  max-height: 16rem;
-  overflow-y: auto;
-  margin: 0 0 0.75rem;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.tasks-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.375rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.tasks-item:hover {
-  background: var(--ui-bg-muted);
-}
-
-.tasks-item[data-completed='true'] span {
-  color: var(--ui-text-muted);
-  text-decoration: line-through;
-}
-
-.tasks-empty {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.tasks-note {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.tasks-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.tasks-status {
-  color: var(--ui-text-muted);
-  font-size: 0.75rem;
-}
-
-.tasks-status code {
-  font-size: 0.75rem;
-}
-
-.tasks-error {
-  margin: 0.5rem 0 0;
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-</style>

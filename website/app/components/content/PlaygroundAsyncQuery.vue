@@ -11,26 +11,27 @@ const { data: messages, status, error, refresh } = useAsyncQuery(api.messages.li
   <PlaygroundDemo title="useAsyncQuery — SSR data, then live">
     <div
       v-if="error"
-      class="async-offline"
+      class="flex flex-wrap items-center gap-3"
     >
-      <p class="async-offline-text">
+      <p class="m-0 text-sm text-muted">
         The SSR fetch couldn't reach the Convex deployment.
-        Start it with <code>npx convex dev</code> in <code>website/</code>, then retry.
+        Start it with <ProseCode>npx convex dev</ProseCode> in <ProseCode>website/</ProseCode>, then retry.
       </p>
-      <button
-        class="async-button"
+      <UButton
         type="button"
+        color="neutral"
+        variant="outline"
         @click="refresh()"
       >
         Retry
-      </button>
+      </UButton>
     </div>
     <template v-else>
-      <p class="async-status">
-        status: <code>{{ status }}</code> — rendered on the server, live afterwards
+      <p class="m-0 mb-2 text-sm text-muted">
+        status: <ProseCode>{{ status }}</ProseCode> — rendered on the server, live afterwards
         (post a message in the chat demo and it appears here instantly).
       </p>
-      <ul class="async-list">
+      <ul class="m-0 flex list-disc flex-col gap-1 ps-5 text-sm text-default">
         <li
           v-for="message in messages ?? []"
           :key="message._id"
@@ -41,43 +42,3 @@ const { data: messages, status, error, refresh } = useAsyncQuery(api.messages.li
     </template>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.async-offline {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.async-offline-text {
-  margin: 0;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.async-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.async-status {
-  margin: 0 0 0.5rem;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.async-list {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-</style>

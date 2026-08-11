@@ -41,64 +41,27 @@ async function ping() {
 
 <template>
   <PlaygroundDemo title="Connection state — useConvexConnectionState">
-    <div class="connection">
-      <dl class="connection-grid">
-        <template
-          v-for="entry in entries"
-          :key="entry.key"
-        >
-          <dt class="connection-key">
-            {{ entry.key }}
-          </dt>
-          <dd class="connection-value">
-            {{ entry.value }}
-          </dd>
-        </template>
-      </dl>
-      <button
-        class="connection-button"
-        type="button"
-        :disabled="pinging"
-        @click="ping"
+    <dl class="m-0 mb-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 font-mono text-xs">
+      <template
+        v-for="entry in entries"
+        :key="entry.key"
       >
-        {{ pinging ? 'Request in flight…' : 'Fire a slow action (~600ms)' }}
-      </button>
-    </div>
+        <dt class="text-muted">
+          {{ entry.key }}
+        </dt>
+        <dd class="m-0 font-medium text-default tabular-nums">
+          {{ entry.value }}
+        </dd>
+      </template>
+    </dl>
+    <UButton
+      type="button"
+      color="neutral"
+      variant="outline"
+      :loading="pinging"
+      @click="ping"
+    >
+      {{ pinging ? 'Request in flight…' : 'Fire a slow action (~600ms)' }}
+    </UButton>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.connection-grid {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-  margin: 0 0 1rem;
-  font-size: 0.8125rem;
-}
-
-.connection-key {
-  font-family: var(--ui-font-mono, monospace);
-  color: var(--ui-text-muted);
-}
-
-.connection-value {
-  margin: 0;
-  font-family: var(--ui-font-mono, monospace);
-  font-weight: 500;
-}
-
-.connection-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.connection-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-</style>

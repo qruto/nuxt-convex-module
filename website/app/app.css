@@ -1,877 +1,405 @@
-/* ════════════════════════════════════════════════════════════════
-   Nuxt backend — playground depth-design system
+/* ================================================================
+   SITE THEME — titanium + signal orange, on Tailwind v4 / Nuxt UI v4
    ----------------------------------------------------------------
-   Restrained, premium depth — NOT puffy neumorphism. Surfaces sit a
-   hair ABOVE the canvas and lift with a single soft directional
-   drop-shadow + a hairline edge + a 1px top highlight; wells recess
-   gently. Depth still ENCODES STATE, but it whispers.
+   Docus inlines this file LAST (.nuxt/docus.css) after Tailwind and
+   Nuxt UI, both @layer-ed. Unlayered rules here therefore beat every
+   layered rule — the ground overrides depend on that. Never import
+   the tailwind entry stylesheet here yourself; the layer already does.
 
-     • RAISED  (--raise / --raise-sm)  → active/selected, primary
-       buttons, hoverable cards, the live tiles. A clean lifted card.
-     • INSET   (--inset / --inset-sm)  → text inputs, code/state
-       readouts, toggle tracks, the PRESSED state. A subtle recess.
-     • STATUS  → colored rings (border + inner dot), never flat fills.
+   Division of labor:
+     * palette, fonts, motion curve, keyframes -> plain :root tokens
+       below (see the @theme note there)
+     * semantic color/spacing/type/radius      -> Tailwind + Nuxt UI
+       defaults; components use their utilities (text-muted, bg-
+       elevated, rounded-lg …)
+     * component chrome (buttons, search, nav) -> app.config.ts `ui`
+     * the depth system                        -> unlayered :root
+       tokens + the plate/well/raised/etched/sheen/noise utilities
 
-   One neutral palette + a single indigo accent + semantic ring
-   colors. Dual light/dark via `color-scheme: light dark` + system
-   preference (no JS, no switcher). LIGHT leans on a soft drop-shadow
-   + hairline + white top highlight; DARK is near-flat, structured by
-   a hairline rim + a faint shadow. Multi-layer shadows can't live in
-   `light-dark()` (no comma lists) → dark variants in a
-   `prefers-color-scheme` block.
-   ════════════════════════════════════════════════════════════════ */
+   Depth utilities land in @layer utilities, so any unlayered
+   component CSS still wins (the old :where() contract, upgraded).
+   Geometry deviates ONLY via the seams (--plate-radius, --plate-elev,
+   --well-radius, --well-inset, --raised-*), never via competing
+   rounded-*/shadow-* utilities (ordering between custom and core
+   utilities is not guaranteed). Each recipe raises a --depth flag
+   descendants may read via `@container style(--depth: …)`.
 
-/* ════════════════════════════════════════════════════════════════
-   EDC THEME — Titanium + fluorescent orange
-   ----------------------------------------------------------------
-   One palette across the whole app. The `@theme` block re-tones Nuxt
-   UI / Tailwind (the docs + homepage rendered by Docus); the `:root`
-   tokens further down drive the playground's depth-design. Industrial,
-   machined, hi-vis — titanium greys carry the structure, fluorescent
-   orange carries the signal.
-   ════════════════════════════════════════════════════════════════ */
-@theme {
-  /* Rounded type system: Baloo 2 (display) + Nunito (sans/body) + JetBrains Mono.
-     `--font-sans` drives the Docus/Nuxt UI docs chrome → soft, rounded Nunito. */
+   Plain CSS here references only runtime-real custom properties
+   (--ui-*, --color-signal-*, our own tokens below) — never
+   --radius-*/--text-* etc., which are `@theme inline` and pruned
+   from the emitted :root.
+
+   Browser floor (user decision 2026-08-09): Baseline Newly Available
+   ships natively — light-dark(), @scope, style queries. Non-Baseline
+   features still need @supports (corner-shape, animation-timeline).
+   ================================================================ */
+
+/* -- Design tokens (deliberately NOT @theme) ---------------------
+   docus 5.12.3 splices this file into the compiled Tailwind output
+   via a trailing @import (after other rules), so `@theme` blocks
+   authored here are never consumed — they reach the browser as dead
+   unknown at-rules (verified against the served CSS; the old
+   tokens.css hit the same wall). `@utility` definitions DO compile.
+   Until that's fixed upstream, tokens are plain unlayered :root
+   custom properties: they override Tailwind's layered defaults
+   (--font-sans, --ease-out), the Nuxt UI runtime bridge
+   (--ui-color-primary-* -> var(--color-signal-*, )) resolves them,
+   and @nuxt/fonts scans any --font* declaration. The few utilities
+   whose @theme keys would have generated them get shims below. */
+/* SACRIFICIAL GUARD — must stay the FIRST statement of this file.
+   docus 5.12.3 pulls app.css in through a trailing `@import` (after
+   other rules — a spec-invalid position), and the pipeline swallows
+   the first statement of the inlined file (verified empirically:
+   whatever rule is first here never reaches the browser, regardless
+   of selector). This throwaway block absorbs that; everything real
+   starts after it. Remove once docus imports app.css before its own
+   rules. */
+:root {
+  --docus-trailing-import-guard: 1;
+}
+
+:root {
+  /* Hi-vis signal orange (RAL 2010 family) — the brand ramp.
+     app.config `ui.colors.primary/info: 'signal'` bridges it to
+     --ui-color-primary-* at runtime. */
+  --color-signal-50:  #fff4ed;
+  --color-signal-100: #ffe6d5;
+  --color-signal-200: #ffc8aa;
+  --color-signal-300: #ffa274;
+  --color-signal-400: #ff6f3d;
+  --color-signal-500: #ff5a1f;
+  --color-signal-600: #f0420a;
+  --color-signal-700: #c63307;
+  --color-signal-800: #9d2b0e;
+  --color-signal-900: #7e260f;
+  --color-signal-950: #441305;
+
+  /* Site motion curve — replaces Tailwind's --ease-out, so the
+     `ease-out` utility and plain var(--ease-out) both get it. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --animate-fade-up: fade-up 0.5s var(--ease-out) both;
+  --animate-pulse-ring: pulse-ring 2.4s ease-in-out infinite;
+}
+
+/* Type — Baloo 2 (rounded display), Nunito (rounded body), JetBrains
+   Mono (data/code). @nuxt/fonts self-hosts every family named in a
+   --font* property; no <link> tags anywhere. Kept in their OWN block:
+   the fontless transform rewrites --font* declarations in place, and
+   the block it touches must not carry other tokens. */
+:root {
   --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Baloo 2", "Nunito", system-ui, sans-serif;
 }
 
-/* Fluorescent orange — Nuxt UI inlines its palette as literal
-   `--ui-color-primary-*` values at build time (a `@theme` re-tone of
-   Tailwind `orange` never reaches it, and unused theme vars are
-   tree-shaken), so the primary scale is overridden at the documented
-   variable seam instead. */
-:root {
-  --ui-color-primary-50:  #fff4ed;
-  --ui-color-primary-100: #ffe6d5;
-  --ui-color-primary-200: #ffc8aa;
-  --ui-color-primary-300: #ffa274;
-  --ui-color-primary-400: #ff6f3d;
-  --ui-color-primary-500: #ff5a1f;
-  --ui-color-primary-600: #f0420a;
-  --ui-color-primary-700: #c63307;
-  --ui-color-primary-800: #9d2b0e;
-  --ui-color-primary-900: #7e260f;
-  --ui-color-primary-950: #441305;
+/* Utility shims for the tokens above (their @theme keys would have
+   auto-generated these). */
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility animate-fade-up {
+  animation: var(--animate-fade-up);
+}
+@utility animate-pulse-ring {
+  animation: var(--animate-pulse-ring);
 }
 
-:root {
-  /* Rounded corners for Nuxt UI / Docus components (depth design wants soft,
-     pill-friendly radii everywhere). */
-  --ui-radius: 0.5rem;
-}
-
-/* Bridge: make the playground's `light-dark()` tokens follow Docus's
-   color-mode toggle (the `.dark` / `.light` class on <html>), not just the OS
-   preference — so the header switch drives the whole app. */
-html.dark { color-scheme: dark; }
-html.light { color-scheme: light; }
-
-:root {
-  /* MANDATORY: adapt native UI (scrollbars, form controls) to scheme. */
-  color-scheme: light dark;
-
-  /* ── Type — a rounded system ───────────────────────────────
-     Baloo 2 (chunky, warm ROUNDED display — full rounded terminals,
-     hi-vis against the orange accent), Nunito (rounded-terminal body),
-     JetBrains Mono for data/labels/code. Loaded via <link> in
-     nuxt.config. Soft rounded letterforms to echo the full-rounded,
-     depth-design surfaces. */
-  --display: "Baloo 2", system-ui, sans-serif;
-  --font: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-  /* ── Surfaces — TITANIUM neutral grays (no blue, no warm cast) ──
-     Pure neutral so the orange accent carries all the warmth. The
-     near-white `--surface` lifts off the slightly darker canvas; the
-     `--sink` well sits a hair below for inputs & readouts. */
-  --bg:         light-dark(#e8e8e8, #161616);
-  --surface:    light-dark(#fafafa, #232323);
-  --surface-hi: light-dark(#ffffff, #2b2b2b);
-  /* `--sink` (recessed wells) sits a quiet half-step below the surface but
-     ABOVE the canvas — the recess is read from the inset shadow's hairline
-     and the concave gradient, not from a heavy tonal drop into gray. */
-  --sink:       light-dark(#f0f0f0, #1c1c1c);
-  /* Concave endpoints: shadowed under the top lip, catching light at the
-     bottom of the dish. Feed --grad-sink. Kept a NARROW span — the dish is
-     read from the inset light pooling at its floor, not from a long tonal
-     ramp down the face (that ramp banded and looked like a fade, not a dish). */
-  --sink-lo:    light-dark(#ebebeb, #171717);
-  --sink-hi:    light-dark(#f4f4f4, #202020);
-
-  /* ── Ink — neutral, AA-checked on the titanium grays ───────── */
-  --ink:       light-dark(#1c1c1c, #ededed);
-  --ink-dim:   light-dark(#565656, #a8a8a8);
-  --ink-faint: light-dark(#6b6b6b, #858585);
-
-  /* ── Accent — Tailwind ORANGE (600 is the identity color) ────
-     -press is the hover/active shade; -soft is the readable TEXT
-     shade; -dim is a faint tint fill. Dark lifts to a lighter orange
-     so it stays legible on the near-black material. */
-  --accent:       light-dark(#f0420a, #ff7a3c);  /* fluorescent orange 600 / lifted */
-  --accent-press: light-dark(#c63307, #ff9166);  /* 700 / lighter for dark */
-  --accent-soft:  light-dark(#c63307, #ffb992);  /* readable text shade */
-  --accent-dim:   light-dark(rgb(240 66 10 / 0.12), rgb(255 90 31 / 0.20));
-  --accent-glow:  light-dark(rgb(240 66 10 / 0.30), rgb(255 90 31 / 0.38));
-  /* Dark lifts --accent to a much brighter orange so accent TEXT stays legible
-     on near-black; white label on that fill is only 2.6:1, under even the 3:1
-     UI floor. Filled surfaces in dark therefore take a near-black label
-     (~7:1) instead of inheriting the light-mode white. */
-  --on-accent:    light-dark(#ffffff, #241108);
-
-  /* ── Semantic ring colors (status, not fills) ───────────────── */
-  --ok:       light-dark(#16a34a, #4ade80);
-  --ok-dim:   light-dark(rgb(22 163 74 / 0.12), rgb(74 222 128 / 0.16));
-  --warn:     light-dark(#d97706, #fbbf24);
-  --warn-dim: light-dark(rgb(217 119 6 / 0.12), rgb(251 191 36 / 0.16));
-  --err:      light-dark(#dc2626, #f87171);
-  --err-dim:  light-dark(rgb(220 38 38 / 0.1), rgb(248 113 113 / 0.16));
-  /* No blue in the palette — "info"/in-progress folds into the orange accent. */
-  --info:     var(--accent);
-  --info-dim: var(--accent-dim);
-
-  /* ── Experimental marker (a violet, distinct from the accent) ─ */
-  --xp:      light-dark(#7c3aed, #c4b5fd);
-  --xp-dim:  light-dark(rgb(124 58 237 / 0.12), rgb(196 181 253 / 0.18));
-  --xp-glow: light-dark(rgb(124 58 237 / 0.22), rgb(196 181 253 / 0.3));
-  --on-xp:   #ffffff;
-
-  /* Neutral hairline — separates busy lists / table rows / headers. */
-  --edge:    light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
-  --edge-hi: light-dark(rgb(0 0 0 / 0.14), rgb(255 255 255 / 0.12));
-
-  /* ── Geometry — rounder for the depth-design refresh ───────── */
-  --r-sm: 10px;
-  --r:    16px;
-  --r-lg: 22px;
-
-  /* ── Motion ────────────────────────────────────────────────── */
-  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
-  --press:       130ms;
-  --transition:  180ms var(--ease-out);
-
-  /* ── Depth — legacy names, aliased onto the canonical ladder ──
-     The base components (.btn, .card, .well, .input, .pill and the
-     playground's Lab* components) predate the --elev-* ladder defined
-     further down. Rather than keep a SECOND shadow family lit from a
-     different direction (these used a straight-down cast; the ladder
-     casts down-right from the top-left sun), every legacy name now
-     ALIASES the ladder. One light source across homepage, docs AND
-     playground — and, because the ladder carries html.dark/html.light
-     overrides, the playground's depth now follows the theme toggle too
-     (it previously only tracked the OS preference). See design.md §3. */
-  --raise:        var(--elev-1);   /* resting card / panel            */
-  --raise-sm:     var(--elev-1);   /* resting control (button, pill)  */
-  --raise-lg:     var(--elev-3);   /* popover / large lifted surface  */
-  --inset:        var(--inset-2);  /* deep well (panel.well, tracks)  */
-  --inset-sm:     var(--inset-1);  /* shallow well (input, chip)      */
-  --raise-accent: var(--elev-accent); /* primary — crown + base, no halo */
-
-  /* Custom UI hooks */
-  accent-color: var(--accent);
-  scrollbar-color: var(--edge-hi) transparent;
-  scrollbar-width: thin;
-}
-
-/* (Legacy --raise/--inset dark overrides removed — they now alias the
-   --elev-* ladder, which carries its own dark + html.dark/html.light
-   variants below.) */
-
-/* ════════════════════════════════════════════════════════════════
-   Keyframes
-   ════════════════════════════════════════════════════════════════ */
-@keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 0 var(--ring-glow, var(--accent-glow)); opacity: 1; }
-  50%      { box-shadow: 0 0 0 6px transparent; opacity: 0.6; }
-}
+/* Keyframes for the --animate-* tokens above. Top-level (not nested in
+   @theme): always emitted, and unaffected by theme processing. */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes blink { 50% { opacity: 0.35; } }
-
-/* ════════════════════════════════════════════════════════════════
-   Reset / base
-   ════════════════════════════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; }
-
-html { scrollbar-color: var(--edge-hi) transparent; scrollbar-width: thin; scroll-behavior: smooth; }
-
-body { margin: 0; }
-
-/* The playground canvas is scoped to the playground shell so the Docus docs and
-   homepage keep Nuxt UI's surface; the playground keeps its depth-design. */
-.pg-shell {
-  min-height: 100dvh;
-  color: var(--ink);
-  background-color: var(--bg);
-  /* A whisper of an accent vignette so the canvas isn't dead —
-     never a grid, never loud. */
-  background-image:
-    radial-gradient(900px 520px at 94% -12%, var(--accent-dim), transparent 60%);
-  background-attachment: fixed;
-  font-family: var(--font);
-  font-size: 15px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.pg-shell ::selection { background: var(--accent); color: var(--on-accent); }
-
-h1, h2, h3 { text-wrap: balance; }
-p, li { text-wrap: pretty; }
-
-input, .mono, code, pre, time, .tnum { font-variant-numeric: tabular-nums; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* --ring-glow is a per-element color seam; the fallback tracks the
+   accent. (A color, not a shadow list — it feeds a 0-spread ring.) */
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--ring-glow,
+      color-mix(in srgb, var(--ui-primary) 35%, transparent));
+    opacity: 1;
   }
+  50% { box-shadow: 0 0 0 6px transparent; opacity: 0.6; }
 }
 
+/* -- THE GROUND --------------------------------------------------
+   Light mode sits on the titanium mill canvas (neutral-200) and
+   elevation goes LIGHTER — muted 100 (well floors), elevated 50
+   (bead-blast plates), accented white (crowns/hover) — fixing the
+   old inverted ladder where popovers rendered darker than the page.
+   Scoped :root:not(.dark) so dark mode falls through to Nuxt UI's
+   layered .dark defaults (bg 900 / muted+elevated 800 / accented
+   700 — already depth-correct); a bare unlayered :root would trump
+   them. */
+:root {
+  --ui-radius: 0.5rem; /* rounded-sm 8 . md 12 . lg 16 . xl 24 */
+}
+:root:not(.dark) {
+  --ui-bg:          var(--ui-color-neutral-200);
+  --ui-bg-muted:    var(--ui-color-neutral-100);
+  --ui-bg-elevated: var(--ui-color-neutral-50);
+  --ui-bg-accented: #ffffff;
+  --ui-border:          var(--ui-color-neutral-300);
+  --ui-border-muted:    var(--ui-color-neutral-200);
+  --ui-border-accented: var(--ui-color-neutral-300);
+}
+
+/* -- DEPTH SYSTEM ------------------------------------------------
+   Light from directly overhead, tiny elevation. Every raised step
+   carries exactly two 1px inset lines: a light catch on the crown
+   (a hair, not a stroke) and a hard shade at the base (no blur —
+   the crisp line is the plate's thickness). Wells invert it: shade
+   under the lip, light POOLING at the floor. Shadow colors carry
+   light-dark() per layer, so each token has one definition across
+   both schemes; the html bridge below keeps them in lockstep with
+   the class-driven color mode. */
+:root {
+  --elev-0:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.06)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.05)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.05), transparent);
+  --elev-1:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.07)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4));
+  --elev-2:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.08)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.42)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.45)),
+    0 3px 6px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.45));
+  --elev-3:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.09)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.45)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.028), rgb(0 0 0 / 0.3)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.5)),
+    0 6px 14px -4px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.55));
+  /* Convex accent plate — a crown the saturated fill can carry, a
+     hard base, and a cast tinted with the accent in light. */
+  --elev-accent:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.28)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)),
+    0 3px 6px -2px light-dark(
+      color-mix(in srgb, var(--ui-color-primary-600) 35%, transparent),
+      rgb(0 0 0 / 0.45));
+  /* Header bar — ambient only; the hairline is UHeader's border-b. */
+  --elev-header: 0 6px 16px -14px rgb(0 0 0 / 0.5);
+
+  /* Wells — lip shade on top, light pooling at the floor. */
+  --inset-1:
+    inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.05)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
+  --inset-2:
+    inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.055)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
+
+  /* Glows — keyed to the semantic aliases. */
+  --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  --glow-success: 0 0 9px color-mix(in srgb, var(--ui-color-success-400) 55%, transparent);
+
+  /* Convex/concave gradients — the tonal ramps that make plates read
+     as gently domed and wells as dished, endpoints from the --ui-bg
+     ladder. --grad-surface must stay a SINGLE gradient (it pairs
+     with padding-box in the plate recipe's bevel trick). */
+  --grad-surface: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
+    var(--ui-bg-elevated) 58%,
+    color-mix(in srgb, var(--ui-bg-elevated), #000 2.5%));
+  /* The dish holds its mid-tone; it only turns at the lip and floor. */
+  --grad-sink: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg-muted), #000 2%),
+    var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
+    color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+  /* Accent plates — lit crown, shaded base. Press shade is a hover
+     semantic the alias system doesn't provide: one step deeper in
+     light, one step lighter in dark. */
+  --ui-primary-press: light-dark(var(--ui-color-primary-600), var(--ui-color-primary-300));
+  --grad-accent: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-primary), #fff 16%), var(--ui-primary) 55%,
+    color-mix(in srgb, var(--ui-primary), #000 10%));
+  --grad-accent-press: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-primary-press), #fff 12%), var(--ui-primary-press) 55%,
+    color-mix(in srgb, var(--ui-primary-press), #000 8%));
+  /* 1px plate bevel: specular top edge -> shaded bottom edge. */
+  --grad-bevel: linear-gradient(180deg,
+    light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
+    light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)) 40%,
+    light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)));
+}
+
+/* -- Scheme bridge + native UI -----------------------------------
+   Nuxt UI only sets scheme-light/dark on <body>; the light-dark()
+   tokens above and the html scrollbar need the scheme on <html> too,
+   keyed to the SAME .dark/.light class @nuxtjs/color-mode toggles. */
+:root { color-scheme: light dark; accent-color: var(--ui-primary); }
+html.dark { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+html {
+  scrollbar-color: var(--ui-border-accented) transparent;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+/* Only the global smooth scroll opts out here; entrance animations
+   opt IN per element via motion-safe: (no global animation nuker). */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 @supports not (scrollbar-color: auto) {
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--edge-hi); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Shared utilities
-   ════════════════════════════════════════════════════════════════ */
-.mono { font-family: var(--mono); }
-
-/* Laser-etched marking — text carved into the material: dimmed ink with a
-   1px light catch on the lower edge (light mode); in dark the groove reads
-   as a shadow instead. */
-.etched {
-  color: var(--ink-dim);
-  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
-}
-
-/* ── Landing section scaffold ────────────────────────────────────
-   The homepage reads like a field manual: every section shares one
-   structure — etched index eyebrow, display title, quiet sub. */
-.ld-inner {
-  max-width: 1120px;
-  margin-inline: auto;
-  padding: clamp(2.75rem, 7vh, 4.75rem) 1.5rem;
-}
-.ld-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 0 0 0.9rem;
-}
-.ld-tick {
-  width: 22px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: var(--glow-accent-soft);
-}
-.ld-index { color: var(--accent-soft); }
-.ld-title {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  margin: 0 0 0.6rem;
-}
-.ld-sub {
-  font-family: var(--font);
-  font-size: 0.98rem;
-  line-height: 1.6;
-  color: var(--ink-dim);
-  margin: 0;
-  max-width: 44rem;
-}
-.ld-sect { border-bottom: 1px solid var(--edge); }
-
-.lab-label {
-  font-family: var(--mono);
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.fade-up { animation: fade-up 0.26s var(--ease-out) both; }
-
-/* Inline code chip — a tiny recessed well */
-.prose-code,
-.subtitle code,
-.ph-sub code,
-code.inline {
-  font-family: var(--mono);
-  font-size: 0.82em;
-  color: var(--accent-soft);
-  background: var(--sink);
-  padding: 0.08rem 0.36rem;
-  border-radius: 5px;
-  box-shadow: var(--inset-sm);
-}
-
-@media (max-width: 860px) {
-  .main-grid { grid-template-columns: 1fr; }
-  .sidebar { display: none !important; }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Buttons (.btn base — raised at rest, pressed-in on :active)
-   ════════════════════════════════════════════════════════════════ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: var(--font);
-  font-size: 0.88rem;
-  font-weight: 600;
-  border-radius: var(--r-sm);
-  border: 0;
-  background: var(--grad-surface);
-  color: var(--ink);
-  cursor: pointer;
-  box-shadow: var(--raise-sm);
-  transition: color var(--transition), box-shadow var(--transition),
-    transform var(--press) var(--ease-out);
-  text-decoration: none;
-}
-.btn:hover { color: var(--accent); }
-.btn:active:not(:disabled) { box-shadow: var(--inset-sm); transform: translateY(0.5px); }
-/* Pressed neutral buttons drop to the sink tone — the convex crown flattens. */
-.btn:not(.primary):active:not(:disabled) { background: var(--sink); }
-.btn.primary { background: var(--grad-accent); color: var(--on-accent); box-shadow: var(--raise-accent); }
-.btn.primary:hover { background: var(--grad-accent-press); color: var(--on-accent); }
-.btn.primary:active:not(:disabled) { box-shadow: var(--inset-sm); }
-.btn.secondary { background: var(--grad-surface); }
-.btn.danger { color: var(--err); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: var(--raise-sm); }
-
-/* ════════════════════════════════════════════════════════════════
-   Focus & touch (Web Interface Guidelines) — ring sits ON TOP of depth
-   ════════════════════════════════════════════════════════════════ */
-.pg-shell :where(a, button, summary, [role="button"], .lb):focus-visible,
-.btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-a, button, summary, [role="button"], .lb, .tg, label { touch-action: manipulation; }
-
-.tg-sw input:focus-visible ~ .tg-track {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Inputs — concave wells carved into the material
-   ════════════════════════════════════════════════════════════════ */
-.input {
-  width: 100%;
-  padding: 0.6rem 0.8rem;
-  font-family: var(--font);
-  font-size: 0.92rem;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--grad-sink);
-  color: var(--ink);
-  box-shadow: var(--inset-sm);
-  transition: box-shadow var(--transition);
-}
-.input:focus {
-  outline: none;
-  box-shadow: var(--inset-sm), 0 0 0 2px var(--accent);
-}
-.input::placeholder { color: var(--ink-faint); }
-
-/* ════════════════════════════════════════════════════════════════
-   Cards / panels / pills
-   ════════════════════════════════════════════════════════════════ */
-.card {
-  background: var(--grad-surface);
-  border-radius: var(--r-lg);
-  box-shadow: var(--raise);
-}
-
-.well {
-  background: var(--grad-sink);
-  border-radius: var(--r-lg);
-  box-shadow: var(--inset);
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.18rem 0.6rem;
-  border-radius: 999px;
-  color: var(--ink-dim);
-  background: var(--sink);
-  box-shadow: var(--inset-sm);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Page-level helpers (shared across the rebuilt pages)
-   ════════════════════════════════════════════════════════════════ */
-.stack { display: flex; flex-direction: column; gap: 1rem; }
-.row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
-.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start; }
-@media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
-
-.hint { font-size: 0.78rem; color: var(--ink-dim); line-height: 1.55; margin: 0; }
-.hint code, .lead code { font-family: var(--mono); font-size: 0.9em; color: var(--accent-soft); }
-.lead { font-size: 0.88rem; color: var(--ink-dim); line-height: 1.6; margin: 0; }
-
-textarea.input { resize: vertical; min-height: 4.5rem; line-height: 1.5; }
-select.input { cursor: pointer; }
-
-/* A collapsible "developer details" section — a recessed well. */
-details.dev {
-  background: var(--grad-sink);
-  border-radius: var(--r);
-  box-shadow: var(--inset-sm);
-  padding: 0.2rem 0.2rem;
-}
-details.dev > summary {
-  cursor: pointer;
-  list-style: none;
-  padding: 0.6rem 0.85rem;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-details.dev > summary::-webkit-details-marker { display: none; }
-details.dev > summary::before {
-  content: '+';
-  font-size: 0.95rem;
-  line-height: 1;
-  color: var(--accent);
-}
-details.dev[open] > summary::before { content: '−'; }
-details.dev > .dev-body { padding: 0.25rem 0.85rem 0.85rem; }
-
-/* ════════════════════════════════════════════════════════════════
-   DEPTH SYSTEM  (see design.md)
-   ----------------------------------------------------------------
-   Light from directly OVERHEAD, tiny elevation. A 5-step raised
-   ladder (--elev-*) + inset wells (--inset-1/2) + glows.
-
-   THE TWO EDGES. Every raised step carries exactly two 1px inset
-   lines and nothing else on its rim:
-     • TOP    — a light catch that is only a HAIR lighter than the
-       material under it at that point. It reads as the crown turning
-       into the light, not as a stroke. A blown-out white line reads as
-       a border and kills the dome, so these alphas stay low and the
-       surface gradient starts just below white to leave it room.
-     • BOTTOM — a hard 1px shade, NO blur. Blur here turns the rim into
-       a smear; the crisp line is what says "this plate has a
-       thickness".
-   Wells invert it: shade under the top lip, then light POOLING at the
-   floor (a wide, heavily-negative-spread inset highlight) — that pool
-   is what makes a dish read as dished.
-
-   Box-shadow tokens can't use light-dark() (no comma lists), so dark
-   is redefined for BOTH the system pref and the `html.dark` toggle;
-   `html.light` forces light on a dark system.
-   ════════════════════════════════════════════════════════════════ */
-:root {
-  --elev-0:
-    inset 0 1px 0 rgb(255 255 255 / 0.45),
-    0 0 0 1px rgb(0 0 0 / 0.04),
-    0 1px 1px rgb(0 0 0 / 0.05);
-  --elev-1:
-    inset 0 1px 0 rgb(255 255 255 / 0.55),
-    inset 0 -1px 0 rgb(0 0 0 / 0.05),
-    0 0 0 1px rgb(0 0 0 / 0.03),
-    0 1px 1px rgb(0 0 0 / 0.05),
-    0 2px 3px -1px rgb(0 0 0 / 0.06);
-  --elev-2:
-    inset 0 1px 0 rgb(255 255 255 / 0.6),
-    inset 0 -1px 0 rgb(0 0 0 / 0.055),
-    0 0 0 1px rgb(0 0 0 / 0.03),
-    0 1px 2px rgb(0 0 0 / 0.06),
-    0 3px 5px -2px rgb(0 0 0 / 0.08);
-  --elev-3:
-    inset 0 1px 0 rgb(255 255 255 / 0.62),
-    inset 0 -1px 0 rgb(0 0 0 / 0.055),
-    0 0 0 1px rgb(0 0 0 / 0.028),
-    0 2px 3px -1px rgb(0 0 0 / 0.06),
-    0 6px 12px -4px rgb(0 0 0 / 0.1);
-  --elev-4:
-    inset 0 1px 0 rgb(255 255 255 / 0.68),
-    inset 0 -1px 0 rgb(0 0 0 / 0.06),
-    0 3px 6px -2px rgb(0 0 0 / 0.09),
-    0 10px 22px -6px rgb(0 0 0 / 0.15);
-  /* Convex accent plate — same two edges, tuned for a saturated fill:
-     a white crown it can actually carry, a hard shaded base, and a cast
-     tinted with the accent instead of a halo around the whole button. */
-  --elev-accent:
-    inset 0 1px 0 rgb(255 255 255 / 0.3),
-    inset 0 -1px 0 rgb(0 0 0 / 0.2),
-    0 1px 1px rgb(0 0 0 / 0.1),
-    0 2px 5px -2px rgb(240 66 10 / 0.35);
-  /* Wells — lip shade on top, light pooling at the floor. */
-  --inset-1:
-    inset 0 1px 2px -0.5px rgb(0 0 0 / 0.06),
-    inset 0 -6px 8px -7px rgb(255 255 255 / 0.9),
-    inset 0 -1px 0 rgb(255 255 255 / 0.8),
-    inset 0 0 0 1px rgb(0 0 0 / 0.02);
-  --inset-2:
-    inset 0 2px 3px -1px rgb(0 0 0 / 0.075),
-    inset 0 -12px 14px -12px rgb(255 255 255 / 0.95),
-    inset 0 -1px 0 rgb(255 255 255 / 0.9),
-    inset 0 0 0 1px rgb(0 0 0 / 0.03);
-
-  --glow-accent:
-    0 0 0 1px rgb(255 90 31 / 0.35),
-    0 4px 16px rgb(255 90 31 / 0.35);
-  --glow-accent-soft: 0 0 14px rgb(255 90 31 / 0.30);
-  --glow-ok:   0 0 9px rgb(74 222 128 / 0.55);
-  --glow-warn: 0 0 9px rgb(251 191 36 / 0.5);
-  --glow-err:  0 0 9px rgb(248 113 113 / 0.5);
-
-  /* Convex/concave gradients — the tiny tonal ramps that make raised
-     plates read as gently domed and wells as gently dished, under the
-     same overhead light as the shadow ladder. All whisper-subtle;
-     colors follow color-scheme via light-dark(). NOTE: --grad-surface
-     must stay a SINGLE gradient — it's paired with `padding-box` in
-     the .depth-border trick, and a comma list would break the pairing. */
-  --grad-surface: linear-gradient(180deg,
-    color-mix(in srgb, var(--surface-hi), var(--surface) 55%),
-    var(--surface) 58%,
-    color-mix(in srgb, var(--surface), #000 2.5%));
-  /* The dish holds its mid-tone across most of its face and only turns at
-     the very lip and the very floor — a long linear ramp read as a fade. */
-  --grad-sink: linear-gradient(180deg,
-    var(--sink-lo), var(--sink) 34%, var(--sink) 76%, var(--sink-hi));
-  /* Convex accent for the primary button — lit crown, shaded base. */
-  --grad-accent: linear-gradient(180deg,
-    color-mix(in srgb, var(--accent), #fff 16%), var(--accent) 55%,
-    color-mix(in srgb, var(--accent), #000 10%));
-  --grad-accent-press: linear-gradient(180deg,
-    color-mix(in srgb, var(--accent-press), #fff 12%), var(--accent-press) 55%,
-    color-mix(in srgb, var(--accent-press), #000 8%));
-  /* 1px bevel for .depth-border: specular top edge → shaded bottom edge.
-     Same restraint as the ladder's crown — a hair, not a stroke. */
-  --grad-bevel: linear-gradient(180deg,
-    rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.1) 40%, rgb(0 0 0 / 0.11));
-}
-
-/* Dark tokens — system pref + explicit toggle. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --elev-0:
-      inset 0 1px 0 rgb(255 255 255 / 0.06),
-      0 0 0 1px rgb(255 255 255 / 0.05);
-    --elev-1:
-      inset 0 1px 0 rgb(255 255 255 / 0.07),
-      inset 0 -1px 0 rgb(0 0 0 / 0.4),
-      0 0 0 1px rgb(0 0 0 / 0.3),
-      0 1px 1px rgb(0 0 0 / 0.4),
-      0 2px 4px -1px rgb(0 0 0 / 0.4);
-    --elev-2:
-      inset 0 1px 0 rgb(255 255 255 / 0.08),
-      inset 0 -1px 0 rgb(0 0 0 / 0.42),
-      0 0 0 1px rgb(0 0 0 / 0.3),
-      0 1px 2px rgb(0 0 0 / 0.45),
-      0 3px 6px -2px rgb(0 0 0 / 0.45);
-    --elev-3:
-      inset 0 1px 0 rgb(255 255 255 / 0.09),
-      inset 0 -1px 0 rgb(0 0 0 / 0.45),
-      0 0 0 1px rgb(0 0 0 / 0.3),
-      0 2px 4px -1px rgb(0 0 0 / 0.5),
-      0 6px 14px -4px rgb(0 0 0 / 0.55);
-    --elev-4:
-      inset 0 1px 0 rgb(255 255 255 / 0.11),
-      inset 0 -1px 0 rgb(0 0 0 / 0.5),
-      0 4px 8px -2px rgb(0 0 0 / 0.55),
-      0 12px 26px -6px rgb(0 0 0 / 0.65);
-    --elev-accent:
-      inset 0 1px 0 rgb(255 255 255 / 0.28),
-      inset 0 -1px 0 rgb(0 0 0 / 0.3),
-      0 1px 2px rgb(0 0 0 / 0.4),
-      0 3px 6px -2px rgb(0 0 0 / 0.45);
-    --inset-1:
-      inset 0 1px 2px rgb(0 0 0 / 0.4),
-      inset 0 -6px 8px -7px rgb(255 255 255 / 0.09),
-      inset 0 -1px 0 rgb(255 255 255 / 0.05);
-    --inset-2:
-      inset 0 2px 3px -1px rgb(0 0 0 / 0.45),
-      inset 0 -12px 14px -12px rgb(255 255 255 / 0.11),
-      inset 0 -1px 0 rgb(255 255 255 / 0.055);
-    --grad-bevel: linear-gradient(180deg,
-      rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.035) 40%, rgb(0 0 0 / 0.45));
+  ::-webkit-scrollbar-thumb {
+    background: var(--ui-border-accented);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 }
-html.dark {
-  --elev-0: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.05);
-  --elev-1: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 -1px 0 rgb(0 0 0 / 0.4), 0 0 0 1px rgb(0 0 0 / 0.3), 0 1px 1px rgb(0 0 0 / 0.4), 0 2px 4px -1px rgb(0 0 0 / 0.4);
-  --elev-2: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 -1px 0 rgb(0 0 0 / 0.42), 0 0 0 1px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.45), 0 3px 6px -2px rgb(0 0 0 / 0.45);
-  --elev-3: inset 0 1px 0 rgb(255 255 255 / 0.09), inset 0 -1px 0 rgb(0 0 0 / 0.45), 0 0 0 1px rgb(0 0 0 / 0.3), 0 2px 4px -1px rgb(0 0 0 / 0.5), 0 6px 14px -4px rgb(0 0 0 / 0.55);
-  --elev-4: inset 0 1px 0 rgb(255 255 255 / 0.11), inset 0 -1px 0 rgb(0 0 0 / 0.5), 0 4px 8px -2px rgb(0 0 0 / 0.55), 0 12px 26px -6px rgb(0 0 0 / 0.65);
-  --elev-accent: inset 0 1px 0 rgb(255 255 255 / 0.28), inset 0 -1px 0 rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.4), 0 3px 6px -2px rgb(0 0 0 / 0.45);
-  --inset-1: inset 0 1px 2px rgb(0 0 0 / 0.4), inset 0 -6px 8px -7px rgb(255 255 255 / 0.09), inset 0 -1px 0 rgb(255 255 255 / 0.05);
-  --inset-2: inset 0 2px 3px -1px rgb(0 0 0 / 0.45), inset 0 -12px 14px -12px rgb(255 255 255 / 0.11), inset 0 -1px 0 rgb(255 255 255 / 0.055);
-  --grad-bevel: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.035) 40%, rgb(0 0 0 / 0.45));
-}
-html.light {
-  --elev-0: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 0 0 1px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.05);
-  --elev-1: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -1px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(0 0 0 / 0.03), 0 1px 1px rgb(0 0 0 / 0.05), 0 2px 3px -1px rgb(0 0 0 / 0.06);
-  --elev-2: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -1px 0 rgb(0 0 0 / 0.055), 0 0 0 1px rgb(0 0 0 / 0.03), 0 1px 2px rgb(0 0 0 / 0.06), 0 3px 5px -2px rgb(0 0 0 / 0.08);
-  --elev-3: inset 0 1px 0 rgb(255 255 255 / 0.62), inset 0 -1px 0 rgb(0 0 0 / 0.055), 0 0 0 1px rgb(0 0 0 / 0.028), 0 2px 3px -1px rgb(0 0 0 / 0.06), 0 6px 12px -4px rgb(0 0 0 / 0.1);
-  --elev-4: inset 0 1px 0 rgb(255 255 255 / 0.68), inset 0 -1px 0 rgb(0 0 0 / 0.06), 0 3px 6px -2px rgb(0 0 0 / 0.09), 0 10px 22px -6px rgb(0 0 0 / 0.15);
-  --elev-accent: inset 0 1px 0 rgb(255 255 255 / 0.3), inset 0 -1px 0 rgb(0 0 0 / 0.2), 0 1px 1px rgb(0 0 0 / 0.1), 0 2px 5px -2px rgb(240 66 10 / 0.35);
-  --inset-1: inset 0 1px 2px -0.5px rgb(0 0 0 / 0.06), inset 0 -6px 8px -7px rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(255 255 255 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.02);
-  --inset-2: inset 0 2px 3px -1px rgb(0 0 0 / 0.075), inset 0 -12px 14px -12px rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.03);
-  --grad-bevel: linear-gradient(180deg, rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.1) 40%, rgb(0 0 0 / 0.11));
-}
 
-/* ── Depth utilities ─────────────────────────────────────────────
-   Reusable building blocks for the marketing homepage. */
-.depth-surface {
-  background: var(--grad-surface);
-  border-radius: var(--r-lg);
-  box-shadow: var(--elev-1);
-}
-/* A 1px bevel that's lit at the top-left and dark at the bottom-right,
-   sitting on a drop shadow → "border lighter than the shadow". */
-.depth-border {
+h1, h2, h3 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+input, code, pre, time { font-variant-numeric: tabular-nums; }
+a, button, summary, [role="button"], label { touch-action: manipulation; }
+
+/* -- Depth recipes -----------------------------------------------
+   class="plate | well | raised" — see the header comment for the
+   seam contract. */
+@utility plate {
+  --depth: plate;
   border: 1px solid transparent;
-  border-radius: var(--r-lg);
-  background:
-    var(--grad-surface) padding-box,
-    var(--grad-bevel) border-box;
-  box-shadow: var(--elev-1);
+  border-radius: var(--plate-radius, calc(var(--ui-radius) * 3));
+  background: var(--grad-surface) padding-box, var(--grad-bevel) border-box;
+  box-shadow: var(--plate-elev, var(--elev-1));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
-.depth-well {
+@utility well {
+  --depth: well;
   background: var(--grad-sink);
-  border-radius: var(--r-lg);
-  box-shadow: var(--inset-1);
+  border-radius: var(--well-radius, calc(var(--ui-radius) * 1.5));
+  box-shadow: var(--well-inset, var(--inset-2));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
-.text-grad {
-  background: linear-gradient(135deg, var(--accent-soft), var(--accent) 55%, var(--accent-press));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-.text-grad-ink {
-  background: linear-gradient(160deg,
-    color-mix(in srgb, var(--ink), #fff 18%), var(--ink) 55%, var(--ink-dim));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-/* Matte titanium sheen — a soft corner light-catch plus one faint diagonal
-   glare band sweeping the plate, like a key light glancing off bead-blasted
-   metal. Matte, not glossy: whisper opacities, wide soft ramps, no hard
-   specular line. Uses ::before so it can stack with .noise's ::after. */
-.sheen { position: relative; }
-.sheen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 18% -10%,
-      light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)), transparent 45%),
-    linear-gradient(116deg,
-      transparent 42%,
-      light-dark(rgb(255 255 255 / 0.28), rgb(255 255 255 / 0.04)) 52%,
-      transparent 60%);
+@utility raised {
+  --depth: raised;
+  background: var(--grad-surface);
+  border-radius: var(--raised-radius, calc(var(--ui-radius) * 2));
+  box-shadow: var(--raised-elev, var(--elev-1));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
+/* Laser-etched marking — a 1px light catch under the glyphs (light);
+   the groove reads as a shadow in dark. Texture only: pair it with a
+   text-* color utility (usually text-toned) — baking a color in here
+   would race core text-* utilities inside @layer utilities. */
+@utility etched {
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+/* Matte titanium sheen — a corner light-catch plus one faint glare
+   band, like a key light off bead-blasted metal. ::before so it
+   stacks with noise's ::after. */
+@utility sheen {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 18% -10%,
+        light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)), transparent 45%),
+      linear-gradient(116deg,
+        transparent 42%,
+        light-dark(rgb(255 255 255 / 0.28), rgb(255 255 255 / 0.04)) 52%,
+        transparent 60%);
+  }
+}
 /* A whisper of fractal noise to stop flat banding on big surfaces. */
-.noise { position: relative; }
-.noise::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.035;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+@utility noise {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 }
 
-/* ════════════════════════════════════════════════════════════════
-   DOCUS / NUXT UI — depth coat
-   ----------------------------------------------------------------
-   The docs theme is Nuxt UI. Rounder corners come from --ui-radius; here we
-   add tiny, top-left-lit elevation to the docs chrome. Selectors target Nuxt
-   UI's stable utility classes (the Docus header is the only `header.backdrop-blur`,
-   so it won't touch the homepage device's scoped <header>).
-   ════════════════════════════════════════════════════════════════ */
-
-/* ── THE GROUND ──────────────────────────────────────────────────
-   Depth design applied to the ground itself: the whole site — homepage
-   AND docs — sits on the titanium mill canvas, not on blank white/black.
-   Raised surfaces (cards, header, popovers) are then genuinely LIGHTER
-   than the ground in light mode (bead-blast #fafafa on mill #e8e8e8) and
-   lighter in dark too — physical elevation, not just borders.
-   These override Nuxt UI's `@layer theme` tokens (unlayered wins). */
-:root, .light {
-  --ui-bg: #e8e8e8;
-  --ui-bg-muted: #e0e0e0;
-  --ui-bg-elevated: #dcdcdc;
-  --ui-bg-accented: #d2d2d2;
-  --ui-border: rgb(0 0 0 / 0.08);
-  --ui-border-muted: rgb(0 0 0 / 0.06);
-  --ui-border-accented: rgb(0 0 0 / 0.13);
-}
-.dark {
-  --ui-bg: #161616;
-  --ui-bg-muted: #1d1d1d;
-  --ui-bg-elevated: #232323;
-  --ui-bg-accented: #2b2b2b;
-  --ui-border: rgb(255 255 255 / 0.07);
-  --ui-border-muted: rgb(255 255 255 / 0.05);
-  --ui-border-accented: rgb(255 255 255 / 0.13);
+/* -- Syntax-token vocabulary -------------------------------------
+   Hand-authored code snippets mark tokens with .tk-* spans at any
+   nesting depth; scoped to the [data-tokens] subtree. */
+@scope ([data-tokens]) {
+  .tk-k, .tk-t { color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300)); }
+  .tk-f { color: var(--ui-primary); font-weight: 600; }
+  .tk-n { color: var(--ui-primary); }
+  .tk-s { color: var(--ui-text-toned); }
+  .tk-c { color: var(--ui-text-muted); }
 }
 
-/* Header — a softly lifted bar. */
-header.backdrop-blur {
-  box-shadow: 0 1px 0 var(--edge), 0 6px 16px -14px rgb(0 0 0 / 0.5);
+/* -- Landing page-level rules (no owning component) ---------------
+   Applied via `class:` props in content/index.md. */
+/* Hero ground — brushed grain + a whisper of accent bloom. */
+.landing-hero-ground {
+  background-image:
+    radial-gradient(1000px 560px at 88% -10%,
+      light-dark(color-mix(in srgb, var(--color-signal-600) 12%, transparent),
+                 color-mix(in srgb, var(--color-signal-500) 20%, transparent)),
+      transparent 62%),
+    repeating-linear-gradient(180deg,
+      transparent 0 3px,
+      light-dark(rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.012)) 3px 4px);
+}
+/* The headline's second line — ink turned to heat. A class (not MDC
+   span utilities) because the gradient stops are light-dark() pairs,
+   and MDC's {.class} shorthand can't carry dark: variants. */
+.landing-hero-accent {
+  display: block;
+  background: linear-gradient(135deg,
+    light-dark(var(--color-signal-700), var(--color-signal-200)),
+    light-dark(var(--color-signal-600), var(--color-signal-400)) 55%,
+    light-dark(var(--color-signal-700), var(--color-signal-300)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+/* Scroll-driven section-header reveal (progressive enhancement). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .landing-reveal [data-slot="header"] {
+      animation: fade-up 1ms ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
 }
 
-/* The mark is two forms nested, not one silhouette — the Convex swirl sits in
-   the crook of the Nuxt peak at roughly a third of the height. Docus's default
-   `h-6` shrank the swirl to a smudge; a few more pixels is all it needs to
-   resolve, and the header bar has the room. */
-header.backdrop-blur a[aria-label] img {
-  height: 1.85rem;
-}
-
-/* Left sidebar + right TOC links: hover/active become depth pills. The link
-   ships a `::before` background layer (inset, z-[-1], rounded) we light up. */
-aside a { transition: color 0.18s var(--ease-out); }
-aside a:hover::before {
-  background: var(--surface);
-  box-shadow: var(--elev-0);
-}
-aside a.text-primary::before {
-  background: var(--grad-surface);
-  box-shadow: var(--elev-1);
-}
-
-/* Code blocks → carved wells. */
-pre.shiki {
-  border-radius: var(--r) !important;
-  border: 1px solid var(--edge);
-  box-shadow: var(--inset-1);
-}
-
-/* Inline code & kbd → tiny recessed chips. */
-:where(p, li, td, h1, h2, h3, h4, h5) > code {
-  box-shadow: var(--inset-sm);
-}
-kbd { box-shadow: var(--elev-0); }
-
-/* ── The search trigger → a CONCAVE well ─────────────────────────
-   It is a button technically, but every reading of it is a FIELD: it carries
-   placeholder text, it sits where a search input sits, and it opens straight
-   into one. Doming it fought that — a raised plate you type into makes no
-   physical sense. So it takes the well treatment: dished gradient, shade under
-   the top lip, light pooling at the floor. Hover deepens the dish rather than
-   lifting it; :active bottoms it out.
-
-   Nuxt UI's `bg-elevated` / `hover:bg-accented` utilities only set a flat
-   background-color; the opaque gradient layer here paints over them, so the
-   dish survives every state. Both triggers match: the wide desktop one and the
-   compact icon button that replaces it below `lg`.
-
-   No real border — the well's own inset rim IS the 1px edge, and it costs no
-   layout; an actual 1px border grew the control from 32px to 34px and pushed
-   it out of line with the icon buttons beside it. */
-header button:has(kbd),
-header [role="button"]:has(kbd) {
-  border: 0;
-  background: var(--grad-sink);
-  box-shadow: var(--inset-1);
-  transition: box-shadow var(--transition), color var(--transition);
-}
-header button:has(kbd):hover,
-header [role="button"]:has(kbd):hover {
-  box-shadow: var(--inset-2);
-}
-header button:has(kbd):active,
-header [role="button"]:has(kbd):active {
-  box-shadow: var(--inset-2), inset 0 3px 5px -2px rgb(0 0 0 / 0.12);
-}
-/* Match the site's focus ring rather than Nuxt UI's default outline. */
-header button:has(kbd):focus-visible,
-header [role="button"]:has(kbd):focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* ── The shortcut hint → ONE key cap ─────────────────────────────
-   Nuxt UI emits a separate <kbd> per key, so ⌘ and K arrived as two chips with
-   a seam between them. They are not two things to press in sequence — they are
-   one chord, and the label should read as one. The rim/fill moves up to the
-   wrapper and the individual caps go bare, so `⌘K` sits in a single cap.
-   Raised, because it names a key you press. */
-header :is(button, [role="button"]):has(kbd) > [data-slot="trailing"] {
-  gap: 0;
-  padding: 0 0.3rem;
-  border-radius: 5px;
-  background: var(--grad-surface);
-  box-shadow: var(--elev-0);
-}
-header :is(button, [role="button"]):has(kbd) kbd {
+/* -- Docus-skin remnant ------------------------------------------
+   Everything else is themed via app.config `ui.*` keys. Only this
+   stays: Nuxt UI emits one <kbd> per key inside the search trigger,
+   but CmdK is one chord — the trailing wrapper (styled via
+   ui.contentSearchButton.slots.trailing) becomes the single cap and
+   the individual caps go bare. No theme key reaches the nested UKbd
+   instances, hence CSS on the stable data-slot hook. */
+header [data-slot="trailing"] kbd {
   padding: 0;
   min-width: 0;
   border-radius: 0;
   background: none;
-  /* Kills Nuxt UI's per-cap `ring ring-inset ring-accented` — the seam. */
-  box-shadow: none;
+  box-shadow: none; /* kills the per-cap ring — the seam */
 }
-/* The ⌘ cap resolves to a wider glyph than K — nudge the pair apart optically
-   without reintroducing a seam. */
-header :is(button, [role="button"]):has(kbd) kbd:first-child:not(:last-child) {
+/* The Cmd glyph resolves wider than K — nudge the pair apart optically. */
+header [data-slot="trailing"] kbd:first-child:not(:last-child) {
   margin-inline-end: 0.05em;
-}
-
-/* MDC ::card / ::card-group tiles. This theme renders docs content WITHOUT a
-   `.prose` wrapper, so target Nuxt UI's card classes directly: a bordered,
-   rounded, surfaced block. Lift them a hair off the page; raise on hover so
-   the depth tracks the existing hover:border-primary affordance. */
-:where(a, div)[class*="border-default"][class*="rounded-md"][class*="bg-default"] {
-  /* On the titanium ground, raised tiles get the bead-blast surface —
-     lighter than the canvas, so the elevation is physical. */
-  background-color: var(--surface);
-  box-shadow: var(--elev-1);
-  transition: box-shadow var(--transition), border-color var(--transition),
-    background-color var(--transition);
-}
-:where(a, div)[class*="border-default"][class*="rounded-md"][class*="bg-default"]:hover {
-  box-shadow: var(--elev-2);
 }

@@ -30,134 +30,68 @@ async function submit() {
 
 <template>
   <PlaygroundDemo title="Live chat — useQuery + useMutation">
-    <div class="chat">
-      <p
-        v-if="messages === undefined"
-        class="chat-loading"
+    <p
+      v-if="messages === undefined"
+      class="m-0 mb-4 text-sm text-muted"
+    >
+      Loading messages…
+    </p>
+    <ul
+      v-else-if="messages.length > 0"
+      class="m-0 mb-4 flex max-h-56 list-none flex-col gap-1.5 overflow-y-auto p-0 text-sm text-default"
+    >
+      <li
+        v-for="message in messages"
+        :key="message._id"
       >
-        Loading messages…
-      </p>
-      <ul
-        v-else-if="messages.length > 0"
-        class="chat-list"
-      >
-        <li
-          v-for="message in messages"
-          :key="message._id"
-        >
-          <strong>{{ message.author }}</strong>: {{ message.body }}
-        </li>
-      </ul>
-      <p
-        v-else
-        class="chat-loading"
-      >
-        No messages yet — say something!
-      </p>
+        <strong>{{ message.author }}</strong>: {{ message.body }}
+      </li>
+    </ul>
+    <p
+      v-else
+      class="m-0 mb-4 text-sm text-muted"
+    >
+      No messages yet — say something!
+    </p>
 
-      <form
-        class="chat-form"
-        @submit.prevent="submit"
+    <form
+      class="flex flex-wrap gap-2"
+      @submit.prevent="submit"
+    >
+      <UInput
+        v-model="author"
+        placeholder="Name"
+        aria-label="Author"
+        class="w-32 flex-none"
+      />
+      <UInput
+        v-model="body"
+        placeholder="Message"
+        aria-label="Message"
+        class="min-w-32 flex-1"
+      />
+      <UButton
+        type="submit"
+        color="primary"
+        :loading="sending"
       >
-        <input
-          v-model="author"
-          class="chat-input chat-author"
-          placeholder="Name"
-          aria-label="Author"
-        >
-        <input
-          v-model="body"
-          class="chat-input"
-          placeholder="Message"
-          aria-label="Message"
-        >
-        <button
-          class="chat-button"
-          type="submit"
-          :disabled="sending"
-        >
-          {{ sending ? 'Sending…' : 'Send' }}
-        </button>
-        <button
-          class="chat-button chat-button-subtle"
-          type="button"
-          :disabled="!messages || messages.length === 0"
-          @click="clear({})"
-        >
-          Clear
-        </button>
-      </form>
-      <p
-        v-if="error"
-        class="chat-error"
+        Send
+      </UButton>
+      <UButton
+        type="button"
+        color="neutral"
+        variant="outline"
+        :disabled="!messages || messages.length === 0"
+        @click="clear({})"
       >
-        {{ error }}
-      </p>
-    </div>
+        Clear
+      </UButton>
+    </form>
+    <p
+      v-if="error"
+      class="m-0 mt-2 text-xs text-error"
+    >
+      {{ error }}
+    </p>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.chat-list {
-  max-height: 14rem;
-  overflow-y: auto;
-  margin: 0 0 1rem;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.chat-loading {
-  margin: 0 0 1rem;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.chat-form {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.chat-input {
-  flex: 1;
-  min-width: 8rem;
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg);
-  font-size: 0.875rem;
-}
-
-.chat-author {
-  flex: 0 1 8rem;
-}
-
-.chat-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.chat-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.chat-button-subtle {
-  color: var(--ui-text-muted);
-}
-
-.chat-error {
-  margin: 0.5rem 0 0;
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-</style>

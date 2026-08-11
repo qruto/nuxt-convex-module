@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Shared chrome for playground demos: frames the live example and surfaces the
 // WebSocket connection state so a stopped local deployment reads as "offline"
-// instead of a silently empty demo.
+// instead of a silently empty demo. Same material language as the homepage
+// bench: a raised plate with the demo seated in a recessed well.
 withDefaults(defineProps<{ title?: string }>(), { title: 'Demo' })
 
 const connectionState = useConvexConnectionState()
@@ -10,65 +11,22 @@ const isConnected = computed(() => connectionState.value.isWebSocketConnected)
 </script>
 
 <template>
-  <div class="playground-demo not-prose">
-    <div class="playground-demo-header">
-      <span class="playground-demo-title">{{ title }}</span>
+  <div class="plate sheen my-6">
+    <div class="flex items-center justify-between gap-4 px-4 pt-3 pb-2.5">
+      <span class="etched font-mono text-xs font-semibold tracking-[0.04em] text-toned">{{ title }}</span>
       <span
-        class="playground-demo-status"
-        :data-connected="isConnected"
+        class="inline-flex flex-none items-center gap-1.5 font-mono text-[0.65rem] font-semibold tracking-[0.13em]"
+        :class="isConnected ? 'text-toned' : 'text-dimmed'"
       >
-        <span class="playground-demo-status-dot" />
-        {{ isConnected ? 'Live' : 'Offline' }}
+        <span
+          class="size-1.5 rounded-full"
+          :class="isConnected ? 'bg-success shadow-(--glow-success)' : 'bg-error'"
+        />
+        {{ isConnected ? 'LIVE' : 'OFFLINE' }}
       </span>
     </div>
-    <div class="playground-demo-body">
+    <div class="well mx-3 mb-3 p-4 [--well-radius:14px]">
       <slot />
     </div>
   </div>
 </template>
-
-<style scoped>
-.playground-demo {
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius, 0.5rem);
-  margin: 1rem 0;
-  overflow: hidden;
-}
-
-.playground-demo-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--ui-border);
-  background: var(--ui-bg-muted);
-  font-size: 0.875rem;
-}
-
-.playground-demo-title {
-  font-weight: 600;
-}
-
-.playground-demo-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--ui-text-muted);
-  font-size: 0.75rem;
-}
-
-.playground-demo-status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: var(--ui-color-error-500, #ef4444);
-}
-
-.playground-demo-status[data-connected='true'] .playground-demo-status-dot {
-  background: var(--ui-color-success-500, #22c55e);
-}
-
-.playground-demo-body {
-  padding: 1rem;
-}
-</style>

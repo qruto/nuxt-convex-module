@@ -1,10 +1,14 @@
-import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent } from '#app'
+import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent, useRuntimeConfig } from '#app'
 import { watch } from 'vue'
 import { useAuth } from '../vue/use-auth'
 import { convexAuth } from './server'
 
 /**
  * Auth route middleware — protects pages from unauthenticated access.
+ *
+ * Unauthenticated visitors are sent to the configured login route
+ * (`convex.betterAuth.loginPath`, default `/login`) with the original
+ * destination in a `?redirect=` query.
  *
  * Usage in page:
  * ```vue
@@ -14,8 +18,17 @@ import { convexAuth } from './server'
  * ```
  */
 
+interface GuardedRoute {
+  path: string
+  fullPath: string
+}
+
+function loginTarget(to: GuardedRoute, loginPath: string) {
+  return { path: loginPath, query: { redirect: to.fullPath } }
+}
+
 /** Exported for unit tests — `import.meta.server` is compile-time. @internal */
-export async function serverGuard(path: string) {
+export async function serverGuard(to: GuardedRoute, loginPath: string) {
   const event = useRequestEvent()
   if (!event) return
   // Capture the Nuxt app *before* the await — awaiting loses the async context,
@@ -23,8 +36,8 @@ export async function serverGuard(path: string) {
   // it with runWithContext so the server-side redirect works on direct loads.
   const nuxtApp = useNuxtApp()
   const authed = await convexAuth(event).isAuthenticated()
-  if (!authed && path !== '/login') {
-    return nuxtApp.runWithContext(() => navigateTo('/login'))
+  if (!authed && to.path !== loginPath) {
+    return nuxtApp.runWithContext(() => navigateTo(loginTarget(to, loginPath)))
   }
 }
 
@@ -47,8 +60,10 @@ function waitForSession(isPending: () => boolean) {
 }
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  const loginPath = useRuntimeConfig().public.convex.loginPath || '/login'
+
   if (import.meta.server) {
-    return serverGuard(to.path)
+    return serverGuard(to, loginPath)
   }
 
   const { session } = useAuth()
@@ -57,7 +72,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   // Same self-redirect guard as the server branch.
-  if (!session.value.data && to.path !== '/login') {
-    return navigateTo('/login')
+  if (!session.value.data && to.path !== loginPath) {
+    return navigateTo(loginTarget(to, loginPath))
   }
 })

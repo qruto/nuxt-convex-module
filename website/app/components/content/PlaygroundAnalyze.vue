@@ -37,26 +37,26 @@ async function submit() {
 
 <template>
   <PlaygroundDemo title="Text analysis — useAction">
-    <div class="analyze">
-      <textarea
+    <div class="flex flex-col gap-3">
+      <UTextarea
         v-model="input"
-        class="analyze-input"
-        rows="3"
+        :rows="3"
         placeholder="Paste or type some text to analyze…"
         aria-label="Text to analyze"
+        class="w-full"
       />
-      <div class="analyze-actions">
-        <button
-          class="analyze-button"
+      <div class="flex flex-wrap items-center gap-3">
+        <UButton
           type="button"
-          :disabled="analyzing"
+          color="primary"
+          :loading="analyzing"
           @click="submit"
         >
-          {{ analyzing ? 'Analyzing…' : 'Analyze' }}
-        </button>
+          Analyze
+        </UButton>
         <span
           v-if="analyzing"
-          class="analyze-pending"
+          class="text-xs text-muted"
         >
           Running in the Node runtime…
         </span>
@@ -64,23 +64,40 @@ async function submit() {
 
       <dl
         v-if="result && !analyzing"
-        class="analyze-stats"
+        class="m-0 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2"
       >
-        <div class="analyze-stat">
-          <dt>Characters</dt>
-          <dd>{{ result.characters }}</dd>
+        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+          <dt class="text-xs text-muted">
+            Characters
+          </dt>
+          <dd class="m-0 mt-0.5 text-sm font-semibold text-default tabular-nums">
+            {{ result.characters }}
+          </dd>
         </div>
-        <div class="analyze-stat">
-          <dt>Words</dt>
-          <dd>{{ result.words }}</dd>
+        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+          <dt class="text-xs text-muted">
+            Words
+          </dt>
+          <dd class="m-0 mt-0.5 text-sm font-semibold text-default tabular-nums">
+            {{ result.words }}
+          </dd>
         </div>
-        <div class="analyze-stat">
-          <dt>Longest word</dt>
-          <dd>{{ result.longestWord || '—' }}</dd>
+        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+          <dt class="text-xs text-muted">
+            Longest word
+          </dt>
+          <dd class="m-0 mt-0.5 wrap-anywhere text-sm font-semibold text-default">
+            {{ result.longestWord || '—' }}
+          </dd>
         </div>
-        <div class="analyze-stat">
-          <dt>SHA-256</dt>
-          <dd :title="result.sha256">
+        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+          <dt class="text-xs text-muted">
+            SHA-256
+          </dt>
+          <dd
+            class="m-0 mt-0.5 wrap-anywhere font-mono text-sm font-semibold text-default"
+            :title="result.sha256"
+          >
             {{ result.sha256.slice(0, 16) }}…
           </dd>
         </div>
@@ -88,88 +105,10 @@ async function submit() {
 
       <p
         v-if="error"
-        class="analyze-error"
+        class="m-0 text-xs text-error"
       >
         {{ error }}
       </p>
     </div>
   </PlaygroundDemo>
 </template>
-
-<style scoped>
-.analyze {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.analyze-input {
-  width: 100%;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg);
-  font-size: 0.875rem;
-  font-family: inherit;
-  resize: vertical;
-}
-
-.analyze-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.analyze-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.analyze-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.analyze-pending {
-  color: var(--ui-text-muted);
-  font-size: 0.8125rem;
-}
-
-.analyze-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 0.5rem;
-  margin: 0;
-}
-
-.analyze-stat {
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-muted);
-}
-
-.analyze-stat dt {
-  color: var(--ui-text-muted);
-  font-size: 0.75rem;
-}
-
-.analyze-stat dd {
-  margin: 0.125rem 0 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-.analyze-error {
-  margin: 0;
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-</style>

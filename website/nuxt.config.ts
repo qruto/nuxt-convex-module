@@ -1,5 +1,3 @@
-import { getRandomPort } from 'get-port-please'
-
 // The playground runs against a local anonymous Convex deployment
 // (`npx convex dev` in this directory). The Convex CLI stores its URLs in
 // `.env.local`, which Nuxt doesn't load on its own — surface them here.
@@ -16,14 +14,6 @@ catch {
 // theme, Nuxt Content, search, and SEO; `nuxt-convex-module` is installed so the
 // composables/components are available to live examples.
 
-// Nuxt CLI normally pins Vite's HMR WebSocket to the main dev server so no
-// separate port is used. Under `portless` (our dev script) that pin doesn't
-// hold, so Vite falls back to a standalone HMR socket on its fixed default port
-// 24678 — and every Nuxt dev server then fights over it ("Port 24678 is already
-// in use"). Hand the client HMR socket its own free port instead so parallel
-// dev servers coexist. See the `vite:extendConfig` hook below.
-const hmrPort = await getRandomPort()
-
 export default defineNuxtConfig({
   extends: ['docus'],
   modules: [
@@ -34,24 +24,21 @@ export default defineNuxtConfig({
     head: {
       meta: [
         { name: 'color-scheme', content: 'light dark' },
-        { name: 'theme-color', content: '#161616', media: '(prefers-color-scheme: dark)' },
-        { name: 'theme-color', content: '#e8e8e8', media: '(prefers-color-scheme: light)' },
+        // Ground tones — Nuxt UI neutral-900 / neutral-200 (see app.css).
+        { name: 'theme-color', content: '#171717', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#e5e5e5', media: '(prefers-color-scheme: light)' },
         { name: 'apple-mobile-web-app-title', content: 'Nuxt Convex' },
       ],
-      // Favicon set generated from the Nuxt × Convex mark via RealFaviconGenerator's
-      // engine (`@realfavicongenerator/generate-favicon`). Assets live in `public/`.
+      // Favicon set rasterised from the Nuxt × Convex mark (`public/logo.svg`).
+      // Tab icons are pre-rendered PNG/ICO on a transparent background — no SVG
+      // favicon: browsers rasterise the mark's gradients/filters poorly at 16px.
+      // Fonts have no <link>s: @nuxt/fonts (auto-registered by Nuxt UI)
+      // self-hosts every family named in app.css's `@theme` --font-* vars.
       link: [
         { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' },
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'shortcut icon', href: '/favicon.ico' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
-        },
       ],
     },
   },
@@ -65,21 +52,19 @@ export default defineNuxtConfig({
   },
   compatibilityDate: 'latest',
   hooks: {
-    // Runs after Nuxt CLI's `vite:extend` HMR pin, so this wins. A plain port
-    // number (unlike a live server object) survives Vite's config resolution,
-    // giving the client its own standalone HMR socket on a free port.
+    // Client HMR needs NO override: Nuxt CLI pins the HMR WebSocket to the
+    // main dev server (verified: no standalone HMR port is ever bound), so
+    // the browser's derived default — wss://<page-host>/_nuxt/ — goes through
+    // the portless https proxy to the main server, which upgrades it. Any
+    // `server.hmr = { port }` override only re-points the CLIENT at a port
+    // nothing listens on, killing HMR and Nuxt DevTools (its RPC rides the
+    // same hot channel → "Disconnected from Server").
     'vite:extendConfig'(config, { isClient }) {
-      if (!config.server) return
-      if (isClient) {
-        // Client HMR: use our own free port instead of the shared default.
-        config.server.hmr = { port: hmrPort }
-      }
-      else {
-        // The SSR vite-node server has HMR disabled but still opens a WebSocket
-        // on the default 24678 unless `ws` is turned off explicitly — turn it
-        // off so it doesn't collide with other Nuxt dev servers.
-        config.server.ws = false
-      }
+      if (!config.server || isClient) return
+      // The SSR vite-node server has HMR disabled but still opens a WebSocket
+      // on the default 24678 unless `ws` is turned off explicitly — turn it
+      // off so parallel Nuxt dev servers don't fight over that port.
+      config.server.ws = false
     },
   },
   // The playground pages run against the local anonymous Convex deployment.

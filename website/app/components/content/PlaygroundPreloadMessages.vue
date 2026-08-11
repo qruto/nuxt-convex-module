@@ -36,10 +36,10 @@ async function submit() {
 </script>
 
 <template>
-  <div class="preload">
+  <div>
     <ul
       v-if="messages && messages.length > 0"
-      class="preload-list"
+      class="m-0 mb-4 flex max-h-56 list-none flex-col gap-1.5 overflow-y-auto p-0 text-sm text-default"
     >
       <li
         v-for="message in messages"
@@ -50,103 +50,40 @@ async function submit() {
     </ul>
     <p
       v-else
-      class="preload-empty"
+      class="m-0 mb-4 text-sm text-muted"
     >
       No messages yet — send one below.
     </p>
 
     <form
-      class="preload-form"
+      class="flex flex-wrap gap-2"
       @submit.prevent="submit"
     >
-      <input
+      <UInput
         v-model="body"
-        class="preload-input"
         placeholder="Message"
         aria-label="Message"
-      >
-      <button
-        class="preload-button"
+        class="min-w-32 flex-1"
+      />
+      <UButton
         type="submit"
-        :disabled="sending"
+        color="primary"
+        :loading="sending"
       >
-        {{ sending ? 'Sending…' : 'Send' }}
-      </button>
+        Send
+      </UButton>
     </form>
     <p
       v-if="error"
-      class="preload-error"
+      class="m-0 mt-2 text-xs text-error"
     >
       {{ error }}
     </p>
 
-    <p class="preload-meta">
-      One-shot <code>fetchQuery</code> count at render time: {{ serverCount }}
+    <p class="m-0 mt-3 text-xs text-muted">
+      One-shot <ProseCode>fetchQuery</ProseCode> count at render time: {{ serverCount }}
       · live list now: {{ messages?.length ?? 0 }}.
       Send a message — only the live number moves.
     </p>
   </div>
 </template>
-
-<style scoped>
-.preload-list {
-  max-height: 14rem;
-  overflow-y: auto;
-  margin: 0 0 1rem;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.preload-empty {
-  margin: 0 0 1rem;
-  color: var(--ui-text-muted);
-  font-size: 0.875rem;
-}
-
-.preload-form {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.preload-input {
-  flex: 1;
-  min-width: 8rem;
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg);
-  font-size: 0.875rem;
-}
-
-.preload-button {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.375rem;
-  background: var(--ui-bg-elevated);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.preload-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.preload-error {
-  margin: 0.5rem 0 0;
-  color: var(--ui-color-error-500, #ef4444);
-  font-size: 0.8125rem;
-}
-
-.preload-meta {
-  margin: 0.75rem 0 0;
-  color: var(--ui-text-muted);
-  font-size: 0.8125rem;
-}
-</style>

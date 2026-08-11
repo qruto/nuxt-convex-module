@@ -38,6 +38,13 @@ export interface BetterAuthModuleOptions {
    * `ConvexBetterAuthProvider`.
    */
   crossDomainCallbackRoute?: string
+  /**
+   * Route the `auth` middleware sends unauthenticated visitors to (and never
+   * redirects away from, to avoid a self-redirect loop). The original
+   * destination is appended as a `?redirect=` query so the login page can
+   * return the visitor after sign-in. Defaults to `/login`.
+   */
+  loginPath?: string
 }
 
 export interface ModuleOptions {
@@ -87,6 +94,7 @@ declare module '@nuxt/schema' {
       url: string
       siteUrl: string
       crossDomainCallbackRoute: string
+      loginPath: string
     }
   }
 }
@@ -433,6 +441,9 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
   const crossDomainCallbackRoute
     = (typeof options.betterAuth === 'object' && options.betterAuth.crossDomainCallbackRoute) || ''
 
+  const loginPath
+    = (typeof options.betterAuth === 'object' && options.betterAuth.loginPath) || '/login'
+
   // Publish the resolved convex url/siteUrl while preserving any sibling keys a
   // user already set, instead of overwriting the whole `convex` object.
   //
@@ -449,6 +460,7 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     url: url || '',
     siteUrl,
     crossDomainCallbackRoute,
+    loginPath,
   }
   runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
