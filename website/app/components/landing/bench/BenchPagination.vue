@@ -1,36 +1,55 @@
 <script setup lang="ts">
-import LoadoutStation from './LoadoutStation.vue'
+import BenchPlate from './BenchPlate.vue'
 
-// Pagination: cursor pages of 3, exhausted at 9.
+// Pagination: cursor pages of 3, exhausted at 9 — the recording pages the
+// table to the end, rests, and rewinds.
+const props = defineProps<{ initialDelay?: number }>()
+
 const PAGE = 3
 const TOTAL = 9
 const loaded = ref(PAGE)
 const pageStatus = computed(() => loaded.value >= TOTAL ? 'Exhausted' : 'CanLoadMore')
+
 function loadMoreDemo() {
   loaded.value = Math.min(loaded.value + PAGE, TOTAL)
 }
+
+const plate = ref<{ $el: HTMLElement } | null>(null)
+const root = computed(() => plate.value?.$el ?? null)
+useDemoScript(root, async ({ wait }) => {
+  await wait(600)
+  loadMoreDemo()
+  await wait(1200)
+  loadMoreDemo()
+  await wait(2000)
+  loaded.value = PAGE
+}, {
+  loop: true,
+  initialDelay: props.initialDelay,
+  reducedMotion: () => {
+    loaded.value = TOTAL
+  },
+})
 </script>
 
 <template>
-  <LoadoutStation
+  <BenchPlate
+    ref="plate"
+    label="PAGINATION"
+    stamp="usePaginatedQuery"
     title="Cursor pagination"
     readout-label="results · status"
   >
     <template #body>
-      <ProseCode>usePaginatedQuery</ProseCode> pages by cursor and
-      tells you when the table is exhausted.
+      <code class="font-mono text-[0.92em] text-highlighted">usePaginatedQuery</code>
+      pages by cursor and tells you when the table is exhausted.
     </template>
     <template #code>
-      <pre
-        data-tokens
-        class="well m-0 overflow-x-auto px-4 py-3.5 font-mono text-[0.76rem] leading-[1.8] whitespace-pre text-highlighted"
-      ><code><span class="tk-k">const</span> { results, status, loadMore } =
-  <span class="tk-f">usePaginatedQuery</span>(api.messages.list, {},
-    { initialNumItems: <span class="tk-n">3</span> })</code></pre>
+      <slot name="code" />
     </template>
     <template #readout>
       <ul
-        class="m-0 flex list-none flex-wrap gap-1.5 p-0 font-mono text-xs"
+        class="m-0 flex min-h-[3.4rem] list-none content-start flex-wrap gap-1.5 p-0 font-mono text-xs"
         aria-live="polite"
       >
         <li
@@ -57,5 +76,5 @@ function loadMoreDemo() {
         >{{ pageStatus }}</span>
       </div>
     </template>
-  </LoadoutStation>
+  </BenchPlate>
 </template>

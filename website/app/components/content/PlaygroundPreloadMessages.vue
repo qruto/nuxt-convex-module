@@ -27,7 +27,9 @@ async function submit() {
     body.value = ''
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
+    // Moderation and rate-limit rejections arrive as ConvexError payloads —
+    // render the reason, not the raw server-error dump.
+    error.value = demoRejectionReason(e)
   }
   finally {
     sending.value = false

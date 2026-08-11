@@ -1,9 +1,35 @@
 <script setup lang="ts">
-import LoadoutStation from './LoadoutStation.vue'
+import BenchPlate from './BenchPlate.vue'
 
-// Files: progress ticks up, then a storage ID lands.
+// File storage: progress ticks up an inset track, then a storage ID lands.
+const props = defineProps<{ initialDelay?: number }>()
+
+const STORAGE_ID = 'kg24d8mn7apf…9d1'
 const uploadPct = ref<number | null>(null)
 const storageId = ref('')
+
+const plate = ref<{ $el: HTMLElement } | null>(null)
+const root = computed(() => plate.value?.$el ?? null)
+useDemoScript(root, async ({ wait }) => {
+  await wait(400)
+  storageId.value = ''
+  uploadPct.value = 0
+  while ((uploadPct.value ?? 0) < 100) {
+    await wait(70)
+    uploadPct.value = Math.min((uploadPct.value ?? 0) + 9, 100)
+  }
+  storageId.value = STORAGE_ID
+  await wait(2000)
+}, {
+  loop: true,
+  initialDelay: props.initialDelay,
+  reducedMotion: () => {
+    uploadPct.value = 100
+    storageId.value = STORAGE_ID
+  },
+})
+
+// The manual control drives the same refs the recording does.
 let uploadTimer: ReturnType<typeof setInterval> | undefined
 function uploadDemo() {
   if (uploadTimer) return
@@ -15,7 +41,7 @@ function uploadDemo() {
     if (uploadPct.value === 100) {
       clearInterval(uploadTimer)
       uploadTimer = undefined
-      storageId.value = 'kg24d8mn7apf…9d1'
+      storageId.value = STORAGE_ID
     }
   }, 70)
 }
@@ -25,22 +51,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <LoadoutStation
+  <BenchPlate
+    ref="plate"
+    label="FILES"
+    stamp="useUpload"
     title="File storage"
     readout-label="progress · storageId"
   >
     <template #body>
-      <ProseCode>useUpload</ProseCode> tracks progress and hands back a
-      storage ID; <ProseCode>useStorageUrl</ProseCode> resolves it to a URL.
-      <ProseCode>useUploadQueue</ProseCode> does the same for many files.
+      <code class="font-mono text-[0.92em] text-highlighted">useUpload</code>
+      tracks progress and hands back a storage ID;
+      <code class="font-mono text-[0.92em] text-highlighted">useStorageUrl</code>
+      resolves it to a URL.
     </template>
     <template #code>
-      <pre
-        data-tokens
-        class="well m-0 overflow-x-auto px-4 py-3.5 font-mono text-[0.76rem] leading-[1.8] whitespace-pre text-highlighted"
-      ><code><span class="tk-k">const</span> { upload, progress } =
-  <span class="tk-f">useUpload</span>(api.files.generateUploadUrl)
-<span class="tk-k">const</span> storageId = <span class="tk-k">await</span> <span class="tk-f">upload</span>(file)</code></pre>
+      <slot name="code" />
     </template>
     <template #readout>
       <!-- Upload progress — an inset track with an accent fill. -->
@@ -65,5 +90,5 @@ onUnmounted(() => {
         >{{ storageId }}</span>
       </div>
     </template>
-  </LoadoutStation>
+  </BenchPlate>
 </template>

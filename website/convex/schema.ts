@@ -19,4 +19,10 @@ export default defineSchema({
     type: v.string(),
     size: v.number(),
   }),
+  // One row per guarded operation (e.g. `messages.clear`) — the timestamp
+  // gate that keeps destructive public mutations from being spammed.
+  meta: defineTable({
+    key: v.string(),
+    at: v.number(),
+  }).index('by_key', ['key']),
 })

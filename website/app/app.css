@@ -336,17 +336,6 @@ a, button, summary, [role="button"], label { touch-action: manipulation; }
   }
 }
 
-/* -- Syntax-token vocabulary -------------------------------------
-   Hand-authored code snippets mark tokens with .tk-* spans at any
-   nesting depth; scoped to the [data-tokens] subtree. */
-@scope ([data-tokens]) {
-  .tk-k, .tk-t { color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300)); }
-  .tk-f { color: var(--ui-primary); font-weight: 600; }
-  .tk-n { color: var(--ui-primary); }
-  .tk-s { color: var(--ui-text-toned); }
-  .tk-c { color: var(--ui-text-muted); }
-}
-
 /* -- Landing page-level rules (no owning component) ---------------
    Applied via `class:` props in content/index.md. */
 /* Hero ground — brushed grain + a whisper of accent bloom. */
@@ -354,7 +343,7 @@ a, button, summary, [role="button"], label { touch-action: manipulation; }
   background-image:
     radial-gradient(1000px 560px at 88% -10%,
       light-dark(color-mix(in srgb, var(--color-signal-600) 12%, transparent),
-                 color-mix(in srgb, var(--color-signal-500) 20%, transparent)),
+                 color-mix(in srgb, var(--color-signal-500) 10%, transparent)),
       transparent 62%),
     repeating-linear-gradient(180deg,
       transparent 0 3px,
@@ -383,6 +372,24 @@ a, button, summary, [role="button"], label { touch-action: manipulation; }
       animation-range: entry 0% entry 35%;
     }
   }
+}
+/* Scripted-recording caret — code-reveal.ts hangs this class on the token
+   span owning the last revealed character. It only exists while a demo
+   script is mid-keystroke, so reduced-motion visitors never see one. */
+.demo-caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.06em;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--color-signal-500);
+  animation: demo-caret-blink 1.1s linear infinite;
+}
+@keyframes demo-caret-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0.12; }
 }
 
 /* -- Docus-skin remnant ------------------------------------------

@@ -1,10 +1,10 @@
 ---
 seo:
   title: Convex for Vue & Nuxt
-  description: The Convex client for Vue and Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment, with opt-in Better Auth and Polar.
+  description: The Convex client for Vue and Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment.
 ---
 
-::u-page-hero
+:::u-page-hero
 ---
 orientation: horizontal
 class: "landing-hero-ground border-b border-default"
@@ -28,7 +28,43 @@ links:
     color: neutral
     variant: link
 ---
-:landing-hero-panel
+::landing-hero-panel
+```ts
+const { data } = await useAsyncQuery(
+  api.messages.list,
+)
+```
+
+```ts
+const send =
+  useMutation(api.messages.send)
+
+await send({ body: 'hi, realtime' })
+```
+
+```ts
+const { results, loadMore } =
+  usePaginatedQuery(api.messages.list,
+    {}, { initialNumItems: 3 })
+```
+
+```ts
+const { upload, progress } =
+  useUpload(api.files.generateUploadUrl)
+
+const id = await upload(file)
+```
+
+```ts
+import { api } from '#convex/api'
+
+const { data } = await useAsyncQuery(
+  api.messages.list,
+)
+const send =
+  useMutation(api.messages.send)
+```
+::
 
 #title
 Convex for Vue & Nuxt, [machined to match upstream.]{.landing-hero-accent}
@@ -36,62 +72,105 @@ Convex for Vue & Nuxt, [machined to match upstream.]{.landing-hero-accent}
 #description
 The Convex client for Vue and Nuxt — reactive live queries, mutations,
 actions, cursor pagination, file storage and SSR, auto-imported and typed
-against your deployment. Better Auth and Polar wire themselves up when
-installed.
+against your deployment.
 
-[NUXT ≥ 4.1 · CONVEX 1.42]{.font-mono .etched .text-toned .text-xs .font-semibold .tracking-widest}
-::
+:landing-version-chip[NUXT ≥ 4.1 · CONVEX 1.42]
+:::
 
 ::u-page-section
+---
+id: spec
+class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
+headline: "01 · SPEC SHEET"
+title: Everything the client ships
+---
+#description
+The whole surface on one plate — every mechanism the client ships, each with
+its own working illustration. Every card links to the page that proves it.
+
+#body
+:landing-spec-sheet
+::
+
+:::u-page-section
 ---
 id: operation
 class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "01 · LIVE OPERATION"
+headline: "02 · LIVE OPERATION"
 title: One table, every client
 ---
 #description
-Nothing below is mocked. Each pane is its own component opening its own
-`useQuery` against a real Convex deployment — no props between them, no
-refetch, no cache keys. Send from either side and both lists move on the
-same tick. Open this page in a second tab and it moves there too.
+The sync loop, staged: two clients, one `useQuery` subscription each, no
+props between them — a write from either side lands in both panes on the
+same commit. The recording drives itself and loops; touch anything and the
+controls are yours. Simulated in-page with zero network — the hero above
+and the [playground](/playground) run the real thing.
 
 #body
-:landing-demo
-::
+::landing-operation
+```ts
+const { data } =
+  useQuery(api.messages.list)
+```
 
-::u-page-section
+```ts
+const send =
+  useMutation(api.messages.send)
+
+await send({
+  author: 'client-a',
+  body: 'hello from A',
+})
+```
+
+```ts
+await send({
+  author: 'client-b',
+  body: 'hello back from B',
+})
+```
+::
+:::
+
+:::u-page-section
 ---
-class: "landing-reveal border-b border-default"
-headline: "02 · PARITY"
-title: The API you already know
+id: bench
+class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
+headline: "03 · BENCH TESTS"
+title: Three mechanisms on replay
 ---
 #description
-Same names, same arguments, same return shapes as Convex's official
-clients — so Convex's own docs and examples translate line for line, and
-the data layer reads identically in either framework.
+Optimistic writes, cursor pagination, file upload — looping readouts,
+simulated in-page with zero network. The [playground](/playground) runs
+them against a real deployment.
 
 #body
-:landing-parity
+::landing-bench
+```ts
+const send = useMutation(api.messages.send)
+  .withOptimisticUpdate((store, { body }) => {
+    // render the write before the commit
+  })
+```
+
+```ts
+const { results, status, loadMore } =
+  usePaginatedQuery(api.messages.list, {},
+    { initialNumItems: 3 })
+```
+
+```ts
+const { upload, progress } =
+  useUpload(api.files.generateUploadUrl)
+const storageId = await upload(file)
+```
 ::
+:::
 
-::u-page-section
+:::u-page-section
 ---
-class: "landing-reveal border-b border-default"
-headline: "03 · LOADOUT"
-title: The whole kit, demonstrated
----
-#description
-Every surface of the client with a working readout. The readouts here are
-simulated in-page — the [playground](/playground) runs them against a real
-deployment.
-
-#body
-:landing-loadout
-::
-
-::u-page-section
----
-class: "landing-reveal"
+id: deploy
+class: "landing-reveal scroll-mt-(--ui-header-height)"
 headline: "04 · DEPLOYMENT"
 title: In your pocket in three moves
 links:
@@ -105,5 +184,17 @@ links:
     variant: outline
 ---
 #body
-:landing-deploy
+::landing-deploy
+```bash
+npx nuxi module add nuxt-convex-module
+```
+
+```bash
+NUXT_PUBLIC_CONVEX_URL=https://…
+```
+
+```bash
+npx convex dev
+```
 ::
+:::
