@@ -1,0 +1,178 @@
+/* ================================================================
+   THEME — palette, type, motion
+   ----------------------------------------------------------------
+   The design tokens, deliberately NOT @theme: docus 5.12.3 splices
+   app.css into the compiled Tailwind output via a trailing @import
+   (after other rules), so `@theme` blocks authored anywhere down this
+   import chain are never consumed — they reach the browser as dead
+   unknown at-rules (verified against the served CSS; the old
+   tokens.css hit the same wall). `@utility` definitions and Tailwind's
+   `--alpha()` / `--spacing()` functions DO compile.
+
+   Until that's fixed upstream, tokens are plain unlayered :root custom
+   properties: they override Tailwind's layered defaults (--font-sans,
+   --ease-out), the Nuxt UI runtime bridge (--ui-color-primary-* ->
+   var(--color-signal-*, )) resolves them, and @nuxt/fonts scans any
+   --font* declaration. The few utilities whose @theme keys would have
+   generated them get shims at the bottom of this file.
+   ================================================================ */
+
+:root {
+  /* Hi-vis signal orange (RAL 2010 family) — the brand ramp.
+     app.config `ui.colors.primary/info: 'signal'` bridges it to
+     --ui-color-primary-* at runtime.
+
+     Authored in OKLCH, which is where this ramp is actually designed:
+     lightness and hue are the ramp's identity and stay fixed across BOTH
+     definitions below; only chroma moves. These values round-trip to the
+     old hexes byte for byte (#fff4ed … #441305) — they ARE the sRGB ramp,
+     just written where the geometry is legible. */
+  --color-signal-50:  oklch(97.38% 0.015 54.75);
+  --color-signal-100: oklch(94.07% 0.0356 56.39);
+  --color-signal-200: oklch(87.42% 0.0747 49.94);
+  --color-signal-300: oklch(79.62% 0.1264 46.68);
+  --color-signal-400: oklch(71.05% 0.1872 38.87);
+  --color-signal-500: oklch(68.24% 0.2107 37.69);
+  --color-signal-600: oklch(63.23% 0.2172 35.1);
+  --color-signal-700: oklch(54.55% 0.1893 34.63);
+  --color-signal-800: oklch(46.45% 0.1546 34.42);
+  --color-signal-900: oklch(40.24% 0.126 35.1);
+  --color-signal-950: oklch(26.61% 0.0792 36.77);
+
+  /* Site motion curve — replaces Tailwind's --ease-out, so the
+     `ease-out` utility and plain var(--ease-out) both get it. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --animate-fade-up: fade-up 0.5s var(--ease-out) both;
+  --animate-pulse-ring: pulse-ring 2.4s ease-in-out infinite;
+  --animate-row-land: row-land 0.9s var(--ease-out) both;
+}
+
+/* Wide gamut — the same ramp, off the leash. sRGB clips this hue hard: every
+   step from 50 to 500 sits EXACTLY on the sRGB boundary (they were built from
+   #ff…), so the orange we ship is the most orange that container allows, not
+   the most orange the screen can throw. On a P3 display each step keeps its
+   lightness and hue and takes the same fraction of the WIDER gamut it held of
+   the narrower one — +12% chroma through the deep end, +27% through the
+   tints. Same ramp, more voltage.
+
+   Declared behind (color-gamut: p3) rather than as bare out-of-gamut oklch on
+   purpose: gamut MAPPING back down to sRGB is the browser's choice of
+   algorithm and drifts between engines, while these two ramps are both exact.
+   Everything downstream — --ui-primary, the glows, --grad-accent — is
+   color-mix()'d off these tokens, so the whole accent system moves with it. */
+@media (color-gamut: p3) {
+  :root {
+    --color-signal-50:  oklch(97.38% 0.0191 54.75);
+    --color-signal-100: oklch(94.07% 0.0452 56.39);
+    --color-signal-200: oklch(87.42% 0.095 49.94);
+    --color-signal-300: oklch(79.62% 0.1601 46.68);
+    --color-signal-400: oklch(71.05% 0.2359 38.87);
+    --color-signal-500: oklch(68.24% 0.2522 37.69);
+    --color-signal-600: oklch(63.23% 0.2443 35.1);
+    --color-signal-700: oklch(54.55% 0.2128 34.63);
+    --color-signal-800: oklch(46.45% 0.1738 34.42);
+    --color-signal-900: oklch(40.24% 0.1417 35.1);
+    --color-signal-950: oklch(26.61% 0.0893 36.77);
+  }
+}
+
+/* -- The spectrum bands ------------------------------------------
+   The signal put through a prism. Section 01 color-codes each shipped
+   mechanism with its own band — spec-sheet marking, one hue per card —
+   while signal orange stays the only brand voice everywhere else.
+
+   Same authoring discipline as the ramp above: lightness and hue are a
+   band's identity (57% on the light scheme, 75% on the dark — both
+   faces of every light-dark() pair below), only chroma moves between
+   the two definitions. One exception, checked on screen: gold turns
+   olive below ~60% L, so its light face sits at 61%. Base values sit
+   safely inside sRGB, the (color-gamut: p3) set safely inside P3 —
+   both exact, so no browser ever gamut-maps them. Chroma is ~90% of
+   each gamut's boundary at that L/H (computed, not eyeballed), capped
+   at 0.15 so no band shouts the others down; the P3 pass is where the
+   wide gamut pays: green +39%, teal +35%, cyan +34%, magenta +27%. */
+:root {
+  --color-spectrum-gold:    light-dark(oklch(61% 0.112 88),  oklch(75% 0.138 88));
+  --color-spectrum-green:   light-dark(oklch(57% 0.14 145),  oklch(75% 0.15 145));
+  --color-spectrum-emerald: light-dark(oklch(57% 0.12 158),  oklch(75% 0.15 158));
+  --color-spectrum-teal:    light-dark(oklch(57% 0.094 178), oklch(75% 0.124 178));
+  --color-spectrum-cyan:    light-dark(oklch(57% 0.088 205), oklch(75% 0.115 205));
+  --color-spectrum-azure:   light-dark(oklch(57% 0.14 252),  oklch(75% 0.119 252));
+  --color-spectrum-violet:  light-dark(oklch(57% 0.15 295),  oklch(75% 0.13 295));
+  --color-spectrum-magenta: light-dark(oklch(57% 0.15 335),  oklch(75% 0.15 335));
+}
+@media (color-gamut: p3) {
+  :root {
+    --color-spectrum-gold:    light-dark(oklch(61% 0.129 88),  oklch(75% 0.159 88));
+    --color-spectrum-green:   light-dark(oklch(57% 0.185 145), oklch(75% 0.195 145));
+    --color-spectrum-emerald: light-dark(oklch(57% 0.16 158),  oklch(75% 0.19 158));
+    --color-spectrum-teal:    light-dark(oklch(57% 0.128 178), oklch(75% 0.168 178));
+    --color-spectrum-cyan:    light-dark(oklch(57% 0.117 205), oklch(75% 0.154 205));
+    --color-spectrum-azure:   light-dark(oklch(57% 0.185 252), oklch(75% 0.129 252));
+    --color-spectrum-violet:  light-dark(oklch(57% 0.19 295),  oklch(75% 0.141 295));
+    --color-spectrum-magenta: light-dark(oklch(57% 0.19 335),  oklch(75% 0.19 335));
+  }
+}
+
+/* Type — Chillax (Fontshare) carries BOTH display and body; the two
+   roles separate by weight, not by family, so the page speaks in one
+   soft geometric voice. Sono (Google) sets data and code: a mono with
+   the same rounded terminals, which JetBrains Mono never had.
+
+   Chillax ships 200–700 and the hero sets 700, so nothing is ever
+   synthesised. Providers are pinned in nuxt.config `fonts.families` —
+   Chillax exists on Fontshare only. @nuxt/fonts self-hosts every family
+   named in a --font* property; no <link> tags anywhere. Kept in their
+   OWN block: the fontless transform rewrites --font* declarations in
+   place, and the block it touches must not carry other tokens. */
+:root {
+  --font-sans: "Chillax", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Sono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Chillax", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Utility shims for the tokens above (their @theme keys would have
+   auto-generated these). */
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility animate-fade-up {
+  animation: var(--animate-fade-up);
+}
+@utility animate-pulse-ring {
+  animation: var(--animate-pulse-ring);
+}
+@utility animate-row-land {
+  animation: var(--animate-row-land);
+}
+
+/* Keyframes for the --animate-* tokens above. Top-level (not nested in
+   @theme): always emitted, and unaffected by theme processing. */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* --ring-glow is a per-element color seam; the fallback tracks the
+   accent. (A color, not a shadow list — it feeds a 0-spread ring.) */
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--ring-glow,
+      color-mix(in srgb, var(--ui-primary) 35%, transparent));
+    opacity: 1;
+  }
+  50% { box-shadow: 0 0 0 6px transparent; opacity: 0.6; }
+}
+/* A row landing in a live readout — the entrance carries its own commit
+   flash: signal tint at touchdown, decayed to nothing by the time the row
+   has settled (opacity/transform finish early; only the tint rides the
+   full duration). */
+@keyframes row-land {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+    background-color: color-mix(in srgb, var(--ui-primary) 22%, transparent);
+  }
+  45% { opacity: 1; transform: none; }
+  to { background-color: transparent; }
+}

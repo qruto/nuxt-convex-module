@@ -1,0 +1,21 @@
+/* ================================================================
+   SKIN REMNANT — the last Nuxt UI / Docus patch left in CSS
+   ----------------------------------------------------------------
+   Everything else is themed via app.config `ui.*` keys. Only this
+   stays: Nuxt UI emits one <kbd> per key inside the search trigger,
+   but CmdK is one chord — the trailing wrapper (styled via
+   ui.contentSearchButton.slots.trailing) becomes the single cap and
+   the individual caps go bare. No theme key reaches the nested UKbd
+   instances, hence CSS on the stable data-slot hook.
+   ================================================================ */
+header [data-slot="trailing"] kbd {
+  padding: 0;
+  min-width: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none; /* kills the per-cap ring — the seam */
+}
+/* The Cmd glyph resolves wider than K — nudge the pair apart optically. */
+header [data-slot="trailing"] kbd:first-child:not(:last-child) {
+  margin-inline-end: 0.05em;
+}

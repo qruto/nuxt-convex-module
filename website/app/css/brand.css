@@ -1,0 +1,45 @@
+/* ================================================================
+   BRAND LOCKUPS — third-party marks set inside running text
+   ----------------------------------------------------------------
+   Official Convex / Nuxt logos set INSIDE running text (the hero headline
+   spells both product names with the real marks). Never sized by box height —
+   a logo box is mostly air, and two vendors' air is never the same. Each mark
+   instead declares the WRITTEN HEIGHT its wordmark exposes as a fraction of
+   its ink-tight viewBox (--brand-ratio) plus where its baseline falls in that
+   box (--brand-baseline), and asks for a target height in --brand-ref. Match
+   like to like: "convex" is set all-lowercase, so it tracks the x-height;
+   "Nuxt" is cap-initial, so it tracks the cap height. Both then hold at any
+   type size, in any font, on the text baseline.
+
+   The nudge: the wrapper holds no in-flow line box (a lone block <svg>; the
+   accessible name is an aria-label, since any real text — even sr-only —
+   would leak into the headline's clip-to-text mask), so its inline-block
+   baseline is its bottom MARGIN EDGE — which sits (1 - --brand-baseline) of
+   the box below the artwork's own baseline. Translate that back down; it's a
+   transform, so the line box keeps the untranslated height and headlines
+   don't grow.
+   ================================================================ */
+:root {
+  /* Chillax 700, measured off its outlines (canvas actualBoundingBoxAscent
+     for H and n). `em` here resolves at the USE site — the logo inside the
+     headline — not against the root font size. Re-measure both whenever
+     --font-display changes; they are what holds a borrowed wordmark on this
+     font's baseline. (Baloo 2 was 0.616 / 0.49.) */
+  --type-cap: 0.675em;
+  --type-x: 0.515em;
+}
+@utility brand-lockup {
+  display: inline-block;
+  vertical-align: baseline;
+  translate: 0 calc((1 - var(--brand-baseline)) * 100%);
+  /* A borrowed mark never takes the sentence's color — the wordmarks run on
+     currentColor and the brand kits both spell them black-or-white, so the
+     lockup pins itself to page ink whatever the copy around it is doing. Its
+     symbol keeps the vendor's own hue on top of that. */
+  color: var(--ui-text-highlighted);
+  > svg {
+    display: block;
+    width: auto;
+    height: calc(var(--brand-ref) / var(--brand-ratio));
+  }
+}
