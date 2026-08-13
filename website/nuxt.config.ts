@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { signalDark, signalLight } from './shiki-themes'
 
 // The playground runs against a local anonymous Convex deployment
@@ -56,10 +57,18 @@ export default defineNuxtConfig({
         highlight: {
           // The site's own palette (see shiki-themes.ts). Nuxt Content hands
           // theme OBJECTS straight to shiki, keyed by these map keys — the
-          // `--shiki-default` / `--shiki-dark` CSS variables the rendered
-          // spans carry come from the keys, not the theme names.
+          // `--shiki-default` / `--shiki-light` / `--shiki-dark` CSS variables
+          // the rendered spans carry come from the keys, not the theme names.
+          //
+          // `light` must be spelled out even though it repeats `default`:
+          // Nuxt UI seeds this map with all THREE keys (material-theme /
+          // -lighter / -palenight) and the merge is per-key, so overriding
+          // only default+dark leaves material-theme-lighter sitting on
+          // `light` — and light mode reads --shiki-light, so every code block
+          // rendered in someone else's blues and purples.
           theme: {
             default: signalLight,
+            light: signalLight,
             dark: signalDark,
           },
         },
@@ -76,11 +85,34 @@ export default defineNuxtConfig({
     // nothing listens on, killing HMR and Nuxt DevTools (its RPC rides the
     // same hot channel → "Disconnected from Server").
     'vite:extendConfig'(config, { isClient }) {
-      if (!config.server || isClient) return
-      // The SSR vite-node server has HMR disabled but still opens a WebSocket
-      // on the default 24678 unless `ws` is turned off explicitly — turn it
-      // off so parallel Nuxt dev servers don't fight over that port.
-      config.server.ws = false
+      if (!config.server) return
+      if (!isClient) {
+        // The SSR vite-node server has HMR disabled but still opens a WebSocket
+        // on the default 24678 unless `ws` is turned off explicitly — turn it
+        // off so parallel Nuxt dev servers don't fight over that port.
+        config.server.ws = false
+        return
+      }
+      // Let Vite's watcher see `content/`. @nuxt/content appends `content/**`
+      // to `nuxt.options.ignore`, which Nuxt hands straight to Vite as
+      // `server.watch.ignored` — so Vite never reports a markdown edit, and
+      // @tailwindcss/vite (which rescans its `@source` globs from its own
+      // `hotUpdate` hook) never rebuilds. A utility class written for the first
+      // time in markdown — `[Nuxt]{.text-green-500}`, a `class:` prop — then
+      // renders with no rule behind it and silently does nothing, while classes
+      // already present at dev-server start work fine. Content's ignore is there
+      // to stop NUXT restarting on every save; that lives on
+      // `nuxt.options.ignore` and stays untouched — only Vite's copy opens up,
+      // so markdown edits reach Tailwind's scanner (at the cost of the
+      // full-reload it fires on a source change).
+      const contentDir = fileURLToPath(new URL('content', import.meta.url))
+      const ignored = config.server.watch?.ignored
+      if (ignored) {
+        config.server.watch!.ignored = (Array.isArray(ignored) ? ignored : [ignored])
+          .map(rule => typeof rule !== 'function'
+            ? rule
+            : (path: string) => !path.startsWith(contentDir) && rule(path))
+      }
     },
   },
   // The playground pages run against the local anonymous Convex deployment.
@@ -90,6 +122,30 @@ export default defineNuxtConfig({
     url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,
     siteUrl: process.env.NUXT_PUBLIC_CONVEX_SITE_URL || process.env.CONVEX_SITE_URL,
     betterAuth: false,
+  },
+  // Providers are pinned rather than discovered. @nuxt/fonts walks its
+  // provider list per family, and Chillax exists on Fontshare only — naming
+  // the source keeps a cold cache from resolving it somewhere else (or not at
+  // all). Weights are the ones the site actually sets: 400 body, 500/600 UI,
+  // 700 headings and code emphasis. Families themselves are declared in
+  // app/css/theme.css as --font-* tokens, which is what this scans.
+  fonts: {
+    families: [
+      { name: 'Chillax', provider: 'fontshare', weights: [400, 500, 600, 700] },
+      { name: 'Sono', provider: 'google', weights: [400, 600, 700] },
+    ],
+  },
+  // A two-icon house collection (`i-nc-*`) for the CTA arrows. Lucide — the
+  // set the rest of the site draws from — locks its stroke at 2/24, which at
+  // the hero button's 24px reads as a chunky signpost next to the display
+  // type. These are the same geometry drawn at 1.5/24 with a longer shaft and
+  // a narrower (≈37°) head: at the 18px the CTAs set them, the stroke lands on
+  // 1.1px, so the arrow sits in the type's own weight class rather than
+  // shouting over it.
+  icon: {
+    customCollections: [
+      { prefix: 'nc', dir: fileURLToPath(new URL('app/assets/icons', import.meta.url)) },
+    ],
   },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
   // client-side content queries). The bundled nuxt-security CSP must allow
