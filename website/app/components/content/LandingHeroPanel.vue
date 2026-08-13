@@ -189,7 +189,7 @@ const { state, replay } = useDemoScript(plate, async (t) => {
     prepareScene(i)
     scene.value = i
     await t.wait(420)
-    if (reveal) await typeCode(t.wait, reveal, { cps: 34 })
+    if (reveal) await typeCode(t.wait, reveal)
     await playScene(i, t)
   }
   mode.value = 'live'
@@ -241,9 +241,9 @@ watch(state, (value) => {
 
     <!-- Source well. Five scene fences stacked in one grid cell — the tallest
          sets the height, so scene changes never pump the plate. Type is sized
-         off the panel (longest scene line is 41ch of 0.6em-advance mono) with
+         off the panel (longest scene line is 55ch of 0.6em-advance mono) with
          a floor that keeps phones readable; past the floor the pre scrolls. -->
-    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/24.6),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
       <div
         v-for="(part, index) in parts"
         :key="SCENES[index]!.id"
@@ -277,10 +277,10 @@ watch(state, (value) => {
           <li
             v-for="m in liveShown"
             :key="m._id"
-            class="flex min-w-0 items-baseline gap-2 text-default motion-safe:animate-fade-up [animation-duration:300ms]"
+            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-[7px] px-1.5 text-default motion-safe:animate-row-land"
           >
             <span
-              class="max-w-[7ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
+              class="max-w-[14ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
               :class="m.author === handle
                 ? 'border-primary/40 text-primary-700 dark:text-primary-300'
                 : 'border-accented text-muted'"
@@ -295,14 +295,16 @@ watch(state, (value) => {
           </li>
         </template>
         <template v-else>
+          <!-- Keyed on the pending flag too: the pending→committed flip
+               remounts the row, so the commit re-lands with its own flash. -->
           <li
             v-for="row in simShown"
-            :key="row.id"
-            class="flex min-w-0 items-baseline gap-2 text-default motion-safe:animate-fade-up [animation-duration:300ms]"
+            :key="`${row.id}${row.pending ? ':pending' : ''}`"
+            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-[7px] px-1.5 text-default motion-safe:animate-row-land"
             :class="row.pending ? 'opacity-60' : undefined"
           >
             <span
-              class="max-w-[7ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
+              class="max-w-[14ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
               :class="row.author === 'you'
                 ? `text-primary-700 dark:text-primary-300 ${row.pending ? 'border-dashed border-primary/60' : 'border-primary/40'}`
                 : 'border-accented text-muted'"
@@ -342,7 +344,7 @@ watch(state, (value) => {
       >
         <span class="sr-only">Write a message to the live Convex table</span>
         <span
-          class="max-w-[8ch] flex-none truncate font-mono text-[0.6rem] font-bold tracking-[0.08em] uppercase text-primary-700 dark:text-primary-300"
+          class="max-w-[14ch] flex-none truncate font-mono text-[0.6rem] font-bold tracking-[0.08em] uppercase text-primary-700 dark:text-primary-300"
           aria-hidden="true"
         >{{ handle }}</span>
         <input
@@ -353,16 +355,19 @@ watch(state, (value) => {
           class="min-w-0 flex-1 border-0 bg-transparent py-1 font-mono text-xs text-highlighted outline-none placeholder:text-dimmed"
         >
       </label>
+      <!-- The transmit key — wordless, the messenger idiom: an accent key
+           with an up arrow, press physics from the button theme. -->
       <UButton
+        icon="i-lucide-arrow-up"
         color="primary"
-        size="sm"
+        size="md"
+        square
         type="submit"
         class="flex-none"
+        :aria-label="sending ? 'Sending…' : 'Send'"
+        :ui="sending ? { leadingIcon: 'motion-safe:animate-pulse' } : undefined"
         :disabled="sending || !draft.trim() || !!error"
-      >
-        {{ sending ? 'sending' : 'send' }}
-        <span aria-hidden="true">→</span>
-      </UButton>
+      />
     </form>
 
     <figcaption class="mt-3.5 flex min-h-[1.4em] flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[0.65rem] font-semibold tracking-[0.13em] @max-[30rem]:gap-x-3">

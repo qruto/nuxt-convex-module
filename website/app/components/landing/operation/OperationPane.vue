@@ -38,10 +38,10 @@ const VISIBLE = 5
         <li
           v-for="row in rows.slice(-VISIBLE)"
           :key="row.id"
-          class="flex min-w-0 items-baseline gap-2 text-default motion-safe:animate-fade-up [animation-duration:300ms]"
+          class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-[7px] px-1.5 text-default motion-safe:animate-row-land"
         >
           <span
-            class="max-w-[9ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
+            class="max-w-[14ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
             :class="row.author === self
               ? 'border-primary/40 text-primary-700 dark:text-primary-300'
               : 'border-accented text-muted'"
