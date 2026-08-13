@@ -1,0 +1,197 @@
+/* ================================================================
+   DEPTH — the ground, the elevation tokens, the recipes
+   ----------------------------------------------------------------
+   One light source, one material. The tokens are unlayered :root
+   custom properties; the recipes below them are @utility, so they land
+   in @layer utilities and any unlayered component CSS still wins (the
+   old :where() contract, upgraded).
+
+   Geometry deviates ONLY via the seams (--plate-radius, --plate-elev,
+   --well-radius, --well-inset, --raised-*), never via competing
+   `rounded-*` / `shadow-*` utilities — ordering between custom and core
+   utilities is not guaranteed. Each recipe raises a --depth flag
+   descendants may read via `@container style(--depth: …)`.
+   ================================================================ */
+
+/* -- THE GROUND --------------------------------------------------
+   Light mode sits on the titanium mill canvas (neutral-200) and
+   elevation goes LIGHTER — muted 100 (well floors), elevated 50
+   (bead-blast plates), accented white (crowns/hover) — fixing the
+   old inverted ladder where popovers rendered darker than the page.
+   Scoped :root:not(.dark) so dark mode falls through to Nuxt UI's
+   layered .dark defaults (bg 900 / muted+elevated 800 / accented
+   700 — already depth-correct); a bare unlayered :root would trump
+   them. */
+:root {
+  --ui-radius: 0.5rem; /* rounded-sm 8 . md 12 . lg 16 . xl 24 */
+}
+:root:not(.dark) {
+  --ui-bg:          var(--ui-color-neutral-200);
+  --ui-bg-muted:    var(--ui-color-neutral-100);
+  --ui-bg-elevated: var(--ui-color-neutral-50);
+  --ui-bg-accented: #ffffff;
+  --ui-border:          var(--ui-color-neutral-300);
+  --ui-border-muted:    var(--ui-color-neutral-200);
+  --ui-border-accented: var(--ui-color-neutral-300);
+}
+
+/* -- Elevation tokens --------------------------------------------
+   Light from directly overhead, tiny elevation. Every raised step
+   carries exactly two 1px inset lines: a light catch on the crown
+   (a hair, not a stroke) and a hard shade at the base (no blur —
+   the crisp line is the plate's thickness). Wells invert it: shade
+   under the lip, light POOLING at the floor. Shadow colors carry
+   light-dark() per layer, so each token has one definition across
+   both schemes; the html bridge in base.css keeps them in lockstep
+   with the class-driven color mode. */
+:root {
+  --elev-0:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.06)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.05)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.05), transparent);
+  --elev-1:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.07)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4));
+  --elev-2:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.08)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.42)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.45)),
+    0 3px 6px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.45));
+  --elev-3:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.09)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.45)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.028), rgb(0 0 0 / 0.3)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.5)),
+    0 6px 14px -4px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.55));
+  /* Convex accent plate — a crown the saturated fill can carry, a
+     hard base, and a cast tinted with the accent in light. */
+  --elev-accent:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.28)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)),
+    0 3px 6px -2px light-dark(
+      color-mix(in srgb, var(--ui-color-primary-600) 35%, transparent),
+      rgb(0 0 0 / 0.45));
+  /* Header bar — ambient only; the hairline is UHeader's border-b. */
+  --elev-header: 0 6px 16px -14px rgb(0 0 0 / 0.5);
+
+  /* Wells — lip shade on top, light pooling at the floor. */
+  --inset-1:
+    inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.05)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
+  --inset-2:
+    inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.055)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
+
+  /* Glows — keyed to the semantic aliases. */
+  --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  --glow-success: 0 0 9px color-mix(in srgb, var(--ui-color-success-400) 55%, transparent);
+
+  /* Convex/concave gradients — the tonal ramps that make plates read
+     as gently domed and wells as dished, endpoints from the --ui-bg
+     ladder. --grad-surface must stay a SINGLE gradient (it pairs
+     with padding-box in the plate recipe's bevel trick). */
+  --grad-surface: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
+    var(--ui-bg-elevated) 58%,
+    color-mix(in srgb, var(--ui-bg-elevated), #000 2.5%));
+  /* The dish holds its mid-tone; it only turns at the lip and floor. */
+  --grad-sink: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg-muted), #000 2%),
+    var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
+    color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+  /* Accent plates — lit crown, shaded base. Press shade is a hover
+     semantic the alias system doesn't provide: one step deeper in
+     light, one step lighter in dark. */
+  --ui-primary-press: light-dark(var(--ui-color-primary-600), var(--ui-color-primary-300));
+  /* Accent tints/shades mix in OKLab — sRGB mixing with white/black
+     drains chroma from a saturated orange; OKLab keeps the crown
+     luminous instead of chalky. Neutral mixes above stay in srgb (they
+     are greys; there is nothing to preserve). */
+  --grad-accent: linear-gradient(180deg,
+    color-mix(in oklab, var(--ui-primary), #fff 16%), var(--ui-primary) 55%,
+    color-mix(in oklab, var(--ui-primary), #000 10%));
+  --grad-accent-press: linear-gradient(180deg,
+    color-mix(in oklab, var(--ui-primary-press), #fff 12%), var(--ui-primary-press) 55%,
+    color-mix(in oklab, var(--ui-primary-press), #000 8%));
+  /* 1px plate bevel: specular top edge -> shaded bottom edge. */
+  --grad-bevel: linear-gradient(180deg,
+    light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
+    light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)) 40%,
+    light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)));
+}
+
+/* -- Depth recipes -----------------------------------------------
+   class="plate | well | raised" — see the seam contract up top. */
+@utility plate {
+  --depth: plate;
+  border: 1px solid transparent;
+  border-radius: var(--plate-radius, calc(var(--ui-radius) * 3));
+  background: var(--grad-surface) padding-box, var(--grad-bevel) border-box;
+  box-shadow: var(--plate-elev, var(--elev-1));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility well {
+  --depth: well;
+  background: var(--grad-sink);
+  border-radius: var(--well-radius, calc(var(--ui-radius) * 1.5));
+  box-shadow: var(--well-inset, var(--inset-2));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility raised {
+  --depth: raised;
+  background: var(--grad-surface);
+  border-radius: var(--raised-radius, calc(var(--ui-radius) * 2));
+  box-shadow: var(--raised-elev, var(--elev-1));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+
+/* Laser-etched marking — a 1px light catch under the glyphs (light);
+   the groove reads as a shadow in dark. Texture only: pair it with a
+   text-* color utility (usually text-toned) — baking a color in here
+   would race core text-* utilities inside @layer utilities. */
+@utility etched {
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+/* Matte titanium sheen — a corner light-catch plus one faint glare
+   band, like a key light off bead-blasted metal. ::before so it
+   stacks with noise's ::after. */
+@utility sheen {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 18% -10%,
+        light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)), transparent 45%),
+      linear-gradient(116deg,
+        transparent 42%,
+        light-dark(rgb(255 255 255 / 0.28), rgb(255 255 255 / 0.04)) 52%,
+        transparent 60%);
+  }
+}
+/* A whisper of fractal noise to stop flat banding on big surfaces. */
+@utility noise {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}

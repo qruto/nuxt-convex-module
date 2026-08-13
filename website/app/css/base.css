@@ -1,0 +1,70 @@
+/* ================================================================
+   BASE — scheme bridge, native browser UI, element defaults
+   ================================================================ */
+
+/* Nuxt UI only sets scheme-light/dark on <body>; the light-dark()
+   tokens and the html scrollbar need the scheme on <html> too, keyed
+   to the SAME .dark/.light class @nuxtjs/color-mode toggles. */
+:root {
+  color-scheme: light dark;
+  accent-color: var(--ui-primary);
+  caret-color: var(--ui-primary);
+  /* Transitions to intrinsic sizes are off by default for back-compat.
+     Switching it on here — it inherits, so once, at the root — lets any
+     component transition to `block-size: auto` / `fit-content` instead
+     of guessing a max-height, and unlocks calc-size() with it. */
+  interpolate-size: allow-keywords;
+}
+html.dark { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+/* -- Native browser UI ------------------------------------------- */
+html {
+  scrollbar-color: var(--ui-border-accented) transparent;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+  /* Reserve the scrollbar's gutter even when the page doesn't scroll, so
+     navigating from a short page to a long one doesn't shift the layout
+     sideways. No-op wherever scrollbars overlay (macOS, touch). */
+  scrollbar-gutter: stable;
+}
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ui-border-accented);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+/* -- Motion preference -------------------------------------------
+   Only the global smooth scroll and keyword sizing opt OUT here;
+   entrance animations opt IN per element via motion-safe: (no global
+   animation nuker). */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  /* Back to numeric-only: a size transition to `auto` snaps instead of
+     animating, and no component needs its own reduced-motion branch. */
+  :root { interpolate-size: numeric-only; }
+}
+
+/* -- Discrete-property transitions -------------------------------
+   display, content-visibility and overlay, for the elements that own a
+   real entry/exit. Scoped to those rather than `*`: rules here are
+   unlayered, so a global would reach every Nuxt UI element carrying
+   `transition-all`, and any of those that toggle display would linger
+   for the whole duration instead of cutting. The entry half still
+   belongs to the component, in @starting-style. */
+:where([popover], dialog, details) {
+  transition-behavior: allow-discrete;
+}
+
+/* -- Element defaults -------------------------------------------- */
+h1, h2, h3 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+input, code, pre, time { font-variant-numeric: tabular-nums; }
+a, button, summary, [role="button"], label { touch-action: manipulation; }
+/* Grow to the text instead of scrolling inside a fixed box. */
+textarea { field-sizing: content; }
