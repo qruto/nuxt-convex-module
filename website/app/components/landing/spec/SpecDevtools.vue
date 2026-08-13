@@ -1,11 +1,13 @@
 <template>
-  <!-- A postage-stamp DevTools window: the Convex tab seated in the strip,
-       live-query LED breathing, log lines shimmering underneath. Reduced
-       motion shows the open panel at rest. -->
-  <div class="w-full max-w-48 overflow-hidden rounded-lg border border-(--ui-border-accented)">
-    <div class="flex items-center gap-1 border-b border-(--ui-border-accented) px-2 py-1 font-mono text-[0.5rem] font-bold tracking-[0.12em] text-dimmed">
+  <!-- A postage-stamp DevTools window: the Convex tab seated in the strip
+       (its underline stays signal orange — it IS the Convex tab), while the
+       panel's live telemetry breathes in the card's Nuxt-emerald band: LEDs,
+       and log lanes shimmering underneath. Reduced motion shows the open
+       panel at rest. -->
+  <div class="w-full max-w-48 overflow-hidden rounded-lg border border-accented">
+    <div class="flex items-center gap-1 border-b border-accented px-2 py-1 font-mono text-[0.5rem] font-bold tracking-[0.12em] text-dimmed">
       <span class="px-1">NUXT</span>
-      <span class="relative px-1 text-primary-700 dark:text-primary-300">CONVEX<i class="absolute inset-x-1 -bottom-[3px] h-0.5 rounded-full bg-primary" /></span>
+      <span class="relative px-1 text-primary-700 dark:text-primary-300">CONVEX<i class="absolute inset-x-1 -bottom-0.75 h-0.5 rounded-full bg-primary" /></span>
       <span class="px-1">TIMELINE</span>
       <i class="led ml-auto size-1.5 flex-none rounded-full" />
     </div>
@@ -18,7 +20,7 @@
       >
         <i class="shimmer absolute inset-y-0 w-1/2 rounded-full" />
       </div>
-      <div class="mt-0.5 flex items-center gap-1.5 font-mono text-[0.5rem] font-bold tracking-[0.1em] text-dimmed">
+      <div class="mt-0.5 flex items-center gap-1.5 font-mono text-[0.5rem] font-bold tracking-widest text-dimmed">
         <i class="led size-1 flex-none rounded-full" /><span>3 QUERIES LIVE</span>
       </div>
     </div>
@@ -27,14 +29,14 @@
 
 <style scoped>
 .led {
-  background: var(--color-signal-500);
-  box-shadow: var(--glow-primary-soft);
+  background: var(--band, var(--color-signal-500));
+  box-shadow: var(--band-glow, var(--glow-primary-soft));
 }
 .shimmer {
   left: -50%;
   background: linear-gradient(90deg,
     transparent,
-    color-mix(in srgb, var(--ui-text-dimmed) 30%, transparent),
+    color-mix(in srgb, var(--band, var(--ui-text-dimmed)) 35%, transparent),
     transparent);
 }
 @media (prefers-reduced-motion: no-preference) {

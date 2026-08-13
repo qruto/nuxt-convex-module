@@ -74,7 +74,7 @@ async function beginStep(index: number, t: DemoTools) {
   reveal?.reset()
   step.value = index
   await t.wait(350)
-  if (reveal) await typeCode(t.wait, reveal, { cps: 36 })
+  if (reveal) await typeCode(t.wait, reveal)
 }
 
 async function scriptedSend(side: 'A' | 'B', t: DemoTools) {

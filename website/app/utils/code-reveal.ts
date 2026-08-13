@@ -82,20 +82,41 @@ export function createCodeReveal(container: HTMLElement): CodeReveal | null {
 }
 
 /**
- * Drive a reveal with a demo script's `wait` tool: constant keystroke rate
- * with a beat at every line break, so the recording reads as typed lines,
- * not a wipe. Cancellation unwinds through `wait` (the engine's generation
- * check), leaving the block wherever the takeover caught it.
+ * Drive a reveal with a demo script's `wait` tool, paced like a person at an
+ * editor rather than a metronome: keystrokes land in loose bursts, symbol
+ * reaches ({, ', =) cost a beat more than word characters, a breath falls on
+ * the occasional word boundary, and a line break rests before newline and
+ * auto-indent land together — leading whitespace is never typed out, exactly
+ * as no editor makes you. Cancellation unwinds through `wait` (the engine's
+ * generation check), leaving the block wherever the takeover caught it.
  */
 export async function typeCode(
   wait: (ms: number) => Promise<void>,
   reveal: CodeReveal,
   opts: { cps?: number, lineRest?: number } = {},
 ): Promise<void> {
-  const interval = 1000 / (opts.cps ?? 36)
-  const lineRest = opts.lineRest ?? 260
-  for (let i = 1; i <= reveal.length; i++) {
-    await wait(reveal.text[i - 1] === '\n' ? lineRest : interval)
+  const base = 1000 / (opts.cps ?? 40)
+  const lineRest = opts.lineRest ?? 340
+  const symbol = /[{}()[\]<>='"`.,:;#$&|*+\\/-]/
+  const { text, length } = reveal
+  let i = 0
+  while (i < length) {
+    const ch = text[i]!
+    if (ch === '\n') {
+      let next = i + 1
+      while (next < length && (text[next] === ' ' || text[next] === '\t')) next++
+      // A trailing newline ends the pass; resting on it would read as a hang.
+      if (next < length) await wait(lineRest * (0.8 + Math.random() * 0.9))
+      i = next
+    }
+    else {
+      let delay = base * (0.5 + Math.random() * 1.1)
+      if (symbol.test(ch)) delay += base * (0.7 + Math.random() * 1.1)
+      if (ch === ' ' && Math.random() < 0.2) delay += 90 + Math.random() * 240
+      else if (Math.random() < 0.02) delay += 130 + Math.random() * 280
+      await wait(delay)
+      i++
+    }
     reveal.revealTo(i)
   }
   reveal.clearCaret()
