@@ -75,11 +75,19 @@ export default defineAppConfig({
     // Landing chrome: mono eyebrows with the glowing accent tick,
     // display-font titles (replaces the bespoke LandingSection/
     // LandingEyebrow components).
+    //
+    // Descriptions carry a two-step emphasis scale so the key things in them
+    // scan without turning into a bullet list: `**term**` steps the ink up to
+    // highlighted (the capability names), `[term]{.text-primary}` takes the
+    // signal orange (the one claim that matters most on the plate). These
+    // slots sit OUTSIDE .prose, so <strong> arrives unstyled — that ink step
+    // has to be spelled out here or bold reads as plain body copy.
     pageHero: {
       slots: {
         headline:
           'font-mono text-xs font-semibold tracking-[0.14em] uppercase etched text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
         title: 'font-display',
+        description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },
     },
     pageSection: {
@@ -87,6 +95,7 @@ export default defineAppConfig({
         headline:
           'font-mono text-xs font-semibold tracking-[0.14em] uppercase etched text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
         title: 'font-display',
+        description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },
     },
 
@@ -114,7 +123,7 @@ export default defineAppConfig({
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:
-      'The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment.',
+      'The Nuxt module for Convex — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same client runs standalone in any Vue app.',
   },
 
   header: {
@@ -124,10 +133,15 @@ export default defineAppConfig({
     // flattened small-size variant). The browser-tab favicons are transparent
     // PNG/ICO rasterised from this same mark. One asset for both schemes: the
     // Nuxt peak and the Convex swirl carry their own color.
+    // `h-8` overrides Docus's default `h-6`: the mark is line art (hollow
+    // triangle, open ring), so at 24px its limbs land on ~2px with a half-lit
+    // pixel either side — 43% of the inked pixels are antialias fringe rather
+    // than color, which reads as blur. 32px gives every stroke a solid core.
     logo: {
       light: '/logo.svg',
       dark: '/logo.svg',
       alt: 'Nuxt Convex',
+      class: 'h-8',
     },
   },
 

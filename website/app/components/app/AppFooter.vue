@@ -58,9 +58,9 @@ const columns = computed(() => [
               Nuxt Convex
             </p>
             <p class="m-0 mt-2 max-w-96 text-sm leading-relaxed text-toned">
-              The Convex client for Vue &amp; Nuxt — live queries, mutations,
-              actions, pagination, file storage and SSR, with opt-in Better
-              Auth and Polar.
+              The Nuxt module for Convex — live queries, mutations, actions,
+              pagination, file storage and SSR, with opt-in Better Auth and
+              Polar. The same client runs standalone in any Vue app.
             </p>
           </template>
         </UFooterColumns>

@@ -1,21 +1,24 @@
 ---
 seo:
-  title: Convex for Vue & Nuxt
-  description: The Convex client for Vue and Nuxt — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment.
+  title: Use Convex backend in a Nuxt application
+  description: One install wires Convex into Nuxt — live queries, mutations, actions, cursor pagination, file storage and SSR, auto-imported and typed against your deployment. The same client runs standalone in any Vue app.
 ---
 
 :::u-page-hero
 ---
 orientation: horizontal
 class: "landing-hero-ground border-b border-default"
-headline: "NUXT MODULE · CONVEX CLIENT LIBRARY"
+headline: "NUXT MODULE · CONVEX INTEGRATION"
 ui:
   header: "motion-safe:animate-fade-up"
 links:
   - label: get started
     to: /getting-started/introduction
-    trailingIcon: i-lucide-arrow-right
+    trailingIcon: i-nc-arrow-right
     color: primary
+    ui:
+      # size xl ships a 24px icon — oversized next to its 16px label.
+      trailingIcon: size-4.5
   - label: github
     to: https://github.com/qruto/nuxt-convex-module
     target: _blank
@@ -24,9 +27,11 @@ links:
     variant: ghost
   - label: see it run
     to: "#operation"
-    trailingIcon: i-lucide-arrow-down
+    trailingIcon: i-nc-arrow-down
     color: neutral
     variant: link
+    ui:
+      trailingIcon: size-4
 ---
 ::landing-hero-panel
 ```ts
@@ -57,24 +62,21 @@ const id = await upload(file)
 
 ```ts
 import { api } from '#convex/api'
-
-const { data } = await useAsyncQuery(
-  api.messages.list,
-)
-const send =
-  useMutation(api.messages.send)
+const { data } = await useAsyncQuery(api.messages.list)
+const send = useMutation(api.messages.send)
 ```
 ::
 
 #title
-Convex for Vue & Nuxt, [machined to match upstream.]{.landing-hero-accent}
+Use :brand-convex backend in a :brand-nuxt application
 
 #description
-The Convex client for Vue and Nuxt — reactive live queries, mutations,
-actions, cursor pagination, file storage and SSR, auto-imported and typed
-against your deployment.
+One install wires it in — **live queries**, **mutations**, **actions**,
+**cursor pagination**, **file storage** and **SSR**, all
+[auto-imported and typed]{.text-primary} against your deployment. The same
+client also runs **standalone in any Vue app**.
 
-:landing-version-chip[NUXT ≥ 4.1 · CONVEX 1.42]
+:landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5 · CONVEX 1.42]
 :::
 
 ::u-page-section
@@ -82,10 +84,10 @@ against your deployment.
 id: spec
 class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
 headline: "01 · SPEC SHEET"
-title: Everything the client ships
+title: Everything the module ships
 ---
 #description
-The whole surface on one plate — every mechanism the client ships, each with
+The whole surface on one plate — nine mechanisms, each **color-banded** with
 its own working illustration. Every card links to the page that proves it.
 
 #body
@@ -100,9 +102,9 @@ headline: "02 · LIVE OPERATION"
 title: One table, every client
 ---
 #description
-The sync loop, staged: two clients, one `useQuery` subscription each, no
-props between them — a write from either side lands in both panes on the
-same commit. The recording drives itself and loops; touch anything and the
+The sync loop, staged: two clients, one `useQuery` subscription each, **no
+props between them** — a write from either side lands in **both panes on the
+same commit**. The recording drives itself and loops; touch anything and the
 controls are yours. Simulated in-page with zero network — the hero above
 and the [playground](/playground) run the real thing.
 
@@ -140,9 +142,9 @@ headline: "03 · BENCH TESTS"
 title: Three mechanisms on replay
 ---
 #description
-Optimistic writes, cursor pagination, file upload — looping readouts,
-simulated in-page with zero network. The [playground](/playground) runs
-them against a real deployment.
+**Optimistic writes**, **cursor pagination**, **file upload** — looping
+readouts, simulated in-page with zero network. The [playground](/playground)
+runs them against a real deployment.
 
 #body
 ::landing-bench
@@ -176,8 +178,11 @@ title: In your pocket in three moves
 links:
   - label: Install the kit
     to: /getting-started/installation
-    trailingIcon: i-lucide-arrow-right
+    trailingIcon: i-nc-arrow-right
     color: primary
+    ui:
+      # size xl ships a 24px icon — oversized next to its 16px label.
+      trailingIcon: size-4.5
   - label: Try the live playground
     to: /playground
     color: neutral
