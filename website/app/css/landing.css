@@ -14,14 +14,16 @@
 }
 /* Two voices on one headline. The brand lockups hold full page ink and their
    vendors' own mark colors (the brand-lockup recipe pins that); every OTHER
-   word is gently raised off the page by three stacked moves, all clipped to
-   the glyphs — the melt (hue), the dome (form), the cast (lift).
+   word takes two clipped background layers — a plain vertical gradient for
+   color, and one band that bevels it.
 
-   The dome is where the depth lives: two 1lh-tall bands tiled down the
-   element, so each LINE relights. They are background layers because that is
-   the ONLY way an inside shadow can exist on type — text-shadow has no
-   `inset` keyword, and box-shadow's inset hugs the element box, not the
-   glyphs. Their stops sit on measured Chillax 700 edges, not guesses (canvas
+   The bevel is where the depth lives, and it is a background layer because
+   that is the ONLY way an inside shadow can exist on type: text-shadow has no
+   `inset` keyword, box-shadow's inset hugs the element box rather than the
+   glyphs, and drop-shadow() throws the shape outward. So the light is painted
+   INTO the paint, at the height each edge actually sits at.
+
+   Which means the stops are measured Chillax 700 edges, not guesses (canvas
    actualBoundingBox at the hero's lh = 1em — it really is 1: 72px type on a
    72px line — as fractions of the tile):
 
@@ -29,115 +31,95 @@
      15%    cap tops            105.5%  descender bottoms
      31%    x-height tops
 
-   Crown and shade stay separate layers because they overlap: the shade is
-   deepest just above the baseline (76.5%) while the crown throws a
-   bounce-light kick right on it (82.5%), where a real extrusion catches light
-   reflecting off the ground. That kick is the move that sells a rounded solid
-   — without it the letters read as a flat gradient however hard the crown is
-   pushed. The cycle then repeats for the descenders; x-height letters stop at
-   the baseline, so no stop past 82.5% touches them and the two halves tune
-   independently.
+   Every stop below is one of those five numbers plus a few px of falloff, and
+   nothing lands between them — a headline lit from overhead catches light on
+   the first few px under a top edge and loses it on the last few px above a
+   bottom edge, and is simply its own color in between. Each lit edge is a
+   PLATEAU, not a peak: light at full strength from the edge down a few px,
+   then falloff, which is how a rounded solid actually catches a key light. A
+   peak would sit below the edge and read as a stripe across the letter.
 
-   That last figure is the one that shapes this rule: Chillax's descenders run
-   105.5% deep, PAST the tile. A tile can't hold a stop beyond 100%, so the
-   final 5.5% of every p/y/g lands in the top of the NEXT tile — which means
-   the two layers have to be periodic: each one's value at 100% is repeated at
-   0% (crown 5%, shade 9%), so the seam is invisible and the overhanging tail
-   keeps the lighting it had. It also inverts the old top-of-tile treatment.
-   Under Baloo the first 6% was empty air and took the crown's brightest
-   plateau; here it is occupied by the line above's descender tips, so it
-   opens dark with just the bounce on the tail, and the crown's peak waits for
-   the ascender tops at 11%.
+   There are two lit edges rather than one because two letter classes start at
+   different heights (b/d/k/N at 9.5–15%, a/c/e/o at 31%); the x-height hit
+   runs weaker, since for tall letters it crosses mid-stem, where a bright
+   line would read as a stripe instead of a highlight.
+
+   The tile repeats every 1lh, so each LINE relights. Chillax's descenders run
+   105.5% deep, PAST the tile, and a tile can't hold a stop beyond 100% — the
+   final 5.5% of every p/y/g lands in the top of the NEXT tile. So the band has
+   to be periodic: its value at 100% is repeated at 0% (shade 10%), the seam is
+   invisible, and the overhanging tail keeps its shading through to the foot
+   stop at 5.5%.
+
+   Crown and shade share ONE layer because their stops never overlap — the
+   light lives at 9–39%, the dark at 77–5.5%-of-the-next-tile. Anything that
+   makes them collide (a bounce-light kick on the baseline, a full-height dome)
+   costs a second layer and starts the drift back toward cast metal.
 
    Done as one inherited paint rather than MDC spans around every non-brand
    word — the markdown stays a readable sentence, and any word added to it is
    on-palette by default. */
 .landing-hero-ground h1 {
-  /* The melt — one oklch-interpolated sweep, gold crown (h58) through the
-     signal ramp's own 600/400 to ember (h26). Interpolating in oklch keeps
-     the hue walk molten instead of detouring through brown. sRGB-exact stops
-     here, re-pinned just inside P3 below: the same two-exact-ramps contract
-     as the theme tokens, so nothing is ever gamut-mapped (the mid stop rides
-     those tokens, so it boosts itself). */
-  --hero-melt-a: light-dark(oklch(66% 0.155 58), oklch(83% 0.13 68));
-  --hero-melt-b: light-dark(var(--color-signal-600), var(--color-signal-400));
-  --hero-melt-c: light-dark(oklch(53% 0.2 26), oklch(63% 0.21 27));
-  /* The dome's two inks. Every band stop below is a percentage of one of
-     these, so a scheme costs ONE number — the ink's own alpha — instead of a
+  /* The color: one vertical sweep down the ramp's own steps, interpolated in
+     oklch so it stays in the orange rather than detouring through brown. Two
+     stops, no third hue — the bevel is what gives the letters form, and a
+     gradient doing scenery underneath it fights that. Straight ramp tokens, so
+     the wide-gamut (color-gamut: p3) definition in theme.css carries the
+     headline too; nothing to re-pin here.
+
+     600 is the LIGHT end on purpose, not 500: on the mill canvas (neutral-200)
+     500 measures 2.48:1 and 600 is the first step over the 3:1 floor large
+     text has to clear (3.04:1, rising to 4.30:1 by the last line). The old
+     gold melt opened at 2.59:1 and never cleared it. Dark has room to spare —
+     300 and 500 sit at 9.1:1 and 5.8:1 on neutral-900. */
+  --hero-ink-a: light-dark(var(--color-signal-600), var(--color-signal-300));
+  --hero-ink-b: light-dark(var(--color-signal-700), var(--color-signal-500));
+  /* The bevel's two inks. Every band stop is a percentage of one of these, so
+     a scheme costs ONE number — the ink's own alpha — instead of a
      light-dark() pair at every edge. Crown is normalized to the light scheme
      and shade to the dark one (dark eases the crown, since bright paint blows
-     out, and leans on the shade, which is what carries depth on a dark
-     ground — and alpha stops at 1). Both ride at whisper strength ON PURPOSE:
-     the melt is the star and the dome only rounds it. Push the crown past
-     ~20% or the shade past ~15% and the headline turns back into cast metal —
-     the muddy, embossed read these numbers were walked down from. */
+     out, and leans on the shade, which is what carries depth on a dark ground
+     — and alpha stops at 1). Both ride at whisper strength ON PURPOSE. Push
+     the crown past ~22% or the shade past ~16% and the headline turns back
+     into cast metal — the muddy, embossed read these numbers were walked down
+     from. */
   --hero-crown: light-dark(oklch(100% 0 0), oklch(100% 0 0 / 0.75));
   --hero-shade: light-dark(oklch(0% 0 0 / 0.67), oklch(0% 0 0));
-  /* The cast, taken FROM the paint it falls under: the melt's mid stop, its
-     own hue and a fraction of its chroma, lightness driven to a floor —
-     retune the melt and the shadow follows. Deep ember-brown on the mill
-     canvas; a warm near-black on the dark ground, where a shadow is a whisper
-     and any lighter cast reads as haze. */
-  --hero-cast: light-dark(oklch(from var(--hero-melt-b) 0.34 calc(c * 0.5) h / 0.8),
-                          oklch(from var(--hero-melt-b) 0.09 calc(c * 0.3) h / 0.45));
-  --hero-cast-soft: light-dark(oklch(from var(--hero-melt-b) 0.44 calc(c * 0.45) h / 0.1),
-                               oklch(from var(--hero-melt-b) 0.07 calc(c * 0.25) h / 0.3));
   /* Inherited ink for anything the clip can't paint. */
   color: light-dark(var(--color-signal-700), var(--color-signal-300));
   background-image:
-    /* Crown: the overhanging tail's bounce, the lit upper face, then the
-       bounce off the ground. Opens and closes on the same 5% so the tile
-       seam reads as one continuous light. Stops only ever ASCEND — CSS
-       clamps an out-of-order stop up to its predecessor, which silently
-       flattens the whole band into one tone. */
+    /* The bevel. Stops only ever ASCEND — CSS clamps an out-of-order stop up
+       to its predecessor, which silently flattens the band into one tone. */
     linear-gradient(180deg,
-      --alpha(var(--hero-crown) / 5%) 0%,
-      transparent 7%,
-      --alpha(var(--hero-crown) / 18%) 11%,
-      --alpha(var(--hero-crown) / 4%) 45%,
-      transparent 53% 74%,
-      --alpha(var(--hero-crown) / 7%) 82.5%,
-      transparent 89%,
-      --alpha(var(--hero-crown) / 5%)),
-    /* Shade: the underside turning away, released at each bounce — and held
-       at 9% across the seam, under the descenders hanging into this tile. */
-    linear-gradient(180deg,
-      --alpha(var(--hero-shade) / 9%) 0%,
-      transparent 4% 47%,
-      --alpha(var(--hero-shade) / 4%) 62%,
-      --alpha(var(--hero-shade) / 15%) 76.5%,
-      --alpha(var(--hero-shade) / 3%) 83.5%,
-      --alpha(var(--hero-shade) / 16%) 97%,
-      --alpha(var(--hero-shade) / 9%)),
-    linear-gradient(135deg in oklch,
-      var(--hero-melt-a), var(--hero-melt-b) 52%, var(--hero-melt-c));
-  /* Two tiled bands over one full-height melt (auto = the whole box). */
-  background-size: 100% 1lh, 100% 1lh, auto;
+      /* the seam: descender tails hanging in from the line above, shading
+         down to their feet */
+      --alpha(var(--hero-shade) / 10%) 0%,
+      --alpha(var(--hero-shade) / 14%) 5.5%,
+      /* 5.5–9.5% is the one stretch of the tile with no ink in it at all
+         (below the descender feet, above the ascender tops), so the crown can
+         reach full strength there and be at plateau the instant the first
+         glyph edge arrives. */
+      transparent 7.5%,
+      /* the top few px of the ascenders, held flat across the cap tops so
+         both letter classes get a lit edge rather than a lit midriff */
+      --alpha(var(--hero-crown) / 20%) 9.5% 15.5%,
+      transparent 20.5%,
+      /* same again at the x-height tops, weaker — this one crosses tall
+         stems, where a bright line would read as a stripe */
+      transparent 29%,
+      --alpha(var(--hero-crown) / 12%) 31% 34.5%,
+      transparent 39%,
+      /* the last few px above the baseline, where every letter's bottom is */
+      transparent 77%,
+      --alpha(var(--hero-shade) / 15%) 82.5%,
+      --alpha(var(--hero-shade) / 10%)),
+    linear-gradient(180deg in oklch, var(--hero-ink-a), var(--hero-ink-b));
+  /* One tiled band over the full-height color (auto = the whole box). */
+  background-size: 100% 1lh, auto;
   background-clip: text;
   /* NOT color: transparent — that would take the brand lockups' currentColor
      with it. This empties the glyph fill and leaves `color` live. */
   -webkit-text-fill-color: transparent;
-  /* The lift: drop-shadow(), and specifically NOT text-shadow. Text shadows
-     paint above the element's background — and this headline's paint IS a
-     background — so one would cover the melt instead of sitting under it.
-     drop-shadow() follows painted alpha, so it reads the clipped artwork and
-     throws the glyph shape. Contact first, then a whisper of ambient; chained
-     drop-shadows each see the previous one's output, so both stay low-alpha
-     and tight — compounding is what turns a stack of these into a smudge, and
-     anything wider silts up the counters of a/o/e. One flat cast per scheme is
-     the honest limit here: drop-shadow() has one color for the whole element,
-     so the shadow is the headline's dominant paint rather than each word's
-     own. A deliberate trade for staying in plain CSS — one light, one
-     material, no filter graph. */
-  filter: drop-shadow(0 -1px var(--hero-cast)) drop-shadow(0 3px var(--hero-cast-soft));
-}
-/* The melt, off the leash — endpoints re-pinned to the P3 boundary
-   (verified in-gamut, same as the ramp in theme.css; mid stop moves with it). */
-@media (color-gamut: p3) {
-  .landing-hero-ground h1 {
-    --hero-melt-a: light-dark(oklch(66% 0.178 58), oklch(83% 0.16 68));
-    --hero-melt-c: light-dark(oklch(53% 0.235 26), oklch(63% 0.245 27));
-  }
 }
 /* Forced colors keep the transparent fill and the background image, which
    would leave an invisible headline — hand the glyphs back to the system. */
@@ -145,7 +127,6 @@
   .landing-hero-ground h1 {
     background-image: none;
     -webkit-text-fill-color: currentColor;
-    filter: none;
   }
 }
 /* Scroll-driven section-header reveal (progressive enhancement). */
