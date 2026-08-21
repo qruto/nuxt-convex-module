@@ -29,7 +29,7 @@ export default defineAppConfig({
           color: 'primary',
           variant: 'solid',
           class:
-            'border-0 bg-(image:--grad-accent) hover:bg-(image:--grad-accent-press) active:bg-(image:--grad-accent-press) shadow-(--elev-accent) active:shadow-(--inset-1) active:translate-y-[0.5px] disabled:shadow-(--elev-accent)',
+            'border-0 bg-(image:--grad-accent) hover:bg-(image:--grad-accent-press) active:top-px active:relative active:bg-(image:--grad-accent-press) shadow-(--elev-accent) active:shadow-(--inset-1) active:translate-y-[0.5px] disabled:shadow-(--elev-accent)',
         },
         {
           color: 'neutral',
@@ -128,11 +128,12 @@ export default defineAppConfig({
 
   header: {
     title: 'Nuxt Convex',
-    // The wordless mark (transparent, no plate) — the full artwork, shadows
-    // and all, everywhere it appears (user's call: one consistent mark over a
-    // flattened small-size variant). The browser-tab favicons are transparent
-    // PNG/ICO rasterised from this same mark. One asset for both schemes: the
-    // Nuxt peak and the Convex swirl carry their own color.
+    // The wordless mark (transparent, no plate) — the same artwork everywhere
+    // it appears, at every size (user's call: one consistent mark over a
+    // separate small-size variant). It carries inner shading only, no cast
+    // shadow, so it needs no ground of its own. The browser-tab favicons are
+    // transparent PNG/ICO rasterised from this same mark. One asset for both
+    // schemes: the Nuxt peak and the Convex swirl carry their own color.
     // `h-8` overrides Docus's default `h-6`: the mark is line art (hollow
     // triangle, open ring), so at 24px its limbs land on ~2px with a half-lit
     // pixel either side — 43% of the inked pixels are antialias fringe rather

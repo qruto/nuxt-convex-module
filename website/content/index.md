@@ -79,6 +79,8 @@ client also runs **standalone in any Vue app**.
 :landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5 · CONVEX 1.42]
 :::
 
+:landing-services
+
 ::u-page-section
 ---
 id: spec
@@ -87,8 +89,9 @@ headline: "01 · SPEC SHEET"
 title: Everything the module ships
 ---
 #description
-The whole surface on one plate — nine mechanisms, each **color-banded** with
-its own working illustration. Every card links to the page that proves it.
+The whole surface on one plate — nine numbered figures, each **color-banded**
+and working live on its own **engraved stage**. Every card links to the page
+that proves it.
 
 #body
 :landing-spec-sheet

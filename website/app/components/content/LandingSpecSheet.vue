@@ -25,6 +25,14 @@ import SpecVue from '../landing/spec/SpecVue.vue'
 // flash is magenta against the green commit, DevTools is Nuxt emerald, plain
 // Vue is Vue green. PARITY alone keeps signal orange: parity IS the brand
 // claim. The illustrations read var(--band) through plain CSS inheritance.
+//
+// Beyond the hue, every stage is its own instrument face: `face` keys a
+// static engraving on the well floor (scoped CSS below) whose geometry
+// restates the card's mechanism — registration marks for parity, broadcast
+// rings for live, ruled lines for the served document, and so on. PLAIN VUE
+// alone stays unengraved: the plain face is that card's claim. Each stage
+// also carries its etched FIG. NN caption — the cards are the sheet's
+// numbered figures.
 interface SpecEntry {
   label: string
   stamp: string
@@ -33,6 +41,7 @@ interface SpecEntry {
   to: string
   art: Component
   band: string
+  face: string
 }
 
 const ENTRIES: SpecEntry[] = [
@@ -43,6 +52,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'Ported hook-for-composable — `useQuery`, `useMutation`, `usePaginatedQuery`, `preloadQuery`. Same names, same arguments, same return shapes; Convex\'s docs translate line for line.',
     to: '/getting-started/introduction',
     art: SpecParity,
+    face: 'parity',
     band: 'light-dark(var(--color-signal-500), var(--color-signal-400))',
   },
   {
@@ -52,6 +62,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'Query results are refs on one shared WebSocket subscription — a mutation commits and every subscriber moves on the same tick.',
     to: '/guide/queries-and-mutations',
     art: SpecLive,
+    face: 'live',
     band: 'var(--color-spectrum-gold)',
   },
   {
@@ -61,6 +72,7 @@ const ENTRIES: SpecEntry[] = [
     body: '`useAsyncQuery` fetches on the server, ships rows in the payload, and upgrades to the live subscription on hydration.',
     to: '/guide/server-and-ssr',
     art: SpecSsr,
+    face: 'ssr',
     band: 'var(--color-spectrum-cyan)',
   },
   {
@@ -70,6 +82,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'Composables and components auto-import; `#convex/*` aliases resolve your generated API, with a pre-codegen fallback.',
     to: '/guide/import-aliases',
     art: SpecTyped,
+    face: 'typed',
     band: 'var(--color-spectrum-azure)',
   },
   {
@@ -79,6 +92,7 @@ const ENTRIES: SpecEntry[] = [
     body: '`.withOptimisticUpdate` renders the write immediately and reconciles on commit — paginated helpers like `insertAtTop` included.',
     to: '/api-reference/composables',
     art: SpecOptimistic,
+    face: 'optimistic',
     band: 'var(--color-spectrum-magenta)',
   },
   {
@@ -88,6 +102,7 @@ const ENTRIES: SpecEntry[] = [
     body: '`useUpload` and `useUploadQueue` track progress and hand back storage IDs; `useStorageUrl` resolves them.',
     to: '/guide/file-storage',
     art: SpecFiles,
+    face: 'files',
     band: 'var(--color-spectrum-teal)',
   },
   {
@@ -97,6 +112,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'Install `@convex-dev/better-auth`, `@convex-dev/polar`, `@clerk/vue`, or `@auth0/auth0-vue` and the client wires itself up — server-side components like Resend run in your Convex backend as-is.',
     to: '/guide/authentication',
     art: SpecAddons,
+    face: 'addons',
     band: 'var(--color-spectrum-violet)',
   },
   {
@@ -106,6 +122,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'Connection state, live per-query subscriptions, server logs, auth state, open-in-editor.',
     to: '/guide/devtools',
     art: SpecDevtools,
+    face: 'devtools',
     band: 'var(--color-spectrum-emerald)',
   },
   {
@@ -115,6 +132,7 @@ const ENTRIES: SpecEntry[] = [
     body: 'The `/vue` subpath is self-contained — the same composables in any Vue app, no Nuxt required.',
     to: '/guide/plain-vue',
     art: SpecVue,
+    face: 'vue',
     band: 'var(--color-spectrum-green)',
   },
 ]
@@ -129,13 +147,14 @@ function segments(body: string) {
 <template>
   <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
     <li
-      v-for="entry in ENTRIES"
+      v-for="(entry, index) in ENTRIES"
       :key="entry.label"
       class="m-0 p-0"
     >
       <NuxtLink
         :to="entry.to"
         :style="{ '--band': entry.band }"
+        :data-face="entry.face"
         class="raised spec-card group flex h-full flex-col gap-1.5 px-5 pt-4 pb-4.5 no-underline transition-shadow duration-180 ease-out [--raised-elev:var(--elev-0)] hover:[--raised-elev:var(--elev-2)] focus-visible:outline-2 focus-visible:outline-(--band)"
       >
         <span class="flex items-baseline justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
@@ -150,13 +169,16 @@ function segments(body: string) {
           </span>
           <span class="etched min-w-0 truncate text-dimmed">{{ entry.stamp }}</span>
         </span>
-        <!-- The card's working illustration — its own recessed stage; hover
-             floods the stage with a whisper of the card's band. -->
+        <!-- The card's working illustration — its own recessed stage wearing
+             its own engraved face (see the per-face CSS below); hover floods
+             the stage with a whisper of the card's band. -->
         <span
           class="well spec-stage mt-1 mb-1.5 grid min-h-24 place-items-center overflow-hidden px-3.5 py-3 [--well-radius:12px]"
           aria-hidden="true"
         >
           <component :is="entry.art" />
+          <!-- The figure caption — datasheet figures are numbered. -->
+          <span class="etched absolute right-2.5 bottom-1 font-mono text-[0.52rem] font-bold tracking-[0.14em] text-dimmed opacity-70">FIG. {{ String(index + 1).padStart(2, '0') }}</span>
         </span>
         <span class="font-display text-[1.02rem] font-semibold text-highlighted">
           {{ entry.title }}
@@ -195,11 +217,94 @@ function segments(body: string) {
 .spec-arrow {
   color: var(--band);
 }
-/* The stage flood — painted on an overlay so the well's own gradient stays
-   a single background (the recipe's contract). */
 .spec-stage {
   position: relative;
+  /* Stacking context so the engraving (::before, z -1) slots between the
+     well floor and the illustration. */
+  isolation: isolate;
 }
+/* -- The engraved faces -------------------------------------------
+   Nine stages, nine dial faces: each well floor carries a static
+   engraving in the card's own band whose GEOMETRY restates the
+   mechanism — the way a gauge's printed face gives each instrument
+   its identity on a shared panel. Strokes stay at whisper alpha
+   (edge rulers run stronger; they are tiny). Static like any
+   etching — no motion to guard. */
+.spec-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+/* PARITY — registration marks: the pressman's proof that two layers
+   align perfectly. Two ⊕ in the top corners (ring + crosshair). */
+.spec-card[data-face="parity"] .spec-stage::before {
+  --ink: color-mix(in srgb, var(--band) 32%, transparent);
+  background:
+    radial-gradient(circle, transparent 2.5px, var(--ink) 2.5px 3.5px, transparent 3.5px) left 9px top 8px / 11px 11px,
+    linear-gradient(var(--ink), var(--ink)) left 9px top 13px / 11px 1px,
+    linear-gradient(var(--ink), var(--ink)) left 14px top 8px / 1px 11px,
+    radial-gradient(circle, transparent 2.5px, var(--ink) 2.5px 3.5px, transparent 3.5px) right 9px top 8px / 11px 11px,
+    linear-gradient(var(--ink), var(--ink)) right 9px top 13px / 11px 1px,
+    linear-gradient(var(--ink), var(--ink)) right 14px top 8px / 1px 11px;
+  background-repeat: no-repeat;
+}
+/* LIVE — broadcast rings off the hub's edge, fading toward the
+   subscribers the packets travel to. */
+.spec-card[data-face="live"] .spec-stage::before {
+  background: repeating-radial-gradient(circle at 0% 50%,
+    color-mix(in srgb, var(--band) 16%, transparent) 0 1px, transparent 1px 15px);
+  mask-image: linear-gradient(90deg, #000 20%, transparent 82%);
+}
+/* SSR — the served document's ruled lines. */
+.spec-card[data-face="ssr"] .spec-stage::before {
+  background: repeating-linear-gradient(180deg,
+    color-mix(in srgb, var(--band) 11%, transparent) 0 1px, transparent 1px 7px);
+}
+/* TYPED — graph paper, the editor's plane. */
+.spec-card[data-face="typed"] .spec-stage::before {
+  --ink: color-mix(in srgb, var(--band) 10%, transparent);
+  background:
+    repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 14px);
+}
+/* OPTIMISTIC — speculative hatching, diagonal kin to the dashed
+   LOCAL frame: penciled in until the commit inks it. */
+.spec-card[data-face="optimistic"] .spec-stage::before {
+  background: repeating-linear-gradient(45deg,
+    color-mix(in srgb, var(--band) 11%, transparent) 0 1px, transparent 1px 12px);
+}
+/* FILES — a measuring tape along the floor under the progress ref;
+   the scale runs out before the figure caption. */
+.spec-card[data-face="files"] .spec-stage::before {
+  --ink: color-mix(in srgb, var(--band) 30%, transparent);
+  background:
+    repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 7px) left bottom / 100% 5px,
+    repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 28px) left bottom / 100% 9px;
+  background-repeat: no-repeat;
+  mask-image: linear-gradient(90deg, #000 58%, transparent 90%);
+}
+/* ADD-ONS — breadboard sockets: the holes things plug into. */
+.spec-card[data-face="addons"] .spec-stage::before {
+  background: radial-gradient(circle 1.2px,
+    color-mix(in srgb, var(--band) 24%, transparent) 0 0.9px, transparent 1.2px) 0 0 / 13px 13px;
+}
+/* DEVTOOLS — the inspector's ruler along the top frame, major tick
+   every fourth minor. */
+.spec-card[data-face="devtools"] .spec-stage::before {
+  --ink: color-mix(in srgb, var(--band) 30%, transparent);
+  background:
+    repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 6px) left top / 100% 4px,
+    repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 24px) left top / 100% 7px;
+  background-repeat: no-repeat;
+}
+/* PLAIN VUE — no engraving at all. Against eight etched faces the
+   bare floor IS the card's claim: nothing required. */
+
+/* The stage flood — painted on an overlay so the well's own gradient stays
+   a single background (the recipe's contract). */
 .spec-stage::after {
   content: "";
   position: absolute;

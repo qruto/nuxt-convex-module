@@ -115,21 +115,29 @@
   }
 }
 
-/* Type — Chillax (Fontshare) carries BOTH display and body; the two
-   roles separate by weight, not by family, so the page speaks in one
-   soft geometric voice. Sono (Google) sets data and code: a mono with
-   the same rounded terminals, which JetBrains Mono never had.
+/* Type — three roles, three families. Baloo 2 (Google) is the display
+   face: a rounded, high-x-height display sans whose bowls carry a
+   gradient at 72px far better than a text face does — the hero is one
+   big painted surface, and Baloo 2 gives it area to paint. Chillax
+   (Fontshare) drops back to body/UI, where its narrower, quieter
+   geometry belongs. Sono (Google) sets data and code: a mono with the
+   same rounded terminals, which JetBrains Mono never had.
 
-   Chillax ships 200–700 and the hero sets 700, so nothing is ever
+   Baloo 2 ships a 400–800 variable axis and Chillax 200–700; the hero
+   sets 700 in Baloo, body 400–600 in Chillax, so nothing is ever
    synthesised. Providers are pinned in nuxt.config `fonts.families` —
    Chillax exists on Fontshare only. @nuxt/fonts self-hosts every family
    named in a --font* property; no <link> tags anywhere. Kept in their
    OWN block: the fontless transform rewrites --font* declarations in
-   place, and the block it touches must not carry other tokens. */
+   place, and the block it touches must not carry other tokens.
+
+   Swapping --font-display is never just this line: brand.css's
+   --type-cap/--type-x and landing.css's hero tile stops are both
+   measured off the display face's outlines. See the note in each. */
 :root {
   --font-sans: "Chillax", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Sono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: "Chillax", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Baloo 2", "Chillax", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Utility shims for the tokens above (their @theme keys would have
