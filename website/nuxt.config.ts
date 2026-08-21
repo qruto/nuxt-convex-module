@@ -127,10 +127,13 @@ export default defineNuxtConfig({
   // provider list per family, and Chillax exists on Fontshare only — naming
   // the source keeps a cold cache from resolving it somewhere else (or not at
   // all). Weights are the ones the site actually sets: 400 body, 500/600 UI,
-  // 700 headings and code emphasis. Families themselves are declared in
-  // app/css/theme.css as --font-* tokens, which is what this scans.
+  // 700 headings and code emphasis. Baloo 2 is display-only — 600 on the small
+  // plate/footer titles, 700 on the hero and section headings. Families
+  // themselves are declared in app/css/theme.css as --font-* tokens, which is
+  // what this scans.
   fonts: {
     families: [
+      { name: 'Baloo 2', provider: 'google', weights: [600, 700] },
       { name: 'Chillax', provider: 'fontshare', weights: [400, 500, 600, 700] },
       { name: 'Sono', provider: 'google', weights: [400, 600, 700] },
     ],

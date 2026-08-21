@@ -14,118 +14,142 @@
 }
 /* Two voices on one headline. The brand lockups hold full page ink and their
    vendors' own mark colors (the brand-lockup recipe pins that); every OTHER
-   word takes two clipped background layers — a plain vertical gradient for
-   color, and one band that bevels it.
+   word takes two clipped background layers — a vertical ramp that gives the
+   letters their tone, and a crown that lights their top edges — tiled every
+   1lh so each LINE relights on its own. Tiling is the point: one sweep over
+   the whole block would spread the ramp so thin that each individual line
+   reads flat; giving every line the whole ramp is what makes the melt
+   legible at display size.
 
-   The bevel is where the depth lives, and it is a background layer because
-   that is the ONLY way an inside shadow can exist on type: text-shadow has no
-   `inset` keyword, box-shadow's inset hugs the element box rather than the
-   glyphs, and drop-shadow() throws the shape outward. So the light is painted
-   INTO the paint, at the height each edge actually sits at.
-
-   Which means the stops are measured Chillax 700 edges, not guesses (canvas
+   The stops are measured Baloo 2 700 edges, not guesses (canvas
    actualBoundingBox at the hero's lh = 1em — it really is 1: 72px type on a
    72px line — as fractions of the tile):
 
-      9.5%  ascender tops        82.5%  baseline
-     15%    cap tops            105.5%  descender bottoms
-     31%    x-height tops
+      7.9%  i-dots (the ceiling)   77.7%  baseline
+     11.7%  ascender tops          96.4%  descender bottoms (p)
+     16.1%  cap tops               97.6%  descender bottoms (j g y q)
+     28.2%  x-height tops
 
-   Every stop below is one of those five numbers plus a few px of falloff, and
-   nothing lands between them — a headline lit from overhead catches light on
-   the first few px under a top edge and loses it on the last few px above a
-   bottom edge, and is simply its own color in between. Each lit edge is a
-   PLATEAU, not a peak: light at full strength from the edge down a few px,
-   then falloff, which is how a rounded solid actually catches a key light. A
-   peak would sit below the edge and read as a stripe across the letter.
+   Baloo 2 keeps its descenders INSIDE the tile (97.6%, where Chillax ran
+   105.5% and overran into the next line's ceiling), so the ink-free stretch
+   is a single contiguous 97.6% → 100% → 7.9% wrap around the seam. The ramp
+   still has to be periodic — its value at 100% repeated at 0%, because a
+   tile can't hold a stop past 100% — but it now has a comfortable 10% of
+   empty tile to swing from the dark foot back up to the lit top edge,
+   instead of Chillax's 4% squeeze.
 
-   There are two lit edges rather than one because two letter classes start at
-   different heights (b/d/k/N at 9.5–15%, a/c/e/o at 31%); the x-height hit
-   runs weaker, since for tall letters it crosses mid-stem, where a bright
-   line would read as a stripe instead of a highlight.
-
-   The tile repeats every 1lh, so each LINE relights. Chillax's descenders run
-   105.5% deep, PAST the tile, and a tile can't hold a stop beyond 100% — the
-   final 5.5% of every p/y/g lands in the top of the NEXT tile. So the band has
-   to be periodic: its value at 100% is repeated at 0% (shade 10%), the seam is
-   invisible, and the overhanging tail keeps its shading through to the foot
-   stop at 5.5%.
-
-   Crown and shade share ONE layer because their stops never overlap — the
-   light lives at 9–39%, the dark at 77–5.5%-of-the-next-tile. Anything that
-   makes them collide (a bounce-light kick on the baseline, a full-height dome)
-   costs a second layer and starts the drift back toward cast metal.
+   The ceiling is the i-DOT, not the ascender: Baloo 2 hangs it 3.9% higher
+   than b/d/k/l, and the headline is full of them ("in", "application"). Miss
+   that and every dot on the page catches the tail of the reset ramp.
 
    Done as one inherited paint rather than MDC spans around every non-brand
    word — the markdown stays a readable sentence, and any word added to it is
-   on-palette by default. */
+   on-palette by default.
+
+   The tile is phase-locked to the BLOCK's top edge, not to the line boxes, so
+   this only stays aligned while every line advances exactly 1lh. Anything
+   inline that outgrows the strut — an image, an icon, a lockup — slides every
+   line beneath it off its own tile. brand.css keeps the logos out of the line
+   box for exactly this reason. */
 .landing-hero-ground h1 {
-  /* The color: one vertical sweep down the ramp's own steps, interpolated in
-     oklch so it stays in the orange rather than detouring through brown. Two
-     stops, no third hue — the bevel is what gives the letters form, and a
-     gradient doing scenery underneath it fights that. Straight ramp tokens, so
-     the wide-gamut (color-gamut: p3) definition in theme.css carries the
-     headline too; nothing to re-pin here.
+  /* The ramp's three tones, interpolated in oklch so the sweep stays in the
+     orange rather than detouring through brown. Straight ramp tokens, so the
+     wide-gamut (color-gamut: p3) definition in theme.css carries the headline
+     too; nothing to re-pin here.
 
      600 is the LIGHT end on purpose, not 500: on the mill canvas (neutral-200)
      500 measures 2.48:1 and 600 is the first step over the 3:1 floor large
-     text has to clear (3.04:1, rising to 4.30:1 by the last line). The old
-     gold melt opened at 2.59:1 and never cleared it. Dark has room to spare —
-     300 and 500 sit at 9.1:1 and 5.8:1 on neutral-900. */
+     text has to clear (3.04:1 — and since every line relights, every line's
+     top edge sits at exactly that, no better line to hide behind). The old
+     gold melt opened at 2.59:1 and never cleared it. The far end runs DEEPER
+     than it used to (a third stop, 800 rather than stopping at 700): the extra
+     ~9% of lightness across a line is what turns a tint into a lit form, and
+     it only ever improves contrast — 4.30:1 at the baseline, 5.99:1 at the
+     descender feet. Dark has the same shape with room to spare: 9.1 / 5.7 /
+     4.7:1 on neutral-900. */
   --hero-ink-a: light-dark(var(--color-signal-600), var(--color-signal-300));
   --hero-ink-b: light-dark(var(--color-signal-700), var(--color-signal-500));
-  /* The bevel's two inks. Every band stop is a percentage of one of these, so
-     a scheme costs ONE number — the ink's own alpha — instead of a
-     light-dark() pair at every edge. Crown is normalized to the light scheme
-     and shade to the dark one (dark eases the crown, since bright paint blows
-     out, and leans on the shade, which is what carries depth on a dark ground
-     — and alpha stops at 1). Both ride at whisper strength ON PURPOSE. Push
-     the crown past ~22% or the shade past ~16% and the headline turns back
-     into cast metal — the muddy, embossed read these numbers were walked down
-     from. */
-  --hero-crown: light-dark(oklch(100% 0 0), oklch(100% 0 0 / 0.75));
-  --hero-shade: light-dark(oklch(0% 0 0 / 0.67), oklch(0% 0 0));
+  --hero-ink-c: light-dark(var(--color-signal-800), var(--color-signal-600));
+  /* The crown's ink. Every stop below is a percentage of this one value, so a
+     scheme costs ONE number — the ink's own alpha. Dark eases off (bright
+     paint on a dark ground blows out first) and both ride at whisper strength
+     ON PURPOSE: push past ~20% and the headline turns into cast metal. There
+     is deliberately NO matching dark band under the bottom edges — light-only
+     plus the ramp's deep foot reads as a form lit from above, while a
+     symmetric light/dark pair at every edge reads as something stamped INTO
+     the page, which is the opposite of what this is doing. */
+  --hero-crown: light-dark(oklch(100% 0 0 / 0.17), oklch(100% 0 0 / 0.1));
+  /* The lift — the crown says "lit from above", this says "off the page".
+     A filter is the only operator that can cast OUTSIDE the glyphs: the paint
+     here is a background clipped to text, so text-shadow lands on TOP of it,
+     and box-shadow hugs the element box rather than the letters. The catch is
+     that a filter colours the whole subtree with one ink, the black Convex and
+     Nuxt wordmarks included — which is exactly why the offset stays tiny and
+     the blur stays wide. A tight cast fringes those marks and reads as an
+     outline; a soft one just reads as height.
+
+     ONE shape, two grounds. Both schemes get the same rig — a near-contact
+     shadow and a wider cast pooled just below the letters — and only the inks
+     are scheme-swapped: on light the ground takes a warm shadow, on dark it
+     bounces the signal back up as a glow (a dark cast on a dark ground is
+     invisible, and the light in that room has to come from somewhere). */
+  --hero-cast-near: light-dark(--alpha(var(--color-signal-950) / 10%),
+                               --alpha(var(--color-signal-600) / 12%));
+  --hero-cast-far: light-dark(--alpha(var(--color-signal-950) / 13%),
+                              --alpha(var(--color-signal-500) / 16%));
   /* Inherited ink for anything the clip can't paint. */
   color: light-dark(var(--color-signal-700), var(--color-signal-300));
+  filter:
+    drop-shadow(0 1px 2px var(--hero-cast-near))
+    drop-shadow(0 5px 18px var(--hero-cast-far));
   background-image:
-    /* The bevel. Stops only ever ASCEND — CSS clamps an out-of-order stop up
-       to its predecessor, which silently flattens the band into one tone. */
-    linear-gradient(180deg,
-      /* the seam: descender tails hanging in from the line above, shading
-         down to their feet */
-      --alpha(var(--hero-shade) / 10%) 0%,
-      --alpha(var(--hero-shade) / 14%) 5.5%,
-      /* 5.5–9.5% is the one stretch of the tile with no ink in it at all
-         (below the descender feet, above the ascender tops), so the crown can
-         reach full strength there and be at plateau the instant the first
-         glyph edge arrives. */
-      transparent 7.5%,
-      /* the top few px of the ascenders, held flat across the cap tops so
-         both letter classes get a lit edge rather than a lit midriff */
-      --alpha(var(--hero-crown) / 20%) 9.5% 15.5%,
-      transparent 20.5%,
-      /* same again at the x-height tops, weaker — this one crosses tall
-         stems, where a bright line would read as a stripe */
-      transparent 29%,
-      --alpha(var(--hero-crown) / 12%) 31% 34.5%,
-      transparent 39%,
-      /* the last few px above the baseline, where every letter's bottom is */
-      transparent 77%,
-      --alpha(var(--hero-shade) / 15%) 82.5%,
-      --alpha(var(--hero-shade) / 10%)),
-    linear-gradient(180deg in oklch, var(--hero-ink-a), var(--hero-ink-b));
-  /* One tiled band over the full-height color (auto = the whole box). */
-  background-size: 100% 1lh, auto;
+    /* The crown. Stops only ever ASCEND — CSS clamps an out-of-order stop up
+       to its predecessor, which silently flattens a band into one tone. */
+    linear-gradient(
+      180deg,
+      /* 97.6–100% and 0–7.9% are the tile's ink-free wrap, so the crown can
+         already be at full strength when the first glyph edge arrives */
+      transparent 0% 6%,
+      /* PLATEAU, not a peak, and wide enough to cover all three top-edge
+         classes at once (i-dots 7.9%, ascenders 11.7%, caps 16.1%) — a peak
+         lands below the edge and reads as a stripe across the letter */
+      var(--hero-crown) 7.9% 16.6%,
+      transparent 23%,
+      /* the same again at the x-height tops, weaker: on b/d/k/l this one
+         crosses mid-stem, where a bright line WOULD be a stripe */
+      transparent 26.5%,
+      --alpha(var(--hero-crown) / 55%) 28.2% 32%,
+      transparent 38% 100%
+    ),
+    /* The tone. */
+    linear-gradient(
+      180deg in oklch,
+      /* the seam value, repeated at both ends */
+      var(--hero-ink-c) 0%,
+      /* full light held from the ceiling down past the cap tops */
+      var(--hero-ink-a) 7.9% 16.1%,
+      /* melt to the settled brand tone by the baseline, and hold it for most
+         of the descender — a descender that darkens along its WHOLE length
+         pulls "app" out of "application" as its own dark shape */
+      var(--hero-ink-b) 77.7% 88%,
+      /* only the last few px fall away, which reads as the tail turning under
+         rather than as a second colour */
+      var(--hero-ink-c) 96.5% 100%
+    );
+  background-size: 100% 1lh;
   background-clip: text;
   /* NOT color: transparent — that would take the brand lockups' currentColor
      with it. This empties the glyph fill and leaves `color` live. */
   -webkit-text-fill-color: transparent;
 }
 /* Forced colors keep the transparent fill and the background image, which
-   would leave an invisible headline — hand the glyphs back to the system. */
+   would leave an invisible headline — hand the glyphs back to the system, and
+   drop the cast with it (a filter survives forced-colors and would smear the
+   system ink). */
 @media (forced-colors: active) {
   .landing-hero-ground h1 {
     background-image: none;
+    filter: none;
     -webkit-text-fill-color: currentColor;
   }
 }

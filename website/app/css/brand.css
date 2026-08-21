@@ -14,24 +14,39 @@
    The nudge: the wrapper holds no in-flow line box (a lone block <svg>; the
    accessible name is an aria-label, since any real text — even sr-only —
    would leak into the headline's clip-to-text mask), so its inline-block
-   baseline is its bottom MARGIN EDGE — which sits (1 - --brand-baseline) of
-   the box below the artwork's own baseline. Translate that back down; it's a
-   transform, so the line box keeps the untranslated height and headlines
-   don't grow.
+   baseline is its bottom MARGIN EDGE. Collapse the wrapper to zero height and
+   the mark's own baseline is then --brand-baseline of the DRAWN height below
+   that edge — translate it straight back up and it lands on the text baseline.
+
+   Zero height is not a shortcut, it's the invariant: the artwork is a third
+   party's box, so its height against our strut is a coincidence, and a mark
+   that reaches higher above the baseline than the line's own ascent (Nuxt's
+   does — its icon overshoots the caps, 0.9em of box against a 0.777em strut
+   ascent at line-height 1) STRETCHES that one line. The headline melt tiles
+   its gradient every 1lh from the block's top edge (landing.css), so one
+   stretched line puts every line under it out of phase with its own tile —
+   which is how the descenders of "application" ended up relighting. A lockup
+   contributes width to the line and nothing else; overflow paints the rest.
    ================================================================ */
 :root {
-  /* Chillax 700, measured off its outlines (canvas actualBoundingBoxAscent
+  /* Baloo 2 700, measured off its outlines (canvas actualBoundingBoxAscent
      for H and n). `em` here resolves at the USE site — the logo inside the
      headline — not against the root font size. Re-measure both whenever
      --font-display changes; they are what holds a borrowed wordmark on this
-     font's baseline. (Baloo 2 was 0.616 / 0.49.) */
-  --type-cap: 0.675em;
-  --type-x: 0.515em;
+     font's baseline. (Chillax was 0.675 / 0.515.) */
+  --type-cap: 0.616em;
+  --type-x: 0.495em;
 }
 @utility brand-lockup {
+  /* Drawn height of the whole artwork — the written height we asked for,
+     scaled back up through the fraction of the box that writing occupies. */
+  --brand-drawn: calc(var(--brand-ref) / var(--brand-ratio));
   display: inline-block;
   vertical-align: baseline;
-  translate: 0 calc((1 - var(--brand-baseline)) * 100%);
+  /* Width only: the box carries no height into the line box, and the mark
+     overflows it (see the note above — a tall lockup must never move a line). */
+  block-size: 0;
+  translate: 0 calc(var(--brand-baseline) * var(--brand-drawn) * -1);
   /* A borrowed mark never takes the sentence's color — the wordmarks run on
      currentColor and the brand kits both spell them black-or-white, so the
      lockup pins itself to page ink whatever the copy around it is doing. Its
@@ -40,6 +55,6 @@
   > svg {
     display: block;
     width: auto;
-    height: calc(var(--brand-ref) / var(--brand-ratio));
+    height: var(--brand-drawn);
   }
 }
