@@ -32,16 +32,30 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#e5e5e5', media: '(prefers-color-scheme: light)' },
         { name: 'apple-mobile-web-app-title', content: 'Nuxt Convex' },
       ],
-      // Favicon set rasterised from the Nuxt × Convex mark (`public/logo.svg`).
-      // Tab icons are pre-rendered PNG/ICO on a transparent background — no SVG
-      // favicon: browsers rasterise the mark's gradients/filters poorly at 16px.
+      // Favicon set generated from the Nuxt × Convex mark (`public/logo.svg`)
+      // by RealFaviconGenerator's own core library — see the note in
+      // `public/logo.svg` and the memory entry for how to regenerate it.
+      // This is RFG's full default set: a 96px PNG for browsers that ignore
+      // SVG icons, the vector itself, the ICO for legacy consumers, the iOS
+      // touch icon, and the manifest.
+      //
+      // `tagPriority` is load-bearing. Docus's own `app/app.vue` hardcodes a
+      // keyless `useHead({ link: [{ rel: 'icon', href: '/favicon.ico' }] })`,
+      // which nothing can dedupe away — and because a component's useHead is
+      // merged after `app.head`, it would otherwise render *after* these and
+      // win, since browsers take the last `rel="icon"` candidate. Pushing
+      // these past unhead's default priority (100) puts the vector last.
+      // Verify with a real request, not the config: the SVG link must be the
+      // final `rel="icon"` in the served HTML.
+      //
       // Fonts have no <link>s: @nuxt/fonts (auto-registered by Nuxt UI)
       // self-hosts every family named in app.css's `@theme` --font-* vars.
       link: [
-        { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' },
-        { rel: 'shortcut icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
-        { rel: 'manifest', href: '/site.webmanifest' },
+        { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96', tagPriority: 120 },
+        { rel: 'shortcut icon', href: '/favicon.ico', tagPriority: 120 },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png', tagPriority: 120 },
+        { rel: 'manifest', href: '/site.webmanifest', tagPriority: 120 },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg', tagPriority: 121 },
       ],
     },
   },
@@ -124,18 +138,18 @@ export default defineNuxtConfig({
     betterAuth: false,
   },
   // Providers are pinned rather than discovered. @nuxt/fonts walks its
-  // provider list per family, and Chillax exists on Fontshare only — naming
-  // the source keeps a cold cache from resolving it somewhere else (or not at
-  // all). Weights are the ones the site actually sets: 400 body, 500/600 UI,
-  // 700 headings and code emphasis. Baloo 2 is display-only — 600 on the small
-  // plate/footer titles, 700 on the hero and section headings. Families
-  // themselves are declared in app/css/theme.css as --font-* tokens, which is
-  // what this scans.
+  // provider list per family, and Technor exists on Fontshare only — naming
+  // the source keeps a cold cache from resolving it somewhere else (or not
+  // at all). Weights are the ones the site actually sets: 400 body, 500/600
+  // UI, 700 headings and code emphasis. Technor is display-only — 600 on the
+  // small plate/footer titles, 700 on the hero and section headings.
+  // Families themselves are declared in app/css/theme.css as --font-*
+  // tokens, which is what this scans.
   fonts: {
     families: [
-      { name: 'Baloo 2', provider: 'google', weights: [600, 700] },
-      { name: 'Chillax', provider: 'fontshare', weights: [400, 500, 600, 700] },
-      { name: 'Sono', provider: 'google', weights: [400, 600, 700] },
+      { name: 'Technor', provider: 'fontshare', weights: [600, 700] },
+      { name: 'Bai Jamjuree', provider: 'google', weights: [400, 500, 600, 700] },
+      { name: 'Kode Mono', provider: 'google', weights: [400, 600, 700] },
     ],
   },
   // A two-icon house collection (`i-nc-*`) for the CTA arrows. Lucide — the

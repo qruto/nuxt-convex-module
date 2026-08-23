@@ -173,7 +173,7 @@ async function manualSend(side: 'A' | 'B') {
       <!-- Step fences stacked in one grid cell: the tallest sets the height,
            so step changes never pump the plate. Type floors at 0.75rem and
            scrolls past the floor (longest line ≈ 32ch of 0.6em mono). -->
-      <div class="@container grid flex-1 content-start [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/20),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+      <div class="@container grid flex-1 content-start [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/19.4),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
         <div
           v-for="(part, index) in parts"
           :key="STEPS[index]!.id"
