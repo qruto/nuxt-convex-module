@@ -21,7 +21,7 @@
    Zero height is not a shortcut, it's the invariant: the artwork is a third
    party's box, so its height against our strut is a coincidence, and a mark
    that reaches higher above the baseline than the line's own ascent (Nuxt's
-   does — its icon overshoots the caps, 0.9em of box against a 0.777em strut
+   does — its icon overshoots the caps, 0.9em of box against a 0.840em strut
    ascent at line-height 1) STRETCHES that one line. The headline melt tiles
    its gradient every 1lh from the block's top edge (landing.css), so one
    stretched line puts every line under it out of phase with its own tile —
@@ -29,13 +29,13 @@
    contributes width to the line and nothing else; overflow paints the rest.
    ================================================================ */
 :root {
-  /* Baloo 2 700, measured off its outlines (canvas actualBoundingBoxAscent
+  /* Technor 700, measured off its outlines (canvas actualBoundingBoxAscent
      for H and n). `em` here resolves at the USE site — the logo inside the
      headline — not against the root font size. Re-measure both whenever
      --font-display changes; they are what holds a borrowed wordmark on this
-     font's baseline. (Chillax was 0.675 / 0.515.) */
-  --type-cap: 0.616em;
-  --type-x: 0.495em;
+     font's baseline. (Baloo 2 was 0.616 / 0.495, Chillax 0.675 / 0.515.) */
+  --type-cap: 0.625em;
+  --type-x: 0.537em;
 }
 @utility brand-lockup {
   /* Drawn height of the whole artwork — the written height we asked for,

@@ -243,7 +243,7 @@ watch(state, (value) => {
          sets the height, so scene changes never pump the plate. Type is sized
          off the panel (longest scene line is 55ch of 0.6em-advance mono) with
          a floor that keeps phones readable; past the floor the pre scrolls. -->
-    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/32),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
       <div
         v-for="(part, index) in parts"
         :key="SCENES[index]!.id"

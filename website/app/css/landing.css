@@ -15,30 +15,32 @@
 /* Two voices on one headline. The brand lockups hold full page ink and their
    vendors' own mark colors (the brand-lockup recipe pins that); every OTHER
    word takes two clipped background layers — a vertical ramp that gives the
-   letters their tone, and a crown that lights their top edges — tiled every
-   1lh so each LINE relights on its own. Tiling is the point: one sweep over
+   letters their tone, and a bevel that lights their top edges and shades
+   their bottoms — tiled every 1lh so each LINE relights on its own. Tiling is the point: one sweep over
    the whole block would spread the ramp so thin that each individual line
    reads flat; giving every line the whole ramp is what makes the melt
    legible at display size.
 
-   The stops are measured Baloo 2 700 edges, not guesses (canvas
+   The stops are measured Technor 700 edges, not guesses (canvas
    actualBoundingBox at the hero's lh = 1em — it really is 1: 72px type on a
    72px line — as fractions of the tile):
 
-      7.9%  i-dots (the ceiling)   77.7%  baseline
-     11.7%  ascender tops          96.4%  descender bottoms (p)
-     16.1%  cap tops               97.6%  descender bottoms (j g y q)
-     28.2%  x-height tops
+     12.6%  i-dots (the ceiling)    84.0%  baseline
+     15.5%  ascender tops          104.0%  descender bottoms (p)
+     21.5%  cap tops               105.5%  descender bottoms (j g y q)
+     30.3%  x-height tops
 
-   Baloo 2 keeps its descenders INSIDE the tile (97.6%, where Chillax ran
-   105.5% and overran into the next line's ceiling), so the ink-free stretch
-   is a single contiguous 97.6% → 100% → 7.9% wrap around the seam. The ramp
-   still has to be periodic — its value at 100% repeated at 0%, because a
-   tile can't hold a stop past 100% — but it now has a comfortable 10% of
-   empty tile to swing from the dark foot back up to the lit top edge,
-   instead of Chillax's 4% squeeze.
+   Technor hangs its descenders PAST the tile (104–105.5%, like Chillax's
+   105.5% and unlike Baloo 2, which kept them inside at 97.6%), so the feet
+   are painted by the NEXT tile's top: their shade band wraps the seam —
+   active at 100% and again over 0–5.5% — and the tone ramp holds the dark
+   foot value across it. Both gradients stay periodic (a tile can't hold a
+   stop past 100%, so the value at 100% must repeat at 0%). The ink-free
+   swing from the wrapped feet back up to the lit ceiling is 5.5% → 12.6% —
+   7.1% of tile, tighter than Baloo 2's 10% but nearly double Chillax's old
+   4% squeeze, and the ramp climbs it cleanly.
 
-   The ceiling is the i-DOT, not the ascender: Baloo 2 hangs it 3.9% higher
+   The ceiling is the i-DOT, not the ascender: Technor hangs it 2.9% higher
    than b/d/k/l, and the headline is full of them ("in", "application"). Miss
    that and every dot on the page catches the tail of the reset ramp.
 
@@ -70,71 +72,89 @@
   --hero-ink-a: light-dark(var(--color-signal-600), var(--color-signal-300));
   --hero-ink-b: light-dark(var(--color-signal-700), var(--color-signal-500));
   --hero-ink-c: light-dark(var(--color-signal-800), var(--color-signal-600));
-  /* The crown's ink. Every stop below is a percentage of this one value, so a
-     scheme costs ONE number — the ink's own alpha. Dark eases off (bright
-     paint on a dark ground blows out first) and both ride at whisper strength
-     ON PURPOSE: push past ~20% and the headline turns into cast metal. There
-     is deliberately NO matching dark band under the bottom edges — light-only
-     plus the ramp's deep foot reads as a form lit from above, while a
-     symmetric light/dark pair at every edge reads as something stamped INTO
-     the page, which is the opposite of what this is doing. */
+  /* The crown's ink — the bevel's LIGHT half, an inset white glow bled down
+     from the top edges. Every stop below is a percentage of this one value,
+     so a scheme costs ONE number — the ink's own alpha. Dark eases off
+     (bright paint on a dark ground blows out first) and both ride at whisper
+     strength ON PURPOSE: push past ~20% and the headline turns into cast
+     metal. The matching shade under the bottom edges (--hero-shade, further
+     down) is what makes the pair read as the logo's bevel — the guard against
+     the old "stamped into the page" failure is restraint, not absence: both
+     halves feathered, narrow, and quiet. */
   --hero-crown: light-dark(oklch(100% 0 0 / 0.17), oklch(100% 0 0 / 0.1));
-  /* The lift — the crown says "lit from above", this says "off the page".
-     A filter is the only operator that can cast OUTSIDE the glyphs: the paint
-     here is a background clipped to text, so text-shadow lands on TOP of it,
-     and box-shadow hugs the element box rather than the letters. The catch is
-     that a filter colours the whole subtree with one ink, the black Convex and
-     Nuxt wordmarks included — which is exactly why the offset stays tiny and
-     the blur stays wide. A tight cast fringes those marks and reads as an
-     outline; a soft one just reads as height.
-
-     ONE shape, two grounds. Both schemes get the same rig — a near-contact
-     shadow and a wider cast pooled just below the letters — and only the inks
-     are scheme-swapped: on light the ground takes a warm shadow, on dark it
-     bounces the signal back up as a glow (a dark cast on a dark ground is
-     invisible, and the light in that room has to come from somewhere). */
-  --hero-cast-near: light-dark(--alpha(var(--color-signal-950) / 10%),
-                               --alpha(var(--color-signal-600) / 12%));
-  --hero-cast-far: light-dark(--alpha(var(--color-signal-950) / 13%),
-                              --alpha(var(--color-signal-500) / 16%));
+  /* The shade — the bevel's other half. The logo's depth is an INNER pair,
+     not an extrusion (a solid under-block was tried 2026-08-21 and rejected):
+     a white inner glow bleeding down from every top edge, a dark inner shadow
+     rising from every bottom edge, think inset text-shadows at ∓2px. CSS has
+     no inset text-shadow, but the clipped tile fakes both: the crown layer IS
+     the top glow, and this ink hands the same layer its dark counterpart —
+     feathered in over ~3px and released just past the measured bottom edge,
+     the way a 2px-offset inner shadow's blur would land. Because the clip
+     does the painting, neither half ever touches the brand lockups — which is
+     the other reason the extrusion lost: a filter smears one ink over the
+     whole subtree, wordmarks included, where this pair only lands on the
+     words that own the ramp. Dark runs a heavier alpha than light because
+     black-on-signal-600 has less to push against than black-on-white. */
+  --hero-shade: light-dark(oklch(0% 0 0 / 0.14), oklch(0% 0 0 / 0.22));
+  /* The cast — "off the page" still comes from outside: one wide, soft
+     drop-shadow pooled under the letters. On light the ground takes a warm
+     shadow; on dark it bounces the signal back up as a glow (a dark cast on
+     a dark ground is invisible, and the light in that room has to come from
+     somewhere). Soft and low-alpha ON PURPOSE — a filter tints the whole
+     subtree with one ink, wordmarks included, and only a wide cast reads as
+     height on them rather than as an outline. */
+  --hero-cast: light-dark(--alpha(var(--color-signal-950) / 13%),
+                          --alpha(var(--color-signal-500) / 16%));
   /* Inherited ink for anything the clip can't paint. */
   color: light-dark(var(--color-signal-700), var(--color-signal-300));
-  filter:
-    drop-shadow(0 1px 2px var(--hero-cast-near))
-    drop-shadow(0 5px 18px var(--hero-cast-far));
+  filter: drop-shadow(0 5px 18px var(--hero-cast));
   background-image:
-    /* The crown. Stops only ever ASCEND — CSS clamps an out-of-order stop up
+    /* The bevel. Stops only ever ASCEND — CSS clamps an out-of-order stop up
        to its predecessor, which silently flattens a band into one tone. */
     linear-gradient(
       180deg,
-      /* 97.6–100% and 0–7.9% are the tile's ink-free wrap, so the crown can
-         already be at full strength when the first glyph edge arrives */
-      transparent 0% 6%,
+      /* the descender feet, wrapped: p bottoms out at 104% and j g y q at
+         105.5%, past the seam, so their plateau lives at the TOP of the
+         tile (0–5.5%) and the band holds full strength at 100% below to
+         stay periodic across it */
+      var(--hero-shade) 0% 5.5%,
+      transparent 7.5% 10.7%,
       /* PLATEAU, not a peak, and wide enough to cover all three top-edge
-         classes at once (i-dots 7.9%, ascenders 11.7%, caps 16.1%) — a peak
+         classes at once (i-dots 12.6%, ascenders 15.5%, caps 21.5%) — a peak
          lands below the edge and reads as a stripe across the letter */
-      var(--hero-crown) 7.9% 16.6%,
-      transparent 23%,
+      var(--hero-crown) 12.6% 22%,
+      transparent 28.4%,
       /* the same again at the x-height tops, weaker: on b/d/k/l this one
          crosses mid-stem, where a bright line WOULD be a stripe */
-      transparent 26.5%,
-      --alpha(var(--hero-crown) / 55%) 28.2% 32%,
-      transparent 38% 100%
+      transparent 28.6%,
+      --alpha(var(--hero-crown) / 55%) 30.3% 34.1%,
+      /* the shade half. Baseline first: feathered in over ~3px of tile, held
+         just PAST the line because round bottoms (o e c) overshoot ~1.5%
+         below it, then released fast — below the baseline a descender stem
+         should take the faintest possible stripe */
+      transparent 40.1% 79.8%,
+      var(--hero-shade) 84% 85.5%,
+      /* then the climb back to full shade at the seam, where the wrapped
+         foot plateau above takes over — the feather rides the last stretch
+         of the p stems into their own feet */
+      transparent 87.5% 96.8%,
+      var(--hero-shade) 100%
     ),
     /* The tone. */
     linear-gradient(
       180deg in oklch,
-      /* the seam value, repeated at both ends */
-      var(--hero-ink-c) 0%,
+      /* the seam value, held flat across the wrapped descender feet so a
+         foot straddling the seam is one colour, not two */
+      var(--hero-ink-c) 0% 5.5%,
       /* full light held from the ceiling down past the cap tops */
-      var(--hero-ink-a) 7.9% 16.1%,
+      var(--hero-ink-a) 12.6% 21.5%,
       /* melt to the settled brand tone by the baseline, and hold it for most
          of the descender — a descender that darkens along its WHOLE length
          pulls "app" out of "application" as its own dark shape */
-      var(--hero-ink-b) 77.7% 88%,
+      var(--hero-ink-b) 84% 94.3%,
       /* only the last few px fall away, which reads as the tail turning under
          rather than as a second colour */
-      var(--hero-ink-c) 96.5% 100%
+      var(--hero-ink-c) 98.5% 100%
     );
   background-size: 100% 1lh;
   background-clip: text;
