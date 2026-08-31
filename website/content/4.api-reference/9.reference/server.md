@@ -1,5 +1,8 @@
 ---
 navigation: true
+description: "Helpers for integrating Convex into Nuxt applications using server rendering — generated TypeScript API reference for nuxt-convex-module/server."
+seo:
+  title: "API reference: server"
 ---
 
 # server

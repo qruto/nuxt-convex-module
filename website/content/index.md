@@ -109,7 +109,7 @@ The sync loop, staged: two clients, one `useQuery` subscription each, **no
 props between them** — a write from either side lands in **both panes on the
 same commit**. The recording drives itself and loops; touch anything and the
 controls are yours. Simulated in-page with zero network — the hero above
-and the [playground](/playground) run the real thing.
+and the [live demos in the guide](/guide/queries) run the real thing.
 
 #body
 ::landing-operation
@@ -146,8 +146,8 @@ title: Three mechanisms on replay
 ---
 #description
 **Optimistic writes**, **cursor pagination**, **file upload** — looping
-readouts, simulated in-page with zero network. The [playground](/playground)
-runs them against a real deployment.
+readouts, simulated in-page with zero network. The guide's
+[live demos](/guide/pagination) run them against a real deployment.
 
 #body
 ::landing-bench
@@ -186,8 +186,8 @@ links:
     ui:
       # size xl ships a 24px icon — oversized next to its 16px label.
       trailingIcon: size-4.5
-  - label: Try the live playground
-    to: /playground
+  - label: See it running live
+    to: /guide/queries
     color: neutral
     variant: outline
 ---

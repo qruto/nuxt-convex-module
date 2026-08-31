@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Server-side Better Auth + Convex integration for Nuxt — generated TypeScript API reference for nuxt-convex-module/better-auth/server."
+seo:
+  title: "API reference: better-auth/server"
 ---
 
 # better-auth/server

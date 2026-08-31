@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Vue login component for use with Clerk — generated TypeScript API reference for nuxt-convex-module/clerk/client."
+seo:
+  title: "API reference: clerk/client"
 ---
 
 # clerk/client
