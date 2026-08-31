@@ -1,5 +1,8 @@
 ---
 navigation: true
+description: "Tools to integrate Convex into Vue applications — generated TypeScript API reference for nuxt-convex-module/client."
+seo:
+  title: "API reference: client"
 ---
 
 # client

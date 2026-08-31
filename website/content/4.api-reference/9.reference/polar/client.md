@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Vue ports of @convex-dev/polar/react's billing components — CheckoutLink and CustomerPortalLink."
+seo:
+  title: "API reference: polar/client"
 ---
 
 # polar/client

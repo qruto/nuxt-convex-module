@@ -1,10 +1,12 @@
 ---
 navigation: true
-title: Modules
+title: All Modules
 description: Auto-generated TypeScript API reference for every public nuxt-convex-module module.
+seo:
+  title: "API reference: all modules"
 ---
 
-# API Modules
+# All Modules
 
 ## Modules
 

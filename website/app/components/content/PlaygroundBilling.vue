@@ -22,7 +22,7 @@
         Buy demo product
       </CheckoutLink>
       <CustomerPortalLink
-        return-url="/playground/billing"
+        return-url="/components/polar"
         class="raised inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-default no-underline transition-[color,box-shadow] duration-150 ease-out [--raised-radius:10px] hover:text-primary active:shadow-(--inset-1)"
       >
         Manage subscription

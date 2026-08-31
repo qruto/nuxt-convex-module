@@ -4,6 +4,16 @@ export default defineAppConfig({
     colorMode: '',
   },
 
+  // No `navigation.sub`: the sidebar carries the WHOLE tree, every section and
+  // every page at once, the way an ordinary docs site reads. `sub: 'aside'`
+  // would put the four sections in a UPageAnchors switcher above the sidebar
+  // and scope the tree below it to the one you are in — you would have to pick
+  // a section before you could see what was in it. Docus never collapses groups
+  // on desktop (DocsAsideLeftBody hardcodes `:collapsible="false"`), so the
+  // length is held down at the source instead: the generated TypeDoc modules
+  // that would nest three folders deep are kept out of the tree — see the note
+  // in scripts/typedoc-postprocess.mjs.
+
   ui: {
     colors: {
       // Custom ramp declared in app.css (fluorescent signal orange);

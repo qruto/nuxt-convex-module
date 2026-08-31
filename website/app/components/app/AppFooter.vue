@@ -19,18 +19,29 @@ const columns = computed(() => [
   {
     label: 'Guide',
     children: [
-      { label: 'Queries & mutations', to: '/guide/queries-and-mutations' },
+      { label: 'Queries', to: '/guide/queries' },
+      { label: 'Mutations', to: '/guide/mutations-and-actions' },
+      { label: 'Pagination', to: '/guide/pagination' },
       { label: 'Server & SSR', to: '/guide/server-and-ssr' },
-      { label: 'Authentication', to: '/guide/authentication' },
-      { label: 'Billing', to: '/guide/billing' },
+      { label: 'Auth state', to: '/guide/auth-state' },
+    ],
+  },
+  {
+    label: 'Components',
+    children: [
+      { label: 'Better Auth', to: '/components/better-auth' },
+      { label: 'Clerk', to: '/components/clerk' },
+      { label: 'Auth0', to: '/components/auth0' },
+      { label: 'Polar', to: '/components/polar' },
+      { label: 'Resend', to: '/components/resend' },
     ],
   },
   {
     label: 'Reference',
     children: [
-      { label: 'Composables', to: '/api-reference/composables' },
-      { label: 'Server utilities', to: '/api-reference/server-utilities' },
-      { label: 'Playground', to: '/playground' },
+      { label: 'Auto-imports', to: '/api-reference/auto-imports' },
+      { label: 'Server imports', to: '/api-reference/server-imports' },
+      { label: 'Modules', to: '/api-reference/reference' },
     ],
   },
   {
@@ -39,7 +50,7 @@ const columns = computed(() => [
       { label: 'Source', to: repo.value, target: '_blank' },
       { label: 'Issues', to: `${repo.value}/issues`, target: '_blank' },
       { label: 'Changelog', to: `${repo.value}/blob/main/CHANGELOG.md`, target: '_blank' },
-      { label: 'MIT license', to: `${repo.value}/blob/main/LICENSE`, target: '_blank' },
+      { label: 'License', to: `${repo.value}/blob/main/LICENSE`, target: '_blank' },
     ],
   },
 ])

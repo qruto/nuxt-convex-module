@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Public client-side API for the opt-in Better Auth integration — a Vue/Nuxt port of @convex-dev/better-auth's react integration."
+seo:
+  title: "API reference: better-auth/client"
 ---
 
 # better-auth/client

@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Vue login component for use with Auth0 — generated TypeScript API reference for nuxt-convex-module/auth0/client."
+seo:
+  title: "API reference: auth0/client"
 ---
 
 # auth0/client

@@ -1,5 +1,8 @@
 ---
-navigation: true
+navigation: false
+description: "Nuxt-idiomatic data fetching for Convex queries — generated TypeScript API reference for nuxt-convex-module/nuxt/composables/use-async-query."
+seo:
+  title: "API reference: nuxt/composables/use-async-query"
 ---
 
 # nuxt/composables/use-async-query
