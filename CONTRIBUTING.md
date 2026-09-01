@@ -45,13 +45,15 @@ pnpm test
 pnpm build
 ```
 
-The `website/` directory is a full Nuxt app (product homepage · docs · interactive playground) wired to the local package **and a real Convex dev deployment**. Start it with:
+The `website/` directory is a full Nuxt app (product homepage · docs, with live demos embedded throughout the docs) wired to the local package **and a real Convex dev deployment**. Start it with:
 
 ```bash
 pnpm dev
 ```
 
-That runs `convex dev` in `website/` with the Nuxt dev server supervised via `--start`, so function push, codegen, the WebSocket sync protocol, SSR fetching, and the interactive playground pages all run against a live deployment. On first run `convex dev` walks you through picking a deployment — a free anonymous local one works fine (no account needed); it stores the choice in `website/.env.local`.
+That runs `convex dev` in `website/` with the Nuxt dev server supervised via its [`--start`](https://docs.convex.dev/cli#run-the-convex-dev-server) option — one process pushes functions and codegen on change and runs the Nuxt dev server alongside — so function push, codegen, the WebSocket sync protocol, SSR fetching, and the docs' live demos all run against a live deployment. On first run `convex dev` walks you through picking a deployment; a free [anonymous local deployment](https://docs.convex.dev/cli/local-deployments) works fine (no account needed), and it stores the choice in `website/.env.local`.
+
+The Convex functions backing the demos live in [`website/convex/`](./website/convex) — a small team-chat + tasks app exercising queries, mutations, actions, pagination, and file storage. Each demo shows its own source, and the status pill in every demo header reflects the live WebSocket connection state.
 
 The docs site also wants to know its own public origin — Docus feeds it to `site.url`, `llms.domain`, canonical URLs and OG images. Deployments pick it up from the host (`VERCEL_*`/`URL`); locally, add it to the same `website/.env.local` to silence the `nuxt-llms require a domain to be set` warning:
 
@@ -65,7 +67,7 @@ To work on the **Nuxt DevTools panel** (`devtools-client-app/`), also start its 
 pnpm dev:devtools-client
 ```
 
-Then open the website, launch Nuxt DevTools in the browser, and pick the Convex tab. The website playground pages provide live queries/mutations to inspect.
+Then open the website, launch Nuxt DevTools in the browser, and pick the Convex tab. The docs' live demos provide queries/mutations to inspect.
 
 ## Project Structure
 
@@ -73,7 +75,7 @@ Then open the website, launch Nuxt DevTools in the browser, and pick the Convex 
 src/                  # Module source (Nuxt module + Convex component)
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
 test/                 # Vitest unit & integration tests
-website/              # Nuxt app: product homepage · docs (Docus) · interactive playground
+website/              # Nuxt app: product homepage · docs (Docus) with live Convex demos
 ```
 
 ## Submitting Changes

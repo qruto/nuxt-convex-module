@@ -13,7 +13,7 @@ Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` 
 
 Coverage is complete rather than partial: `convex/react` and `convex/nextjs` are ported in full, hook-for-composable, and the port is kept diffable against upstream so new Convex releases can be tracked file-for-file — see [Relationship to upstream](#relationship-to-upstream) and [`PARITY.md`](./PARITY.md).
 
-> 📖 **Full documentation:** the **[docs site](./website)** (homepage · docs · playground, one Nuxt app) covers installation, the integration guide, every composable and server helper, and the complete API reference.
+> 📖 **Full documentation:** the **[docs site](./website)** (homepage and docs in one Nuxt app, with live Convex demos throughout) covers installation, the guide, every supported component, and the complete API reference.
 
 ## Supported official packages
 
@@ -210,9 +210,9 @@ The authoritative file-by-file map, pinned upstream baseline versions, and out-o
 1. Clone this repository
 2. Install dependencies using `pnpm install`
 3. Prepare for development using `pnpm dev:prepare`
-4. Start the development server (the docs/playground app) using `pnpm dev` — or `pnpm start`
+4. Start the development server (the docs site) using `pnpm dev` — or `pnpm start`
 
-`pnpm dev` runs the playground through [portless](https://portless.sh), so it is served at a stable, named HTTPS URL — **https://nuxt-convex-module.localhost** — instead of a shifting `localhost:<port>`. portless generates and trusts a local CA on first run (auto-elevating to bind port 443); pass `--no-tls` for plain HTTP, or run `nuxt dev website` directly to bypass portless entirely.
+`pnpm dev` runs the docs site through [portless](https://portless.sh), so it is served at a stable, named HTTPS URL — **https://nuxt-convex-module.localhost** — instead of a shifting `localhost:<port>`. portless generates and trusts a local CA on first run (auto-elevating to bind port 443); pass `--no-tls` for plain HTTP, or run `nuxt dev website` directly to bypass portless entirely.
 
 We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASING.md](./RELEASING.md).
 
