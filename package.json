@@ -31,8 +31,8 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/module.js"
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
     },
     "./client": {
       "types": "./dist/runtime/vue/index.d.ts",
@@ -79,11 +79,11 @@
       "import": "./dist/runtime/auth0/vue/index.js"
     }
   },
-  "main": "./dist/module.js",
+  "main": "./dist/module.mjs",
   "typesVersions": {
     "*": {
       ".": [
-        "./dist/types.d.ts"
+        "./dist/types.d.mts"
       ],
       "client": [
         "./dist/runtime/vue/index.d.ts"
@@ -131,9 +131,9 @@
   "scripts": {
     "prepare": "git config hook.commitlint.event commit-msg && git config hook.commitlint.command 'pnpm exec commitlint --edit' || true",
     "prepack": "pnpm run build",
-    "build": "nuxt-module-build build && node scripts/normalize-module-ext.js && pnpm run build:devtools-client",
+    "build": "nuxt-module-build build && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && node scripts/normalize-module-ext.js && nuxt prepare website",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare website",
     "dev": "pnpm run dev:prepare && pnpm --dir website exec convex dev --start 'portless run --name nuxt-convex-module nuxt dev'",
     "dev:devtools-client": "nuxt dev devtools-client-app --port 3630",
     "start": "pnpm run dev",
