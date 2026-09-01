@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@convex-dev/polar": "^0.9.2",
-    "@polar-sh/checkout": "^0.4.0",
+    "@polar-sh/checkout": "^0.4.1",
     "nuxt-convex-module": "workspace:*",
-    "convex": "^1.42.3",
-    "docus": "^5.12.2",
+    "convex": "^1.45.0",
+    "docus": "^5.13.0",
     "nuxt": "catalog:"
   },
   "devDependencies": {
