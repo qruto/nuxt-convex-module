@@ -32,9 +32,12 @@ const RAIL: Array<ServiceEntry | null> = [
 </script>
 
 <template>
-  <div class="border-b border-default">
+  <!-- landing-mill: the rail is part of the same milled billet as the
+       sections around it — an untextured strip here would read as a
+       different material between two brushed plates. -->
+  <div class="landing-mill border-b border-default">
     <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 py-5 lg:justify-between">
-      <p class="etched m-0 font-mono text-[0.6rem] font-semibold tracking-[0.14em] text-dimmed">
+      <p class="concave-text m-0 font-mono text-[0.6rem] font-semibold tracking-[0.14em] text-dimmed">
         WORKS WITH · OFFICIAL ADD-ONS
       </p>
       <ul
@@ -69,7 +72,7 @@ const RAIL: Array<ServiceEntry | null> = [
               aria-hidden="true"
             />
             <span class="flex flex-col">
-              <span class="etched font-mono text-[0.62rem] font-semibold tracking-[0.14em] text-toned">{{ entry.label }}</span>
+              <span class="concave-text font-mono text-[0.62rem] font-semibold tracking-[0.14em] text-toned">{{ entry.label }}</span>
               <span class="font-mono text-[0.5rem] tracking-[0.18em] text-dimmed">{{ entry.role }}</span>
             </span>
           </li>

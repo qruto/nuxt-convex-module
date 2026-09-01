@@ -27,9 +27,11 @@ export default defineNuxtConfig({
     head: {
       meta: [
         { name: 'color-scheme', content: 'light dark' },
-        // Ground tones — Nuxt UI neutral-900 / neutral-200 (see app.css).
+        // Ground tones — Nuxt UI neutral-900 dark, and the lightened
+        // titanium canvas (oklch 93.8%) light. Both are set in the
+        // ground ladder at the top of app/css/depth.css; keep in sync.
         { name: 'theme-color', content: '#171717', media: '(prefers-color-scheme: dark)' },
-        { name: 'theme-color', content: '#e5e5e5', media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: '#eaeaea', media: '(prefers-color-scheme: light)' },
         { name: 'apple-mobile-web-app-title', content: 'Nuxt Convex' },
       ],
       // Favicon set generated from the Nuxt × Convex mark (`public/logo.svg`)

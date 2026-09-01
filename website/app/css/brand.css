@@ -56,5 +56,15 @@
     display: block;
     width: auto;
     height: var(--brand-drawn);
+    /* An <svg> viewport clips to its viewBox by default, and both kits
+       export ink-TIGHT boxes — Nuxt's "t" ends exactly on x=128. Any
+       relief staged on the paths (the hero billet's concave drop-shadows)
+       is therefore thrown straight into that wall: the cast stopped dead
+       on a vertical, drawing a rectangular halo around the wordmark and
+       shaving the last letter's own edge. The lockup already contributes
+       width and nothing else (block-size: 0 above, the mark overflows),
+       so letting the viewport overflow too costs no layout and hands the
+       shadows the room they need. */
+    overflow: visible;
   }
 }

@@ -71,7 +71,7 @@ function formatValue(key: string, value: unknown): string {
       <li
         v-for="key in activeKeys"
         :key="key"
-        class="raised flex items-baseline justify-between gap-3 px-2.5 py-1.5 text-sm [--raised-elev:var(--elev-0)] [--raised-radius:10px]"
+        class="convex-0 rounded-[10px] flex items-baseline justify-between gap-3 px-2.5 py-1.5 text-sm"
       >
         <span class="font-medium text-default">{{ labels[key] }}</span>
         <span

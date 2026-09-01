@@ -15,7 +15,7 @@
         class="badge-vue size-4.5 [grid-area:1/1]"
       />
     </span>
-    <code class="etched min-w-0 truncate rounded-md px-2 py-1 text-[0.66rem] text-highlighted">useQuery(api.messages.list)</code>
+    <code class="concave-text min-w-0 truncate rounded-md px-2 py-1 text-[0.66rem] text-highlighted">useQuery(api.messages.list)</code>
   </div>
 </template>
 

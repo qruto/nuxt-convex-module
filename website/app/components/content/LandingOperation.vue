@@ -148,9 +148,9 @@ async function manualSend(side: 'A' | 'B') {
     class="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
   >
     <!-- The code plate — the walkthrough's driver seat. -->
-    <div class="plate flex min-w-0 flex-col gap-3 px-5 pt-4 pb-5">
+    <div class="convex bevel rounded-xl flex min-w-0 flex-col gap-3 px-5 pt-4 pb-5">
       <header class="flex items-center justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
-        <span class="etched text-toned">operation.ts</span>
+        <span class="concave-text text-toned">operation.ts</span>
         <span
           v-if="state === 'playing'"
           class="inline-flex items-center gap-1.5 font-bold text-primary-700 dark:text-primary-300"
@@ -164,7 +164,7 @@ async function manualSend(side: 'A' | 'B') {
         <li
           v-for="(s, index) in STEPS"
           :key="s.id"
-          class="etched transition-colors duration-300"
+          class="concave-text transition-colors duration-300"
           :class="index <= step ? 'text-primary-700 dark:text-primary-300' : 'text-dimmed'"
         >
           0{{ index + 1 }} {{ s.label }}
@@ -197,9 +197,9 @@ async function manualSend(side: 'A' | 'B') {
           @send="manualSend('A')"
         />
 
-        <!-- The sync bus — an etched channel with a hub LED between the clients. -->
+        <!-- The sync bus — a cut channel with a hub LED between the clients. -->
         <div class="flex min-w-[118px] flex-col items-center gap-2 self-center max-[479px]:w-full">
-          <span class="etched font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap text-toned">CONVEX SYNC</span>
+          <span class="concave-text font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap text-toned">CONVEX SYNC</span>
           <div
             class="flex w-full items-center"
             aria-hidden="true"
@@ -208,7 +208,7 @@ async function manualSend(side: 'A' | 'B') {
               class="h-0.5 flex-1 rounded-full transition-[background,box-shadow] duration-150 ease-out"
               :class="bus === 'A' ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-border-accented)'"
             />
-            <span class="mx-1 grid size-[26px] flex-none place-items-center rounded-full bg-(image:--grad-surface) shadow-(--elev-1)">
+            <span class="convex mx-1 grid size-[26px] flex-none place-items-center rounded-full">
               <i
                 class="size-2 rounded-full transition-[background,box-shadow] duration-150 ease-out"
                 :class="bus ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-text-dimmed)'"
@@ -219,7 +219,7 @@ async function manualSend(side: 'A' | 'B') {
               :class="bus === 'B' ? 'bg-primary shadow-(--glow-primary-soft)' : 'bg-(--ui-border-accented)'"
             />
           </div>
-          <span class="etched min-h-[1em] font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap text-primary-700 dark:text-primary-300">{{ chip ?? ' ' }}</span>
+          <span class="concave-text min-h-[1em] font-mono text-[0.58rem] font-semibold tracking-[0.14em] whitespace-nowrap text-primary-700 dark:text-primary-300">{{ chip ?? ' ' }}</span>
           <!-- One more pass — simulated, so no cost to ask. -->
           <UButton
             size="xs"
@@ -241,7 +241,7 @@ async function manualSend(side: 'A' | 'B') {
           @send="manualSend('B')"
         />
       </div>
-      <span class="etched self-end font-mono text-[0.56rem] font-semibold tracking-[0.14em] text-dimmed">SIMULATED · ZERO NETWORK</span>
+      <span class="concave-text self-end font-mono text-[0.56rem] font-semibold tracking-[0.14em] text-dimmed">SIMULATED · ZERO NETWORK</span>
     </div>
   </div>
 </template>

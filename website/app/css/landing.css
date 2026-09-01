@@ -3,23 +3,123 @@
    Applied via `class:` props in content/index.md.
    ================================================================ */
 
-/* Hero ground — brushed grain + a whisper of accent bloom. */
+/* -- THE MILL FINISHES -------------------------------------------
+   The grounds the landing's sections are cut into. One material and
+   one overhead light (the --mill-* tokens in chrome.css), but each
+   section carries the finish its own content asks for, the way one
+   billet takes different tool passes:
+
+     landing-mill        brushed grain — the base finish (the hero
+                         below via its own rule, the services rail)
+     landing-mill-grid   01 . the spec sheet's measurement grid
+     landing-mill-rings  02 . broadcast rings off the socket, set in
+                         a RECESSED tray (lip shade instead of the
+                         ray — the demo is staged in a well)
+     landing-mill-hatch  03 . diagonal cross-feed marks off the bench
+     landing-mill-knurl  04 . knurling — the grip texture on the
+                         thing that ends up in your pocket
+
+   Every one of them repaints the ground opaquely before laying its
+   own finish down. That is load-bearing since chrome.css put the
+   brushed grain on `body`: without a fill of their own these
+   sections would show the page grain THROUGH their own, two
+   gradients of the same pitch at different phases, which is exactly
+   the beat the coprime periods exist to avoid. */
+.landing-mill {
+  background-color: var(--ui-bg);
+  background-image: var(--mill-ray), var(--mill-grain);
+}
+/* 01 — the drawing grid: minor rule every 28px, major every 140px,
+   each pair scribed (shade + 1px light catch below/beside). */
+.landing-mill-grid {
+  background-color: var(--ui-bg);
+  background-image:
+    var(--mill-ray),
+    repeating-linear-gradient(180deg,
+      var(--mill-rule-lo) 0 1px, --alpha(var(--mill-rule-hi) / 14%) 1px 2px,
+      transparent 2px 28px),
+    repeating-linear-gradient(90deg,
+      var(--mill-rule-lo) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(180deg,
+      var(--mill-rule-major) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(90deg,
+      var(--mill-rule-major) 0 1px, transparent 1px 140px);
+}
+/* 02 — concentric arcs walking out of the socket at top center,
+   where the other sections' ray sits; the tray lip recesses the
+   whole stage below the surface. */
+.landing-mill-rings {
+  background-color: var(--ui-bg);
+  background-image:
+    repeating-radial-gradient(circle at 50% 0%,
+      transparent 0 45px,
+      var(--mill-rule-lo) 45px 46px,
+      --alpha(var(--mill-rule-hi) / 12%) 46px 47px,
+      transparent 47px 90px);
+  box-shadow: var(--mill-lip);
+}
+/* 03 — one-direction diagonal tool marks (a cross-feed pass, not a
+   weave): the brushed pair rotated to 45° and spaced wider. */
+.landing-mill-hatch {
+  background-color: var(--ui-bg);
+  background-image:
+    var(--mill-ray),
+    repeating-linear-gradient(45deg, var(--mill-line-hi) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(45deg, var(--mill-line-lo) 0 1px, transparent 1px 11px);
+}
+/* 04 — crossed knurl: the two diagonals interleave into diamonds;
+   light one way, shade the other, so the raised points read lit. */
+.landing-mill-knurl {
+  background-color: var(--ui-bg);
+  background-image:
+    var(--mill-ray),
+    repeating-linear-gradient(63deg, var(--mill-line-hi) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-63deg, var(--mill-line-lo) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-63deg, var(--mill-line-hi) 0 1px, transparent 1px 13px);
+}
+
+/* Hero ground — the same brushed grain under a whisper of accent
+   bloom. Composed here rather than stacking the landing-mill class:
+   two classes setting background-image on one element would stomp
+   each other, and the hero trades the mill's overhead ray for its
+   own bloom. */
 .landing-hero-ground {
   --hero-bloom: light-dark(--alpha(var(--color-signal-600) / 12%),
                            --alpha(var(--color-signal-500) / 10%));
-  --hero-grain: light-dark(oklch(100% 0 0 / 0.18), oklch(100% 0 0 / 0.012));
+  background-color: var(--ui-bg);
   background-image:
     radial-gradient(1000px 560px at 88% -10%, var(--hero-bloom), transparent 62%),
-    repeating-linear-gradient(180deg, transparent 0 3px, var(--hero-grain) 3px 4px);
+    var(--mill-grain);
 }
-/* Two voices on one headline. The brand lockups hold full page ink and their
-   vendors' own mark colors (the brand-lockup recipe pins that); every OTHER
-   word takes two clipped background layers — a vertical ramp that gives the
-   letters their tone, and a bevel that lights their top edges and shades
-   their bottoms — tiled every 1lh so each LINE relights on its own. Tiling is the point: one sweep over
-   the whole block would spread the ramp so thin that each individual line
-   reads flat; giving every line the whole ramp is what makes the melt
-   legible at display size.
+/* The hero headline is worked INTO THE PAGE under a STILL lamp — final
+   relief split (2026-08-24): the plain words are CONVEX, pressed up out
+   of the page ground in its own material and carrying the full
+   playground chain right down to the twelve-step side wall, and the
+   brand lockups are the one CONCAVE element — engraved badges cut into
+   that same ground, holding dark matte graphite wordmark inlays and
+   vendor-hue enamel symbols. Raised sentence, inlaid marks: the two reliefs read
+   against each other, which is what makes both legible on a ground this
+   flat.
+
+   The lamp does NOT turn any more. --light-angle is frozen at 330°, so
+   every rim, wall, cast and face sweep resolves once and the sentence
+   is fixed premium relief. The hero's only motion is --shine-phase, the
+   specular travelling the two wordmarks (see the shine block).
+
+   This is the text-depth playground's machinery VERBATIM (not the tiled
+   melt — that system now lives only in ConvexText.vue / ConcaveText.vue):
+   whole-block shading and fill sweeps, and two copies of the line
+   (HeroBillet component) because a background paints UNDER its
+   text-shadow — the ink copy carries the seventeen convex shadows (lit
+   rim toward the lamp, its soft spread, the shaded rim away, the
+   twelve-step side wall, and the two-step cast pooling onto the ground),
+   the face copy the clipped shading + sheen + raised fill.
+
+   The measured Technor stops documented below are NOT used here anymore;
+   the two display-relief components still consume them. Tiling is the
+   point there: one sweep over the whole block would spread the ramp so
+   thin that each individual line reads flat; giving every line the whole
+   ramp is what makes the melt legible at display size.
 
    The stops are measured Technor 700 edges, not guesses (canvas
    actualBoundingBox at the hero's lh = 1em — it really is 1: 72px type on a
@@ -53,124 +153,591 @@
    inline that outgrows the strut — an image, an icon, a lockup — slides every
    line beneath it off its own tile. brand.css keeps the logos out of the line
    box for exactly this reason. */
-.landing-hero-ground h1 {
-  /* The ramp's three tones, interpolated in oklch so the sweep stays in the
-     orange rather than detouring through brown. Straight ramp tokens, so the
-     wide-gamut (color-gamut: p3) definition in theme.css carries the headline
-     too; nothing to re-pin here.
+/* TWO typed angles, and only the second one moves.
 
-     600 is the LIGHT end on purpose, not 500: on the mill canvas (neutral-200)
-     500 measures 2.48:1 and 600 is the first step over the 3:1 floor large
-     text has to clear (3.04:1 — and since every line relights, every line's
-     top edge sits at exactly that, no better line to hide behind). The old
-     gold melt opened at 2.59:1 and never cleared it. The far end runs DEEPER
-     than it used to (a third stop, 800 rather than stopping at 700): the extra
-     ~9% of lightness across a line is what turns a tint into a lit form, and
-     it only ever improves contrast — 4.30:1 at the baseline, 5.99:1 at the
-     descender feet. Dark has the same shape with room to spare: 9.1 / 5.7 /
-     4.7:1 on neutral-900. */
-  --hero-ink-a: light-dark(var(--color-signal-600), var(--color-signal-300));
-  --hero-ink-b: light-dark(var(--color-signal-700), var(--color-signal-500));
-  --hero-ink-c: light-dark(var(--color-signal-800), var(--color-signal-600));
-  /* The crown's ink — the bevel's LIGHT half, an inset white glow bled down
-     from the top edges. Every stop below is a percentage of this one value,
-     so a scheme costs ONE number — the ink's own alpha. Dark eases off
-     (bright paint on a dark ground blows out first) and both ride at whisper
-     strength ON PURPOSE: push past ~20% and the headline turns into cast
-     metal. The matching shade under the bottom edges (--hero-shade, further
-     down) is what makes the pair read as the logo's bevel — the guard against
-     the old "stamped into the page" failure is restraint, not absence: both
-     halves feathered, narrow, and quiet. */
-  --hero-crown: light-dark(oklch(100% 0 0 / 0.17), oklch(100% 0 0 / 0.1));
-  /* The shade — the bevel's other half. The logo's depth is an INNER pair,
-     not an extrusion (a solid under-block was tried 2026-08-21 and rejected):
-     a white inner glow bleeding down from every top edge, a dark inner shadow
-     rising from every bottom edge, think inset text-shadows at ∓2px. CSS has
-     no inset text-shadow, but the clipped tile fakes both: the crown layer IS
-     the top glow, and this ink hands the same layer its dark counterpart —
-     feathered in over ~3px and released just past the measured bottom edge,
-     the way a 2px-offset inner shadow's blur would land. Because the clip
-     does the painting, neither half ever touches the brand lockups — which is
-     the other reason the extrusion lost: a filter smears one ink over the
-     whole subtree, wordmarks included, where this pair only lands on the
-     words that own the ramp. Dark runs a heavier alpha than light because
-     black-on-signal-600 has less to push against than black-on-white. */
-  --hero-shade: light-dark(oklch(0% 0 0 / 0.14), oklch(0% 0 0 / 0.22));
-  /* The cast — "off the page" still comes from outside: one wide, soft
-     drop-shadow pooled under the letters. On light the ground takes a warm
-     shadow; on dark it bounces the signal back up as a glow (a dark cast on
-     a dark ground is invisible, and the light in that room has to come from
-     somewhere). Soft and low-alpha ON PURPOSE — a filter tints the whole
-     subtree with one ink, wordmarks included, and only a wide cast reads as
-     height on them rather than as an outline. */
-  --hero-cast: light-dark(--alpha(var(--color-signal-950) / 13%),
-                          --alpha(var(--color-signal-500) / 16%));
-  /* Inherited ink for anything the clip can't paint. */
-  color: light-dark(var(--color-signal-700), var(--color-signal-300));
-  filter: drop-shadow(0 5px 18px var(--hero-cast));
-  background-image:
-    /* The bevel. Stops only ever ASCEND — CSS clamps an out-of-order stop up
-       to its predecessor, which silently flattens a band into one tone. */
-    linear-gradient(
-      180deg,
-      /* the descender feet, wrapped: p bottoms out at 104% and j g y q at
-         105.5%, past the seam, so their plateau lives at the TOP of the
-         tile (0–5.5%) and the band holds full strength at 100% below to
-         stay periodic across it */
-      var(--hero-shade) 0% 5.5%,
-      transparent 7.5% 10.7%,
-      /* PLATEAU, not a peak, and wide enough to cover all three top-edge
-         classes at once (i-dots 12.6%, ascenders 15.5%, caps 21.5%) — a peak
-         lands below the edge and reads as a stripe across the letter */
-      var(--hero-crown) 12.6% 22%,
-      transparent 28.4%,
-      /* the same again at the x-height tops, weaker: on b/d/k/l this one
-         crosses mid-stem, where a bright line WOULD be a stripe */
-      transparent 28.6%,
-      --alpha(var(--hero-crown) / 55%) 30.3% 34.1%,
-      /* the shade half. Baseline first: feathered in over ~3px of tile, held
-         just PAST the line because round bottoms (o e c) overshoot ~1.5%
-         below it, then released fast — below the baseline a descender stem
-         should take the faintest possible stripe */
-      transparent 40.1% 79.8%,
-      var(--hero-shade) 84% 85.5%,
-      /* then the climb back to full shade at the seam, where the wrapped
-         foot plateau above takes over — the feather rides the last stretch
-         of the p stems into their own feet */
-      transparent 87.5% 96.8%,
-      var(--hero-shade) 100%
-    ),
-    /* The tone. */
-    linear-gradient(
-      180deg in oklch,
-      /* the seam value, held flat across the wrapped descender feet so a
-         foot straddling the seam is one colour, not two */
-      var(--hero-ink-c) 0% 5.5%,
-      /* full light held from the ceiling down past the cap tops */
-      var(--hero-ink-a) 12.6% 21.5%,
-      /* melt to the settled brand tone by the baseline, and hold it for most
-         of the descender — a descender that darkens along its WHOLE length
-         pulls "app" out of "application" as its own dark shape */
-      var(--hero-ink-b) 84% 94.3%,
-      /* only the last few px fall away, which reads as the tail turning under
-         rather than as a second colour */
-      var(--hero-ink-c) 98.5% 100%
-    );
-  background-size: 100% 1lh;
-  background-clip: text;
-  /* NOT color: transparent — that would take the brand lockups' currentColor
-     with it. This empties the glyph fill and leaves `color` live. */
-  -webkit-text-fill-color: transparent;
+     --light-angle  the lamp. STATIC at 330°. Every convex rim, cast and
+                    face sweep on the words derives from it with
+                    sin()/cos(), so freezing it makes the sentence one
+                    fixed, premium piece of relief — struck metal, not a
+                    light show. It stays a registered angle (not a plain
+                    number) because the whole chain is written in terms
+                    of it and a future lamp move should stay one edit.
+
+     --shine-phase  the LIGHT BAR crossing the lockups, and the only
+                    animated value in the hero. Animated on the sweep
+                    STOPS themselves, in HeroBillet's zero-size defs svg
+                    (see the shine block), so nothing that paints is
+                    invalidated per frame — only the face copy's fills
+                    repaint, in their own compositor layer.
+
+   Splitting these was the point of the 2026-08-24 pass: "make only
+   logos texts animated… leave the other title text as convex". Don't
+   re-animate --light-angle — it would put the whole headline back in
+   motion. */
+@property --light-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 330deg;
 }
-/* Forced colors keep the transparent fill and the background image, which
-   would leave an invisible headline — hand the glyphs back to the system, and
-   drop the cast with it (a filter survives forced-colors and would smear the
-   system ink). */
+@property --shine-phase {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 250deg;
+}
+.landing-billet {
+  /* THE SCENE — and NOTHING ELSE. There is deliberately no plate here:
+     no background, no radius, no elevation, no padding. The headline is
+     cut straight into the PAGE, so the depth-scene's surface is the
+     page's own ground (--ui-bg, l 0.922 light / 0.205 dark — flat and
+     achromatic, with the hero section's brushed mill grain running
+     across it unbroken). This element now contributes exactly two
+     things: the surface colors every ink below derives from, and the
+     turning lamp.
+
+     Earlier builds painted a silver/steel billet here — a rounded,
+     shadowed slab the title sat on. It read as a card floating over
+     the page rather than as type cut into it, so it's gone. Giving
+     this element a background again re-introduces the block; if the
+     cut needs more separation, deepen the FLOOR or the walls below,
+     never re-plate the ground.
+
+     --surface-color-2 is only a whisper darker than --surface-color:
+     the page ground is flat, so the recess floor's 165° ramp has to be
+     nearly flat too or the letters read as gradient-filled shapes laid
+     on the page instead of one material cut to one depth. */
+  --light-angle: 330deg;
+  --surface-color: var(--ui-bg);
+  --surface-color-2: color-mix(in oklab, var(--ui-bg), black 5%);
+  position: relative;
+  /* The headline is hand-set on TWO lines ("Use convex backend" /
+     "in a Nuxt application" — the markdown hard break), and the second
+     line needs ~11em. The theme's stepped text-7xl (72px) overruns the
+     hero column at every desktop width, so the size goes fluid: 4vw
+     tracks the column (~45.5% of the viewport in the horizontal hero),
+     capping at the old 72px on wide screens and holding the text-5xl
+     floor below the two-column layout, where the title is full-width
+     and the lines can afford to wrap again. Unlayered, so it beats the
+     slot's text-5xl/sm:text-7xl utilities. */
+  font-size: clamp(3rem, 4vw, 4.5rem);
+}
+/* The travelling light bar — the hero's ONLY animation, and it is hung
+   DIRECTLY ON THE SWEEP STOPS in HeroBillet's zero-size .billet-sweeps
+   defs svg. That scoping is load-bearing, not stylistic: the keyframes
+   used to sit on the ink copy's .brand-lockup, and every frame of the
+   inherited --shine-phase dirtied the ink artwork's raster — seventeen
+   text-shadows plus the badges' four-pass filter chains, ~1.1s a frame,
+   1fps measured. On the stops, a frame invalidates only the empty
+   resource svg and the face fills that reference it (which repaint in
+   .billet-face's own compositor layer — see that rule). 60fps+ measured.
+   Never re-hang this animation on anything that paints, and never move
+   the sweep gradients back into the artwork's own defs.
+
+   The phase runs a full turn while the eleven sweep bearings sit inside
+   0°–100°; with the lobes' ±25° that is ~150° of pass and ~210° of quiet.
+   That gap is the whole rhythm: a glint is an event, not a scanline
+   sweeping forever.
+
+   Reduced motion drops to the registered 250° initial value, which is
+   inside the quiet gap — motion-off visitors get the matte graphite ramp
+   with no bar, which is exactly the static finish anyway. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-billet-line .billet-sweeps stop {
+    animation: wordmark-shine 6.5s linear infinite;
+  }
+  /* Convex is the first mark in the sentence and Nuxt the second, so the bar
+     reaches Nuxt a beat later — one light crossing two lines, not two marks
+     firing in lockstep. A POSITIVE delay, deliberately: a negative one would
+     ADVANCE Nuxt's phase and put it in front. Until it elapses --shine-phase
+     holds its registered 250°, which is inside the quiet gap, so the first
+     pass simply starts late instead of jumping mid-sweep. */
+  .hero-billet-line .billet-sweeps #brand-nuxt-sweep stop {
+    animation-delay: 1.05s;
+  }
+  @keyframes wordmark-shine {
+    from { --shine-phase: 0deg; }
+    to   { --shine-phase: 360deg; }
+  }
+}
+.hero-billet-line {
+  /* ================================================================
+     THE CONVEX WORDS — a faithful port of the text-depth playground's
+     `.depth-text.convex`, not a re-derivation of it.
+
+     Earlier passes hand-baked the playground's formulas into
+     light-dark() alpha literals, because light-dark() can't carry a
+     number. Every one of those bakes drifted: the rim blur landed at
+     softness × 0.19 instead of × 0.35 × crisp, the face shading at
+     14/30% instead of the 20.25/24.75% that `shading 45` actually
+     yields, the wall blur at depth × 0.06 instead of × 0.12 × crisp.
+     Individually small, together the reason the dark headline read as
+     flat type wearing a highlight instead of struck metal.
+
+     So the KNOBS stay plain numbers here — exactly the playground's
+     aluminium preset — and every ink below is its formula verbatim.
+     Per-scheme values ride the html.dark class (base.css makes it
+     authoritative for color-scheme, and depth.css already keys off it),
+     which is the one mechanism that can carry a number where
+     light-dark() cannot. Re-tune by moving a KNOB, never by editing a
+     derived value.
+     ================================================================ */
+  --depth: 0.0364em;      /* preset 4px @110px */
+  --softness: 0.0409em;   /* preset 4.5px @110px */
+  --highlight: 75;
+  --shade: 55;
+  --shading: 45;
+  --sheen: 30;
+  --edge: 45;
+  --side: 40;
+  --solidness: 45;
+
+  /* The custom fill. The playground's default convex law is "surface
+     +5% white" — on this ground that is l 0.926 on 0.922 light and
+     0.245 on 0.205 dark, i.e. invisible, which is exactly what the
+     match-the-surface checkbox is for turning off. Both values were
+     picked by rendering candidate fills through the playground itself
+     on our two grounds; the rims, wall, shading and casts all
+     re-derive from --text-color automatically, which is why this is
+     the one pair to touch for contrast. */
+  --text-color: oklch(0.83 0.006 255);
+  --text-color-2: oklch(0.76 0.006 255);
+
+  /* ---- derived, playground verbatim ---- */
+  --lx: calc(sin(var(--light-angle)) * var(--depth));
+  --ly: calc(cos(var(--light-angle)) * var(--depth) * -1);
+  --ink-light: color-mix(in oklab,
+      oklch(from var(--text-color) min(calc(l + 0.22), 0.96) calc(c * 0.85) h),
+      white 22%);
+  --ink-dark: color-mix(in oklab,
+      oklch(from var(--text-color) max(calc(l - 0.28), 0.13) calc(c * 1.1) h),
+      black 12%);
+  /* --surf-dark only: it feeds the convex CASTS, which pool BELOW the
+     letters. Its lit counterpart --surf-light stays absent — a pale
+     spread around glyphs is the halo the no-second-surface rule
+     exists to prevent. */
+  --surf-dark: oklch(from var(--surface-color-2) 0.22 calc(c * 1.4) h);
+  --crisp: calc(1 - var(--solidness) * 0.009);
+  --hi: color-mix(in oklab, var(--ink-light)
+      min(calc(var(--highlight) * 1% * (1 + var(--solidness) * 0.005)), 98%), transparent);
+  --hi-soft: color-mix(in oklab, var(--ink-light) calc(var(--highlight) * 0.4%), transparent);
+  --lo: color-mix(in oklab, var(--ink-dark)
+      min(calc(var(--shade) * 0.75% * (1 + var(--solidness) * 0.005)), 96%), transparent);
+  --lo-surf: color-mix(in oklab, var(--surf-dark) calc(var(--shade) * 0.35%), transparent);
+  --lo-cast: color-mix(in oklab, var(--surf-dark) calc(var(--shade) * 0.25%), transparent);
+  /* the side wall — the letter's thickness, twelve overlapping steps */
+  --sx: calc(var(--lx) * -0.06);
+  --sy: calc(var(--ly) * -0.06);
+  --ink-wall: oklch(from var(--text-color)
+      max(calc(l * 0.62), 0.16) min(calc(c * 1.4 + 0.01), 0.22) h);
+  --wall: color-mix(in oklab, var(--ink-wall) min(calc(var(--side) * 1.6%), 94%), transparent);
+  --wall-blur: calc(var(--depth) * 0.12 * var(--crisp));
+  /* the machined contact line where the wall meets the ground */
+  --edge-w: clamp(0.5px, calc(var(--depth) * 0.2), 0.04em);
+  --edge-c: color-mix(in oklab, var(--ink-dark) calc(var(--edge) * 0.4%), transparent);
+  /* the face turns TOWARD the lamp; sheen rides 65° off it */
+  --glyph-shading: linear-gradient(var(--light-angle) in oklab,
+      color-mix(in oklab, var(--ink-dark) calc(var(--shading) * 0.45%), transparent),
+      transparent 42% 58%,
+      color-mix(in oklab, var(--ink-light) calc(var(--shading) * 0.55%), transparent));
+  --glyph-sheen: linear-gradient(calc(var(--light-angle) + 65deg),
+      transparent 32%,
+      color-mix(in oklab, var(--ink-light) calc(var(--sheen) * 0.65%), transparent) 50%,
+      transparent 68%);
+  --text-fill: linear-gradient(165deg in oklab, var(--text-color), var(--text-color-2));
+
+  display: block;
+  position: relative;
+  line-height: 1.06;
+  /* The break after "backend" is hand-placed in the markdown (a markdown
+     hard break — both billet copies get it, so they stay in register).
+     `balance` would shorten the measure and re-wrap around that break;
+     `pretty` only tidies the overflow wraps narrow viewports add. */
+  text-wrap: pretty;
+  color: transparent;
+}
+/* Dark keeps every knob — same aluminium material, same lamp — and
+   moves only the fill. Verified against the playground on our own
+   ground: at the match-the-surface 0.245 the sentence vanished, 0.34
+   was still timid, 0.56 glared; 0.44/0.36 is the step that reads. */
+:root.dark .hero-billet-line {
+  --text-color: oklch(0.44 0.006 255);
+  --text-color-2: oklch(0.36 0.006 255);
+}
+/* MDC wraps the block slot's text in a <p>; flatten it so both copies
+   stay pure line boxes and overlay in register. */
+.hero-billet-line :is(.billet-ink, .billet-face) > p { display: contents; }
+.hero-billet-line > .billet-ink {
+  /* The playground's convex chain in its own paint order: lit rim
+     toward the lamp, its soft spread, the shaded rim away, the
+     twelve-step side wall, then the two-step cast onto the ground.
+     Contact blurs carry × --crisp; the casts stay soft. Static, so
+     all seventeen paint once. */
+  color: transparent;
+  text-shadow:
+    calc(var(--lx) * 0.5)  calc(var(--ly) * 0.5)  calc(var(--softness) * 0.35 * var(--crisp)) var(--hi),
+    var(--lx)              var(--ly)              var(--softness)                             var(--hi-soft),
+    calc(var(--lx) * -0.5) calc(var(--ly) * -0.5) calc(var(--softness) * 0.35 * var(--crisp)) var(--lo),
+    calc(var(--sx) * 1)  calc(var(--sy) * 1)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 2)  calc(var(--sy) * 2)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 3)  calc(var(--sy) * 3)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 4)  calc(var(--sy) * 4)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 5)  calc(var(--sy) * 5)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 6)  calc(var(--sy) * 6)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 7)  calc(var(--sy) * 7)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 8)  calc(var(--sy) * 8)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 9)  calc(var(--sy) * 9)  var(--wall-blur) var(--wall),
+    calc(var(--sx) * 10) calc(var(--sy) * 10) var(--wall-blur) var(--wall),
+    calc(var(--sx) * 11) calc(var(--sy) * 11) var(--wall-blur) var(--wall),
+    calc(var(--sx) * 12) calc(var(--sy) * 12) var(--wall-blur) var(--wall),
+    calc(var(--lx) * -1)   calc(var(--ly) * -1)   calc(var(--softness) * 1.2) var(--lo-surf),
+    calc(var(--lx) * -2.1) calc(var(--ly) * -2.1) calc(var(--softness) * 2.8) var(--lo-cast);
+}
+/* The sweep gradients' host (HeroBillet) — a resource-only svg that must
+   never paint or take space: out of flow so the 0×0 box can't grow the
+   first line's strut or slide the copies out of register. */
+.hero-billet-line > .billet-sweeps {
+  position: absolute;
+}
+.hero-billet-line > .billet-face {
+  /* the playground's ::after: shading + sheen + fill, clipped to the
+     letters and layered ABOVE the shadows so they never wash the face;
+     paint-order keeps the contact stroke's inner half under the fill */
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Its own compositor layer, and this is the shine's other half: the
+     face fills repaint every frame of the bar, and without the layer
+     that damage lands in tiles shared with the ink copy underneath —
+     whose text-shadows and filter chains then re-raster too (2fps
+     measured; 60fps+ with it). Nothing here transforms; the hint is
+     purely the promotion. */
+  will-change: transform;
+  user-select: none; /* aria-hidden copy must not double in a selection */
+  color: transparent;
+  text-shadow: none;
+  background-image: var(--glyph-shading), var(--glyph-sheen), var(--text-fill);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: var(--edge-w) var(--edge-c);
+  paint-order: stroke fill;
+}
+/* -- The badge LIFT -----------------------------------------------
+   What used to be here, and why it is not (2026-08-31). Three builds
+   of the playground's embossed preset ran on these two marks: first
+   .depth-text.convex, then .depth-icon.convex chained properly, then
+   that chain crisped and shallowed pass by pass on instruction. The
+   last of those took the relief down to ~1px, and at 1px a CHAINED
+   renderer has nowhere to put itself — the four wall copies, the
+   shaded rim and the contact all land inside one pixel of the outline,
+   so instead of an extrusion they composite into a hairline tracing
+   every shape. That is the "ugly one-pixel border around colored
+   logos", and it is not tunable: fifteen stacked copies need room to
+   read as thickness, and a badge this shallow has none to give.
+
+   So the chain is gone, and what replaces it is deliberately not a
+   relief renderer. The marks now carry three things:
+
+     1. Their FILLS, which is where the depth actually lives and always
+        did most of this work — the wordmark's eight-stop matte
+        graphite descent (lit crown → baseline shade → a bounce of
+        ground light at the feet) and the enamel's five-stop domes.
+        Untouched.
+     2. ONE soft shadow per path: a pixel down-light, blurred twice
+        that, at 24%. A LIFT off the plate rather than an extrusion
+        into it. One pass is the whole trick — nothing chains, nothing
+        compounds, and a single blurred copy has no hard boundary left
+        to be a border with.
+     3. The travelling light bar, now the mark's only animation and its
+        main specular event. See the sweep block below.
+
+   The MATERIAL rules survive the demolition intact, because they were
+   always about colour rather than about the renderer: the wordmark's
+   shadow is the ground's neutral ink (--surf-dark — the same one the
+   words beside it cast in, since a shadow lands on the plate and takes
+   the plate's colour), and each enamel symbol's is its own hue nearly
+   out of light. No grey ink touches a coloured element, and nothing
+   casts black.
+
+   The face copy's duplicate mark keeps its width but never paints
+   (display:none would slide the copies out of register) — except for
+   the light bar, which is exactly what that registered duplicate is
+   good for. */
+.hero-billet-line .billet-ink .brand-lockup {
+  /* ---- KNOBS ----
+     --mark-lift is the shadow's offset ON THE PAGE, as a fraction of
+     the headline's em (depth.css calls the same idea --lift: a part
+     held above its plate rather than cut into it). --mark-spread turns
+     it into the blur, and --mark-shadow is the ink's alpha in the
+     playground's percent.
+
+     Lift is NOT a plain em, and that is the trap this file paid for
+     twice. A CSS filter on an SVG element measures in USER UNITS, so
+     one shared em was scaled by each kit's own viewBox-to-render
+     factor: Convex's 51.5-unit box draws at 0.537em / 0.6893 = 0.779em
+     (one unit = 0.0151em), Nuxt's 32-unit box at 0.625em / 0.75 =
+     0.833em (one unit = 0.0260em) — 1.72x apart, one mark lifted
+     nearly twice as far as the other in the same sentence. So the knob
+     is the lift we want on the PAGE and each artwork converts it with
+     its own --mark-per-em (down by the fill swaps): viewBox height x
+     --brand-ratio / the --brand-ref coefficient. A lockup with no
+     --mark-per-em leaves --mark-depth invalid and drops the filter
+     whole — flat, rather than lifted at some other artwork's scale,
+     which is the failure you want to see. And a constant in user units
+     is a constant fraction of the ARTWORK, so this scales with the
+     mark at every type size with no em left in the chain. */
+  --mark-lift: 0.026; /* 1.5px at the hero's 57.6px */
+  --mark-spread: 1.7; /* → a 2.5px blur: soft enough to have no edge to
+                         read as a border, tight enough to stay a
+                         shadow rather than a glow */
+  --mark-shadow: 30;
+  --mark-depth: calc(var(--mark-lift) * var(--mark-per-em) * 1px);
+
+  /* the shadow's vector — the sentence's one lamp, thrown away from it */
+  --mark-lx: calc(sin(var(--light-angle)) * var(--mark-depth) * -1);
+  --mark-ly: calc(cos(var(--light-angle)) * var(--mark-depth));
+  --mark-blur: calc(var(--mark-depth) * var(--mark-spread));
+
+  /* the wordmark's material — the fill ramp's MID tone per scheme */
+  --mark-color: light-dark(oklch(0.455 0.008 255), oklch(0.37 0.012 255));
+  color: light-dark(#16181d, #101215); /* plate-ink fallback under the fills */
+}
+/* Every path in both lockups runs the same one-pass shadow; only the
+   material changes. Attribute selectors keep working after the url()
+   fill swaps further down, because they read the attribute, not the
+   computed paint. */
+.hero-billet-line .billet-ink .brand-lockup path {
+  --mat: var(--mark-color);
+  /* --mat-shade is the two blocks below; every path matches one of them */
+  --mark-cast: color-mix(in oklab, var(--mat-shade)
+      calc(var(--mark-shadow) * 1%), transparent);
+  filter: drop-shadow(var(--mark-lx) var(--mark-ly) var(--mark-blur) var(--mark-cast));
+}
+/* The WORDMARKS shade neutral. Their face is graphite at 0.008 chroma,
+   and a lightness drop on a near-neutral face lands the shadow within
+   a hair of black — the one ink on this page that would be a pure
+   value with no hue in it, which reads as a printing artefact next to
+   a plate whose every other shadow is tinted. The playground has the
+   principled answer and it is not a hue choice at all: depth.css
+   derives a cast from --shaded-ground, the SURFACE's tint, and only
+   rims and walls from the material. Our port of that ink is
+   --surf-dark (on .hero-billet-line, feeding the words' own
+   --lo-cast), dead-neutral oklch(0.22 0 0) on this page because the
+   ground carries no chroma to lend. Deriving from it rather than
+   writing a grey keeps that true if --ui-bg is ever tinted.
+
+   Only the LIGHTNESS is ours, and it rides high — "lighter for texts
+   in logos". The letters are the busiest shape in the lockup:
+   fourteen counters and stems a couple of pixels apart at the
+   x-height, so a dark pool under every one of them silts up the gaps.
+   Per scheme, because the two grounds want opposite things: 0.54 on
+   the light plate (it only has to beat 0.89, and past ~0.6 it stops
+   being visible at this alpha), 0.16 on the dark one (it has to sit
+   UNDER the 0.205 ground or it stops reading as shadow at all).
+   light-dark() picks a COLOR, never a channel, so the relative-color
+   expression is written out twice. */
+.hero-billet-line .billet-ink .brand-lockup path[fill="currentColor"] {
+  --mat-shade: light-dark(oklch(from var(--surf-dark) 0.54 c h),
+                          oklch(from var(--surf-dark) 0.16 c h));
+}
+/* The ENAMEL symbols keep their own hue, nearly out of light. l x 0.45
+   with chroma riding UP on the way down, the way paint does as it
+   leaves the light — which is what keeps four dark inks unmistakably
+   plum, amber, oxblood and bottle-green instead of four near-blacks.
+   They run DARKER than the wordmark on instruction, and it is also
+   what the shapes want: three or four fat closed bodies with nothing
+   to silt up. The floor catches magenta, whose 0.42 L face would
+   otherwise shade to 0.19. */
+.hero-billet-line .billet-ink .brand-lockup path:not([fill="currentColor"]) {
+  --mat-shade: oklch(from var(--mat) max(calc(l * 0.45), 0.24) calc(c * 1.1) h);
+}
+/* each enamel symbol's material — its own vendor hue */
+.hero-billet-line .billet-ink .brand-lockup path[fill="#F3B01C"] { --mat: #f3b01c; }
+.hero-billet-line .billet-ink .brand-lockup path[fill="#8D2676"] { --mat: #8d2676; }
+.hero-billet-line .billet-ink .brand-lockup path[fill="#EE342F"] { --mat: #ee342f; }
+.hero-billet-line .billet-ink .brand-lockup path[fill="#00DC82"] { --mat: #00dc82; }
+/* -- THE LIGHT BAR ------------------------------------------------
+   A specular band raked to the lamp, crossing each lockup symbol-first
+   and leaving off its far end. It is painted by the FACE COPY.
+
+   That copy has always been in the markup and has always been dead
+   weight — a pixel-registered duplicate of the artwork, hidden outright
+   (it can't be display:none; that would slide the two copies out of
+   register). Filling ITS paths with a mostly-transparent sweep gradient
+   lays the specular exactly over the ink copy's letters: no second set
+   of path data, no <mask>, no <use>, no blend mode, and the ink copy's
+   concave staging underneath is left completely alone.
+
+   url() resolves by document order, and HeroBillet puts the sweep
+   gradients in a zero-size svg AHEAD of both copies — so these fills
+   bind to that resource-only svg, and animating its stops never dirties
+   either artwork (the shine block has the 1fps story). The base ramps'
+   ids still exist twice — both copies render the same component — and
+   those references land on the INK copy's elements, which is fine
+   because the ramps are static.
+
+   Both path classes have to be named explicitly: the face's inherited
+   `color` is transparent, so `fill="currentColor"` would paint nothing,
+   and the enamel paths carry hard-coded vendor hex, which would double
+   the symbols in flat colour if left alone. */
+.hero-billet-line .billet-face [aria-label="Convex"] path { fill: url(#brand-convex-sweep); }
+.hero-billet-line .billet-face [aria-label="Nuxt"] path { fill: url(#brand-nuxt-sweep); }
+/* Enamel is glossier than the matte wordmark, but it is also COLOURED: a
+   full-strength bar over the swirl reads as a smudge rather than gloss.
+   Held to a third so the vendor hue survives the pass. */
+.hero-billet-line .billet-face .brand-lockup path:not([fill="currentColor"]) {
+  opacity: 0.34;
+}
+/* The bar itself. A stop's `offset` is not a CSS property, so a moving
+   band has to be a STANDING ramp whose alphas travel: eleven fixed stops,
+   bearings ascending with offset, and two lobes evaluated per stop
+   against --shine-phase — --core is the specular, --wash the luster
+   spreading ahead of and behind it. As the phase runs its turn the lit
+   stops walk from offset 0 to offset 1 and the band crosses the mark.
+
+   Alphas, not lightnesses, and that is the difference from the old
+   effect: this is an OVERLAY, so everything the bar is not touching has
+   to stay fully transparent or it would flatten the graphite below it.
+   The peak lands at 0.78 — over the ~0.28 L wordmark that composites to
+   roughly 0.74 L, a bright band that still reads darker than the light
+   ground it sits on. Warm silver rather than white: the lamp is the same
+   one lighting the rest of the page.
+
+   Lobe WIDTHS are the difference between a bar and a lit half. The stops
+   are 10° apart, so ±13° of core is ~2.6 stops — a band about a quarter of
+   the mark wide — with the wash carrying another quarter either side as
+   luster. A first cut at ±19°/±34° lit two thirds of the lockup at once
+   and read as "the left half of this is silver" rather than as a light
+   crossing it. Widen these and the bar dissolves; narrow them past ~±10°
+   and it starts to hop stop to stop instead of travelling. */
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop {
+  --core: max(calc((cos(var(--shine-phase) - var(--stop-bearing)) - 0.974) * 38.5), 0);
+  --wash: max(calc((cos(var(--shine-phase) - var(--stop-bearing)) - 0.906) * 10.6), 0);
+  stop-color: light-dark(oklch(0.88 0.02 62), oklch(0.9 0.028 58));
+  /* 0.62/0.16 → 0.72/0.19 (2026-08-31): the bar used to be one effect
+     among several and is now the mark's only light. A tenth more peak
+     is what keeps the graphite reading as metal rather than as flat
+     dark type once the relief chain came off. */
+  stop-opacity: calc(min(var(--core), 1) * 0.72 + min(var(--wash), 1) * 0.19);
+}
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(1)  { --stop-bearing: 0deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(2)  { --stop-bearing: 10deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(3)  { --stop-bearing: 20deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(4)  { --stop-bearing: 30deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(5)  { --stop-bearing: 40deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(6)  { --stop-bearing: 50deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(7)  { --stop-bearing: 60deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(8)  { --stop-bearing: 70deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(9)  { --stop-bearing: 80deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(10) { --stop-bearing: 90deg; }
+:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(11) { --stop-bearing: 100deg; }
+/* User units per em of page type — see --mark-lift. 51.5 × 0.6893 ÷
+   0.537 and 32 × 0.75 ÷ 0.625; the second number is the artwork's
+   --brand-ratio and the third its --brand-ref's coefficient. */
+.hero-billet-line .billet-ink [aria-label="Convex"] { --mark-per-em: 66.11; }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] { --mark-per-em: 38.4; }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="currentColor"] { fill: url(#brand-convex-eng-w); }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#F3B01C"] { fill: url(#brand-convex-eng-gold); }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#8D2676"] { fill: url(#brand-convex-eng-magenta); }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#EE342F"] { fill: url(#brand-convex-eng-red); }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="currentColor"] { fill: url(#brand-nuxt-eng-w); }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="#00DC82"] { fill: url(#brand-nuxt-eng-green); }
+/* -- The wordmark GRAPHITE ----------------------------------------
+   The lockups' letters are DARK MATTE metal — gun-blued graphite, not
+   silver (2026-08-25: "dark matte color instead of silver, but still
+   put some shiny animation"). Two things keep it reading as machined
+   metal rather than as flat dark type, and both matter:
+
+     1. The base ramp is DIFFUSE. Matte means no specular in the fill:
+        the convex descent below is a smooth ~0.22 L fall from crown to
+        baseline — enough to model the face turning away from the lamp,
+        never a chrome reflection with its horizon bands.
+     2. The shine is not in this ramp at all any more. It used to be —
+        --shine-phase modulated these very stops, which meant the glint
+        could only ever travel the ramp's own VERTICAL axis and had to
+        share its amplitude with the groove modelling. It is now a
+        separate raked overlay on the face copy (the light-bar block
+        above), which leaves this ramp free to be nothing but a static
+        matte groove and lets the bar cross the mark's WIDTH.
+
+   gradientUnits is userSpaceOnUse with a VERTICAL axis over the
+   wordmark's own y-range, which fixes two things objectBoundingBox got
+   wrong. Per-path bboxes gave every letter its own copy of the ramp, so
+   Convex's "x" — two separate paths with different bboxes — showed a
+   seam straight down the letter once the ramp went high-contrast. And
+   absolute y means the bands line up ACROSS letters, so an x-height
+   letter shows the lower part of the reflection and a cap-height letter
+   shows all of it, which is how real chrome type behaves.
+
+   The enamel symbol gradients stay as shipped — enamel is enamel. */
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop {
+  /* Static. --stop-bearing is gone from this ramp: the stops below now
+     carry position (offset) and tone (--stop-l) only, and the moving
+     light lives on the face copy's sweep gradient. */
+  stop-color: light-dark(oklch(var(--stop-l) 0.008 255),
+                         oklch(var(--stop-l-dark) 0.012 255));
+}
+/* The ramp, per scheme — and it runs the CONVEX way, matching the
+   raised staging around it (the concave groove ascent died with the
+   engraved build — a fill that models a cut under shadows that model
+   a boss is exactly the fight the playground's one-light law exists
+   to prevent). A raised face under the overhead-ish lamp is LIT at
+   its top and falls into shade toward the baseline: bright crown at
+   offset 0 descending monotonically to the shade at 0.86, then a
+   small bounce at the feet — the sliver of ground light every raised
+   edge picks back up, and all that remains of the old chrome
+   reflection.
+
+   Still matte: the descent is diffuse, ~0.035 L steps with no
+   specular band in the base — the shine lives entirely on the face
+   copy's raked bar. And still DARK metal: the whole ramp sits under
+   the plain words' 0.83/0.76 fill in light scheme, so the sentence
+   reads as pale aluminium words around a darker graphite badge.
+
+   The dark scheme keeps its one rule — ride ABOVE the ground's
+   0.205 L so the page can silhouette the mark — and its crown tops
+   out at 0.46, just over the plain words' 0.44 fill: on a dark
+   ground the lit face of a raised object IS the brightest thing on
+   it, and the bar still reads the letters out on each pass. */
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(1) {
+  --stop-l: 0.56; --stop-l-dark: 0.46; /* lit crown */
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(2) {
+  --stop-l: 0.525; --stop-l-dark: 0.43;
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(3) {
+  --stop-l: 0.49; --stop-l-dark: 0.4;
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(4) {
+  --stop-l: 0.455; --stop-l-dark: 0.37; /* the mid face — --mark-color */
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(5) {
+  --stop-l: 0.42; --stop-l-dark: 0.34;
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(6) {
+  --stop-l: 0.385; --stop-l-dark: 0.31;
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(7) {
+  --stop-l: 0.335; --stop-l-dark: 0.27; /* baseline shade */
+}
+:is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(8) {
+  --stop-l: 0.37; --stop-l-dark: 0.3; /* ground light bounces at the feet */
+}
+/* Forced colors: the clip + painted plate would leave invisible or
+   off-palette glyphs — flatten everything back to system ink, and
+   stop the lamp (an animated no-op costs frames for nothing). */
 @media (forced-colors: active) {
-  .landing-hero-ground h1 {
-    background-image: none;
+  .hero-billet-line .billet-sweeps stop {
+    /* the shine is the hero's only animation, and every value it
+       drives is overridden below — stop it rather than spend frames
+       recolouring gradients nothing paints. */
+    animation: none;
+  }
+  .hero-billet-line { color: inherit; }
+  .hero-billet-line > .billet-ink { color: inherit; text-shadow: none; }
+  .hero-billet-line > .billet-face { display: none; }
+  .hero-billet-line .billet-ink .brand-lockup path {
     filter: none;
-    -webkit-text-fill-color: currentColor;
+    fill: currentColor;
   }
 }
 /* Scroll-driven section-header reveal (progressive enhancement). */

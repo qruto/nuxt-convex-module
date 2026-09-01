@@ -22,15 +22,15 @@ const VISIBLE = 5
 </script>
 
 <template>
-  <article class="plate flex h-full min-w-0 flex-col gap-2.5 px-4 pt-3.5 pb-4 [--plate-radius:18px]">
+  <article class="convex bevel rounded-[18px] flex h-full min-w-0 flex-col gap-2.5 px-4 pt-3.5 pb-4">
     <header class="flex items-center justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
-      <span class="etched text-toned">{{ label }}</span>
-      <span class="etched inline-flex items-center gap-1.5 text-dimmed"><i
+      <span class="concave-text text-toned">{{ label }}</span>
+      <span class="concave-text inline-flex items-center gap-1.5 text-dimmed"><i
         aria-hidden="true"
         class="size-1.5 rounded-full bg-success shadow-(--glow-success)"
       />SUB</span>
     </header>
-    <div class="well flex-1 overflow-hidden px-3.5 py-3 [--well-radius:12px]">
+    <div class="concave-2 rounded-md flex-1 overflow-hidden px-3.5 py-3">
       <ul
         class="m-0 flex h-full max-h-[8.4rem] min-h-[6rem] list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
         aria-live="polite"

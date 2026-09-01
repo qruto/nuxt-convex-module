@@ -31,7 +31,7 @@ import SpecVue from '../landing/spec/SpecVue.vue'
 // restates the card's mechanism — registration marks for parity, broadcast
 // rings for live, ruled lines for the served document, and so on. PLAIN VUE
 // alone stays unengraved: the plain face is that card's claim. Each stage
-// also carries its etched FIG. NN caption — the cards are the sheet's
+// also carries its cut FIG. NN caption — the cards are the sheet's
 // numbered figures.
 interface SpecEntry {
   label: string
@@ -155,7 +155,7 @@ function segments(body: string) {
         :to="entry.to"
         :style="{ '--band': entry.band }"
         :data-face="entry.face"
-        class="raised spec-card group flex h-full flex-col gap-1.5 px-5 pt-4 pb-4.5 no-underline transition-shadow duration-180 ease-out [--raised-elev:var(--elev-0)] hover:[--raised-elev:var(--elev-2)] focus-visible:outline-2 focus-visible:outline-(--band)"
+        class="convex-0 hover:convex-2 rounded-lg spec-card group flex h-full flex-col gap-1.5 px-5 pt-4 pb-4.5 no-underline transition-shadow duration-180 ease-out focus-visible:outline-2 focus-visible:outline-(--band)"
       >
         <span class="flex items-baseline justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
           <span class="flex flex-none items-baseline gap-1.5">
@@ -165,20 +165,20 @@ function segments(body: string) {
               aria-hidden="true"
               class="band-tick h-0.75 w-2.5 flex-none self-center rounded-full"
             />
-            <span class="etched text-toned">{{ entry.label }}</span>
+            <span class="concave-text text-toned">{{ entry.label }}</span>
           </span>
-          <span class="etched min-w-0 truncate text-dimmed">{{ entry.stamp }}</span>
+          <span class="concave-text min-w-0 truncate text-dimmed">{{ entry.stamp }}</span>
         </span>
         <!-- The card's working illustration — its own recessed stage wearing
              its own engraved face (see the per-face CSS below); hover floods
              the stage with a whisper of the card's band. -->
         <span
-          class="well spec-stage mt-1 mb-1.5 grid min-h-24 place-items-center overflow-hidden px-3.5 py-3 [--well-radius:12px]"
+          class="concave-2 rounded-md spec-stage mt-1 mb-1.5 grid min-h-24 place-items-center overflow-hidden px-3.5 py-3"
           aria-hidden="true"
         >
           <component :is="entry.art" />
           <!-- The figure caption — datasheet figures are numbered. -->
-          <span class="etched absolute right-2.5 bottom-1 font-mono text-[0.52rem] font-bold tracking-[0.14em] text-dimmed opacity-70">FIG. {{ String(index + 1).padStart(2, '0') }}</span>
+          <span class="concave-text absolute right-2.5 bottom-1 font-mono text-[0.52rem] font-bold tracking-[0.14em] text-dimmed opacity-70">FIG. {{ String(index + 1).padStart(2, '0') }}</span>
         </span>
         <span class="font-display text-[1.02rem] font-semibold text-highlighted">
           {{ entry.title }}
@@ -300,11 +300,11 @@ function segments(body: string) {
     repeating-linear-gradient(90deg, var(--ink) 0 1px, transparent 1px 24px) left top / 100% 7px;
   background-repeat: no-repeat;
 }
-/* PLAIN VUE — no engraving at all. Against eight etched faces the
+/* PLAIN VUE — no engraving at all. Against eight cut faces the
    bare floor IS the card's claim: nothing required. */
 
-/* The stage flood — painted on an overlay so the well's own gradient stays
-   a single background (the recipe's contract). */
+/* The stage flood — painted on an overlay so the stage keeps the single
+   dish gradient `concave-2` paints on it. */
 .spec-stage::after {
   content: "";
   position: absolute;

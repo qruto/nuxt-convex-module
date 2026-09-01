@@ -55,7 +55,7 @@ useDemoScript(root, async ({ wait }) => {
         <li
           v-for="n in loaded"
           :key="n"
-          class="raised px-2 py-0.5 text-default [--raised-elev:var(--elev-0)] [--raised-radius:7px] motion-safe:animate-fade-up [animation-duration:240ms]"
+          class="convex-0 rounded-[7px] px-2 py-0.5 text-default motion-safe:animate-fade-up [animation-duration:240ms]"
         >
           msg_{{ String(n).padStart(3, '0') }}
         </li>

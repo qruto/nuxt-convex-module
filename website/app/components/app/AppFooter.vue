@@ -62,7 +62,7 @@ const columns = computed(() => [
       <UContainer>
         <UFooterColumns
           :columns="columns"
-          :ui="{ label: 'etched font-mono text-[0.62rem] font-bold tracking-[0.14em] uppercase text-dimmed' }"
+          :ui="{ label: 'concave-text font-mono text-[0.62rem] font-bold tracking-[0.14em] uppercase text-dimmed' }"
         >
           <template #left>
             <p class="m-0 font-display text-base font-bold text-highlighted">

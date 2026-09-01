@@ -11,7 +11,7 @@ const version = computed(() => npm.value?.version ?? null)
 </script>
 
 <template>
-  <span class="etched inline-block font-mono text-xs font-semibold tracking-widest text-toned">
+  <span class="concave-text inline-block font-mono text-xs font-semibold tracking-widest text-toned">
     <template v-if="version">V{{ version }} · </template><slot mdc-unwrap="p" />
   </span>
 </template>

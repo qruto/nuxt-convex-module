@@ -16,10 +16,10 @@ defineProps<{
 </script>
 
 <template>
-  <article class="plate flex h-full flex-col gap-3 px-5 pt-4.5 pb-5">
+  <article class="convex bevel rounded-xl flex h-full flex-col gap-3 px-5 pt-4.5 pb-5">
     <header class="flex items-baseline justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
-      <span class="etched flex-none text-toned">{{ label }}</span>
-      <span class="etched min-w-0 truncate text-dimmed">{{ stamp }}</span>
+      <span class="concave-text flex-none text-toned">{{ label }}</span>
+      <span class="concave-text min-w-0 truncate text-dimmed">{{ stamp }}</span>
     </header>
     <h3 class="m-0 font-display text-[1.02rem] font-semibold text-highlighted">
       {{ title }}
@@ -34,8 +34,8 @@ defineProps<{
     <div class="[&>div]:my-0 [&_button]:hidden [&_pre]:overflow-x-auto [&_pre]:text-[0.85rem] [&_pre]:leading-[1.8] [&_pre]:whitespace-pre lg:[&_pre]:text-[0.72rem]">
       <slot name="code" />
     </div>
-    <div class="well mt-auto flex flex-col items-start gap-3 px-4 py-3.5">
-      <span class="etched font-mono text-[0.58rem] font-semibold tracking-[0.14em] text-toned uppercase">{{ readoutLabel }}</span>
+    <div class="concave-2 rounded-md mt-auto flex flex-col items-start gap-3 px-4 py-3.5">
+      <span class="concave-text font-mono text-[0.58rem] font-semibold tracking-[0.14em] text-toned uppercase">{{ readoutLabel }}</span>
       <slot name="readout" />
     </div>
   </article>

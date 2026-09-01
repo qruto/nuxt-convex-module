@@ -11,9 +11,9 @@ const isConnected = computed(() => connectionState.value.isWebSocketConnected)
 </script>
 
 <template>
-  <div class="plate sheen my-6">
+  <div class="convex bevel sheen rounded-xl my-6">
     <div class="flex items-center justify-between gap-4 px-4 pt-3 pb-2.5">
-      <span class="etched font-mono text-xs font-semibold tracking-[0.04em] text-toned">{{ title }}</span>
+      <span class="concave-text font-mono text-xs font-semibold tracking-[0.04em] text-toned">{{ title }}</span>
       <span
         class="inline-flex flex-none items-center gap-1.5 font-mono text-[0.65rem] font-semibold tracking-[0.13em]"
         :class="isConnected ? 'text-toned' : 'text-dimmed'"
@@ -25,7 +25,7 @@ const isConnected = computed(() => connectionState.value.isWebSocketConnected)
         {{ isConnected ? 'LIVE' : 'OFFLINE' }}
       </span>
     </div>
-    <div class="well mx-3 mb-3 p-4 [--well-radius:14px]">
+    <div class="concave-2 rounded-[14px] mx-3 mb-3 p-4">
       <slot />
     </div>
   </div>

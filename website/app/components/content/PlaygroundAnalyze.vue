@@ -66,7 +66,7 @@ async function submit() {
         v-if="result && !analyzing"
         class="m-0 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2"
       >
-        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+        <div class="convex-0 rounded-[10px] px-2.5 py-2">
           <dt class="text-xs text-muted">
             Characters
           </dt>
@@ -74,7 +74,7 @@ async function submit() {
             {{ result.characters }}
           </dd>
         </div>
-        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+        <div class="convex-0 rounded-[10px] px-2.5 py-2">
           <dt class="text-xs text-muted">
             Words
           </dt>
@@ -82,7 +82,7 @@ async function submit() {
             {{ result.words }}
           </dd>
         </div>
-        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+        <div class="convex-0 rounded-[10px] px-2.5 py-2">
           <dt class="text-xs text-muted">
             Longest word
           </dt>
@@ -90,7 +90,7 @@ async function submit() {
             {{ result.longestWord || '—' }}
           </dd>
         </div>
-        <div class="raised px-2.5 py-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]">
+        <div class="convex-0 rounded-[10px] px-2.5 py-2">
           <dt class="text-xs text-muted">
             SHA-256
           </dt>
