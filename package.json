@@ -211,7 +211,7 @@
     "@vue/test-utils": "^2.4.11",
     "better-auth": "~1.6.25",
     "changelogen": "^0.6.2",
-    "changelogithub": "^14.0.0",
+    "changelogithub": "^15.0.5",
     "convex": "^1.45.0",
     "convex-helpers": "^0.1.120",
     "eslint": "^10.8.0",
