@@ -1,0 +1,237 @@
+/* ================================================================
+   CHROME — the shell every page wears: the ground, the header rail,
+   and the seams and grooves the docs are scribed with
+   ----------------------------------------------------------------
+   landing.css owns "/" and nothing else; this file owns what the
+   docs and the landing SHARE — the page ground, the sticky header,
+   and the reusable line treatments that turn a Docus `border-b`
+   into a machined seam and a Nuxt UI rail into a lit groove.
+
+   Everything here is the depth.css physics one level up: ONE
+   overhead light, a catch on the crown, a hard shade at the base,
+   reflected light on the far wall of every cut. No new material and
+   no second lamp — the tokens are all built from the --ui-bg ladder
+   and the --mill-* grain that already exist.
+
+   Unlayered, like every file in this chain, so these rules beat the
+   layered Tailwind / Nuxt UI utilities they override. Imported after
+   brand.css and BEFORE landing.css, so the landing's own grounds
+   still win where the two meet.
+   ================================================================ */
+
+/* -- THE PAGE GRAIN ----------------------------------------------
+   The docs used to get the titanium COLOR and none of its finish —
+   every mill texture was opt-in via a `class:` in index.md, so every
+   page but the landing was a flat fill. This is the same brushed
+   pass, run across the whole document.
+
+   Same coprime 3px/7px pitch as --mill-grain below: the two periods
+   must not share a factor, or they beat into a visible band. The
+   alphas are the landing's dialled to ~60% — a finish read at arm's
+   length across a hero plate is a finish that vibrates behind a
+   column of 16px prose. No --mill-ray either: a radial pool at
+   50% 0% belongs to a plate with a top edge, and a document has
+   none.
+
+   The full-strength set below it is the same billet at plate scale:
+   the grain pair interleaves a light catch every 3px with a shade
+   every 7px (coprime, so the pattern never beats), the ray is the
+   overhead lamp pooling at a plate's top edge, the rules are cuts in
+   that surface (a shade line with its catch one pixel below, since
+   an overhead light lands on a groove's lower wall), and the lip
+   recesses a whole section below the surface. Alphas are
+   whisper-level on purpose — a finish is what a surface feels like,
+   never a figure competing with the content on it. The landing's
+   four section finishes (landing.css) are built out of these. */
+:root {
+  --mill-line-hi-page: light-dark(oklch(100% 0 0 / 0.12), oklch(100% 0 0 / 0.012));
+  --mill-line-lo-page: light-dark(oklch(0% 0 0 / 0.018), oklch(0% 0 0 / 0.16));
+  --mill-grain-page:
+    repeating-linear-gradient(180deg, var(--mill-line-hi-page) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(180deg, var(--mill-line-lo-page) 0 1px, transparent 1px 7px);
+
+  --mill-line-hi: light-dark(oklch(100% 0 0 / 0.2), oklch(100% 0 0 / 0.017));
+  --mill-line-lo: light-dark(oklch(0% 0 0 / 0.032), oklch(0% 0 0 / 0.28));
+  --mill-grain:
+    repeating-linear-gradient(180deg, var(--mill-line-hi) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(180deg, var(--mill-line-lo) 0 1px, transparent 1px 7px);
+  --mill-ray: radial-gradient(120% 55% at 50% 0%,
+      light-dark(oklch(100% 0 0 / 0.3), oklch(100% 0 0 / 0.04)),
+      transparent 68%);
+  --mill-rule-lo: light-dark(oklch(0% 0 0 / 0.05), oklch(100% 0 0 / 0.03));
+  --mill-rule-major: light-dark(oklch(0% 0 0 / 0.08), oklch(100% 0 0 / 0.048));
+  --mill-rule-hi: light-dark(oklch(100% 0 0 / 0.5), oklch(0% 0 0 / 0.5));
+  --mill-lip: inset 0 14px 18px -14px light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.65));
+}
+/* Nuxt UI paints `body` with bg-default (= --ui-bg); the grain rides
+   on that fill. Every landing finish class carries an opaque
+   background-color of its own so it OCCLUDES this one instead of
+   stacking a second, out-of-phase grain over it — see the note above
+   .landing-mill in landing.css. */
+body {
+  background-image: var(--mill-grain-page);
+}
+@media (forced-colors: active) {
+  body { background-image: none; }
+}
+
+/* -- LINE TREATMENTS ---------------------------------------------
+   Every rule, rail and join on the site is the SAME cut: a groove
+   scribed into the plate, lit from directly overhead. It is exactly
+   two pixels wide — the near wall the light cannot reach (shade),
+   and the far wall it lands on (catch), which is ALWAYS the very
+   next pixel. Nothing between them, and never both on one pixel.
+
+   That last clause is the whole reason this block exists. The old
+   seam stacked two outer shadows with growing offsets:
+
+     0 1px 0 shade, 0 2px 0 catch
+
+   A 2px-offset shadow with no spread covers BOTH rows below the box,
+   not just the second one — so the catch was painted under the shade,
+   and a 7% black over a 70% white came out at 231 against a 234
+   ground. Three levels of shade where seventeen were asked for: the
+   rule read as a single white line. The same mistake, stood on end,
+   split the Copy page join into four lines with a dead plate-coloured
+   column through the middle.
+
+   The fix is to pick two clips that CANNOT overlap. An inset shadow
+   is clipped to the inside of the box, an outer shadow to the
+   outside; put one wall in each and they meet exactly at the edge,
+   one pixel apart, whatever either alpha is.
+
+   --seam-shade  the near wall. Alpha, not a colour, so one value
+                 reads the same on the page ground and on a plate.
+   --seam-catch  the far wall. `--rail-catch` is the same light under
+                 the name the sidebar and TOC rails already use.
+   --seam-x      a cut running ACROSS the page (a rule under a page
+                 header): shade on the box's own last row, catch on
+                 the first row below it. Replaces `border-b`.
+   --seam-y      the same cut stood on end, for the join between two
+                 butted plates: shade in the column just outside the
+                 leading edge, catch on the first column inside it.
+                 Drawn by the RIGHT-hand plate, which paints last.
+   --rail-shade  the near wall as a BORDER colour, for the two rails
+                 that are drawn with `border-s` and cannot be re-cut
+                 from here. In light this is the hairline the ground
+                 already used; in dark it has to be spelled out,
+                 because Nuxt UI's dark `--ui-border` is LIGHTER than
+                 the page and a rail built on it reads as a raised
+                 wire, not a groove — two light lines instead of a
+                 dark one and a light one. */
+:root {
+  --seam-shade: light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.55));
+  --seam-catch: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.06));
+  --rail-catch: var(--seam-catch);
+  --rail-shade: light-dark(oklch(88.5% 0 0), rgb(0 0 0 / 0.55));
+
+  --seam-x:
+    inset 0 -1px 0 var(--seam-shade),
+    0 1px 0 var(--seam-catch);
+  --seam-y:
+    -1px 0 0 var(--seam-shade),
+    inset 1px 0 0 var(--seam-catch);
+}
+
+/* -- THE DASHED SEAM ---------------------------------------------
+   A dashed rule is the same two-pixel cut, broken into stitches — so
+   the catch has to be dashed too, in phase with the shade, and a
+   box-shadow only ever draws solid. Both walls are painted instead as
+   one-pixel-tall background layers on the separator's own border
+   element: same 3px-on / 2px-off rhythm Chrome renders a 1px dashed
+   border with, so the change is the depth and nothing else.
+
+   The border is dropped for an explicit 2px box: the element's whole
+   height WAS that border, and a cut needs a second row to turn on.
+   Hung on USeparator's `border` slot in app.config, alongside the
+   theme's own `border-dashed` — which stays, so a VERTICAL dashed
+   separator (this rule reads as one cut across, and there is no such
+   thing as a two-pixel-tall column) still renders the plain border it
+   renders today. */
+[data-orientation='horizontal'] .seam-dashed {
+  border-block-start-width: 0;
+  block-size: 2px;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 0, 0 1px;
+  background-image:
+    repeating-linear-gradient(90deg, var(--seam-shade) 0 3px, transparent 3px 5px),
+    repeating-linear-gradient(90deg, var(--seam-catch) 0 3px, transparent 3px 5px);
+}
+@media (forced-colors: active) {
+  [data-orientation='horizontal'] .seam-dashed {
+    border-block-start-width: 1px;
+    block-size: auto;
+    background-image: none;
+  }
+}
+
+/* -- THE HEADER RAIL ---------------------------------------------
+   The bar used to be bg-default/75 — the SAME tone as the page —
+   over a shadow with more negative spread (-14px) than blur (16px),
+   which renders as a ~2px sliver. Nothing said "above".
+
+   Now it is a plate: a lighter surface with the brushed grain
+   running along it, a catch on its crown, a hard 1px shade at its
+   base — that solid layer IS the bottom edge, so app.config drops
+   the theme's border-b or the bar draws two lines — and a real cast
+   onto the ground below.
+
+   The fill is a dome (crown -> foot) rather than a flat step, so the
+   bar has a lit top and a settled bottom of its own; both endpoints
+   keep an alpha so backdrop-blur still has work to do. */
+:root {
+  /* The dome's own endpoints, NOT the --ui-bg-* aliases: the search
+     well below re-points --ui-bg-muted inside the header, and a bar
+     built from that variable would darken its own foot along with the
+     dish it is trying to separate from. */
+  --header-crown: light-dark(var(--ui-bg-accented), oklch(30% 0 0));
+  --header-foot: light-dark(var(--ui-bg-elevated), var(--ui-color-neutral-800));
+  --gradient-header: linear-gradient(180deg,
+    color-mix(in srgb, var(--header-crown) 88%, transparent),
+    color-mix(in srgb, var(--header-foot) 88%, transparent));
+  /* Grain first — background layers paint front to back. */
+  --gradient-header-image: var(--mill-grain), var(--gradient-header);
+
+  --elevation-header:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.07)),
+    0 1px 0 light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.5)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
+    0 10px 20px -8px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5));
+}
+
+/* The bar is brighter than the page now, and the search trigger's dish is
+   `concave` over `bg-muted` — so untouched it would sit a single point
+   below its own surround and read flat. Re-point --ui-bg-muted INSIDE the
+   header: `bg-muted` resolves it at use time, so the dish deepens by
+   itself and nothing outside the bar moves. */
+/* `.app-header` rather than the bare element: `header` would also
+   catch any <header> a content page renders. Hung on the root slot in
+   app.config. */
+.app-header {
+  --ui-bg-muted: light-dark(oklch(95.2% 0 0), oklch(22.5% 0 0));
+}
+
+/* -- THE FIELD-GROUP SEAM ----------------------------------------
+   Docus hardcodes `border-l border-muted` on the dropdown half of
+   the Copy page group (DocsPageHeaderLinks.vue), so it can't be
+   reached from app.config's theme keys. Both halves are raised
+   plates now, and the join between them is a cut like any other.
+   Same kind of patch as skin.css's <kbd> rule, and for the same
+   reason — the class lives in someone else's template.
+   `.docs-page-links` is hung on UPageHeader's `links` slot.
+
+   The border is switched OFF rather than made transparent. An inset
+   shadow is clipped to the PADDING box, so a 1px border the eye
+   can't see still pushed the whole cut a pixel inboard and left a
+   dead plate-coloured column at the actual join — the gap that made
+   one groove read as two lines. With the border gone the cut lands
+   exactly where the two plates meet.
+
+   The seam is listed BEFORE --elevation-1 so the shade sits on top of
+   the plate ring that runs round this half; the two share that one
+   column and the darker of them is the wall the cut needs. */
+.docs-page-links :is(a, button).border-l {
+  border-inline-start-width: 0;
+  box-shadow: var(--seam-y), var(--elevation-1);
+}

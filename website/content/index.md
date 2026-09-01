@@ -11,14 +11,18 @@ class: "landing-hero-ground border-b border-default"
 headline: "NUXT MODULE · CONVEX INTEGRATION"
 ui:
   header: "motion-safe:animate-fade-up"
+  title: "landing-billet"
 links:
   - label: get started
     to: /getting-started/introduction
-    trailingIcon: i-nc-arrow-right
+    # The destination is the docs, not a next step in a flow — an open book
+    # names it, and a noun LEADS the way the github mark does (arrows stay
+    # trailing, where they mean direction).
+    icon: i-nc-book-open
     color: primary
     ui:
       # size xl ships a 24px icon — oversized next to its 16px label.
-      trailingIcon: size-4.5
+      leadingIcon: size-4.5
   - label: github
     to: https://github.com/qruto/nuxt-convex-module
     target: _blank
@@ -68,13 +72,24 @@ const send = useMutation(api.messages.send)
 ::
 
 #title
-Use :brand-convex backend in a :brand-nuxt application
+::hero-billet
+Use :brand-convex backend\
+in a :brand-nuxt application
+::
 
 #description
-One install wires it in — **live queries**, **mutations**, **actions**,
-**cursor pagination**, **file storage** and **SSR**, all
-[auto-imported and typed]{.text-primary} against your deployment. The same
-client also runs **standalone in any Vue app**.
+<!-- Three beats, two emphasis spans. The old build bolded all six capability
+     names, which is what made the block read as noise: a comma list is
+     already a list, and bolding every item in it emphasises nothing. Bold
+     now carries the CLAIM (one span, the lead), `.text-primary` the one
+     thing that is actually the module's argument, and the closer runs
+     plain — it is an aside, not a third pitch. -->
+**One install wires Convex into Nuxt.**
+
+Live queries, mutations, actions, cursor pagination, file storage and SSR —
+all [auto-imported and typed]{.text-primary} against your deployment.
+
+The same client runs standalone in any Vue app.
 
 :landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5 · CONVEX 1.45]
 :::
@@ -84,10 +99,12 @@ client also runs **standalone in any Vue app**.
 ::u-page-section
 ---
 id: spec
-class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
+class: "landing-mill-grid landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
 headline: "01 · SPEC SHEET"
-title: Everything the module ships
 ---
+#title
+:concave-text[Everything the module ships]
+
 #description
 The whole surface on one plate — nine numbered figures, each **color-banded**
 and working live on its own **engraved stage**. Every card links to the page
@@ -100,10 +117,12 @@ that proves it.
 :::u-page-section
 ---
 id: operation
-class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
+class: "landing-mill-rings landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
 headline: "02 · LIVE OPERATION"
-title: One table, every client
 ---
+#title
+:concave-text[One table, every client]
+
 #description
 The sync loop, staged: two clients, one `useQuery` subscription each, **no
 props between them** — a write from either side lands in **both panes on the
@@ -140,10 +159,12 @@ await send({
 :::u-page-section
 ---
 id: bench
-class: "landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
+class: "landing-mill-hatch landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
 headline: "03 · BENCH TESTS"
-title: Three mechanisms on replay
 ---
+#title
+:concave-text[Three mechanisms on replay]
+
 #description
 **Optimistic writes**, **cursor pagination**, **file upload** — looping
 readouts, simulated in-page with zero network. The guide's
@@ -175,9 +196,8 @@ const storageId = await upload(file)
 :::u-page-section
 ---
 id: deploy
-class: "landing-reveal scroll-mt-(--ui-header-height)"
+class: "landing-mill-knurl landing-reveal scroll-mt-(--ui-header-height)"
 headline: "04 · DEPLOYMENT"
-title: In your pocket in three moves
 links:
   - label: Install the kit
     to: /getting-started/installation
@@ -191,6 +211,9 @@ links:
     color: neutral
     variant: outline
 ---
+#title
+:convex-text[In your pocket in three moves]
+
 #body
 ::landing-deploy
 ```bash

@@ -34,6 +34,63 @@ defineProps<{ mono?: boolean }>()
       focusable="false"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <!-- Badge-relief gradients for the hero billet (landing.css
+           switches the fills to these there; everywhere else the
+           attribute fills below stand). The wordmark is a dark MATTE
+           graphite badge, RAISED like the words around it: the stops
+           model a convex face under the overhead-ish lamp — lit crown
+           at the top falling into shade toward the baseline, with a
+           sliver of ground light bouncing back at the feet. The shine
+           is not in this ramp (landing.css sweeps a raked light bar
+           across the face copy instead); the values here are the
+           static light base.
+
+           The SYMBOLS are domed enamel: FIVE stops each, lit crown
+           toward the 330° lamp (up-left) → a lit shoulder → the vendor
+           hue at 50% → its shade → the deep shade away from the light.
+           Keeping the vendor hue at the body stop is what stops this
+           reading as a recolour; the extra shoulder/shade pair is what
+           makes it read as a DOME rather than a two-tone wash, and the
+           deep ends sit lifted off the earlier near-black shades so the
+           curve rolls instead of crushing. Reverse the ramp and the
+           symbols go concave. -->
+      <defs>
+        <linearGradient id="brand-convex-eng-w" gradientUnits="userSpaceOnUse" x1="0" y1="55.7" x2="0" y2="91.2">
+          <stop offset="0" stop-color="#717579" />
+          <stop offset="0.14" stop-color="#676b6f" />
+          <stop offset="0.3" stop-color="#5d6165" />
+          <stop offset="0.44" stop-color="#54575b" />
+          <stop offset="0.58" stop-color="#4a4d51" />
+          <stop offset="0.72" stop-color="#414448" />
+          <stop offset="0.86" stop-color="#34373b" />
+          <stop offset="1" stop-color="#3d4044" />
+        </linearGradient>
+        <linearGradient id="brand-convex-eng-gold" x1="0" y1="0" x2="0.72" y2="1">
+          <stop offset="0" stop-color="#ffeec2" />
+          <stop offset="0.2" stop-color="#fdd077" />
+          <stop offset="0.5" stop-color="#f3b01c" />
+          <stop offset="0.79" stop-color="#cd8c11" />
+          <stop offset="1" stop-color="#ab740b" />
+        </linearGradient>
+        <linearGradient id="brand-convex-eng-magenta" x1="0" y1="0" x2="0.72" y2="1">
+          <stop offset="0" stop-color="#e0a6d1" />
+          <stop offset="0.2" stop-color="#b8619f" />
+          <stop offset="0.5" stop-color="#8d2676" />
+          <stop offset="0.79" stop-color="#6e1a5a" />
+          <stop offset="1" stop-color="#5c1449" />
+        </linearGradient>
+        <linearGradient id="brand-convex-eng-red" x1="0" y1="0" x2="0.72" y2="1">
+          <stop offset="0" stop-color="#ffc6c0" />
+          <stop offset="0.2" stop-color="#fb8a82" />
+          <stop offset="0.5" stop-color="#ee342f" />
+          <stop offset="0.79" stop-color="#c02320" />
+          <stop offset="1" stop-color="#a31c1a" />
+        </linearGradient>
+        <!-- THE LIGHT BAR's sweep gradient is NOT here: it lives in
+             HeroBillet's own zero-size defs svg, ahead of both billet
+             copies, so that animating its stops never dirties this
+             artwork's raster (the ~1fps lesson — see the note there). -->
+      </defs>
       <path
         d="M114.794 86.6648C111.454 83.6785 109.784 79.2644 109.784 73.434C109.784 67.6036 111.487 63.1896 114.896 60.2033C118.301 57.2169 122.959 55.7209 128.865 55.7209C131.319 55.7209 133.486 55.8973 135.372 56.2613C137.258 56.6197 139.063 57.2283 140.786 58.0929V67.5524C138.106 66.2157 135.064 65.5445 131.659 65.5445C128.66 65.5445 126.445 66.1417 125.018 67.3363C123.586 68.5308 122.873 70.5615 122.873 73.434C122.873 76.2099 123.575 78.2178 124.986 79.4578C126.391 80.7035 128.617 81.3235 131.665 81.3235C134.891 81.3235 137.955 80.5329 140.862 78.9573V88.8547C137.636 90.3849 133.615 91.1471 128.801 91.1471C122.797 91.1471 118.133 89.6511 114.794 86.6648Z"
         fill="currentColor"

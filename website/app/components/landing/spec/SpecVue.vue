@@ -12,7 +12,7 @@
       </span>
       <span class="nuxt-chip flex items-center rounded-md border border-dashed border-accented px-2 py-1 text-[0.55rem] font-bold tracking-widest text-dimmed">NUXT · OPTIONAL</span>
     </div>
-    <code class="etched max-w-full truncate rounded-sm px-1.5 py-0.5 text-[0.58rem] text-toned">'nuxt-convex-module/vue'</code>
+    <code class="concave-text max-w-full truncate rounded-sm px-1.5 py-0.5 text-[0.58rem] text-toned">'nuxt-convex-module/vue'</code>
   </div>
 </template>
 

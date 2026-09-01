@@ -18,7 +18,7 @@
       <span class="ml-auto flex-none text-[0.55rem] text-dimmed">84 KB</span>
     </div>
     <span class="h-1.5 w-full overflow-hidden rounded-full bg-(--ui-border-accented)"><i class="fill block h-full rounded-full" /></span>
-    <code class="sid etched self-start rounded-sm px-1.5 py-0.5 text-[0.56rem] text-highlighted">id kg24d8mn…9d1</code>
+    <code class="sid concave-text self-start rounded-sm px-1.5 py-0.5 text-[0.56rem] text-highlighted">id kg24d8mn…9d1</code>
   </div>
 </template>
 

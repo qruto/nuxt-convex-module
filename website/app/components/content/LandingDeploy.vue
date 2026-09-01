@@ -27,13 +27,13 @@ const parts = codeSlotParts(useSlots(), steps.length)
   <div>
     <!-- The case-foam tray — a well carved into the ground itself; each step
          sits in the foam like a tool. -->
-    <ol class="well m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(270px,1fr))] gap-4.5 p-4.5 [--well-radius:22px]">
+    <ol class="concave-2 rounded-[22px] m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(270px,1fr))] gap-4.5 p-4.5">
       <li
         v-for="(step, index) in steps"
         :key="step.id"
-        class="raised px-5 pt-4.5 pb-5"
+        class="convex rounded-lg px-5 pt-4.5 pb-5"
       >
-        <span class="etched mb-3 inline-block font-mono text-[0.65rem] font-bold tracking-[0.16em] text-toned after:mt-1 after:block after:h-0.5 after:w-full after:rounded-full after:bg-primary/85 after:content-['']">{{ step.id }}</span>
+        <span class="concave-text mb-3 inline-block font-mono text-[0.65rem] font-bold tracking-[0.16em] text-toned after:mt-1 after:block after:h-0.5 after:w-full after:rounded-full after:bg-primary/85 after:content-['']">{{ step.id }}</span>
         <!-- The command wraps rather than scrolling: a horizontally-clipped
              command reads as a short one — people copy what they can see.
              (ProsePre's own copy button covers the retyping case.) -->

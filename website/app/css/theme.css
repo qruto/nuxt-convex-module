@@ -59,8 +59,9 @@
    Declared behind (color-gamut: p3) rather than as bare out-of-gamut oklch on
    purpose: gamut MAPPING back down to sRGB is the browser's choice of
    algorithm and drifts between engines, while these two ramps are both exact.
-   Everything downstream — --ui-primary, the glows, --grad-accent — is
-   color-mix()'d off these tokens, so the whole accent system moves with it. */
+   Everything downstream — --ui-primary, the glows, every `bg-primary`
+   surface — resolves off these tokens, so the whole accent system moves
+   with it. */
 @media (color-gamut: p3) {
   :root {
     --color-signal-50:  oklch(97.38% 0.0191 54.75);

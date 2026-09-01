@@ -207,36 +207,22 @@ watch(state, (value) => {
 </script>
 
 <template>
-  <!-- The instrument panel — a chamfered plate, radius and elevation bumped
-       through the recipe seams. Its own size container: the narrow tweaks
-       query the panel, not the viewport. -->
+  <!-- The instrument panel — the deepest convex step on the page, at a
+       radius no other surface uses. Its own size container: the narrow
+       tweaks query the panel, not the viewport. -->
   <figure
     ref="plate"
-    class="plate sheen noise @container relative m-0 px-6 pt-5 pb-5 [--plate-elev:var(--elev-3)] [--plate-radius:26px] motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
+    class="convex-3 bevel sheen noise rounded-[26px] @container relative m-0 px-6 pt-5 pb-5 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
     aria-label="A recorded tour of the client's composables that ends on a live Convex query rendering real rows"
   >
+    <!-- The header is the file tab and nothing else. It used to carry a
+         REC / LIVE-OFFLINE badge as well — and LIVE was the same boolean
+         the foot of the panel was already reporting as WS OPEN, one fact
+         wearing two lamps in two different colours. State now has exactly
+         one home, the rail at the foot, and this line is left doing the one
+         job a file tab does. -->
     <header class="mb-3.5 flex items-center gap-4 font-mono text-[0.65rem] font-semibold tracking-[0.13em] @max-[30rem]:gap-3">
-      <span class="etched text-toned tracking-[0.08em]">app.vue</span>
-      <span
-        v-if="mode === 'recording'"
-        class="ml-auto inline-flex items-center gap-2 font-bold tracking-[0.14em] text-primary-700 dark:text-primary-300"
-      >
-        <i
-          aria-hidden="true"
-          class="size-2 rounded-full bg-primary shadow-(--glow-primary-soft) motion-safe:animate-pulse-ring"
-        />REC</span>
-      <span
-        v-else
-        class="ml-auto inline-flex items-center gap-2 font-bold tracking-[0.14em]"
-        :class="online ? 'text-primary-700 dark:text-primary-300' : 'text-dimmed'"
-      >
-        <i
-          aria-hidden="true"
-          class="size-2 rounded-full"
-          :class="online
-            ? 'bg-primary shadow-(--glow-primary-soft) motion-safe:animate-pulse-ring'
-            : 'bg-(--ui-text-dimmed)'"
-        />{{ online ? 'LIVE' : 'OFFLINE' }}</span>
+      <span class="concave-text text-toned tracking-[0.08em]">app.vue</span>
     </header>
 
     <!-- Source well. Five scene fences stacked in one grid cell — the tallest
@@ -261,14 +247,14 @@ watch(state, (value) => {
       aria-hidden="true"
     >
       <span class="h-px flex-1 bg-linear-to-r from-transparent to-primary/30" />
-      <span class="etched flex-none text-toned">RENDERS</span>
+      <span class="concave-text flex-none text-toned">RENDERS</span>
       <span class="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
     </div>
 
     <!-- Rendered readout — the active scene's result as UI while recording,
          the real query result once live. Bottom-anchored like a log; bounded
          rather than fixed so a near-empty list has no dead void. -->
-    <div class="well overflow-hidden px-4.5 py-3.5 [--well-radius:14px]">
+    <div class="concave-2 rounded-[14px] overflow-hidden px-4.5 py-3.5">
       <ul
         class="m-0 flex max-h-[6.6rem] min-h-[3.3rem] list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
         aria-live="polite"
@@ -339,7 +325,7 @@ watch(state, (value) => {
       @submit.prevent="submit"
     >
       <label
-        class="flex min-w-0 flex-1 items-center gap-2 rounded-md bg-(image:--grad-sink) px-3 py-1.5 shadow-(--inset-1) transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
+        class="concave rounded-md flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
         :class="sending ? 'opacity-65' : undefined"
       >
         <span class="sr-only">Write a message to the live Convex table</span>
@@ -370,11 +356,35 @@ watch(state, (value) => {
       />
     </form>
 
-    <figcaption class="mt-3.5 flex min-h-[1.4em] flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[0.65rem] font-semibold tracking-[0.13em] @max-[30rem]:gap-x-3">
+    <!-- THE STATUS RAIL — the panel's one readout, and the only place it
+         reports state. A recessed strip machined into the plate: the cells
+         are scribed apart rather than spaced apart, so it reads as one
+         instrument with divisions instead of a row of loose chips.
+
+         The zones are the same in both acts, which is what lets one strip
+         serve a recording and a live socket without either borrowing the
+         other's idiom:
+
+           state    the lamp. REC while the script runs (signal orange —
+                    authored, ours), LIVE once the socket is up (green —
+                    a machine fact, and the conventional colour for one).
+                    OFFLINE kills the light rather than recolouring it.
+           subject  what is being reported on: the scene, or the table.
+           event    the last thing that happened: the sim chip, or the
+                    hydration / commit latency / a rejected write.
+           action   REPLAY, in its own bay past the last scribe. -->
+    <figcaption class="panel-rail concave rounded-[10px] mt-3.5 flex min-h-[2.15rem] items-stretch font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
       <template v-if="mode === 'recording'">
-        <span class="etched text-toned">SCENE 0{{ scene + 1 }} · {{ SCENES[scene]!.label }}</span>
+        <span class="rail-cell">
+          <i
+            aria-hidden="true"
+            class="lamp lamp-rec"
+          />
+          <span class="concave-text text-primary-700 dark:text-primary-300">REC</span>
+        </span>
+        <span class="rail-cell concave-text text-toned">SCENE 0{{ scene + 1 }} · {{ SCENES[scene]!.label }}</span>
         <span
-          class="inline-flex items-center gap-1.5"
+          class="rail-cell rail-optional gap-1.5"
           aria-hidden="true"
         >
           <i
@@ -386,34 +396,40 @@ watch(state, (value) => {
         </span>
         <span
           v-if="sim.chip"
-          class="etched ml-auto inline-flex items-center gap-1.5 text-primary-700 dark:text-primary-300"
+          class="rail-cell rail-optional concave-text ml-auto text-primary-700 dark:text-primary-300"
         >{{ sim.chip }}</span>
       </template>
       <template v-else>
-        <span class="etched inline-flex items-center gap-1.5 text-dimmed"><i
-          aria-hidden="true"
-          class="size-1.5 rounded-full"
-          :class="online ? 'bg-success shadow-(--glow-success)' : 'bg-(--ui-text-dimmed)'"
-        />{{ online ? 'WS OPEN' : 'NO SOCKET' }}</span>
-        <span class="etched inline-flex items-center gap-1.5 text-dimmed">{{ (data ?? []).length }} DOCUMENTS</span>
+        <span class="rail-cell">
+          <i
+            aria-hidden="true"
+            class="lamp"
+            :class="online ? 'lamp-live' : 'lamp-dead'"
+          />
+          <span
+            class="concave-text"
+            :class="online ? 'text-toned' : 'text-dimmed'"
+          >{{ online ? 'LIVE' : 'OFFLINE' }}</span>
+        </span>
+        <span class="rail-cell concave-text text-dimmed">{{ (data ?? []).length }} DOCUMENTS</span>
         <span
           v-if="rejection"
-          class="etched flex-1 basis-full tracking-[0.02em] text-error"
-        >{{ rejection }}</span>
+          class="rail-cell concave-text min-w-0 flex-1 tracking-[0.02em] text-error"
+        ><span class="truncate">{{ rejection }}</span></span>
         <span
           v-else-if="rtt !== null"
-          class="etched inline-flex items-center gap-1.5 text-primary-700 dark:text-primary-300"
+          class="rail-cell rail-optional concave-text text-primary-700 dark:text-primary-300"
         >COMMIT {{ rtt }} MS</span>
         <span
           v-else
-          class="etched inline-flex items-center gap-1.5 text-dimmed"
+          class="rail-cell rail-optional concave-text text-dimmed"
         >SSR HYDRATED</span>
         <!-- One more pass of the recording — simulated, so no cost to ask. -->
         <UButton
           size="xs"
           color="neutral"
           variant="ghost"
-          class="ml-auto font-mono text-[0.56rem] font-bold tracking-[0.14em] text-dimmed"
+          class="rail-cell ml-auto font-mono text-[0.56rem] font-bold tracking-[0.14em] text-dimmed hover:text-toned"
           :disabled="state === 'playing'"
           @click="replay()"
         >
@@ -423,3 +439,109 @@ watch(state, (value) => {
     </figcaption>
   </figure>
 </template>
+
+<style scoped>
+/* The rail is a groove cut across the foot of the plate — the shallow
+   `concave` to the source tray's `concave-2` above it, so the two
+   recesses read as one machining pass rather than as a well and a card.
+   The shape and the paint are on the element (depth.css); what is left
+   here is only the layout.
+
+   Deliberately NOT overflow:hidden. Nothing in here needs clipping — the
+   scribes are inset well clear of the rounding — and REPLAY's focus ring
+   is an outline drawn OUTSIDE its box, so a clip would swallow the only
+   indicator a keyboard user gets on the one control in the rail. */
+.rail-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding-inline: 0.72rem;
+  white-space: nowrap;
+}
+/* A status bar that wraps is not a status bar, and the full set needs
+   about 26rem of rail. Below that the EVENT cell goes: SSR HYDRATED and
+   COMMIT n MS are transient notes, while the lamp, the document count and
+   REPLAY are the standing readout and the one control. The recording act
+   sheds the same way — the scene pips and the sim chip go, and "SCENE 03"
+   already says how far along the tour is. A REJECTION is
+   never optional — an error the panel is hiding is worse than a rail that
+   scrolls — so that branch has no `rail-optional`.
+
+   Written as a container query HERE rather than as a `@max-[26rem]:hidden`
+   utility on the markup, because `.rail-cell` above is unlayered scoped CSS
+   and beats the layered `hidden` outright: the class sat on the element
+   looking correct and never took effect. (The query resolves against
+   `figure.convex-3`'s @container — and note the panel's own
+   `@max-[30rem]:px-4.5` cannot work at all, since an element is never its
+   own query container.) */
+@container (max-width: 26rem) {
+  .rail-optional {
+    display: none;
+  }
+}
+/* Cells are SCRIBED apart, not spaced apart: a shade line with its light
+   catch one pixel to its right — the same two-line rule the mill finishes
+   cut into the section grounds (landing.css), turned on its side. Inset
+   vertically so the scribe stops short of the groove's own lip instead of
+   colliding with it. Drawn on a pseudo rather than as a border so the
+   rail's rounding clips it and the first cell can opt out. */
+.rail-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.4rem;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  background-image: linear-gradient(90deg,
+    light-dark(oklch(0% 0 0 / 0.11), oklch(0% 0 0 / 0.5)) 0 1px,
+    light-dark(oklch(100% 0 0 / 0.8), oklch(100% 0 0 / 0.05)) 1px 2px);
+}
+/* The lamp sits in a counterbore — a ring of shade around the light, which
+   is what stops a coloured dot on a metal panel reading as a sticker. The
+   glow is the lamp's own spill and only the LIT states get one. */
+.lamp {
+  --lamp-bore: 0 0 0 2px light-dark(oklch(0% 0 0 / 0.07), oklch(0% 0 0 / 0.55));
+  flex: none;
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 999px;
+  background: var(--ui-text-dimmed);
+  box-shadow: var(--lamp-bore);
+}
+/* Green for the socket, signal orange for the recording. The split is the
+   point of having one lamp: a machine fact and an authored one are not the
+   same kind of state, and the colour is what says which you are looking
+   at. */
+.lamp-live {
+  background: var(--ui-color-success-500);
+  box-shadow: var(--lamp-bore), var(--glow-success);
+}
+.lamp-rec {
+  background: var(--ui-primary);
+  box-shadow: var(--lamp-bore), var(--glow-primary-soft);
+}
+/* Offline is a DEAD lamp, not a differently coloured one: it keeps the
+   counterbore and loses the light. */
+.lamp-dead {
+  background: var(--ui-text-dimmed);
+}
+/* The theme's pulse-ring keyframes set box-shadow outright, which would
+   drop the counterbore for the length of the pulse and leave the lamp
+   floating on the rail. This one carries the bore through both frames. */
+@media (prefers-reduced-motion: no-preference) {
+  .lamp-rec {
+    animation: lamp-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes lamp-pulse {
+    0%, 100% {
+      box-shadow: var(--lamp-bore),
+        0 0 0 0 color-mix(in srgb, var(--ui-primary) 35%, transparent);
+      opacity: 1;
+    }
+    50% {
+      box-shadow: var(--lamp-bore), 0 0 0 6px transparent;
+      opacity: 0.6;
+    }
+  }
+}
+</style>

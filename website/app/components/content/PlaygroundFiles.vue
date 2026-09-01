@@ -82,7 +82,7 @@ function formatSize(size: number) {
             class="w-32"
             :model-value="progress"
             :max="1"
-            :ui="{ base: 'bg-default shadow-(--inset-1)' }"
+            :ui="{ base: 'bg-default shadow-(--inset-shadow-1)' }"
           />
         </div>
         <p
@@ -136,7 +136,7 @@ function formatSize(size: number) {
             class="w-32"
             :model-value="queueProgress"
             :max="1"
-            :ui="{ base: 'bg-default shadow-(--inset-1)' }"
+            :ui="{ base: 'bg-default shadow-(--inset-shadow-1)' }"
           />
           <UButton
             v-if="items.length > 0 && !queueBusy"
@@ -193,7 +193,7 @@ function formatSize(size: number) {
           <li
             v-for="file in files"
             :key="file._id"
-            class="raised relative flex flex-col gap-1 p-2 [--raised-elev:var(--elev-0)] [--raised-radius:10px]"
+            class="convex-0 rounded-[10px] relative flex flex-col gap-1 p-2"
           >
             <img
               v-if="file.type.startsWith('image/') && file.url"

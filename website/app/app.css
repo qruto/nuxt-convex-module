@@ -7,12 +7,21 @@
 
      theme.css    palette, type, motion — the design tokens, plus the
                   utility shims and keyframes that ride on them
-     depth.css    the ground ladder, the elevation/gradient tokens,
-                  and the plate/well/raised/etched/sheen/noise recipes
+     depth.css    the ground ladder, the shadow tokens, and the whole
+                  depth vocabulary: convex . concave . concave-text .
+                  concave-icon . sheen . noise
      base.css     scheme bridge, native browser UI, element defaults
      brand.css    third-party logo lockups set inside running text
-     landing.css  page-level rules with no owning component
+     chrome.css   the shell every page wears: the ground grain, the
+                  mill tokens, the header rail, and the seam/rail
+                  line treatments
+     landing.css  page-level rules with no owning component, and the
+                  four mill finishes the sections are cut into
      skin.css     the last Nuxt UI / Docus patch left in CSS
+
+   Display-size relief (a title cut into or raised off the ground) is
+   NOT here: it needs two copies of the words, so it is a component —
+   ConcaveText.vue / ConvexText.vue, each carrying its own recipe.
 
    Docus inlines this file LAST (.nuxt/docus.css) after Tailwind and
    Nuxt UI, both @layer-ed. Unlayered rules here therefore beat every
@@ -51,5 +60,6 @@
 @import "./css/depth.css";
 @import "./css/base.css";
 @import "./css/brand.css";
+@import "./css/chrome.css";
 @import "./css/landing.css";
 @import "./css/skin.css";

@@ -73,7 +73,7 @@ onUnmounted(() => {
         size="sm"
         class="w-full"
         :model-value="uploadPct ?? 0"
-        :ui="{ base: 'bg-default shadow-(--inset-1)' }"
+        :ui="{ base: 'bg-default shadow-(--inset-shadow-1)' }"
       />
       <div class="flex flex-wrap items-center gap-3">
         <UButton

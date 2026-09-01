@@ -1,41 +1,93 @@
 /* ================================================================
-   DEPTH — the ground, the elevation tokens, the recipes
+   DEPTH — one light, two shapes, two materials
    ----------------------------------------------------------------
-   One light source, one material. The tokens are unlayered :root
-   custom properties; the recipes below them are @utility, so they land
-   in @layer utilities and any unlayered component CSS still wins (the
-   old :where() contract, upgraded).
+   Every surface on this site is either CONVEX (it sticks out) or
+   CONCAVE (it is cut in). That is the whole vocabulary, and it holds
+   whatever the thing is made of — a box, a line of type, an icon:
 
-   Geometry deviates ONLY via the seams (--plate-radius, --plate-elev,
-   --well-radius, --well-inset, --raised-*), never via competing
-   `rounded-*` / `shadow-*` utilities — ordering between custom and core
-   utilities is not guaranteed. Each recipe raises a --depth flag
-   descendants may read via `@container style(--depth: …)`.
+     convex . convex-0 . convex-2 . convex-3     raised titanium
+     bevel                                       + a machined edge
+     concave . concave-2                         cut-in titanium
+     convex-accent                               a raised accent part
+     concave-text                                glyphs cut in
+     concave-icon                                mask icons cut in
+
+   The numbers are one ladder of depth, not four vocabularies: 0 is
+   flush, plain is the default step, 2 and 3 stand further off the
+   page. `concave` is the shallow press, `concave-2` the deep tray.
+   Each recipe carries the LIGHT and the MATERIAL; geometry stays
+   core Tailwind, so a surface reads:
+
+     <div class="convex bevel rounded-3xl">        a machined plate
+     <div class="concave-2 rounded-xl">            a deep tray
+     <button class="convex-accent">                the accent part
+
+   TWO MATERIALS, one physics. Titanium (`convex`, `concave`) is
+   shaded in neutral black and white off the --ui-bg ladder. The
+   accent part (`convex-accent`) is shaded in its OWN colour: a
+   saturated orange plate bounces orange into its underside and into
+   the ground beneath it, so a neutral base line and a neutral cast
+   read as grey grime sitting on the colour — which is exactly what
+   makes a light-mode accent button look flat and printed-on. Its
+   dark face keeps plain black: on a near-black ground there is
+   nothing for a warm shade to be warmer THAN. Do not "simplify" the
+   accent recipe to neutral; it has been tried and it loses the part.
+
+   `convex-accent` is one word for the whole part — face, edge, cast,
+   the cut label, hover and press — because those are one material's
+   behaviour, not four decisions. Only the icon relief sits outside
+   it, applied through the theme's leadingIcon / trailingIcon slots
+   (Nuxt UI renders no data-slot on the icon itself to hook).
+
+   The recipes are @utility, so they land in @layer utilities and any
+   unlayered component CSS still wins. They deliberately do NOT set
+   border-radius: `rounded-*` is core Tailwind and would race them.
+
+   A surface has ONE shape. Where a component's theme has to overrule
+   another's — Docus's search field is a neutral `soft` button, so it
+   gets the convex button rule AND its own concave one — the winner is
+   decided by tailwind-merge, which app.config.ts teaches that these
+   classes are a single `depth` axis. Last one written wins, exactly
+   like `bg-*`. Never lean on the emitted order: Tailwind sorts custom
+   utilities alphabetically, which would silently hand every tie to
+   convex.
    ================================================================ */
 
 /* -- THE GROUND --------------------------------------------------
-   Light mode sits on the titanium mill canvas (neutral-200) and
-   elevation goes LIGHTER — muted 100 (well floors), elevated 50
-   (bead-blast plates), accented white (crowns/hover) — fixing the
-   old inverted ladder where popovers rendered darker than the page.
-   Scoped :root:not(.dark) so dark mode falls through to Nuxt UI's
-   layered .dark defaults (bg 900 / muted+elevated 800 / accented
-   700 — already depth-correct); a bare unlayered :root would trump
-   them. */
+   Light mode sits on the titanium mill canvas and elevation goes
+   LIGHTER — muted 100 (well floors), elevated 50 (bead-blast
+   plates), accented white (crowns/hover) — fixing the old inverted
+   ladder where popovers rendered darker than the page. Scoped
+   :root:not(.dark) so dark mode falls through to Nuxt UI's layered
+   .dark defaults (bg 900 / muted+elevated 800 / accented 700 —
+   already depth-correct); a bare unlayered :root would trump them.
+
+   The canvas is a hair lighter than the neutral-200 it used to be
+   (92.2% -> 93.8%): the ground now carries the brushed grain
+   (chrome.css), and grain reads as material only when the surface
+   under it has some light of its own to catch. The hairline steps
+   back with it — a neutral-300 border that was right against 92.2%
+   over-reads against 93.8% and starts drawing boxes instead of
+   edges. Both are written as bare OKLCH rather than a Tailwind step
+   because neutral has nothing between 100 and 200.
+
+   This narrows the ground -> well gap from 4.8pp to 3.2pp. If wells
+   ever read shallow, deepen --gradient-recessed's top stop below; do NOT
+   claw the ground back down. */
 :root {
   --ui-radius: 0.5rem; /* rounded-sm 8 . md 12 . lg 16 . xl 24 */
 }
 :root:not(.dark) {
-  --ui-bg:          var(--ui-color-neutral-200);
+  --ui-bg:          oklch(93.8% 0 0);
   --ui-bg-muted:    var(--ui-color-neutral-100);
   --ui-bg-elevated: var(--ui-color-neutral-50);
   --ui-bg-accented: #ffffff;
-  --ui-border:          var(--ui-color-neutral-300);
+  --ui-border:          oklch(88.5% 0 0);
   --ui-border-muted:    var(--ui-color-neutral-200);
   --ui-border-accented: var(--ui-color-neutral-300);
 }
 
-/* -- Elevation tokens --------------------------------------------
+/* -- The shadow ladder -------------------------------------------
    Light from directly overhead, tiny elevation. Every raised step
    carries exactly two 1px inset lines: a light catch on the crown
    (a hair, not a stroke) and a hard shade at the base (no blur —
@@ -43,49 +95,44 @@
    under the lip, light POOLING at the floor. Shadow colors carry
    light-dark() per layer, so each token has one definition across
    both schemes; the html bridge in base.css keeps them in lockstep
-   with the class-driven color mode. */
+   with the class-driven color mode.
+
+   These are the rungs the recipes below stand on. Reach for a rung
+   utility first; the raw token is for the handful of places that want
+   the cast without the face (a code block, the header rail). */
 :root {
-  --elev-0:
+  --elevation-0:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.06)),
     0 0 0 1px light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.05)),
     0 1px 1px light-dark(rgb(0 0 0 / 0.05), transparent);
-  --elev-1:
+  --elevation-1:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.07)),
     inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
     0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
     0 1px 1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
     0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4));
-  --elev-2:
+  --elevation-2:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.08)),
     inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.42)),
     0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
     0 1px 2px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.45)),
     0 3px 6px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.45));
-  --elev-3:
+  --elevation-3:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.09)),
     inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.45)),
     0 0 0 1px light-dark(rgb(0 0 0 / 0.028), rgb(0 0 0 / 0.3)),
     0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.5)),
     0 6px 14px -4px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.55));
-  /* Convex accent plate — a crown the saturated fill can carry, a
-     hard base, and a cast tinted with the accent in light. */
-  --elev-accent:
-    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.28)),
-    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.3)),
-    0 1px 2px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)),
-    0 3px 6px -2px light-dark(
-      color-mix(in srgb, var(--ui-color-primary-600) 35%, transparent),
-      rgb(0 0 0 / 0.45));
-  /* Header bar — ambient only; the hairline is UHeader's border-b. */
-  --elev-header: 0 6px 16px -14px rgb(0 0 0 / 0.5);
+  /* --elevation-header lives in chrome.css with the rest of the header
+     rail: it is one plate's recipe, not a rung on this ladder. */
 
   /* Wells — lip shade on top, light pooling at the floor. */
-  --inset-1:
+  --inset-shadow-1:
     inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
     inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.05)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
-  --inset-2:
+  --inset-shadow-2:
     inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
     inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.055)),
@@ -94,76 +141,309 @@
   /* Glows — keyed to the semantic aliases. */
   --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
   --glow-success: 0 0 9px color-mix(in srgb, var(--ui-color-success-400) 55%, transparent);
+}
 
-  /* Convex/concave gradients — the tonal ramps that make plates read
-     as gently domed and wells as dished, endpoints from the --ui-bg
-     ladder. --grad-surface must stay a SINGLE gradient (it pairs
-     with padding-box in the plate recipe's bevel trick). */
-  --grad-surface: linear-gradient(180deg,
+/* -- The faces ---------------------------------------------------
+   The tonal ramps that make a surface read as gently domed or as
+   dished, endpoints from the --ui-bg ladder. --gradient-surface must
+   stay a SINGLE gradient: it pairs with padding-box in the convex
+   recipe's bevel trick. */
+:root {
+  --gradient-surface: linear-gradient(180deg,
     color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
     var(--ui-bg-elevated) 58%,
     color-mix(in srgb, var(--ui-bg-elevated), #000 2.5%));
   /* The dish holds its mid-tone; it only turns at the lip and floor. */
-  --grad-sink: linear-gradient(180deg,
+  --gradient-recessed: linear-gradient(180deg,
     color-mix(in srgb, var(--ui-bg-muted), #000 2%),
     var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
     color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
-  /* Accent plates — lit crown, shaded base. Press shade is a hover
-     semantic the alias system doesn't provide: one step deeper in
-     light, one step lighter in dark. */
-  --ui-primary-press: light-dark(var(--ui-color-primary-600), var(--ui-color-primary-300));
-  /* Accent tints/shades mix in OKLab — sRGB mixing with white/black
-     drains chroma from a saturated orange; OKLab keeps the crown
-     luminous instead of chalky. Neutral mixes above stay in srgb (they
-     are greys; there is nothing to preserve). */
-  --grad-accent: linear-gradient(180deg,
-    color-mix(in oklab, var(--ui-primary), #fff 16%), var(--ui-primary) 55%,
-    color-mix(in oklab, var(--ui-primary), #000 10%));
-  --grad-accent-press: linear-gradient(180deg,
-    color-mix(in oklab, var(--ui-primary-press), #fff 12%), var(--ui-primary-press) 55%,
-    color-mix(in oklab, var(--ui-primary-press), #000 8%));
-  /* 1px plate bevel: specular top edge -> shaded bottom edge. */
-  --grad-bevel: linear-gradient(180deg,
+  /* 1px machined edge: specular top -> shaded bottom. Painted by
+     every convex recipe on the border box, so it only shows where a
+     `bevel` has opened a 1px transparent border for it. */
+  --gradient-bevel: linear-gradient(180deg,
     light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
     light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)) 40%,
     light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)));
 }
 
-/* -- Depth recipes -----------------------------------------------
-   class="plate | well | raised" — see the seam contract up top. */
-@utility plate {
-  --depth: plate;
+/* -- The accent material -----------------------------------------
+   Everything `convex-accent` is made of, in one block. Tints and
+   shades mix in OKLab — sRGB mixing with white/black drains chroma
+   from a saturated orange; OKLab keeps the crown luminous instead of
+   chalky. The neutral mixes above stay in srgb (they are greys;
+   there is nothing to preserve). */
+:root {
+  /* The FACE — one material in both rooms. The accent part is the same
+     piece of orange whichever way the page is lit, so it holds the
+     ramp's most saturated step (500) in both schemes. Nuxt UI's dark
+     alias moves --ui-primary up to 400: right for accent TEXT on a dark
+     ground, wrong for a filled plate — 400 tinted 16% white at the
+     crown came out pastel salmon, and the cut label lost half its
+     contrast on it (1.96:1, against the 3.10:1 the light scheme reads).
+     Named separately so the rest of the site keeps the alias. */
+  --accent-face: light-dark(var(--ui-primary), var(--color-signal-500));
+  /* Hover and press are two shades the alias system doesn't give us.
+     HOVER comes toward the light: deeper in light mode, brighter in
+     dark. PRESS goes the other way in both — the plate has dropped into
+     its recess, so less light reaches it: one step down the ramp from
+     the face, in either scheme. */
+  --ui-primary-hover: light-dark(var(--ui-color-primary-600), var(--ui-color-primary-400));
+  --ui-primary-pressed: var(--ui-color-primary-600);
+  --gradient-accent: linear-gradient(180deg,
+    color-mix(in oklab, var(--accent-face), #fff 16%), var(--accent-face) 55%,
+    color-mix(in oklab, var(--accent-face), #000 10%));
+  --gradient-accent-hover: linear-gradient(180deg,
+    color-mix(in oklab, var(--ui-primary-hover), #fff 12%), var(--ui-primary-hover) 55%,
+    color-mix(in oklab, var(--ui-primary-hover), #000 8%));
+  /* Pressed runs the OTHER WAY: a face below the surrounding edge is
+     shaded by the wall above it and catches bounce off its own floor.
+     Same ramp as the crown, read upside down. */
+  --gradient-accent-pressed: linear-gradient(180deg,
+    color-mix(in oklab, var(--ui-primary-pressed), #000 12%), var(--ui-primary-pressed) 50%,
+    color-mix(in oklab, var(--ui-primary-pressed), #fff 12%));
+  /* The keyline, drawn as a shadow because a real border would resize
+     the part. Warm, not neutral — the gap's wall is lit by the orange
+     plate beside it. */
+  --accent-edge: 0 0 0 1px light-dark(
+      --alpha(var(--color-signal-700) / 88%),
+      --alpha(var(--color-signal-950) / 88%));
+  /* The part's own body: lit crown, warm base line, warm cast. */
+  --elevation-accent:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.28)),
+    inset 0 -1px 0 light-dark(
+      color-mix(in oklab, var(--color-signal-950) 30%, transparent),
+      rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(
+      color-mix(in oklab, var(--color-signal-950) 22%, transparent),
+      rgb(0 0 0 / 0.4)),
+    0 3px 6px -2px light-dark(
+      color-mix(in oklab, var(--color-signal-800) 32%, transparent),
+      rgb(0 0 0 / 0.45));
+  /* Pressed body: the SAME two 1px lines as --elevation-accent with
+     their edges traded — shade under the top lip, light pooling on the
+     floor. Both stay hard (no blur): the crisp line is the plate's
+     thickness, and that is what makes it read as a machined part
+     rather than a soft glow. Deliberately NOT --inset-shadow-1, which
+     is the titanium well: its 0.8 white floor line goes chalk-white on
+     orange and its neutral 6% lip shade disappears entirely. No outer
+     layers here — the seated part's cast is --accent-cast-pressed. */
+  --elevation-accent-pressed:
+    inset 0 1px 0 light-dark(
+      color-mix(in oklab, var(--color-signal-950) 38%, transparent),
+      rgb(0 0 0 / 0.42)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.26));
+  /* The cast onto the ground, written per scheme (dark below):
+     light-dark() can swap a shadow's colors but not the list's SHAPE,
+     and the grounds need different shapes — light shows the part's own
+     warm cast plus one bounce under the lip; dark leaks real light. */
+  --accent-cast:
+    0 1px 1px --alpha(var(--color-signal-950) / 18%),
+    0 7px 14px -6px --alpha(var(--color-signal-900) / 32%),
+    0 16px 30px -16px --alpha(var(--color-signal-950) / 24%),
+    0 3px 7px -4px --alpha(var(--color-signal-500) / 55%);
+  /* Hover: the part lifts — longer, softer cast, brighter bounce. */
+  --accent-cast-lifted:
+    0 1px 1px --alpha(var(--color-signal-950) / 20%),
+    0 9px 18px -6px --alpha(var(--color-signal-900) / 36%),
+    0 22px 40px -18px --alpha(var(--color-signal-950) / 28%),
+    0 4px 9px -4px --alpha(var(--color-signal-500) / 72%);
+  /* Press: the part is seated, so there is no gap left to cast across
+     — everything but the contact shade under the bottom edge goes. */
+  --accent-cast-pressed:
+    0 1px 2px -1px --alpha(var(--color-signal-950) / 26%);
+  /* The label and icon cut into the plate: shade above the glyphs,
+     lit surface below. One pair for both schemes, like the face: the
+     light spilling off a cut edge is the plate's own colour, not the
+     room's. */
+  --accent-cut-shadow: --alpha(var(--color-signal-950) / 55%);
+  --accent-cut-shadow-soft: --alpha(var(--color-signal-950) / 26%);
+  --accent-cut-highlight: --alpha(var(--color-signal-300) / 60%);
+  --accent-cut-highlight-soft: --alpha(var(--color-signal-300) / 30%);
+}
+/* Dark ground: the plate is the brightest thing around, so its cast
+   is genuinely leaked light — a different layer shape, not a recolor. */
+:root.dark {
+  --accent-cast:
+    0 3px 7px -3px --alpha(var(--color-signal-500) / 70%),
+    0 9px 22px -8px --alpha(var(--color-signal-500) / 55%),
+    0 18px 42px -18px --alpha(var(--color-signal-400) / 42%);
+  --accent-cast-lifted:
+    0 3px 8px -3px --alpha(var(--color-signal-400) / 85%),
+    0 10px 26px -8px --alpha(var(--color-signal-500) / 70%),
+    0 20px 48px -18px --alpha(var(--color-signal-400) / 55%);
+  /* Pressed in the dark: the emitter is down in its recess, so the
+     leak pulls in tight and dims — it does not disappear, which on a
+     near-black ground would read as the part switching off. */
+  --accent-cast-pressed:
+    0 2px 6px -3px --alpha(var(--color-signal-500) / 45%),
+    0 8px 18px -10px --alpha(var(--color-signal-500) / 26%);
+}
+
+/* -- CONVEX: titanium surfaces that stick out ---------------------
+   Every rung paints the bevel on its border box as well, where it
+   stays invisible until `bevel` opens a 1px transparent border for
+   it — so the machined edge composes instead of competing for the
+   background property. */
+@utility convex {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-1);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility convex-0 {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-0);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility convex-2 {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-2);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility convex-3 {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-3);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+/* The machined edge — opens the 1px border the bevel gradient shows
+   through. Pair with any convex rung. */
+@utility bevel {
   border: 1px solid transparent;
-  border-radius: var(--plate-radius, calc(var(--ui-radius) * 3));
-  background: var(--grad-surface) padding-box, var(--grad-bevel) border-box;
-  box-shadow: var(--plate-elev, var(--elev-1));
+}
+
+/* -- CONCAVE: titanium surfaces that are cut in -------------------
+   `concave` is the shallow one — a pressed control, a field. Its
+   variant form is how a control seats: `active:concave`. `concave-2`
+   is the deep tray a whole stage sits inside. */
+@utility concave {
+  --depth: concave;
+  background: var(--gradient-recessed);
+  box-shadow: var(--inset-shadow-1);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
-@utility well {
-  --depth: well;
-  background: var(--grad-sink);
-  border-radius: var(--well-radius, calc(var(--ui-radius) * 1.5));
-  box-shadow: var(--well-inset, var(--inset-2));
-  @supports (corner-shape: squircle) { corner-shape: squircle; }
-}
-@utility raised {
-  --depth: raised;
-  background: var(--grad-surface);
-  border-radius: var(--raised-radius, calc(var(--ui-radius) * 2));
-  box-shadow: var(--raised-elev, var(--elev-1));
+@utility concave-2 {
+  --depth: concave;
+  background: var(--gradient-recessed);
+  box-shadow: var(--inset-shadow-2);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
-/* Laser-etched marking — a 1px light catch under the glyphs (light);
-   the groove reads as a shadow in dark. Texture only: pair it with a
-   text-* color utility (usually text-toned) — baking a color in here
-   would race core text-* utilities inside @layer utilities. */
-@utility etched {
+/* -- CONVEX-ACCENT: the raised part, in the accent material -------
+   One word for the whole part: face, keyline, body, cast, the label
+   cut into it, and how all of that behaves under the cursor and
+   under a press. Colour of the label is NOT baked in — pair it with
+   a text-* utility: text-primary-900, one value for both schemes,
+   3.10:1 on this fill — do not lighten it. */
+@utility convex-accent {
+  --depth: convex;
+  background-image: var(--gradient-accent);
+  box-shadow: var(--accent-edge), var(--elevation-accent), var(--accent-cast);
+  text-shadow:
+    0 -1.5px 1px var(--accent-cut-shadow-soft),
+    0 1px 0 var(--accent-cut-highlight),
+    0 2px 1.5px var(--accent-cut-highlight-soft);
+  /* The label and icon ride the face, so they carry the travel; the
+     transition on the button itself does not reach them. */
+  & > * {
+    transition: translate 150ms ease-out;
+  }
+  &:hover {
+    background-image: var(--gradient-accent-hover);
+    box-shadow: var(--accent-edge), var(--elevation-accent), var(--accent-cast-lifted);
+  }
+  &:active {
+    background-image: var(--gradient-accent-pressed);
+    box-shadow: var(--accent-edge), var(--elevation-accent-pressed), var(--accent-cast-pressed);
+    /* THE BOX DOES NOT MOVE. A part that translates has slid down the
+       page; a part that keeps its outline while its light inverts has
+       gone down INTO it. Everything that reads as travel is depth —
+       the two 1px lines trade edges, the face ramp turns over, the
+       cast pulls in to a contact shade — and only the contents ride
+       1px lower, the way a real face does when it drops below the
+       edge around it. */
+    & > * {
+      translate: 0 1px;
+    }
+  }
+  /* Forced colors: keyline, cast and cut are all invisible there, and
+     a hand-set label colour would fight the system pair. */
+  @media (forced-colors: active) {
+    background-image: none;
+    color: inherit;
+    box-shadow: none;
+    text-shadow: none;
+  }
+}
+
+/* -- CONCAVE type and icons ---------------------------------------
+   The same cut, in the channels a glyph can carry it. Text and mask
+   icons need different CSS properties (text-shadow can't reach a
+   masked icon, a filter would blur live text), which is the only
+   reason these are two classes and not one.
+
+   `concave-text` is the 1px marking: a light catch under the glyphs
+   in light, a groove shadow in dark. Texture only — pair it with a
+   text-* colour; baking one in here would race core text-* utilities
+   inside @layer utilities. Below ~18px a deeper cut turns to mush, so
+   it stays at one pixel.
+
+   `concave-icon` is the accent part's icon marking: a mask icon takes
+   no text-shadow, so the LABEL'S OWN cut is chained as drop-shadows at
+   the same three offsets — one marking, written twice because the two
+   channels need different properties. Keep the two lists in step; an
+   icon cut deeper than the letters beside it stops reading as the same
+   engraving. (Chained drop-shadows compound, each casting from the
+   previous result, so the lower layers spread a hair more than the
+   text's — that is as close as a masked glyph gets.)
+
+   THE SHELL IS LOAD-BEARING. A nuxt-icon glyph is the element's own
+   background clipped by a mask, and the painting order is filter THEN
+   mask — so a drop-shadow written straight onto that element is cut
+   away by the glyph it was cast from, and nothing renders. (Probe it
+   with `filter: drop-shadow(0 24px 0 lime)`: no lime.) So the mask
+   moves to a pseudo-element and the filter stays on the now-unmasked
+   element, which has a real glyph to cast from. Scoped to `.iconify`
+   because the shell is only safe where nuxt-icon has put the glyph in
+   `--svg`; on anything else the pseudo would paint a solid square. */
+@utility concave-text {
   text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
 }
+@utility concave-icon {
+  &.iconify {
+    background: none;
+    mask: none;
+    position: relative;
+    filter:
+      drop-shadow(0 -1.5px 1px var(--accent-cut-shadow-soft))
+      drop-shadow(0 1px 0 var(--accent-cut-highlight))
+      drop-shadow(0 2px 1.5px var(--accent-cut-highlight-soft));
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      mask-image: var(--svg);
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+    }
+    /* Forced colors strips the fill a drop-shadow is cut from; box- and
+       text-shadows the browser drops for us, a filter it does not. */
+    @media (forced-colors: active) {
+      filter: none;
+    }
+  }
+}
+
+/* -- Finishes ----------------------------------------------------
+   Not shapes — what the surface is made of. They stack on any depth
+   recipe (::before for the sheen, ::after for the noise). */
+
 /* Matte titanium sheen — a corner light-catch plus one faint glare
-   band, like a key light off bead-blasted metal. ::before so it
-   stacks with noise's ::after. */
+   band, like a key light off bead-blasted metal. */
 @utility sheen {
   position: relative;
   &::before {
