@@ -76,7 +76,7 @@ One install wires it in — **live queries**, **mutations**, **actions**,
 [auto-imported and typed]{.text-primary} against your deployment. The same
 client also runs **standalone in any Vue app**.
 
-:landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5 · CONVEX 1.42]
+:landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5 · CONVEX 1.45]
 :::
 
 :landing-services

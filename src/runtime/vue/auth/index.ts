@@ -274,10 +274,20 @@ export function createConvexAuthState(
   const isAuthenticated = computed(
     () => toValue(authProviderAuthenticated) && (isConvexAuthenticated.value ?? false),
   )
+  const isLoading = computed(() => isConvexAuthenticated.value === null)
+  const isRefreshingWhileAuthenticated = computed(
+    () => isRefreshing.value && isAuthenticated.value,
+  )
+
+  // Upstream (convex 1.44.0) wraps this object in a `useMemo` keyed on the three
+  // derived booleans, so `useConvexAuth()` consumers only re-render when the
+  // auth state actually changes. Vue needs no analog: the object is built once
+  // per call and each field is a `computed` that only re-triggers dependents on
+  // an actual value change, so the identity is already stable.
   return {
-    isLoading: computed(() => isConvexAuthenticated.value === null),
+    isLoading,
     isAuthenticated,
-    isRefreshing: computed(() => isRefreshing.value && isAuthenticated.value),
+    isRefreshing: isRefreshingWhileAuthenticated,
   }
 }
 

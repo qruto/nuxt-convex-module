@@ -21,9 +21,9 @@ Every supported upstream package is ported or wired with the **same public API**
 
 | Official package | What this gives you | Enable | Subpath | Baseline |
 |---|---|---|---|---|
-| [`convex`](https://npmjs.com/package/convex) — `/react` + `/nextjs` | The whole data layer: composables, `ConvexVueClient`, auth helpers, SSR preload + server (Nitro) utils | **always on** | `…/vue`, `…/server` | `1.42` |
-| `convex` — [`/react-clerk`](https://docs.convex.dev/auth/clerk) | [Clerk](https://clerk.com) auth: `provideConvexAuthFromClerk()` · `<ConvexProviderWithClerk>` | `npm i @clerk/vue` | `…/clerk/vue` | `1.42` |
-| `convex` — [`/react-auth0`](https://docs.convex.dev/auth/auth0) | [Auth0](https://auth0.com) auth: `provideConvexAuthFromAuth0()` · `<ConvexProviderWithAuth0>` | `npm i @auth0/auth0-vue` | `…/auth0/vue` | `1.42` |
+| [`convex`](https://npmjs.com/package/convex) — `/react` + `/nextjs` | The whole data layer: composables, `ConvexVueClient`, auth helpers, SSR preload + server (Nitro) utils | **always on** | `…/vue`, `…/server` | `1.45` |
+| `convex` — [`/react-clerk`](https://docs.convex.dev/auth/clerk) | [Clerk](https://clerk.com) auth: `provideConvexAuthFromClerk()` · `<ConvexProviderWithClerk>` | `npm i @clerk/vue` | `…/clerk/vue` | `1.45` |
+| `convex` — [`/react-auth0`](https://docs.convex.dev/auth/auth0) | [Auth0](https://auth0.com) auth: `provideConvexAuthFromAuth0()` · `<ConvexProviderWithAuth0>` | `npm i @auth0/auth0-vue` | `…/auth0/vue` | `1.45` |
 | [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth) | [Better Auth](https://better-auth.com): `useAuth`, `/api/auth/**` proxy, SSR prefetch, `auth` middleware, `<AuthBoundary>`, `convexAuth` | `npm i @convex-dev/better-auth` | `…/better-auth/vue` | `0.12` |
 | [`@convex-dev/polar`](https://github.com/get-convex/polar) | [Polar](https://polar.sh) billing: `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar` | `…/polar/vue` | `0.9` |
 | [`@convex-dev/resend`](https://github.com/get-convex/resend) | **Server-only** — no client port needed; call its functions with `useMutation` / `useAction` | (use in your Convex deployment) | — | — |
