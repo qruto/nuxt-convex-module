@@ -26,13 +26,6 @@
       "url": "https://mcp.better-auth.com/mcp",
       "type": "https"
     },
-    "polar": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://mcp.polar.sh/mcp/polar-sandbox"
-      ]
-    },
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
