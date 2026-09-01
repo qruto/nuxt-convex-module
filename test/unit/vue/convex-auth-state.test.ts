@@ -20,7 +20,7 @@ describe('ConvexVueClient.setAuth', () => {
   // signature typechecks and doesn't throw"): calling `setAuth` with only a
   // token fetcher — no `onChange` callback — must typecheck and not throw.
   // Upstream's test `await`s the call because older clients returned a
-  // backwards-compatibility Promise; convex 1.42.3 (the pinned baseline) and
+  // backwards-compatibility Promise; convex 1.45.0 (the pinned baseline) and
   // this port both declare `setAuth(): void`, so there is nothing to await.
   it('setAuth legacy signature typechecks and does not throw', async () => {
     await withInMemoryWebSocket(async ({ address }) => {
@@ -92,5 +92,72 @@ describe('createScopedConvexAuthState', () => {
     await nextTick()
     expect(state.isLoading.value).toBe(true)
     expect(client.setAuth).toHaveBeenCalledTimes(1)
+  })
+
+  // Convex 1.44.0 (`b96ea1b`) wrapped `ConvexProviderWithAuth`'s context value
+  // in a `useMemo` so `useConvexAuth()` consumers stop re-rendering on every
+  // parent render. The port needs no `useMemo` analog — the state object is
+  // built once per call and reactivity rides on the three `ComputedRef`s — but
+  // that is a property worth pinning: rebuilding the object (or swapping in
+  // fresh computeds) on each auth transition would silently reintroduce the
+  // churn upstream fixed, and break consumers that captured the object.
+  it('keeps the state object and its computed refs referentially stable across auth transitions', async () => {
+    const isLoading = ref(false)
+    const isAuthenticated = ref(true)
+    const fetchAccessToken: AuthTokenFetcher = vi.fn(async () => 'token')
+
+    let onAuthChange: ((isAuthenticated: boolean) => void) | undefined
+    let onRefreshChange: ((isRefreshing: boolean) => void) | undefined
+    const client: IConvexVueClient = {
+      setAuth: vi.fn((_fetchToken, callback, refreshCallback) => {
+        onAuthChange = callback
+        onRefreshChange = refreshCallback
+      }),
+      clearAuth: vi.fn(),
+    }
+
+    const { state, scope } = createScopedConvexAuthState({
+      client,
+      useAuth: () => ({ isLoading, isAuthenticated, fetchAccessToken }),
+    })
+
+    const identity = {
+      state,
+      isLoading: state.isLoading,
+      isAuthenticated: state.isAuthenticated,
+      isRefreshing: state.isRefreshing,
+    }
+    const expectStableIdentity = () => {
+      expect(state).toBe(identity.state)
+      expect(state.isLoading).toBe(identity.isLoading)
+      expect(state.isAuthenticated).toBe(identity.isAuthenticated)
+      expect(state.isRefreshing).toBe(identity.isRefreshing)
+    }
+
+    // Deployment confirms the token: values change, identities must not.
+    onAuthChange?.(true)
+    await nextTick()
+    expect(state.isAuthenticated.value).toBe(true)
+    expectStableIdentity()
+
+    // A rejected token pauses the socket while a replacement is fetched.
+    onRefreshChange?.(true)
+    await nextTick()
+    expect(state.isRefreshing.value).toBe(true)
+    expectStableIdentity()
+
+    onRefreshChange?.(false)
+    await nextTick()
+    expect(state.isRefreshing.value).toBe(false)
+    expectStableIdentity()
+
+    // Live sign-out through the external provider.
+    isAuthenticated.value = false
+    await nextTick()
+    expect(state.isAuthenticated.value).toBe(false)
+    expect(state.isLoading.value).toBe(false)
+    expectStableIdentity()
+
+    scope.stop()
   })
 })

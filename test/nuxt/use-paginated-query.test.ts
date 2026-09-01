@@ -44,6 +44,7 @@ type PaginatedQueryCallArgs = QueryArgs & {
   paginationOpts?: {
     numItems?: number
     cursor?: string | null
+    endCursor?: string | null
     id?: number
   }
 }
@@ -812,6 +813,124 @@ describe('usePaginatedQuery', () => {
           'item4S',
         ])
 
+        await client.close()
+      })
+    })
+
+    // Regression guard for the bug convex fixed upstream in 1.43.0
+    // (`7ceee3e`, "Fix for bug in usePaginatedQuery_experimental"): when a page
+    // other than the first was split, the first split page was restarted from
+    // the beginning of the dataset (`cursor: null`) instead of the cursor the
+    // split page itself started at, duplicating every item before it.
+    //
+    // That fix landed in `browser/sync/paginated_query_client.ts`, which this
+    // port does not use (see PARITY.md) — `splitQuery` instead spreads the
+    // split page's own `paginationOpts`, so it inherits that page's start
+    // cursor. The existing 'page split' case above only splits page 0, whose
+    // start cursor is `null`, so it passes either way. This one splits the
+    // *second* page and pins the distinction.
+    it('splits a non-first page from that page\'s own cursor, not the start of the list', async () => {
+      await withInMemoryWebSocket(async ({ address }) => {
+        const client = new ConvexVueClient(address, { logger: silentConnectLogger })
+        const watchQuerySpy = vi.spyOn(client, 'watchQuery')
+
+        const { result } = await mountWithConvex(
+          client,
+          () => usePaginatedQuery(queryRef, {}, { initialNumItems: 1 }),
+          { tick: true },
+        )
+
+        // Page 0: starts at the beginning, hands out cursor 'abc'.
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 1, cursor: null, id: 1 } as PaginationOptions },
+          {
+            page: ['item1'],
+            continueCursor: 'abc',
+            isDone: false,
+            splitCursor: null,
+          } satisfies PaginationResult<unknown>,
+        )
+        await nextTick()
+        expect(result.status.value).toBe('CanLoadMore')
+
+        // Page 1: starts at 'abc' and comes back oversized, so the client is
+        // asked to split it at 'mid'.
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 2, cursor: 'abc', id: 1 } as PaginationOptions },
+          {
+            page: ['item2', 'item3', 'item4', 'item5'],
+            continueCursor: 'xyz',
+            splitCursor: 'mid',
+            isDone: true,
+          } satisfies PaginationResult<unknown>,
+        )
+        result.loadMore(2)
+        await nextTick()
+
+        // Reading the result drives the render pass that notices the oversized
+        // page and schedules the split; the tick after it lets the new page
+        // subscriptions go out.
+        expect(result.results.value).toEqual(['item1', 'item2', 'item3', 'item4', 'item5'])
+        await nextTick()
+
+        // The split's first half must resume from 'abc' — the cursor page 1
+        // started at. `cursor: null` here is the upstream bug.
+        const firstSplitArgs = asPaginatedCallArgs(getWatchQueryArgs(
+          watchQuerySpy.mock.calls as unknown as WatchQueryCalls,
+          args => asPaginatedCallArgs(args).paginationOpts?.endCursor === 'mid',
+        ))
+        expect(firstSplitArgs.paginationOpts?.cursor).toBe('abc')
+        expect(firstSplitArgs.paginationOpts?.cursor).not.toBeNull()
+
+        // ...and the second half runs from the split point to where the
+        // original page ended.
+        const secondSplitArgs = asPaginatedCallArgs(getWatchQueryArgs(
+          watchQuerySpy.mock.calls as unknown as WatchQueryCalls,
+          args => asPaginatedCallArgs(args).paginationOpts?.endCursor === 'xyz',
+        ))
+        expect(secondSplitArgs.paginationOpts?.cursor).toBe('mid')
+
+        // Feeding both halves swaps them in with no item duplicated from
+        // page 0 — the user-visible symptom of the upstream bug.
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 2, cursor: 'abc', endCursor: 'mid', id: 1 } as unknown as PaginationOptions },
+          {
+            page: ['item2', 'item3'],
+            continueCursor: 'mid',
+            isDone: false,
+            splitCursor: null,
+          } satisfies PaginationResult<unknown>,
+        )
+        applyOptimisticQueryResult(
+          client,
+          queryRef,
+          { paginationOpts: { numItems: 2, cursor: 'mid', endCursor: 'xyz', id: 1 } as unknown as PaginationOptions },
+          {
+            page: ['item4', 'item5'],
+            continueCursor: 'xyz',
+            isDone: true,
+            splitCursor: null,
+          } satisfies PaginationResult<unknown>,
+        )
+        await nextTick()
+        await nextTick()
+
+        expect(result.results.value).toEqual([
+          'item1',
+          'item2',
+          'item3',
+          'item4',
+          'item5',
+        ])
+        expect(new Set(result.results.value).size).toBe(result.results.value.length)
+
+        watchQuerySpy.mockRestore()
         await client.close()
       })
     })

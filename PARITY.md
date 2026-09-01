@@ -15,7 +15,7 @@ The port currently matches these upstream versions:
 
 | Upstream package | Baseline version | Notes |
 |---|---|---|
-| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.42.3** | Verified file-by-file against git tag `npm/1.42.3`. |
+| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.45.0** | Verified file-by-file against git tag `npm/1.45.0`. |
 | `@convex-dev/better-auth` | **0.12.5** | `react` + `nextjs` + client plugins. |
 | `@convex-dev/polar` | **0.9.2** | `react` components only. |
 
@@ -131,8 +131,32 @@ These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:
 | `@convex-dev/resend` | Server-only Convex component — no client surface. Use it from your Convex deployment and call it via `useMutation` / `useAction`. |
 | `convex/react-start`, `@convex-dev/better-auth` `src/react-start` | TanStack Start–specific (React framework adapter). |
 | `convexQueryOptions` (`convex/react` `index.ts`) | Marked `@internal` upstream (TanStack Query interop). The public `QueryOptions` type **is** re-exported. |
-| `baseClient` option on `ConvexReactClientOptions` + `BaseConvexClientInterface` (`convex/react` `client.ts`, `convex/browser` `sync/client.ts`, added upstream in 1.42.2) | Both marked `@internal` upstream and stripped from the published type declarations (verified against convex 1.42.3's shipped d.ts) — injecting a pre-built `BaseConvexClient` is not part of the public surface. `ConvexVueClient` keeps constructing its own `BaseConvexClient`. |
-| `includePage` / `page` symbols, `usePaginatedQueryInternal` export, `UsePaginatedQueryInternalResult` (`convex/react` `use_paginated_query.ts`) | All marked `@internal` upstream and **stripped from the published type declarations** (reachable at runtime via `export *`, but not importable in TypeScript — verified against convex 1.42.3's shipped d.ts). The public typed `usePaginatedQuery(query, args, { initialNumItems })` surface is fully ported; the port's `usePaginatedQueryInternal` is a private, Vue-shaped implementation detail (reactive inputs, `ComputedRef` result, no `throwOnError` param — the error variant is returned as data and thrown by the public shapers, per the computed-poisoning rule). |
+| `baseClient` option on `ConvexReactClientOptions` + `BaseConvexClientInterface` (`convex/react` `client.ts`, `convex/browser` `sync/client.ts`, added upstream in 1.42.2) | Both marked `@internal` upstream and stripped from the published type declarations (verified against convex 1.45.0's shipped d.ts) — injecting a pre-built `BaseConvexClient` is not part of the public surface. `ConvexVueClient` keeps constructing its own `BaseConvexClient`. |
+| `includePage` / `page` symbols, `usePaginatedQueryInternal` export, `UsePaginatedQueryInternalResult` (`convex/react` `use_paginated_query.ts`) | All marked `@internal` upstream and **stripped from the published type declarations** (reachable at runtime via `export *`, but not importable in TypeScript — verified against convex 1.45.0's shipped d.ts). The public typed `usePaginatedQuery(query, args, { initialNumItems })` surface is fully ported; the port's `usePaginatedQueryInternal` is a private, Vue-shaped implementation detail (reactive inputs, `ComputedRef` result, no `throwOnError` param — the error variant is returned as data and thrown by the public shapers, per the computed-poisoning rule). |
+| `browser/sync/paginated_query_client.ts` (`PaginatedQueryClient`) | Marked `@internal` upstream and absent from `convex`'s `exports` map, so a third-party package cannot import it. The port re-implements page management from `react/use_paginated_query.ts` instead, and **both** `usePaginatedQuery` and `usePaginatedQuery_experimental` run on it (only the experimental single-request network path is not reproduced). See the sync note below. |
+
+### Upstream fixes that need no port (do not re-litigate)
+
+Two upstream changes between 1.42.3 and 1.45.0 land in mapped files but require no code change,
+because the Vue translation already rules the bug out. Both are pinned by tests so a future
+refactor cannot quietly reintroduce them.
+
+- **convex 1.43.0 `7ceee3e`** — "Fix for bug in `usePaginatedQuery_experimental`": in
+  `PaginatedQueryClient.splitPaginatedQueryPage`, the first half of a split page restarted from
+  `cursor: null` instead of the cursor the split page began at, duplicating items whenever a page
+  other than the first was split. The port does not use `PaginatedQueryClient` (see the row
+  above); its `splitQuery` spreads `prevState.queries[key].args.paginationOpts`, so the first
+  split page *inherits* that page's start cursor and only gains an `endCursor`. Pinned by
+  "splits a non-first page from that page's own cursor" in
+  `test/nuxt/use-paginated-query.test.ts`. A corollary of inheriting the whole `paginationOpts`:
+  split pages keep the split page's own `numItems`, where `PaginatedQueryClient` resets it to
+  `initialNumItems` — React-v1 behavior, deliberate, pinned by the existing `'page split'` test.
+- **convex 1.44.0 `b96ea1b`** — "stabilize `ConvexProviderWithAuth` context value": upstream
+  wrapped the context object in a `useMemo` keyed on the three derived booleans. The port builds
+  that object once per `createConvexAuthState` call and carries reactivity in `ComputedRef`s, so
+  its identity is already stable; the named locals mirror upstream's memo inputs for diffability.
+  Pinned by "keeps the state object and its computed refs referentially stable across auth
+  transitions" in `test/unit/vue/convex-auth-state.test.ts`.
 
 ## Intentional naming / shape divergences (idiomatic, not gaps)
 
