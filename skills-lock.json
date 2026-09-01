@@ -55,6 +55,13 @@
       "skillPath": "skills/convex-setup-auth/SKILL.md",
       "computedHash": "b1a940758751c5b2fdc6ced105b19927a1655f0c1d4bd2fd5536dc3264202c00"
     },
+    "create-docs": {
+      "source": "docus.dev",
+      "sourceUrl": "https://docus.dev",
+      "sourceType": "well-known",
+      "computedHash": "3c6d7d6f6084ff5ebbd59fe8b348f99bced0d303da45cd61069a0f6dac8199f6",
+      "wellKnownDigest": "sha256:dfe757cc05ff926e6fc7f14575273c6fbb8c42a7484392a8c7c3a1cb9a45d794"
+    },
     "nitro": {
       "source": "antfu/skills",
       "sourceType": "github",
@@ -84,6 +91,13 @@
       "sourceType": "github",
       "skillPath": "skills/portless/SKILL.md",
       "computedHash": "63bff4a71f23671d9aa36591475773dda1a507d54d63591040bd5ffc94556593"
+    },
+    "review-docs": {
+      "source": "docus.dev",
+      "sourceUrl": "https://docus.dev",
+      "sourceType": "well-known",
+      "computedHash": "016eca30a60e4d1ec38cf162753d47e52dbb543a931f77f8050d4bc4f6bc5e6b",
+      "wellKnownDigest": "sha256:c3e0f5dfb7077377f01bcd9338738f87870be5fa05fb68667cced09c85369e7b"
     },
     "typescript-advanced-types": {
       "source": "wshobson/agents",
