@@ -525,6 +525,50 @@ compiling.
 
 ***
 
+### resolveAuthRedirect()
+
+```ts
+function resolveAuthRedirect(value, fallback?): string;
+```
+
+Defined in: [src/runtime/better-auth/vue/redirect.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L55)
+
+Validate a post-sign-in redirect destination, returning `fallback` unless it
+is a same-origin path.
+
+Use it wherever a login page consumes the `?redirect=` query the `auth`
+middleware sets — never navigate to that value directly.
+
+#### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `value` | `unknown` | `undefined` | Candidate destination, typically `route.query.redirect`. A repeated query parameter arrives as an array and is rejected: which entry the app meant is ambiguous, and an attacker chooses the other one. |
+| `fallback` | `string` | `'/'` | Where to send the visitor when `value` is not a safe same-origin path. Defaults to `/`, and is returned as given — pass a path you control, not user input. |
+
+#### Returns
+
+`string`
+
+The normalized `pathname + search + hash`, or `fallback`.
+
+#### Example
+
+```vue
+<script setup lang="ts">
+const route = useRoute()
+const { signIn } = useAuth()
+
+async function onSubmit() {
+  await signIn.email({ email, password })
+  // '/dashboard' survives; 'https://evil.example' becomes '/'.
+  await navigateTo(resolveAuthRedirect(route.query.redirect))
+}
+</script>
+```
+
+***
+
 ### useAuth()
 
 ```ts
