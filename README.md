@@ -19,13 +19,13 @@ Coverage is complete rather than partial: `convex/react` and `convex/nextjs` are
 
 Every supported upstream package is ported or wired with the **same public API**, adapted to Vue. Core Convex is always on; the rest light up when their package is installed.
 
-| Official package | What this gives you | Enable | Subpath | Baseline |
+| Official package | What this gives you | Enable | Subpath | Upstream version |
 |---|---|---|---|---|
-| [`convex`](https://npmjs.com/package/convex) — `/react` + `/nextjs` | The whole data layer: composables, `ConvexVueClient`, auth helpers, SSR preload + server (Nitro) utils | **always on** | `…/vue`, `…/server` | `1.45` |
-| `convex` — [`/react-clerk`](https://docs.convex.dev/auth/clerk) | [Clerk](https://clerk.com) auth: `provideConvexAuthFromClerk()` · `<ConvexProviderWithClerk>` | `npm i @clerk/vue` | `…/clerk/vue` | `1.45` |
-| `convex` — [`/react-auth0`](https://docs.convex.dev/auth/auth0) | [Auth0](https://auth0.com) auth: `provideConvexAuthFromAuth0()` · `<ConvexProviderWithAuth0>` | `npm i @auth0/auth0-vue` | `…/auth0/vue` | `1.45` |
-| [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth) | [Better Auth](https://better-auth.com): `useAuth`, `/api/auth/**` proxy, SSR prefetch, `auth` middleware, `<AuthBoundary>`, `convexAuth` | `npm i @convex-dev/better-auth` | `…/better-auth/vue` | `0.12` |
-| [`@convex-dev/polar`](https://github.com/get-convex/polar) | [Polar](https://polar.sh) billing: `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar` | `…/polar/vue` | `0.9` |
+| [`convex`](https://npmjs.com/package/convex) — `/react` + `/nextjs` | The whole data layer: composables, `ConvexVueClient`, auth helpers, SSR preload + server (Nitro) utils | **always on** | `…/vue`, `…/server` | `1.45.0` |
+| `convex` — [`/react-clerk`](https://docs.convex.dev/auth/clerk) | [Clerk](https://clerk.com) auth: `provideConvexAuthFromClerk()` · `<ConvexProviderWithClerk>` | `npm i @clerk/vue` | `…/clerk/vue` | `1.45.0` |
+| `convex` — [`/react-auth0`](https://docs.convex.dev/auth/auth0) | [Auth0](https://auth0.com) auth: `provideConvexAuthFromAuth0()` · `<ConvexProviderWithAuth0>` | `npm i @auth0/auth0-vue` | `…/auth0/vue` | `1.45.0` |
+| [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth) | [Better Auth](https://better-auth.com): `useAuth`, `/api/auth/**` proxy, SSR prefetch, `auth` middleware, `<AuthBoundary>`, `convexAuth` | `npm i @convex-dev/better-auth` | `…/better-auth/vue` | `0.12.5` |
+| [`@convex-dev/polar`](https://github.com/get-convex/polar) | [Polar](https://polar.sh) billing: `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar` | `…/polar/vue` | `0.9.2` |
 | [`@convex-dev/resend`](https://github.com/get-convex/resend) | **Server-only** — no client port needed; call its functions with `useMutation` / `useAction` | (use in your Convex deployment) | — | — |
 
 Subpath = `nuxt-convex-module/<subpath>`. Pinned baselines and the file-by-file map: [`PARITY.md`](./PARITY.md).
