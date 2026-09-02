@@ -27,6 +27,7 @@ export interface DevtoolsServerInfo {
     clerk: boolean
     auth0: boolean
     polar: boolean
+    security: boolean
   }
 }
 

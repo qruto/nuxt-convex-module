@@ -35,7 +35,7 @@ const info: DevtoolsServerInfo = {
   siteUrl: '',
   rootDir: base,
   functionsDir: 'convex',
-  integrations: { betterAuth: false, clerk: false, auth0: false, polar: false },
+  integrations: { betterAuth: false, clerk: false, auth0: false, polar: false, security: false },
 }
 
 beforeEach(() => {

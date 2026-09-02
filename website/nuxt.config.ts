@@ -167,7 +167,8 @@ export default defineNuxtConfig({
     ],
   },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
-  // client-side content queries). The bundled nuxt-security CSP must allow
+  // client-side content queries). The nuxt-security CSP (the module registers
+  // nuxt-security, a root devDependency, when it detects it) must allow
   // WebAssembly compilation — extend `script-src` with `'wasm-unsafe-eval'`.
   security: {
     headers: {

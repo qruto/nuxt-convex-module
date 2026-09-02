@@ -155,7 +155,6 @@
     "@nuxt/devtools-kit": "^3.4.2",
     "@nuxt/kit": "^4.5.1",
     "h3": "^1.15.11",
-    "nuxt-security": "^2.6.0",
     "sirv": "^3.0.2"
   },
   "peerDependencies": {
@@ -166,6 +165,7 @@
     "@polar-sh/checkout": ">=0.3.0",
     "better-auth": ">=1.6.11 <1.7.0",
     "convex": ">=1.40.0",
+    "nuxt-security": ">=2.6.0",
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
@@ -185,6 +185,9 @@
       "optional": true
     },
     "better-auth": {
+      "optional": true
+    },
+    "nuxt-security": {
       "optional": true
     }
   },
@@ -219,6 +222,7 @@
     "happy-dom": "^20.12.0",
     "npm-run-all2": "^9.0.3",
     "nuxt": "catalog:",
+    "nuxt-security": "^2.6.0",
     "oxc-parser": "^0.147.0",
     "portless": "0.15.6",
     "publint": "^0.3.24",
