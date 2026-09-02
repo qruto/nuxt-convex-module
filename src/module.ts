@@ -1,8 +1,8 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, createResolver, useLogger, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import type { Nuxt } from '@nuxt/schema'
+import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -74,6 +74,16 @@ export interface ModuleOptions {
    * Auto-enabled when `@auth0/auth0-vue` is installed; set `false` to force it off.
    */
   auth0?: boolean
+  /**
+   * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
+   * Auto-enabled when `nuxt-security` is installed — the module registers it
+   * as a module dependency (no `modules` entry needed) and extends its
+   * Content Security Policy with your deployment's origins at runtime. Set
+   * `false` to leave nuxt-security's CSP alone, or `true` to require the
+   * package. Disabling nuxt-security itself (`security: false` in
+   * `nuxt.config`) turns this off too.
+   */
+  security?: boolean
   /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
   authRoute?: string
   /**
@@ -117,14 +127,17 @@ export default defineNuxtModule<ModuleOptions>({
     authRoute: '/api/auth',
     devtools: true,
   },
-  // nuxt-security is an integral part of the integration: declaring it as a
-  // module dependency makes Nuxt's core loader install it (hoisting its types
-  // and deduping if you also register it yourself), and guarantees our setup
-  // runs *before* it — so the Convex-aware CSP defaults below land before
-  // nuxt-security reads its config. Configure it via the `security` key.
-  moduleDependencies: {
-    'nuxt-security': {},
-  },
+  // nuxt-security is optional. When the app has it installed (and hasn't
+  // switched it off), declare it as a module dependency so Nuxt's core loader
+  // registers it — deduping if it's already in `modules`, hoisting its types —
+  // with no extra entry on the consumer's side. The Convex-aware CSP is applied
+  // at runtime (see `registerSecurity`), so module order is irrelevant. Nothing
+  // is declared otherwise: kit fails the build resolving an absent package.
+  moduleDependencies: (nuxt): ModuleDependencies => (
+    resolveSecurityState(nuxt, readSecurityOption(nuxt)).enabled
+      ? { 'nuxt-security': {} }
+      : {}
+  ),
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
 
@@ -161,7 +174,6 @@ export default defineNuxtModule<ModuleOptions>({
     registerAuthComponents(resolver)
     registerServerImports(resolver)
     const integrations = registerIntegrations(resolver, nuxt, options)
-    applyConvexCsp(nuxt, url, siteUrl)
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
@@ -200,6 +212,8 @@ export interface IntegrationFlags {
   clerk: boolean
   auth0: boolean
   polar: boolean
+  /** nuxt-security registered and its CSP extended with the Convex origins. */
+  security: boolean
 }
 
 /**
@@ -322,6 +336,7 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
     clerk: 'clerk',
     auth0: 'auth0',
     polar: 'polar',
+    security: 'nuxt-security',
   }
   const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)
     .filter(key => integrations[key])
@@ -336,13 +351,15 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
  * automatically so the consumer keeps a single `modules` entry.
  */
 function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): IntegrationFlags {
-  const resolve = (key: keyof IntegrationFlags & keyof ModuleOptions, pkg: string): boolean => {
-    const state = resolveIntegrationState(options[key], isPackageInstalled(pkg, nuxt.options.rootDir))
+  type Key = keyof IntegrationFlags & keyof ModuleOptions
+  const report = (key: Key, pkg: string, state: ReturnType<typeof resolveIntegrationState>): boolean => {
     if (state.missingPackage) {
       logger.error(`\`convex.${key}\` is enabled but \`${pkg}\` is not installed. Run \`npm install ${pkg}\` or remove the option.`)
     }
     return state.enabled
   }
+  const resolve = (key: Key, pkg: string): boolean =>
+    report(key, pkg, resolveIntegrationState(options[key], isPackageInstalled(pkg, nuxt.options.rootDir)))
 
   const betterAuth = resolve('betterAuth', '@convex-dev/better-auth')
   if (betterAuth) {
@@ -371,49 +388,62 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerPolarComponents(resolver)
   }
 
-  return { betterAuth, clerk, auth0, polar }
+  const security = report('security', 'nuxt-security', resolveSecurityState(nuxt, options.security))
+  if (security) {
+    registerSecurity(resolver)
+  }
+
+  return { betterAuth, clerk, auth0, polar, security }
+}
+
+/** The raw `convex.security` option — read before module options are resolved. */
+function readSecurityOption(nuxt: Nuxt): boolean | undefined {
+  const opts = nuxt.options as unknown as { convex?: ModuleOptions }
+  return opts.convex?.security
 }
 
 /**
- * Ship a tightened, Convex-aware CSP by default. `connect-src` is tightened
- * only in production builds — creating it in dev would break the Vite HMR and
- * devtools WebSockets, which run on their own ports that `'self'` doesn't
- * cover, while nuxt-security's defaults leave `connect-src` unset (open). The
- * resource directives (`img-src` / `media-src`) are widened in dev too:
- * nuxt-security enforces its default `img-src 'self' data:` during `nuxt dev`
- * as well, which would block files served from Convex storage. Applies only
- * when a build-time Convex URL is known (otherwise we'd lock Convex out
- * instead of allowing it). nuxt-security is installed afterwards via
- * moduleDependencies, so mutating its config here lands before it reads it.
+ * Whether the nuxt-security integration is on: the `convex.security` tri-state
+ * against the package being installed — resolvable from the app, or already
+ * registered in `modules` (a layer may bring it) — and never when the app
+ * disabled nuxt-security itself (`security: false`), since Nuxt then skips its
+ * setup and there is no CSP to extend. Shared by `moduleDependencies` (which
+ * declares the package) and `registerIntegrations` (which reports on it).
  */
-function applyConvexCsp(nuxt: Nuxt, url: string, siteUrl: string): void {
+function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): ReturnType<typeof resolveIntegrationState> {
   const opts = nuxt.options as unknown as Record<string, unknown>
-  if (!url || opts.security === false) return
-  const security = (opts.security ??= {}) as Record<string, unknown>
-  applyConvexSecurityDefaults(
-    security,
-    nuxt.options.dev ? [] : convexConnectSrc(url, siteUrl),
-    convexResourceSrc(url),
-  )
+  if (opts.security === false) return { enabled: false, missingPackage: false }
+  const installed = hasNuxtModule('nuxt-security', nuxt) || isPackageInstalled('nuxt-security', nuxt.options.rootDir)
+  return resolveIntegrationState(explicit, installed)
 }
 
 /**
- * Whether a package is resolvable from the consumer app (or, as a fallback,
- * from this module) — used to auto-enable the optional Better Auth / Polar
- * integrations without making the user list extra modules.
+ * Tighten nuxt-security's Content Security Policy for Convex — `connect-src`
+ * (production only), `img-src`, and `media-src` extended with the deployment
+ * origins. Done at runtime by a Nitro plugin (`runtime/nuxt/security`) hooked
+ * into `nuxt-security:routeRules`, which fires after nuxt-security has merged
+ * its global config and every route rule: the origins land on top of whatever
+ * the app configured regardless of module order, and the URL is read from
+ * runtime config rather than fixed at build time.
+ */
+function registerSecurity(resolver: Resolver): void {
+  addServerPlugin(resolver.resolve('./runtime/nuxt/security'))
+}
+
+/**
+ * Whether a package is installed for the consumer app (or, as a fallback, for
+ * this module) — used to auto-enable the optional integrations (Better Auth,
+ * Polar, nuxt-security, ...) without making the user list extra modules.
+ *
+ * Probes the package directory along Node's lookup paths rather than calling
+ * `require.resolve`: that honours the package's `exports` map under CJS
+ * conditions, so an ESM-only package that also withholds `./package.json`
+ * (nuxt-security) reports as missing even though it is right there.
  */
 function isPackageInstalled(id: string, rootDir: string): boolean {
   for (const base of [join(rootDir, 'package.json'), import.meta.url]) {
-    const require = createRequire(base)
-    for (const target of [id, `${id}/package.json`]) {
-      try {
-        require.resolve(target)
-        return true
-      }
-      catch {
-        // Not resolvable from this base — try the next target/base.
-      }
-    }
+    const lookupPaths = createRequire(base).resolve.paths(id) ?? []
+    if (lookupPaths.some(dir => existsSync(join(dir, id, 'package.json')))) return true
   }
   return false
 }
@@ -730,6 +760,33 @@ function registerServerImports(resolver: Resolver): void {
 }
 
 /**
+ * nuxt-security rules for the Better Auth proxy route, merged over the app's
+ * global security config (a route rule wins, and the app can override these in
+ * turn through its own `routeRules`). Applied whether or not the nuxt-security
+ * integration is on: without nuxt-security installed the key is inert, and
+ * `convex.security: false` opts out of *our* CSP additions, not out of the
+ * module's own route working correctly.
+ *
+ * - `xssValidator: false` — mandatory, not a preference. The validator
+ *   HTML-escapes the JSON request body and rejects the request with `400` if
+ *   anything changed, so a password or display name containing `<` or `>`
+ *   never reaches Better Auth. Escaping is meaningless here regardless: these
+ *   are opaque credentials forwarded to an auth server, never HTML this app
+ *   renders.
+ * - `allowedMethodsRestricter` — Better Auth serves GET and POST only (plus
+ *   HEAD/OPTIONS for Nitro and CORS preflight); anything else is a probe.
+ */
+// Typed through kit's own signature rather than importing from nuxt-security:
+// the augmentation that puts `security` on a route rule comes from the package
+// when it is installed, and this module must still compile when it is not.
+type SecurityRouteRules = NonNullable<Parameters<typeof extendRouteRules>[1]['security']>
+
+const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
+  xssValidator: false,
+  allowedMethodsRestricter: { methods: ['GET', 'HEAD', 'POST', 'OPTIONS'] },
+}
+
+/**
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
  * `${authRoute}/**` same-origin proxy, the opt-in `auth` route middleware, the
@@ -743,6 +800,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
   addImports([
     { name: 'useAuth', from: resolver.resolve('./runtime/better-auth/vue/use-auth') },
     { name: 'usePreloadedAuthQuery', from: resolver.resolve('./runtime/better-auth/vue/hydration') },
+    { name: 'resolveAuthRedirect', from: resolver.resolve('./runtime/better-auth/vue/redirect') },
   ])
 
   addComponent({
@@ -756,8 +814,13 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
     handler: resolver.resolve('./runtime/better-auth/nuxt/proxy'),
   })
   // The proxy forwards live session/token traffic — never cache it, and keep it
-  // out of any prerender pass.
-  extendRouteRules(`${authRoute}/**`, { cache: false, prerender: false })
+  // out of any prerender pass. The `security` rules harden the same route under
+  // nuxt-security (and are inert without it); see {@link AUTH_PROXY_SECURITY_RULES}.
+  extendRouteRules(`${authRoute}/**`, {
+    cache: false,
+    prerender: false,
+    security: AUTH_PROXY_SECURITY_RULES,
+  })
   addRouteMiddleware({
     name: 'auth',
     path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
@@ -810,92 +873,4 @@ function registerPolarComponents(resolver: Resolver): void {
   for (const name of ['CheckoutLink', 'CustomerPortalLink'] as const) {
     addComponent({ name, filePath: componentsFile, export: name })
   }
-}
-
-function toHttpOrigin(raw?: string): string | undefined {
-  if (!raw) return undefined
-  try {
-    return new URL(raw).origin
-  }
-  catch {
-    return undefined
-  }
-}
-
-function toWsOrigin(raw?: string): string | undefined {
-  if (!raw) return undefined
-  try {
-    const u = new URL(raw)
-    return `${u.protocol === 'https:' ? 'wss:' : 'ws:'}//${u.host}`
-  }
-  catch {
-    return undefined
-  }
-}
-
-function uniq(values: Array<string | undefined>): string[] {
-  return Array.from(new Set(values.filter((v): v is string => Boolean(v))))
-}
-
-/**
- * CSP `connect-src` entries the browser needs to reach a Convex deployment: the
- * deployment URL over both HTTPS and WebSocket (the realtime sync channel) and,
- * when configured, the `.site` URL that serves Convex HTTP actions. Returns
- * `[]` for empty or unparseable input.
- */
-export function convexConnectSrc(url?: string, siteUrl?: string): string[] {
-  return uniq([toHttpOrigin(url), toWsOrigin(url), toHttpOrigin(siteUrl), toWsOrigin(siteUrl)])
-}
-
-/**
- * CSP source for Convex-served resources (`img-src` / `media-src`): files
- * uploaded through `useStorageUrl()` are served from the deployment origin.
- */
-export function convexResourceSrc(url?: string): string[] {
-  return uniq([toHttpOrigin(url)])
-}
-
-/**
- * Apply nuxt-convex-module's secure-by-default, Convex-aware CSP onto a security config
- * object (mutated in place). This tightens the directives we can safely
- * pre-fill — locking network egress and Convex-served media to same-origin plus
- * the Convex deployment — while leaving every other directive (script/style/
- * font, etc.) to nuxt-security's own defaults.
- *
- * For each directive we keep any value the user already set and *append* the
- * Convex origins, so consumers extend (add their own third parties) rather than
- * fight the defaults, and the Convex origins are always present. A user who sets
- * `contentSecurityPolicy: false` (CSP disabled) is left untouched.
- */
-export function applyConvexSecurityDefaults(
-  security: Record<string, unknown>,
-  connectSrc: string[],
-  resourceSrc: string[],
-): void {
-  if (security.headers === false) return
-  if (typeof security.headers !== 'object' || security.headers === null) security.headers = {}
-  const headers = security.headers as Record<string, unknown>
-
-  if (headers.contentSecurityPolicy === false) return // CSP explicitly disabled.
-  if (typeof headers.contentSecurityPolicy !== 'object' || headers.contentSecurityPolicy === null) {
-    headers.contentSecurityPolicy = {}
-  }
-  const csp = headers.contentSecurityPolicy as Record<string, unknown>
-
-  tightenDirective(csp, 'connect-src', ['\'self\''], connectSrc)
-  tightenDirective(csp, 'img-src', ['\'self\'', 'data:'], resourceSrc)
-  tightenDirective(csp, 'media-src', ['\'self\''], resourceSrc)
-}
-
-/**
- * Set a CSP directive to the union of its existing value (or `baseline` if it
- * was unset) and `additions`, deduplicated and order-preserving. With no
- * additions the directive is left entirely untouched — materializing the
- * baseline alone would *create* a restriction where nuxt-security's defaults
- * leave the directive open (how `connect-src` stays HMR-safe in dev).
- */
-function tightenDirective(csp: Record<string, unknown>, name: string, baseline: string[], additions: string[]): void {
-  if (additions.length === 0) return
-  const existing = Array.isArray(csp[name]) ? csp[name] as string[] : baseline
-  csp[name] = uniq([...existing, ...additions])
 }

@@ -58,5 +58,8 @@ describe('basic fixture', () => {
     // connect-src carries the deployment origin plus its WebSocket form.
     expect(csp).toContain(`http://${host}`)
     expect(csp).toContain(`ws://${host}`)
+    // img-src / media-src carry the deployment origin for Convex-served storage.
+    expect(csp).toMatch(new RegExp(`img-src[^;]*http://${host}`))
+    expect(csp).toMatch(new RegExp(`media-src[^;]*http://${host}`))
   })
 })

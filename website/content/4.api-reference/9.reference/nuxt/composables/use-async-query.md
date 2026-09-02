@@ -184,7 +184,8 @@ fetch runs and no subscription opens until args become real.
 function useAsyncQuery<Query>(
    query, 
    args?, 
-options?): AsyncQueryReturn<FunctionReturnType<Query>>;
+   options?
+): AsyncQueryReturn<FunctionReturnType<Query>>;
 ```
 
 Defined in: [src/runtime/nuxt/composables/use-async-query.ts:154](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L154)

@@ -12,6 +12,7 @@ export { useAuth, type UseAuthService, type AuthSession, type AuthUser } from '.
 export { authClient, type AuthClient } from '#convex/auth-client'
 export { usePreloadedAuthQuery } from './hydration'
 export { consumeCrossDomainOneTimeToken, type ConsumeCrossDomainOneTimeTokenOptions } from './cross-domain'
+export { resolveAuthRedirect } from './redirect'
 export { AuthBoundary } from './auth-boundary'
 
 // Convex-specific Better Auth client plugins, re-exported so you can assemble a

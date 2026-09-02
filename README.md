@@ -83,9 +83,9 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 - **Runtime config** (`convex` key, via `updateRuntimeConfig`): public `convex.url` / `convex.siteUrl`
 - **Aliases** (Vite + Nitro): `#convex`, `#convex/api`, `#convex/server`, `#convex/dataModel`, `#convex/_generated`
 
-### Module dependency · `moduleDependencies`
+### Optional module · `nuxt-security`
 
-- Installs and configures [`nuxt-security`](https://nuxt-security.vercel.app), applying a Convex-aware CSP in production — `connect-src`, `img-src`, and `media-src` scoped to your deployment.
+- When [`nuxt-security`](https://nuxt-security.vercel.app) is installed, the module registers it as a module dependency (no `modules` entry needed) and extends its CSP with your deployment's origins at runtime — `connect-src` (production only), `img-src`, and `media-src`. Opt out with `convex.security: false`. Full details, plus everything the module hardens on its own, in the [security guide](./website/content/1.getting-started/4.security.md).
 
 ### Manual imports · subpath exports
 
@@ -98,19 +98,21 @@ Everything above is auto-imported in Nuxt, but each surface is also a real **sub
 | `nuxt-convex-module/server` | Nitro/server: `fetchQuery`, `fetchMutation`, `fetchAction`, `preloadQuery`, `preloadedQueryResult` |
 | `nuxt-convex-module/clerk/client` (alias `/clerk/vue`) | `provideConvexAuthFromClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/client` (alias `/auth0/vue`) | `provideConvexAuthFromAuth0`, `<ConvexProviderWithAuth0>` |
-| `nuxt-convex-module/better-auth/client` | `useAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
+| `nuxt-convex-module/better-auth/client` | `useAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
 | `nuxt-convex-module/better-auth/server` | Nitro/server: `convexAuth(event)` (auto-imported in server code; import explicitly for the `ConvexAuthOptions` / `ConvexAuthService` types) |
 | `nuxt-convex-module/polar/client` (alias `/polar/vue`) | `<CheckoutLink>`, `<CustomerPortalLink>` |
 
 ## Integrations (auto-detected)
 
-You only ever add **one** module. Better Auth and Polar light up automatically when their packages are installed — no extra `modules` entries, no config:
+You only ever add **one** module. Better Auth, Polar, and nuxt-security light up automatically when their packages are installed — no extra `modules` entries, no config:
 
 ```bash
 # add auth → it's wired on next dev
 npm i @convex-dev/better-auth better-auth
 # add billing components → registered automatically
 npm i @convex-dev/polar @polar-sh/checkout
+# add security headers → nuxt-security registered, CSP made Convex-aware
+npm i nuxt-security
 ```
 
 ```ts
@@ -125,6 +127,7 @@ export default defineNuxtConfig({
     // betterAuth: { authClient: './app/convex-auth-client' }, // bring your own client
     // betterAuth: { crossDomainCallbackRoute: '/auth/callback' }, // login-CSRF guard for crossDomainClient()
     // polar: false,
+    // security: false, // leave nuxt-security's CSP alone
     // authRoute: '/api/auth',
   },
 })
@@ -134,6 +137,7 @@ export default defineNuxtConfig({
 - **Clerk** (when `@clerk/vue` is installed) — a Vue port of `convex/react-clerk`: `provideConvexAuthFromClerk()` and `<ConvexProviderWithClerk>`. Types via `nuxt-convex-module/clerk/client`.
 - **Auth0** (when `@auth0/auth0-vue` is installed) — a Vue port of `convex/react-auth0`: `provideConvexAuthFromAuth0()` and `<ConvexProviderWithAuth0>`. Types via `nuxt-convex-module/auth0/client`.
 - **Polar** (when `@convex-dev/polar` is installed) — a Vue port of `@convex-dev/polar/react`'s `<CheckoutLink>` and `<CustomerPortalLink>`. Types via `nuxt-convex-module/polar/client`.
+- **nuxt-security** (when `nuxt-security` is installed) — registered as a module dependency and its Content Security Policy extended with your Convex origins: `connect-src` (production only — dev keeps it open for HMR), `img-src`, and `media-src`. Applied at runtime from `runtimeConfig`, so the deployment URL may come from the environment and the order of `modules` doesn't matter. Your own directives are kept; the origins are appended.
 
 Pure Convex with no auth? Install none of them — you get just the data layer (the module provides a base client on its own), and nothing drags an auth provider or Polar into your bundle.
 
@@ -217,6 +221,10 @@ The authoritative file-by-file map, pinned upstream baseline versions, and out-o
 We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASING.md](./RELEASING.md).
 
 ## Security
+
+The [security guide](./website/content/1.getting-started/4.security.md) documents every security aspect in one place: the Convex-aware CSP, the hardened Better Auth proxy, auth tokens in SSR payloads, safe post-sign-in redirects, cross-domain one-time tokens, file-storage caveats, and a production checklist.
+
+In short — install `nuxt-security` for headers and a CSP, use `resolveAuthRedirect()` on your login page, and set `betterAuth.crossDomainCallbackRoute` if you use cross-domain auth.
 
 Found a vulnerability? Report it privately via [GitHub Security Advisories](https://github.com/qruto/nuxt-convex-module/security/advisories/new) — not in a public issue. See [SECURITY.md](./SECURITY.md).
 
