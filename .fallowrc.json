@@ -11,6 +11,7 @@
     "src/runtime/better-auth/nuxt/middleware.ts",
     "src/runtime/better-auth/nuxt/proxy.ts",
     "src/runtime/better-auth/nuxt/server.ts",
+    "src/runtime/nuxt/security.ts",
     "src/runtime/devtools/plugin.client.ts",
     "src/runtime/better-auth/vue/plugin.client.ts",
     "src/runtime/better-auth/vue/plugin.server.ts",

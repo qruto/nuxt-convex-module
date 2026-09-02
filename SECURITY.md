@@ -1,5 +1,10 @@
 # Security Policy
 
+> Looking for how to **secure an app built with this module** — the CSP, the auth proxy, SSR
+> tokens, safe redirects, and a production checklist? That's the
+> [security guide](./website/content/1.getting-started/4.security.md). This file covers reporting
+> vulnerabilities *in* the module.
+
 ## Supported Versions
 
 Only the latest release of `nuxt-convex-module` receives security fixes.

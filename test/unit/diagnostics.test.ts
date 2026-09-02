@@ -33,12 +33,12 @@ describe('formatStartupSummary', () => {
     expect(formatStartupSummary(
       'https://happy-otter-123.convex.cloud',
       'convex',
-      { betterAuth: true, clerk: false, auth0: false, polar: true },
-    )).toBe('Convex https://happy-otter-123.convex.cloud · functions: convex/ · integrations: better-auth, polar')
+      { betterAuth: true, clerk: false, auth0: false, polar: true, security: true },
+    )).toBe('Convex https://happy-otter-123.convex.cloud · functions: convex/ · integrations: better-auth, polar, nuxt-security')
   })
 
   it('spells out the empty cases instead of hiding them', () => {
-    expect(formatStartupSummary('', 'convex', { betterAuth: false, clerk: false, auth0: false, polar: false }))
+    expect(formatStartupSummary('', 'convex', { betterAuth: false, clerk: false, auth0: false, polar: false, security: false }))
       .toBe('Convex (no URL) · functions: convex/ · integrations: none')
   })
 })

@@ -14,6 +14,7 @@ const columns = computed(() => [
       { label: 'Introduction', to: '/getting-started/introduction' },
       { label: 'Installation', to: '/getting-started/installation' },
       { label: 'Configuration', to: '/getting-started/configuration' },
+      { label: 'Security', to: '/getting-started/security' },
     ],
   },
   {

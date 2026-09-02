@@ -149,7 +149,8 @@ The [ConvexLogger](#convexlogger) for this client.
 setAuth(
    fetchToken, 
    onChange?, 
-   onRefreshChange?): void;
+   onRefreshChange?
+): void;
 ```
 
 Defined in: [src/runtime/vue/client.ts:292](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L292)
@@ -1462,7 +1463,8 @@ Defined in: [src/runtime/vue/auth/index.ts:8](https://github.com/qruto/nuxt-conv
 setAuth(
    fetchToken, 
    onChange, 
-   onRefreshChange?): void;
+   onRefreshChange?
+): void;
 ```
 
 Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L9)
@@ -2510,7 +2512,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:288](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L288)
+Defined in: [src/runtime/vue/auth/index.ts:298](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L298)
 
 Create a fresh EffectScope and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2532,8 +2534,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:290](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L290) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:290](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L290) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
 
 ***
 
@@ -2723,7 +2725,8 @@ async function handleClick() {
 function usePaginatedQuery<Query>(
    query, 
    args, 
-options): UsePaginatedQueryReturnType<Query>;
+   options
+): UsePaginatedQueryReturnType<Query>;
 ```
 
 Defined in: [src/runtime/vue/composables/use-paginated-query.ts:204](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L204)
@@ -2780,7 +2783,8 @@ function optimisticallyUpdateValueInPaginatedQuery<Query>(
    localStore, 
    query, 
    args, 
-   updateValue): void;
+   updateValue
+): void;
 ```
 
 Defined in: [src/runtime/vue/composables/use-paginated-query.ts:549](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L549)
@@ -2919,7 +2923,8 @@ query, given a sort order and a function deriving the sort key.
 function usePaginatedQuery_experimental<Query>(
    query, 
    args, 
-options): UsePaginatedQueryReturnType<Query>;
+   options
+): UsePaginatedQueryReturnType<Query>;
 ```
 
 Defined in: [src/runtime/vue/composables/use-paginated-query.ts:860](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L860)
