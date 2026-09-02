@@ -56,4 +56,32 @@ describe('better-auth proxy', () => {
     expect(forwarded!.method).toBe('POST')
     expect(JSON.parse(forwarded!.body)).toEqual({ email: 'test@example.com' })
   })
+
+  // nuxt-security is installed here, so its global XSS validator would
+  // otherwise HTML-escape the JSON body and answer 400 when that changed
+  // anything — rejecting legitimate credentials. The proxy's route rule turns
+  // it off; these characters are opaque secrets, never HTML this app renders.
+  it('forwards credentials containing HTML metacharacters instead of rejecting them', async () => {
+    stub.requests.length = 0
+    const credentials = { email: 'test@example.com', password: 'p<ssw0rd>&more', name: 'O<Brien' }
+    const response = await fetch('/api/auth/sign-up/email', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(credentials),
+    })
+
+    expect(response.status).toBe(200)
+    const forwarded = stub.requests.find(r => r.url === '/api/auth/sign-up/email')
+    expect(forwarded).toBeDefined()
+    // Verbatim — not HTML-escaped in transit.
+    expect(JSON.parse(forwarded!.body)).toEqual(credentials)
+  })
+
+  it('refuses methods Better Auth never serves, without reaching the deployment', async () => {
+    stub.requests.length = 0
+    const response = await fetch('/api/auth/sign-in/email', { method: 'DELETE' })
+
+    expect(response.status).toBe(405)
+    expect(stub.requests).toHaveLength(0)
+  })
 })
