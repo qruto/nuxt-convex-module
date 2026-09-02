@@ -17,7 +17,10 @@ baseline versions; **always start there.**
    ```
 3. For each real change (behavior, public API, types — **not** formatting), apply the
    equivalent change to the mapped Vue file using the translation rules below.
-4. Update the baseline version in [PARITY.md](./PARITY.md) and the README table.
+4. Update the baseline version in [PARITY.md](./PARITY.md), the README table, and
+   `website/app/utils/upstream-baselines.ts` — the docs site states the ported version on
+   the landing hero, the introduction and every component page, all read from that file.
+   `test/unit/upstream-baselines.test.ts` fails if any of the three drift apart.
 5. Add/adjust tests mirroring the change; run the verification commands below.
 6. Open a PR describing the upstream commit(s) ported and the baseline bump.
 
