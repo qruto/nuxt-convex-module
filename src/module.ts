@@ -760,6 +760,33 @@ function registerServerImports(resolver: Resolver): void {
 }
 
 /**
+ * nuxt-security rules for the Better Auth proxy route, merged over the app's
+ * global security config (a route rule wins, and the app can override these in
+ * turn through its own `routeRules`). Applied whether or not the nuxt-security
+ * integration is on: without nuxt-security installed the key is inert, and
+ * `convex.security: false` opts out of *our* CSP additions, not out of the
+ * module's own route working correctly.
+ *
+ * - `xssValidator: false` — mandatory, not a preference. The validator
+ *   HTML-escapes the JSON request body and rejects the request with `400` if
+ *   anything changed, so a password or display name containing `<` or `>`
+ *   never reaches Better Auth. Escaping is meaningless here regardless: these
+ *   are opaque credentials forwarded to an auth server, never HTML this app
+ *   renders.
+ * - `allowedMethodsRestricter` — Better Auth serves GET and POST only (plus
+ *   HEAD/OPTIONS for Nitro and CORS preflight); anything else is a probe.
+ */
+// Typed through kit's own signature rather than importing from nuxt-security:
+// the augmentation that puts `security` on a route rule comes from the package
+// when it is installed, and this module must still compile when it is not.
+type SecurityRouteRules = NonNullable<Parameters<typeof extendRouteRules>[1]['security']>
+
+const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
+  xssValidator: false,
+  allowedMethodsRestricter: { methods: ['GET', 'HEAD', 'POST', 'OPTIONS'] },
+}
+
+/**
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
  * `${authRoute}/**` same-origin proxy, the opt-in `auth` route middleware, the
@@ -786,8 +813,13 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
     handler: resolver.resolve('./runtime/better-auth/nuxt/proxy'),
   })
   // The proxy forwards live session/token traffic — never cache it, and keep it
-  // out of any prerender pass.
-  extendRouteRules(`${authRoute}/**`, { cache: false, prerender: false })
+  // out of any prerender pass. The `security` rules harden the same route under
+  // nuxt-security (and are inert without it); see {@link AUTH_PROXY_SECURITY_RULES}.
+  extendRouteRules(`${authRoute}/**`, {
+    cache: false,
+    prerender: false,
+    security: AUTH_PROXY_SECURITY_RULES,
+  })
   addRouteMiddleware({
     name: 'auth',
     path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
