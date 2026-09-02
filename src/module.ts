@@ -800,6 +800,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
   addImports([
     { name: 'useAuth', from: resolver.resolve('./runtime/better-auth/vue/use-auth') },
     { name: 'usePreloadedAuthQuery', from: resolver.resolve('./runtime/better-auth/vue/hydration') },
+    { name: 'resolveAuthRedirect', from: resolver.resolve('./runtime/better-auth/vue/redirect') },
   ])
 
   addComponent({
