@@ -81,6 +81,21 @@ bound to the initiating browser (magic-link flows finish in another browsing con
 flows; the route restriction is the additive mitigation. Off by default for parity — do not
 sync away.
 
+Port-only security guard: `resolveAuthRedirect` (`better-auth/vue/redirect.ts`) validates the
+`?redirect=` destination the port's own `auth` route middleware attaches before a login page
+navigates to it. The convention has no upstream counterpart — upstream ships no route middleware —
+so the open-redirect surface it creates is the port's to close. Same-origin paths pass; absolute,
+scheme-relative (`//host`), backslash (`/\host`), non-HTTP-scheme and repeated-parameter values
+fall back. Additive and auto-imported; do not sync away.
+
+Port-only security defaults: the `${authRoute}/**` proxy route carries nuxt-security route rules
+(`AUTH_PROXY_SECURITY_RULES` in `src/module.ts`). `xssValidator: false` is **required for
+correctness** — the validator HTML-escapes the JSON body and 400s when that changes anything, so
+a password or name containing `<`/`>` never reaches Better Auth; the values are opaque credentials,
+never rendered HTML. `allowedMethodsRestricter` pins the route to GET/HEAD/POST/OPTIONS (Better
+Auth serves GET and POST only). Applied regardless of `convex.security`, since they concern the
+module's own route rather than the app's CSP. Regression-tested in `test/e2e/better-auth-proxy.test.ts`.
+
 ## Vue-only additions (no upstream origin — keep, do not "sync away")
 
 These are intentional Vue/Nuxt conveniences beyond `convex/react`'s surface:

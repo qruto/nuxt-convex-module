@@ -83,6 +83,13 @@ as the upstream file; when a rule conflicts with a lint rule, scope the lint rul
   `convex.betterAuth.crossDomainCallbackRoute`) restricting `?ott=` consumption to a dedicated
   route — upstream consumes the token on any URL, a login-CSRF surface (see PARITY.md's
   security note). Off by default for parity; keep the guard when syncing.
+- `resolveAuthRedirect` is a port-only open-redirect guard for the `?redirect=` query the port's
+  own `auth` middleware attaches (no upstream counterpart — upstream ships no route middleware).
+  Keep it, and keep the docs pointing login pages at it rather than `route.query.redirect`.
+- The `${authRoute}/**` route rules (`AUTH_PROXY_SECURITY_RULES`) are load-bearing:
+  `xssValidator: false` is a correctness fix, not hardening — nuxt-security otherwise rejects
+  credentials containing `<`/`>` with a 400 before they reach the proxy. Do not "tidy" it away;
+  `test/e2e/better-auth-proxy.test.ts` fails if you do.
 - Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = server-only,
   react-start = framework-specific, `convexQueryOptions` = `@internal`).
 
