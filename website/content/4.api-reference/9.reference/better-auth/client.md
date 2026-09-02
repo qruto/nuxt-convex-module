@@ -356,7 +356,7 @@ const authClient: VueAuthClient<{
            })[];
            after: {
               matcher: (context) => boolean;
-              handler: (inputContext) => Promise<unknown>;
+              handler: MiddlewareHandler;
            }[];
         };
         endpoints: {
