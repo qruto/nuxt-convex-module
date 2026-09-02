@@ -2510,7 +2510,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:288](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L288)
+Defined in: [src/runtime/vue/auth/index.ts:298](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L298)
 
 Create a fresh EffectScope and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2532,8 +2532,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:290](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L290) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:290](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L290) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
 
 ***
 
