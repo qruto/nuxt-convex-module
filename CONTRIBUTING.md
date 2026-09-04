@@ -154,8 +154,9 @@ git config core.hooksPath .githooks
 ```
 
 That is the whole mechanism: no hook manager, nothing generated into `.git/hooks`, and no
-per-clone setup step. `prepare` also clears the `hook.commitlint.*` / `hook.fallow.*` entries
-the repository used before this, so an existing clone does not run both copies.
+per-clone setup step. Note that Git runs [config-based hooks](https://git-scm.com/docs/githooks)
+(`hook.*` in `.git/config`) *in addition* to these rather than instead of them, so never
+register the same hook both ways — it runs twice.
 
 | Hook | Runs | Gate |
 |---|---|---|
