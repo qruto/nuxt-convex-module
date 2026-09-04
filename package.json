@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module",
   "version": "0.0.0",
-  "description": "The Convex client for Vue & Nuxt — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR, with opt-in Better Auth and Polar",
+  "description": "The Convex module for Nuxt — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR, on a complete Vue client that also runs without Nuxt, with opt-in Better Auth and Polar",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qruto/nuxt-convex-module.git"
@@ -223,7 +223,6 @@
     "npm-run-all2": "^9.0.3",
     "nuxt": "catalog:",
     "nuxt-security": "^2.6.0",
-    "oxc-parser": "^0.147.0",
     "portless": "0.15.6",
     "publint": "^0.3.24",
     "typedoc": "^0.28.20",

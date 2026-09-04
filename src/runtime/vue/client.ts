@@ -125,7 +125,6 @@ export interface MutationOptions<Args extends Record<string, Value>> {
 
 // Vue-family alias of upstream's `MutationOptions` (same treatment as
 // `VueMutation` / `VueAction`); the barrel re-exports both names.
-// fallow-ignore-next-line unused-type
 export type VueMutationOptions<Args extends Record<string, Value>> = MutationOptions<Args>
 
 /**
