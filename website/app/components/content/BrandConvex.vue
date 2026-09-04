@@ -56,14 +56,7 @@ defineProps<{ mono?: boolean }>()
            symbols go concave. -->
       <defs>
         <linearGradient id="brand-convex-eng-w" gradientUnits="userSpaceOnUse" x1="0" y1="55.7" x2="0" y2="91.2">
-          <stop offset="0" stop-color="#717579" />
-          <stop offset="0.14" stop-color="#676b6f" />
-          <stop offset="0.3" stop-color="#5d6165" />
-          <stop offset="0.44" stop-color="#54575b" />
-          <stop offset="0.58" stop-color="#4a4d51" />
-          <stop offset="0.72" stop-color="#414448" />
-          <stop offset="0.86" stop-color="#34373b" />
-          <stop offset="1" stop-color="#3d4044" />
+          <BrandGraphiteRamp />
         </linearGradient>
         <linearGradient id="brand-convex-eng-gold" x1="0" y1="0" x2="0.72" y2="1">
           <stop offset="0" stop-color="#ffeec2" />

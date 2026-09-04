@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
-// fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import type { Preloaded } from 'nuxt-convex-module/client'
 
 const props = defineProps<{
@@ -39,23 +38,10 @@ async function submit() {
 
 <template>
   <div>
-    <ul
-      v-if="messages && messages.length > 0"
-      class="m-0 mb-4 flex max-h-56 list-none flex-col gap-1.5 overflow-y-auto p-0 text-sm text-default"
-    >
-      <li
-        v-for="message in messages"
-        :key="message._id"
-      >
-        <strong>{{ message.author }}</strong>: {{ message.body }}
-      </li>
-    </ul>
-    <p
-      v-else
-      class="m-0 mb-4 text-sm text-muted"
-    >
-      No messages yet — send one below.
-    </p>
+    <PlaygroundMessageList
+      :messages="messages"
+      empty="No messages yet — send one below."
+    />
 
     <form
       class="flex flex-wrap gap-2"
