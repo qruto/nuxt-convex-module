@@ -62,6 +62,18 @@
       "computedHash": "3c6d7d6f6084ff5ebbd59fe8b348f99bced0d303da45cd61069a0f6dac8199f6",
       "wellKnownDigest": "sha256:dfe757cc05ff926e6fc7f14575273c6fbb8c42a7484392a8c7c3a1cb9a45d794"
     },
+    "fallow": {
+      "source": "fallow-rs/fallow-skills",
+      "sourceType": "github",
+      "skillPath": "fallow/skills/fallow/SKILL.md",
+      "computedHash": "a51149b68b454fc8b9989490cb687fbe6753952ff84911fed0b7ae32da49ffe1"
+    },
+    "fallow-review": {
+      "source": "fallow-rs/fallow-skills",
+      "sourceType": "github",
+      "skillPath": "fallow/skills/fallow-review/SKILL.md",
+      "computedHash": "5c8619575f3589bf88941c274e5eac9d6c8348225db14e7d04e8cac30454a3e1"
+    },
     "nitro": {
       "source": "antfu/skills",
       "sourceType": "github",
