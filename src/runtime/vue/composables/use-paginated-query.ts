@@ -614,6 +614,7 @@ export function insertAtTop<Query extends PaginatedQueryReference>(options: {
  *
  * @public
  */
+// fallow-ignore-next-line code-duplication -- upstream shape: convex/react ships insertAtTop and insertAtBottomIfLoaded as sibling copies and the port stays diffable against it (PARITY.md)
 export function insertAtBottomIfLoaded<Query extends PaginatedQueryReference>(
   options: {
     paginatedQuery: Query

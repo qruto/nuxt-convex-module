@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import type { RequestForQueries } from 'nuxt-convex-module/client'
 import { api } from '#convex/api'
 
