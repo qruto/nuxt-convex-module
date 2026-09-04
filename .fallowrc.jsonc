@@ -30,7 +30,7 @@
   // `src`, so the `.js` entries do not exist), or nothing at all — which made an
   // inline suppression flap between active and stale. Suppress the specifier
   // instead: the finding is about the build state, never about the import.
-  // "ignoreUnresolvedImports": ["nuxt-convex-module", "nuxt-convex-module/**"],
+  "ignoreUnresolvedImports": ["nuxt-convex-module", "nuxt-convex-module/**"],
 
   "ignoreExports": [
     // The published `nuxt-convex-module/client` (+ `/vue`) barrel. fallow marks it
