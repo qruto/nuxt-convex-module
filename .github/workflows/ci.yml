@@ -39,6 +39,17 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      # Claude Code reads `.claude/skills`, where `npx skills add --agent
+      # claude-code` writes a symlink to the canonical `.agents/skills` copy.
+      # A skill installed without that link — or one whose file is not exactly
+      # `SKILL.md` — is silently invisible to Claude Code on a fresh clone.
+      - name: Agent skills
+        run: |
+          diff <(ls .agents/skills) <(ls .claude/skills)
+          for skill in .claude/skills/*; do
+            test -f "$skill/SKILL.md" || { echo "::error::$skill has no SKILL.md"; exit 1; }
+          done
+
   # Enforce Conventional Commits on PRs. The local commit-msg hook gives fast
   # feedback but can be bypassed with --no-verify, so this is the gate that
   # actually keeps the history clean. Pushes to main are skipped — those commits
