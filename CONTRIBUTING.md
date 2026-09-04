@@ -11,6 +11,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Submitting Changes](#submitting-changes)
 - [Code Quality](#code-quality)
 - [Commit Convention](#commit-convention)
+- [Git Hooks](#git-hooks)
 - [Releasing](#releasing)
 
 ## Code of Conduct
@@ -29,7 +30,8 @@ after you report.
 ## Development Setup
 
 **Prerequisites:** Node.js 24.11+ (latest LTS, matching `engines` in `package.json`), pnpm 11+
-(Git 2.54+ optional — enables the local commit-message and pre-commit hooks; CI enforces both either way)
+(`pnpm install` also points Git at the repo's [`.githooks/`](./.githooks) — see
+[Git Hooks](#git-hooks); CI enforces the same gates either way)
 
 ```bash
 # Clone the repository
@@ -109,12 +111,11 @@ clean under it, so a full run should report nothing. Every exception in that fil
 reason it exists — prefer fixing a finding in code, and widen the policy only with a written
 justification.
 
-**This is enforced, not just documented.** `pnpm install` registers a second native Git
-config-based hook (`hook.fallow.*`) that runs `fallow audit` on `pre-commit`. The audit is
-scoped to the files your branch changed and its default `new-only` gate fails on findings your
-changes *introduce* — pre-existing findings on a file you touched do not block you. It takes
-about a second. The same gate runs on every pull request in CI, so bypassing it locally with
-`git commit --no-verify` only defers it.
+**This is enforced, not just documented.** [`.githooks/pre-commit`](./.githooks/pre-commit)
+runs `fallow audit` before every commit. The audit is scoped to the files your branch changed
+and its default `new-only` gate fails on findings your changes *introduce* — pre-existing
+findings in a file you touched do not block you. It takes about a second. The same gate runs on
+every pull request in CI, so bypassing it locally with `git commit --no-verify` only defers it.
 
 ## Commit Convention
 
@@ -136,13 +137,38 @@ feat!: rename createClient to defineClient
 Allowed types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`,
 `style`, `revert`, and `ai` (AI-instruction / agent metadata updates).
 
-**This is enforced, not just documented.** `pnpm install` registers a native Git
-[config-based hook](https://git-scm.com/docs/githooks) (`hook.commitlint.*` in your local
-`.git/config`) that runs [commitlint](https://commitlint.js.org/) on `commit-msg` and rejects
-non-conforming messages locally — no hook-manager dependency. This requires **Git 2.54+**; on
-older Git the local hook is silently skipped. Either way, CI re-checks every commit on a pull
-request, so the gate holds. The local hook can be bypassed with `git commit --no-verify`; CI
-cannot — non-conventional commits will not merge.
+**This is enforced, not just documented.**
+[`.githooks/commit-msg`](./.githooks/commit-msg) runs
+[commitlint](https://commitlint.js.org/) and rejects non-conforming messages locally. CI
+re-checks every commit on a pull request, so the gate holds either way. The local hook can be
+bypassed with `git commit --no-verify`; CI cannot — non-conventional commits will not merge.
+
+## Git Hooks
+
+The hooks live in [`.githooks/`](./.githooks) as ordinary shell scripts — committed, reviewable
+in a pull request, and carrying their own reasoning in comments. `pnpm install` runs `prepare`,
+which points Git at them:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+That is the whole mechanism: no hook manager, nothing generated into `.git/hooks`, and no
+per-clone setup step. `prepare` also clears the `hook.commitlint.*` / `hook.fallow.*` entries
+the repository used before this, so an existing clone does not run both copies.
+
+| Hook | Runs | Gate |
+|---|---|---|
+| [`pre-commit`](./.githooks/pre-commit) | `fallow audit` | Dead code, duplication, complexity your change introduces |
+| [`commit-msg`](./.githooks/commit-msg) | `commitlint` | [Conventional Commits](#commit-convention) |
+
+Both resolve their tool through `pnpm exec`, because each CLI is a devDependency and is on
+`PATH` only inside a pnpm script. Bypass either once with `git commit --no-verify`; both have a
+CI counterpart that cannot be bypassed.
+
+`pre-commit` is skipped when `CI` is set: the release job commits through `changelogen`, which
+shells out to a plain `git commit`, and a release must not be gated on code quality that the
+`quality` job already ran on the pull request.
 
 ## Releasing
 

@@ -129,7 +129,7 @@
     "pnpm": ">=11.6.0"
   },
   "scripts": {
-    "prepare": "git config hook.commitlint.event commit-msg && git config hook.commitlint.command 'pnpm exec commitlint --edit' && git config hook.fallow.event pre-commit && git config hook.fallow.command 'pnpm exec fallow audit --gate-marker pre-commit' || true",
+    "prepare": "git config core.hooksPath .githooks; git config --remove-section hook.commitlint 2>/dev/null; git config --remove-section hook.fallow 2>/dev/null; true",
     "prepack": "pnpm run build",
     "build": "nuxt-module-build build && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",

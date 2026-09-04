@@ -1,0 +1,24 @@
+#!/bin/sh
+# Quality gate: dead code, duplication, complexity (see CONTRIBUTING.md).
+#
+# `fallow audit` scopes itself to the files this branch changed — it derives the
+# merge-base with the branch upstream on its own, so there is no base-detection
+# logic to keep in sync here. Its default `new-only` gate fails only on findings
+# the change INTRODUCES, so pre-existing findings in a file you touched never
+# block a commit. Takes about a second.
+#
+# `pnpm exec` rather than a bare `fallow`: the CLI is a devDependency, so it is
+# on PATH only inside a pnpm script. A bare call would not resolve, and the
+# stock hook shipped by `fallow hooks install` opens with
+# `command -v fallow || exit 0` — which would pass every commit while looking
+# installed.
+#
+# Skipped in CI on purpose: the release job commits through changelogen, which
+# shells out to a plain `git commit` (hooks and all), and a release must not be
+# gated on code quality. The `quality` job in ci.yml owns that gate and has
+# already run it on the pull request.
+#
+# Bypass once with: git commit --no-verify
+[ -n "$CI" ] && exit 0
+
+exec pnpm exec fallow audit --gate-marker pre-commit
