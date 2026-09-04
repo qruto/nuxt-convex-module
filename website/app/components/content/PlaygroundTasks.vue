@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Id } from '#convex/dataModel'
 import { api } from '#convex/api'
-// fallow-ignore-next-line unresolved-import -- workspace subpath resolves via the stub dist at dev time; fallow can't follow it
 import { insertAtTop, optimisticallyUpdateValueInPaginatedQuery } from 'nuxt-convex-module/client'
 
 // Paginated task list: 5 items per page, growing as `loadMore` is called.

@@ -1,54 +1,89 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
 
-  // Deliberately not a pnpm workspace: a standalone consumer sample with its own
-  // package.json and committed convex/_generated files. fallow's own workspace
+  // Standalone consumer samples, deliberately not workspace members: their own
+  // package.json and committed convex/_generated output. fallow's own workspace
   // diagnostic points here and offers exactly this fix.
   "ignorePatterns": ["examples/**"],
 
-  // Real runtime roots that no plugin declares.
+  // Runtime roots no plugin discovers.
   "entry": [
-    "build.config.ts", // unbuild config, read by `nuxt-module-build`
-    "test/setup/**/*.ts", // vitest projects[].setupFiles — the plugin only reads top-level
+    "build.config.ts", // unbuild config, read by nuxt-module-build
+    "test/setup/**/*.ts", // vitest projects[].setupFiles — the plugin reads only the top level
     "test/fixtures/**", // Nuxt apps @nuxt/test-utils boots by rootDir
     "website/app/app.css" // Docus convention load; seeds the @import chain into app/css/
   ],
 
-  // Registered via `resolver.resolve()` in src/module.ts. The bare-string form of
-  // addPlugin() resolves fine; addPlugin({ src }) and addServerHandler({ handler })
-  // pass a computed path the static graph cannot follow.
+  // Registered from src/module.ts through resolver.resolve(); the static graph
+  // cannot follow the computed path.
   "dynamicallyLoaded": [
-    "src/runtime/better-auth/nuxt/proxy.ts", // addServerHandler, module.ts:814
-    "src/runtime/better-auth/vue/plugin.server.ts",
-    "src/runtime/devtools/plugin.client.ts" // addPlugin({ src }), module.ts:190
+    "src/runtime/better-auth/nuxt/proxy.ts", // addServerHandler({ handler })
+    "src/runtime/better-auth/vue/plugin.server.ts", // addPlugin(resolver.resolve(...))
+    "src/runtime/devtools/plugin.client.ts" // addPlugin({ src }, { append: true })
   ],
 
-  // The published `nuxt-convex-module/client` + `/vue` surface. `fallow dead-code
-  // --trace src/runtime/vue/index.ts:useQuery` reports is_entry_point: true and
-  // "export is externally accessible" — it just has no in-repo consumer, which is
-  // the whole point of a library barrel. Scoped to this one file: the other public
-  // barrels do have in-repo consumers and are not flagged.
   "ignoreExports": [
-    { "file": "src/runtime/vue/index.ts", "exports": ["*"] }
+    // The published `nuxt-convex-module/client` (+ `/vue`) barrel. fallow marks it
+    // an entry point yet still reports its re-exports, because the same file is
+    // also seeded by the nuxt plugin as an auto-import source; the other public
+    // barrels have in-repo consumers and are unaffected.
+    { "file": "src/runtime/vue/index.ts", "exports": ["*"] },
+    // Reached through the vitest `#imports` alias by the runtime under test
+    // (vitest.config.ts declares it per project; the plugin reads top-level only).
+    { "file": "test/helpers/nuxt-imports.ts", "exports": ["useRuntimeConfig"] }
   ],
 
-  // Test doubles whose members are invoked through an interface or a patched global,
-  // never by name: FakeWatch implements convex's Watch<T>, FakeXhr is installed over
-  // globalThis.XMLHttpRequest by installFakeXhr(). ignoreFindings (not ignorePatterns)
-  // keeps both files in the module graph.
-  "ignoreFindings": [
-    "test/fake-watch.ts",
-    "test/helpers/fake-xhr.ts"
+  // Test doubles whose members are invoked through an interface or a patched
+  // global, never by name: FakeWatch implements convex's Watch<T>, FakeXhr is
+  // installed over globalThis.XMLHttpRequest by installFakeXhr().
+  "overrides": [
+    {
+      "files": ["test/fake-watch.ts", "test/helpers/fake-xhr.ts"],
+      "rules": { "unused-class-members": "off" }
+    }
   ],
 
   // Installed on purpose, never imported.
   "ignoreDependencies": [
-    "nuxt", // host-provided; src/runtime imports resolve to the app's nuxt
+    "nuxt", // host framework; src/runtime imports resolve to the app's nuxt
     "nuxt-security", // optional peer, detected by name via hasNuxtModule()
-    "@convex-dev/polar", // optional peer, detected by name; website ships it for Convex
+    "@convex-dev/polar", // optional peer detected by name; the website ships it for its Convex functions
     "@polar-sh/checkout", // optional peer the website provides for the module's import
+    "@codecov/nuxt-plugin", // nuxt.config.ts registers it in the [name, options] tuple form, which the nuxt plugin does not read
     "portless", // invoked inside the nested-quoted `dev` script
     "typedoc-plugin-frontmatter", // both listed as plain strings in typedoc.json "plugin"
     "typedoc-plugin-markdown"
-  ]
+  ],
+
+  "health": {
+    // CRAP needs Istanbul input to mean anything. The CI gate runs without any,
+    // the website and DevTools apps have no unit tests by design, and coverage
+    // for src/ is already gated by vitest's thresholds — so here the score
+    // degenerates to cyclomatic² and merely double-reports the complexity rules.
+    "maxCrap": 0,
+    "thresholdOverrides": [
+      {
+        "files": [
+          "src/runtime/vue/composables/use-paginated-query.ts",
+          "src/runtime/vue/queries-observer.ts"
+        ],
+        "maxCyclomatic": 25,
+        "maxCognitive": 30,
+        "reason": "Verbatim ports of convex/react (PARITY.md): the structure follows upstream so releases stay diffable file-for-file."
+      },
+      {
+        "files": ["website/app/components/content/LandingHeroPanel.vue"],
+        "functions": ["<template>"],
+        "maxCyclomatic": 30,
+        "maxCognitive": 55,
+        "reason": "One plate renders two acts (recording, live) from shared state; splitting the markup would spread the SSR/hydration contract across components."
+      },
+      {
+        "files": ["website/app/components/content/PlaygroundFiles.vue"],
+        "functions": ["<template>"],
+        "maxCognitive": 40,
+        "reason": "Docs demo: three storage composables shown side by side in one file on purpose, so the reader sees composable and markup together."
+      }
+    ]
+  }
 }
