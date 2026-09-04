@@ -186,6 +186,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Full history: `fallow audit` diffs the PR against its base commit.
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Install pnpm, node & dependencies
@@ -194,18 +196,19 @@ jobs:
           runtime: node@lts
           cache: true
 
-      # Whole-project gate: every finding blocks. `auto-changed-since` defaults
-      # to true, which would silently narrow this to a PR's changed files, so it
-      # is pinned off. `version` is omitted on purpose: the action reads the
-      # `fallow` spec from package.json (action/scripts/install.sh) and installs
-      # the newest release matching it — so with a `^` range CI can run a newer
-      # 3.x than the locally installed one. Pin the devDependency exactly if the
-      # two must agree.
+      # PR gate: `fallow audit` scopes to the files the PR changed (the action
+      # hands it the PR base SHA) and fails only on findings the PR introduces.
+      # Pushes to main run the whole-project analysis instead — every finding
+      # blocks — so the repo stays clean under .fallowrc.jsonc as a whole, not
+      # just along the edges a PR happened to touch. `version` is omitted on
+      # purpose: the action reads the `fallow` spec from package.json
+      # (action/scripts/install.sh) and installs the newest release matching
+      # it — so with a `^` range CI can run a newer 3.x than the locally
+      # installed one. Pin the devDependency exactly if the two must agree.
       - name: Quality (fallow)
         uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
         with:
-          auto-changed-since: false
-          fail-on-issues: true
+          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
 
       # No `dev:prepare` needed: TypeDoc runs on the standalone
       # tsconfig.typedoc.json with `skipErrorChecking`.
