@@ -21,14 +21,17 @@ export default createConfigForNuxt({
 })
   .append(
     // `.agents/` holds AI tooling references (skill scripts, fetched examples),
-    // not package source — exclude it from the project's lint rules.
+    // not package source — exclude it from the project's lint rules. `.claude/`
+    // is the same content seen through Claude Code's own skills directory,
+    // which is symlinks back into `.agents/skills` (see
+    // `scripts/link-agent-skills.mjs`), so it has to be ignored alongside it.
     // `.deepsec/` is the deepsec security-scanner workspace (its own
     // package.json/lockfile) — not package source either.
     {
       // `examples/` are standalone consumer apps (own package.json, import the
       // published package and Convex codegen output that only exists after
       // `npx convex dev`) — not lintable as part of this workspace.
-      ignores: ['.agents/**', '.deepsec/**', 'examples/**'],
+      ignores: ['.agents/**', '.claude/**', '.deepsec/**', 'examples/**'],
     },
     // Playground demo components and DevTools panel pages use short,
     // single-word names by design.

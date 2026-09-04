@@ -96,6 +96,36 @@ as the upstream file; when a rule conflicts with a lint rule, scope the lint rul
 - Out-of-scope upstream pieces are listed in [PARITY.md](./PARITY.md) (resend = server-only,
   react-start = framework-specific, `convexQueryOptions` = `@internal`).
 
+## Skills (`.agents/skills/`)
+
+Every skill this repo ships lives — one real copy, committed — in `.agents/skills/`. That is
+the canonical directory `npx skills` ([vercel-labs/skills](https://github.com/vercel-labs/skills))
+installs to, and the directory Codex, Cursor, OpenCode, Gemini CLI, Copilot, Zed and most other
+agents read directly. `skills-lock.json` records where each one came from.
+
+Claude Code reads only `.claude/skills/`, so each skill also has an entry there: a relative
+symlink back to the canonical copy, `.claude/skills/<name>` → `../../.agents/skills/<name>`.
+Those are not hand-made — symlinking is what `skills add` does by default (`--copy` is the
+fallback for filesystems without symlinks), so one copy stays the source of truth and
+`npx skills update` refreshes every agent at once. They are committed, so a clone works with
+no setup.
+
+Install with Claude Code in the agent list and both sides are written for you:
+
+```bash
+npx skills add <owner/repo> --agent claude-code --skill <name>
+npx skills update                       # refresh in place
+npx skills list                         # per-skill: which agents have it
+```
+
+Two things to watch, both gated by the `lint` job in ci:
+
+- `npx skills experimental_install` (the restore-from-lockfile path) installs to the universal
+  `.agents/skills` only — it never writes the Claude Code links. Re-run `skills add` with
+  `--agent claude-code` if `.claude/skills` ends up short, or add the missing symlink by hand.
+- The file must be named `SKILL.md` in that exact case. `SKILL.MD` looks fine on macOS and is
+  invisible on the case-sensitive filesystems ci and Linux contributors use.
+
 ## Verification
 
 Run the full gate before opening a PR:
