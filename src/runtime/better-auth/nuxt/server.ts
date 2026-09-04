@@ -41,6 +41,27 @@ const parseConvexSiteUrl = (url: string | undefined) => {
       + `Currently set to ${url}.`,
     )
   }
+  // Additive guard with no upstream counterpart: every auth request — session
+  // cookies included — is proxied to this origin, and it is the only thing
+  // pinning the proxy's destination host. An unparseable or non-HTTP value has
+  // to fail here rather than at the first `fetch`. `http:` stays legal because
+  // self-hosted Convex runs over it in local development.
+  let protocol: string
+  try {
+    protocol = new URL(url).protocol
+  }
+  catch {
+    throw new Error(
+      `NUXT_PUBLIC_CONVEX_SITE_URL must be an absolute URL, including the scheme.\n`
+      + `Currently set to ${url}.`,
+    )
+  }
+  if (protocol !== 'https:' && protocol !== 'http:') {
+    throw new Error(
+      `NUXT_PUBLIC_CONVEX_SITE_URL must use http: or https:.\n`
+      + `Currently set to ${url}.`,
+    )
+  }
   return url
 }
 
@@ -75,6 +96,10 @@ const handler = async (request: Request, siteUrl: string) => {
     }
   }
 
+  // Not SSRF: scheme and host come wholly from the parseConvexSiteUrl'd config,
+  // the request contributes only pathname + search (a `//evil.com/x` pathname
+  // lands as a path segment), and `redirect: 'manual'` blocks redirect-following.
+  // fallow-ignore-next-line security-sink -- destination host is pinned by config; verified 2026-09-02
   const response = await fetch(nextUrl, init)
 
   // Forced Nitro deviation from upstream's bare `return fetch(nextUrl, init)`:
