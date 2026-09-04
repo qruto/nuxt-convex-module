@@ -1,11 +1,14 @@
 # nuxt-convex-module
 
+[![Nuxt][nuxt-src]][nuxt-href]
+–
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
+–
 [![Tests][tests-src]][tests-href]
 [![Coverage][coverage-src]][coverage-href]
+–
 [![License][license-src]][license-href]
-[![Nuxt][nuxt-src]][nuxt-href]
 
 The [Convex](https://convex.dev) client for [Vue](https://vuejs.org) & [Nuxt](https://nuxt.com) — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR preloading, auto-imported and typed against your deployment.
 
@@ -245,7 +248,7 @@ Found a vulnerability? Report it privately via [GitHub Security Advisories](http
 [tests-src]: https://img.shields.io/github/actions/workflow/status/qruto/nuxt-convex-module/ci.yml?branch=main&style=plastic&colorA=020420&label=tests
 [tests-href]: https://github.com/qruto/nuxt-convex-module/actions/workflows/ci.yml
 
-[coverage-src]: https://img.shields.io/codecov/c/github/qruto/nuxt-convex-module?style=plastic&colorA=020420&label=coverage
+[coverage-src]: https://codecov.io/gh/qruto/nuxt-convex-module/branch/main/graph/badge.svg?token=C55NNBOZ0Z
 [coverage-href]: https://codecov.io/gh/qruto/nuxt-convex-module
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt&style=plastic
