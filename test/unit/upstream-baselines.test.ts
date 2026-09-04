@@ -7,7 +7,7 @@ import { upstreamBaselines } from '../../website/app/utils/upstream-baselines'
 // the introduction, and on every component page — all of it read off
 // `website/app/utils/upstream-baselines.ts`. PARITY.md stays the repository's
 // authority (AGENTS.md's sync procedure updates it first), so this test pins
-// the site's copy, the README table and the components overview to it: a
+// the site's copy, the README's prose and the components overview to it: a
 // baseline bump that misses one of them fails here instead of shipping a
 // confidently wrong version number to readers.
 const read = (path: string) =>
@@ -42,21 +42,25 @@ describe('upstream baselines', () => {
     },
   )
 
-  // Every place a version is spelled out in markdown rather than rendered from
-  // the table above. Keyed by a token unique to that table row.
-  const spelledOut: Array<[file: string, markdown: string, token: string, version: string]> = [
-    ['README.md', README, '`…/vue`, `…/server`', upstreamBaselines.convex.version],
-    ['README.md', README, '`…/clerk/vue`', upstreamBaselines.convex.version],
-    ['README.md', README, '`…/auth0/vue`', upstreamBaselines.convex.version],
-    ['README.md', README, '`…/better-auth/vue`', upstreamBaselines['better-auth'].version],
-    ['README.md', README, '`…/polar/vue`', upstreamBaselines.polar.version],
-    ['components overview', COMPONENTS_OVERVIEW, '`/clerk/vue`', upstreamBaselines.convex.version],
-    ['components overview', COMPONENTS_OVERVIEW, '`/auth0/vue`', upstreamBaselines.convex.version],
-    ['components overview', COMPONENTS_OVERVIEW, '`/better-auth/vue`', upstreamBaselines['better-auth'].version],
-    ['components overview', COMPONENTS_OVERVIEW, '`/polar/vue`', upstreamBaselines.polar.version],
+  // The README states each baseline in prose — "At parity with `convex@1.45.0`"
+  // — rather than in a table cell, so match the package@version it prints.
+  it.each(Object.values(upstreamBaselines))(
+    'states `$package@$version` in README.md',
+    ({ package: pkg, version }) => {
+      expect(README).toContain(`\`${pkg}@${version}\``)
+    },
+  )
+
+  // The components overview still carries a version per row, as the row's last
+  // cell. Keyed by a subpath unique to that row.
+  const overviewRows: Array<[token: string, version: string]> = [
+    ['`/clerk/vue`', upstreamBaselines.convex.version],
+    ['`/auth0/vue`', upstreamBaselines.convex.version],
+    ['`/better-auth/vue`', upstreamBaselines['better-auth'].version],
+    ['`/polar/vue`', upstreamBaselines.polar.version],
   ]
 
-  it.each(spelledOut)('states %s’s %s row as the pinned version', (_file, markdown, token, version) => {
-    expect(lastCell(markdown, token)).toBe(`\`${version}\``)
+  it.each(overviewRows)('states the components overview’s %s row as the pinned version', (token, version) => {
+    expect(lastCell(COMPONENTS_OVERVIEW, token)).toBe(`\`${version}\``)
   })
 })
