@@ -15,16 +15,19 @@ import { api } from '#convex/api'
 // the live panel (rows in the HTML on first paint via `useAsyncQuery`), and
 // the recording only arms client-side through useDemoScript. Touch anything
 // inside the plate mid-recording and it jumps straight to live.
-const { data, error } = await useAsyncQuery(api.messages.list, {})
+const client = useConvex()
+const { data, error } = client
+  ? await useAsyncQuery(api.messages.list, {})
+  : { data: shallowRef([]), error: shallowRef(null) }
 
-const send = useMutation(api.messages.send)
-const connection = useConvexConnectionState()
+const send = client ? useMutation(api.messages.send) : undefined
+const connection = client ? useConvexConnectionState() : shallowRef()
 
 // Only the tail fits the well; the panel is a readout, not the archive.
 const VISIBLE = 4
 const liveShown = computed(() => (data.value ?? []).slice(-VISIBLE))
 
-const online = computed(() => !error.value && connection.value?.isWebSocketConnected !== false)
+const online = computed(() => !!client && !error.value && connection.value?.isWebSocketConnected !== false)
 
 // A per-visitor handle so your own rows are distinguishable from everyone
 // else's. Generated after mount — a random value at SSR time would mismatch
@@ -41,7 +44,7 @@ const rejection = ref<string | null>(null)
 
 async function submit() {
   const body = draft.value.trim()
-  if (!body || sending.value) return
+  if (!body || sending.value || !send) return
   sending.value = true
   rejection.value = null
   const t0 = performance.now()
@@ -335,7 +338,7 @@ watch(state, (value) => {
         >{{ handle }}</span>
         <input
           v-model="draft"
-          :disabled="!!error"
+          :disabled="!client || !!error"
           maxlength="140"
           placeholder="write a row…"
           class="min-w-0 flex-1 border-0 bg-transparent py-1 font-mono text-xs text-highlighted outline-none placeholder:text-dimmed"
@@ -352,7 +355,7 @@ watch(state, (value) => {
         class="flex-none"
         :aria-label="sending ? 'Sending…' : 'Send'"
         :ui="sending ? { leadingIcon: 'motion-safe:animate-pulse' } : undefined"
-        :disabled="sending || !draft.trim() || !!error"
+        :disabled="sending || !draft.trim() || !client || !!error"
       />
     </form>
 
