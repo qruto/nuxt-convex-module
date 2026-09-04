@@ -51,9 +51,10 @@ const DESCRIPTION_MAX = 160
 /** First prose paragraph under the H1, flattened and stripped of markdown. */
 function summarize(body) {
   const afterH1 = body.split(/^# .*$/m)[1] ?? ''
-  const paragraph = afterH1.trimStart().split(/\n\s*\n/)[0] ?? ''
+  const paragraph = afterH1.trimStart().split(/\n\s*\n/)[0]
   // Tables, lists and headings are not prose — those modules have no summary.
-  if (!paragraph || /^[|\-*#>]/.test(paragraph)) return ''
+  // An empty paragraph needs no guard: it falls through and flattens to ''.
+  if (/^[|\-*#>]/.test(paragraph)) return ''
   return paragraph
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links -> their text
     .replace(/[`*_]/g, '')
