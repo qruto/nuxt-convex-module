@@ -194,8 +194,18 @@ jobs:
           runtime: node@lts
           cache: true
 
+      # Whole-project gate: every finding blocks. `auto-changed-since` defaults
+      # to true, which would silently narrow this to a PR's changed files, so it
+      # is pinned off. `version` is omitted on purpose: the action reads the
+      # `fallow` spec from package.json (action/scripts/install.sh) and installs
+      # the newest release matching it — so with a `^` range CI can run a newer
+      # 3.x than the locally installed one. Pin the devDependency exactly if the
+      # two must agree.
       - name: Quality (fallow)
-        run: pnpm run test:quality
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          auto-changed-since: false
+          fail-on-issues: true
 
       # No `dev:prepare` needed: TypeDoc runs on the standalone
       # tsconfig.typedoc.json with `skipErrorChecking`.

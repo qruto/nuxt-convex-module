@@ -36,7 +36,11 @@
     },
     "fallow": {
       "type": "stdio",
-      "command": "fallow-mcp"
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "fallow-mcp"
+      ]
     }
   }
 }

@@ -32,11 +32,9 @@ export type {
   PaginatedQueryReference,
   PaginatedQueryArgs,
   PaginatedQueryItem,
-  // fallow-ignore-next-line unused-type
   UsePaginatedQueryResult,
   UsePaginatedQueryOptions,
   UsePaginatedQueryObjectReturnType,
-  // fallow-ignore-next-line unused-type
   PaginationStatus,
 } from 'convex/react'
 
