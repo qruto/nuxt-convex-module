@@ -9,6 +9,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Development Setup](#development-setup)
 - [Project Structure](#project-structure)
 - [Submitting Changes](#submitting-changes)
+- [Code Quality](#code-quality)
 - [Commit Convention](#commit-convention)
 - [Releasing](#releasing)
 
@@ -28,7 +29,7 @@ after you report.
 ## Development Setup
 
 **Prerequisites:** Node.js 24.11+ (latest LTS, matching `engines` in `package.json`), pnpm 11+
-(Git 2.54+ optional — enables the local commit-message hook; CI enforces it either way)
+(Git 2.54+ optional — enables the local commit-message and pre-commit hooks; CI enforces both either way)
 
 ```bash
 # Clone the repository
@@ -88,11 +89,32 @@ website/              # Nuxt app: product homepage · docs (Docus) with live Con
 3. Make your changes, add tests where appropriate.
 4. Ensure all checks pass:
    ```bash
-   pnpm lint && pnpm test && pnpm build
+   pnpm lint && pnpm test && pnpm test:quality && pnpm build
    ```
 5. Open a pull request against `main`.
 
 Pull requests that include tests and follow the commit convention below are reviewed fastest.
+
+## Code Quality
+
+[Fallow](https://docs.fallow.tools) is the drift gate for dead code, duplication and
+complexity. Run it over the whole repository at any time:
+
+```bash
+pnpm test:quality
+```
+
+The repository policy lives in [`.fallowrc.jsonc`](./.fallowrc.jsonc) and the repo is kept
+clean under it, so a full run should report nothing. Every exception in that file carries the
+reason it exists — prefer fixing a finding in code, and widen the policy only with a written
+justification.
+
+**This is enforced, not just documented.** `pnpm install` registers a second native Git
+config-based hook (`hook.fallow.*`) that runs `fallow audit` on `pre-commit`. The audit is
+scoped to the files your branch changed and its default `new-only` gate fails on findings your
+changes *introduce* — pre-existing findings on a file you touched do not block you. It takes
+about a second. The same gate runs on every pull request in CI, so bypassing it locally with
+`git commit --no-verify` only defers it.
 
 ## Commit Convention
 
