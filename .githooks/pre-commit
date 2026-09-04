@@ -1,24 +1,27 @@
 #!/bin/sh
-# Quality gate: dead code, duplication, complexity (see CONTRIBUTING.md).
-#
-# `fallow audit` scopes itself to the files this branch changed — it derives the
-# merge-base with the branch upstream on its own, so there is no base-detection
-# logic to keep in sync here. Its default `new-only` gate fails only on findings
-# the change INTRODUCES, so pre-existing findings in a file you touched never
-# block a commit. Takes about a second.
-#
-# `pnpm exec` rather than a bare `fallow`: the CLI is a devDependency, so it is
-# on PATH only inside a pnpm script. A bare call would not resolve, and the
-# stock hook shipped by `fallow hooks install` opens with
-# `command -v fallow || exit 0` — which would pass every commit while looking
-# installed.
+# Fast gate, runs on every commit (~6s). The slower half of CI lives in
+# pre-push; see CONTRIBUTING.md § Git Hooks for the split and for what neither
+# hook can cover.
 #
 # Skipped in CI on purpose: the release job commits through changelogen, which
 # shells out to a plain `git commit` (hooks and all), and a release must not be
-# gated on code quality. The `quality` job in ci.yml owns that gate and has
-# already run it on the pull request.
+# gated on checks the pull request already ran. `CI=1` also trips pnpm's
+# `verifyDepsBeforeRun` guard, so these would fail there for the wrong reason.
+#
+# Every tool runs through `pnpm exec` / `pnpm run`: each is a devDependency and
+# is on PATH only inside a pnpm script. A bare `fallow` would not resolve — the
+# stock hook from `fallow hooks install` opens with `command -v fallow || exit 0`
+# and would pass every commit while looking installed.
 #
 # Bypass once with: git commit --no-verify
-[ -n "$CI" ] && exit 0
+if [ -n "$CI" ]; then exit 0; fi
+set -e
 
-exec pnpm exec fallow audit --gate-marker pre-commit
+# `quality` job. Scoped to the files this branch changed — fallow derives the
+# merge-base with the branch upstream itself — and its `new-only` gate fails
+# only on findings the change introduces.
+pnpm exec fallow audit --gate-marker pre-commit
+
+# `lint` job. Whole tree rather than staged files: the repo has no lint-staged,
+# and eslint over this project costs about five seconds.
+pnpm run lint

@@ -22,6 +22,16 @@
     "src/runtime/devtools/plugin.client.ts" // addPlugin({ src }, { append: true })
   ],
 
+  // The website imports the module by its published name through the workspace
+  // link, and those subpaths resolve through `dist/` — which is gitignored, so a
+  // fresh checkout (CI, or anyone who has not built yet) has nothing to resolve
+  // them to. Whether they resolve locally depends on whether `dist/` currently
+  // holds a full build, a `dev:prepare` stub (whose `runtime` is a symlink to
+  // `src`, so the `.js` entries do not exist), or nothing at all — which made an
+  // inline suppression flap between active and stale. Suppress the specifier
+  // instead: the finding is about the build state, never about the import.
+  // "ignoreUnresolvedImports": ["nuxt-convex-module", "nuxt-convex-module/**"],
+
   "ignoreExports": [
     // The published `nuxt-convex-module/client` (+ `/vue`) barrel. fallow marks it
     // an entry point yet still reports its re-exports, because the same file is

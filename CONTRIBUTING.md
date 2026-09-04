@@ -158,18 +158,33 @@ per-clone setup step. Note that Git runs [config-based hooks](https://git-scm.co
 (`hook.*` in `.git/config`) *in addition* to these rather than instead of them, so never
 register the same hook both ways — it runs twice.
 
-| Hook | Runs | Gate |
-|---|---|---|
-| [`pre-commit`](./.githooks/pre-commit) | `fallow audit` | Dead code, duplication, complexity your change introduces |
-| [`commit-msg`](./.githooks/commit-msg) | `commitlint` | [Conventional Commits](#commit-convention) |
+They mirror CI, split by how often each check can afford to run:
 
-Both resolve their tool through `pnpm exec`, because each CLI is a devDependency and is on
-`PATH` only inside a pnpm script. Bypass either once with `git commit --no-verify`; both have a
-CI counterpart that cannot be bypassed.
+| Hook | Runs | Mirrors | Cost |
+|---|---|---|---|
+| [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `quality`, `lint` | ~6s |
+| [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `commit-lint` | instant |
+| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `test:types:lib`, `test`, API-reference drift | `quality`, `typecheck`, `test` | ~20s |
 
-`pre-commit` is skipped when `CI` is set: the release job commits through `changelogen`, which
-shells out to a plain `git commit`, and a release must not be gated on code quality that the
-`quality` job already ran on the pull request.
+`pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
+— only findings your change *introduces*, in the files it touched. `pre-push` runs once per
+push and can afford the whole picture: the full `fallow` run (which, unlike the scoped audit,
+notices a config edit that strands a file elsewhere in the repo), the type check, the test
+suite, and the API-reference drift check. A delete-only push skips it.
+
+Every tool runs through `pnpm exec` / `pnpm run`, because each CLI is a devDependency and is on
+`PATH` only inside a pnpm script. Bypass once with `git commit --no-verify` or
+`git push --no-verify`; every one of these has a CI counterpart that cannot be bypassed.
+
+Both gates are skipped when `CI` is set. The release job commits through `changelogen`, which
+shells out to a plain `git commit`, and a release must not be gated on checks the pull request
+already ran — and `CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so they would fail there for
+the wrong reason anyway.
+
+**What the hooks cannot cover.** These stay CI's alone, so a green push is not a promise of a
+green pipeline: the `e2e` job (builds fixture apps, minutes), `pack` (tarball, `publint`,
+`attw`, and a real npm consumer install), `dependency-review` and the workflow lint, which need
+GitHub, the Windows leg of the test matrix, and the coverage thresholds.
 
 ## Releasing
 
