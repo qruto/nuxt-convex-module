@@ -246,10 +246,17 @@ jobs:
         # comes from the runner image — pnpm's Node runtime deliberately ships
         # without the bundled npm/npx (pnpm 11+), and a stock runner npm is
         # exactly the consumer path this job is meant to exercise.
+        #
+        # The npm the image bundles (10.9.x, from its own Node 22) crashes in
+        # Arborist's peer-set resolution on any Nuxt 4 tree — `Cannot read
+        # properties of null (reading 'edgesOut')`, npm/cli#9787, fixed in npm
+        # 11.6.0. Nothing to do with this package: a bare `npm install` of the
+        # example hits it too. So the consumer npm is pinned, which also keeps
+        # the gate reproducible when the runner image moves.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
           SMOKE="$RUNNER_TEMP/smoke"
           cp -R examples/minimal "$SMOKE"
           cd "$SMOKE"
-          npm install --no-audit --no-fund "$TARBALL"
-          npm run build
+          npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL"
+          npx --yes npm@11.17.0 run build
