@@ -129,7 +129,7 @@
     "pnpm": ">=11.6.0"
   },
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks; git config --remove-section hook.commitlint 2>/dev/null; git config --remove-section hook.fallow 2>/dev/null; true",
+    "prepare": "git config core.hooksPath .githooks || true",
     "prepack": "pnpm run build",
     "build": "nuxt-module-build build && pnpm run build:devtools-client",
     "build:devtools-client": "nuxt generate devtools-client-app",
