@@ -1,0 +1,46 @@
+#!/bin/sh
+# Slow gate, runs once per push (~20s): the CI jobs that are too expensive to
+# repeat on every commit. Together with pre-commit this mirrors every ci.yml
+# job that can run on a laptop — see CONTRIBUTING.md § Git Hooks for the ones
+# that cannot.
+#
+# Bypass once with: git push --no-verify
+if [ -n "$CI" ]; then exit 0; fi
+
+# git feeds one "<local ref> <local sha> <remote ref> <remote sha>" line per ref
+# being pushed, and an all-zero local sha means the ref is being deleted. A
+# delete-only push carries no code, so there is nothing to check.
+pushes_code=0
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  case "$local_sha" in
+    *[!0]*) pushes_code=1 ;;
+  esac
+done
+[ "$pushes_code" = 1 ] || exit 0
+
+set -e
+
+# `quality` job's whole-project run — the same one pushes to main trigger. The
+# pre-commit gate only sees the files a change touched, so it cannot notice a
+# config edit that strands a file elsewhere in the repo; this can, in about half
+# a second.
+pnpm exec fallow --fail-on-issues
+
+# `typecheck` job. Runs dev:prepare first, so it also proves the module still
+# builds its stubs and types.
+pnpm run test:types:lib
+
+# `test` job, minus the Windows leg and coverage thresholds, which need CI.
+pnpm run test
+
+# `quality` job's API-reference drift step. Regenerating must produce no diff,
+# or the committed reference and the source doc-comments have diverged. This
+# one rewrites files: if it fails, the regenerated reference is already in your
+# working tree, ready to commit.
+pnpm run docs:api
+if ! git diff --quiet -- website/content/4.api-reference; then
+  echo >&2
+  echo "pre-push: the API reference drifted — commit the regenerated files below." >&2
+  git --no-pager diff --stat -- website/content/4.api-reference >&2
+  exit 1
+fi
