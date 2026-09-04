@@ -105,6 +105,21 @@ export const LIMITS = {
   author: 24,
 } as const
 
+/** PASS A — any whole token, as written or de-stretched, is a blocked word. */
+function hasBlockedWord(folded: string): boolean {
+  return folded
+    .split(/[^a-z]+/)
+    .some(token => token !== '' && (BLOCKED_WORDS.has(token) || BLOCKED_WORDS.has(collapse(token))))
+}
+
+/** PASS B — a blocked word survives once every non-letter is removed. */
+function hasEvasion(folded: string): boolean {
+  const dense = folded.replace(/[^a-z]/g, '')
+  return EVASION_PATTERNS.some(pattern => pattern.test(dense))
+}
+
+const looksLikeLink = (text: string) => LINKISH.some(pattern => pattern.test(text))
+
 /**
  * Returns a human-readable reason to reject, or `null` to accept.
  * The caller throws; the landing page surfaces it as "SEND REJECTED".
@@ -125,25 +140,13 @@ export function rejectMessage(author: string, body: string): string | null {
     return 'Message looks like spam.'
   }
 
-  for (const pattern of LINKISH) {
-    if (pattern.test(trimmedBody) || pattern.test(author)) {
-      return 'Links and addresses are not allowed in the public demo.'
-    }
+  if (looksLikeLink(trimmedBody) || looksLikeLink(author)) {
+    return 'Links and addresses are not allowed in the public demo.'
   }
 
   const folded = fold(`${author} ${trimmedBody}`)
-
-  for (const token of folded.split(/[^a-z]+/)) {
-    if (token && (BLOCKED_WORDS.has(token) || BLOCKED_WORDS.has(collapse(token)))) {
-      return 'Message was rejected by the public demo filter.'
-    }
-  }
-
-  const dense = folded.replace(/[^a-z]/g, '')
-  for (const pattern of EVASION_PATTERNS) {
-    if (pattern.test(dense)) {
-      return 'Message was rejected by the public demo filter.'
-    }
+  if (hasBlockedWord(folded) || hasEvasion(folded)) {
+    return 'Message was rejected by the public demo filter.'
   }
 
   return null

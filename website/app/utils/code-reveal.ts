@@ -97,27 +97,38 @@ export async function typeCode(
 ): Promise<void> {
   const base = 1000 / (opts.cps ?? 40)
   const lineRest = opts.lineRest ?? 340
-  const symbol = /[{}()[\]<>='"`.,:;#$&|*+\\/-]/
   const { text, length } = reveal
   let i = 0
   while (i < length) {
-    const ch = text[i]!
-    if (ch === '\n') {
-      let next = i + 1
-      while (next < length && (text[next] === ' ' || text[next] === '\t')) next++
+    if (text[i] === '\n') {
+      const next = indentEnd(text, i + 1)
       // A trailing newline ends the pass; resting on it would read as a hang.
       if (next < length) await wait(lineRest * (0.8 + Math.random() * 0.9))
       i = next
     }
     else {
-      let delay = base * (0.5 + Math.random() * 1.1)
-      if (symbol.test(ch)) delay += base * (0.7 + Math.random() * 1.1)
-      if (ch === ' ' && Math.random() < 0.2) delay += 90 + Math.random() * 240
-      else if (Math.random() < 0.02) delay += 130 + Math.random() * 280
-      await wait(delay)
+      await wait(keystrokeDelay(text[i]!, base))
       i++
     }
     reveal.revealTo(i)
   }
   reveal.clearCaret()
+}
+
+/** Index just past the leading blanks at `from` — the auto-indent that lands with a line break. */
+function indentEnd(text: string, from: number): number {
+  let end = from
+  while (end < text.length && (text[end] === ' ' || text[end] === '\t')) end++
+  return end
+}
+
+const SYMBOL = /[{}()[\]<>='"`.,:;#$&|*+\\/-]/
+
+/** One keystroke's pause: a loose burst, a beat more for a symbol reach, the occasional breath. */
+function keystrokeDelay(ch: string, base: number): number {
+  let delay = base * (0.5 + Math.random() * 1.1)
+  if (SYMBOL.test(ch)) delay += base * (0.7 + Math.random() * 1.1)
+  if (ch === ' ' && Math.random() < 0.2) delay += 90 + Math.random() * 240
+  else if (Math.random() < 0.02) delay += 130 + Math.random() * 280
+  return delay
 }
