@@ -91,7 +91,10 @@ describe('CheckoutLink', () => {
     await wrapper.find('a').trigger('click')
     await flushPromises()
 
-    expect(openSpy).toHaveBeenCalledWith('https://polar.test/redirect', '_blank')
+    // `noopener` is a deliberate divergence from upstream's bare two-argument
+    // call — it keeps the checkout tab from reaching back through
+    // `window.opener` (see the note in polar/vue/components.ts).
+    expect(openSpy).toHaveBeenCalledWith('https://polar.test/redirect', '_blank', 'noopener')
     expect(PolarEmbedCheckout.create).not.toHaveBeenCalled()
   })
 
