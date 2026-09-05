@@ -26,6 +26,10 @@ set -e
 # a second.
 pnpm exec fallow --fail-on-issues
 
+# `quality` job's security step, for the same reason it is a separate command
+# there: security candidates never surface under the run above.
+pnpm exec fallow security --fail-on-issues
+
 # `typecheck` job. Runs dev:prepare first, so it also proves the module still
 # builds its stubs and types.
 pnpm run test:types:lib
