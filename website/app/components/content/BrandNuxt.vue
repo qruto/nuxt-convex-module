@@ -49,10 +49,10 @@ defineProps<{ mono?: boolean }>()
           <stop offset="0.79" stop-color="#00ad66" />
           <stop offset="1" stop-color="#009156" />
         </linearGradient>
-        <!-- The travelling light bar's sweep gradient is NOT here — it
-             lives in HeroBillet's zero-size defs svg with Convex's, so
-             animating its stops never dirties this artwork's raster (the
-             ~1fps lesson — see the note there). -->
+        <!-- The ghostwrite band's gradient is NOT here — it lives in
+             HeroBillet's zero-size defs svg with Convex's, so animating
+             its stops never dirties this artwork's raster (the ~1fps
+             lesson — see the note there). -->
       </defs>
       <path
         d="M60.32 32C60.6656 32 60.96 31.7135 60.96 31.36V16.48C60.96 16.48 61.76 17.92 63.2 20.32L69.44 31.04C69.7255 31.6384 70.359 32 70.88 32H75.2V8H70.88C70.5923 8 70.24 8.23906 70.24 8.64V23.68L67.36 18.56L61.6 8.8C61.3197 8.3026 60.7166 8 60.16 8H56V32H60.32Z"

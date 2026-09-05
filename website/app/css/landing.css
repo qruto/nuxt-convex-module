@@ -9,12 +9,11 @@
    section carries the finish its own content asks for, the way one
    billet takes different tool passes:
 
-     landing-mill        brushed grain — the base finish (the hero
-                         below via its own rule, the services rail)
      landing-mill-grid   01 . the spec sheet's measurement grid
-     landing-mill-rings  02 . broadcast rings off the socket, set in
-                         a RECESSED tray (lip shade instead of the
-                         ray — the demo is staged in a well)
+     landing-mill-rings  02 . a turned face — fine concentric passes
+                         under scribed broadcast rings off the
+                         socket, set in a RECESSED tray (lip shade
+                         instead of the ray: staged in a well)
      landing-mill-hatch  03 . diagonal cross-feed marks off the bench
      landing-mill-knurl  04 . knurling — the grip texture on the
                          thing that ends up in your pocket
@@ -24,13 +23,18 @@
    brushed grain on `body`: without a fill of their own these
    sections would show the page grain THROUGH their own, two
    gradients of the same pitch at different phases, which is exactly
-   the beat the coprime periods exist to avoid. */
-.landing-mill {
-  background-color: var(--ui-bg);
-  background-image: var(--mill-ray), var(--mill-grain);
-}
-/* 01 — the drawing grid: minor rule every 28px, major every 140px,
-   each pair scribed (shade + 1px light catch below/beside). */
+   the beat the coprime periods exist to avoid.
+
+   The hero's ground is the fifth finish, in its own rule below (it
+   trades the ray for a bloom). The services rail sitting on the foot
+   of that hero is the one surface with NO finish at all — a flat fill,
+   deliberately; see LandingServices.vue. */
+
+/* 01 — the drawing grid: ONE rule every 28px, scribed (shade + 1px
+   light catch below/beside). A second, darker rule every 140px used to
+   ride on top of this one; it read as two grids of different weights
+   fighting over the same plate rather than as one measurement field, so
+   the majors are gone and the 28px cell is the only cell. */
 .landing-mill-grid {
   background-color: var(--ui-bg);
   background-image:
@@ -39,23 +43,37 @@
       var(--mill-rule-lo) 0 1px, --alpha(var(--mill-rule-hi) / 14%) 1px 2px,
       transparent 2px 28px),
     repeating-linear-gradient(90deg,
-      var(--mill-rule-lo) 0 1px, transparent 1px 28px),
-    repeating-linear-gradient(180deg,
-      var(--mill-rule-major) 0 1px, transparent 1px 140px),
-    repeating-linear-gradient(90deg,
-      var(--mill-rule-major) 0 1px, transparent 1px 140px);
+      var(--mill-rule-lo) 0 1px, transparent 1px 28px);
 }
-/* 02 — concentric arcs walking out of the socket at top center,
-   where the other sections' ray sits; the tray lip recesses the
-   whole stage below the surface. */
+/* 02 — a TURNED face: the part was spun against the tool, so the
+   whole ground is fine concentric passes walking out of the socket
+   at top center, where the other sections' ray sits. The tray lip
+   recesses the stage below the surface.
+
+   The fine pass is the surface, at the same pitch family as the
+   bench and the pocket (5/11, 6/13) so the four plates read as one
+   material worked four ways. It was missing here: this section used
+   to carry the scribed ring ALONE, one arc every 90px, which at that
+   spacing is a drawing on the plate rather than a finish cut into it
+   — the ground read blank next to its neighbours.
+
+   The scribed ring stays on top of it as the coarse structure, the
+   way the grid keeps its rules: it is what makes the arcs read as a
+   broadcast out of the socket rather than as texture. Its radii are
+   multiples of the fine pitch (50px, 100px apart, both 5px steps) so
+   a major always lands ON a minor instead of cutting between two. */
 .landing-mill-rings {
   background-color: var(--ui-bg);
   background-image:
     repeating-radial-gradient(circle at 50% 0%,
-      transparent 0 45px,
-      var(--mill-rule-lo) 45px 46px,
-      --alpha(var(--mill-rule-hi) / 12%) 46px 47px,
-      transparent 47px 90px);
+      transparent 0 50px,
+      var(--mill-rule-lo) 50px 51px,
+      --alpha(var(--mill-rule-hi) / 12%) 51px 52px,
+      transparent 52px 100px),
+    repeating-radial-gradient(circle at 50% 0%,
+      var(--mill-line-hi) 0 1px, transparent 1px 5px),
+    repeating-radial-gradient(circle at 50% 0%,
+      var(--mill-line-lo) 0 1px, transparent 1px 11px);
   box-shadow: var(--mill-lip);
 }
 /* 03 — one-direction diagonal tool marks (a cross-feed pass, not a
@@ -78,33 +96,198 @@
     repeating-linear-gradient(-63deg, var(--mill-line-hi) 0 1px, transparent 1px 13px);
 }
 
-/* Hero ground — the same brushed grain under a whisper of accent
-   bloom. Composed here rather than stacking the landing-mill class:
-   two classes setting background-image on one element would stomp
-   each other, and the hero trades the mill's overhead ray for its
-   own bloom. */
+/* Hero ground — brushed silver under a raking light. Composed here
+   rather than stacking the landing-mill class: two classes setting
+   background-image on one element would stomp each other, and the
+   hero trades the mill's overhead ray for a sweep of its own.
+
+   The sweep used to be a wash of signal orange at the top right. On a
+   ground this close to neutral a 12% chroma haze doesn't read as
+   accent, it reads as a STAIN — the same failure the header cast had.
+   It is two neutral layers now: the lamp's pool where the orange
+   used to sit, and a shallow diagonal fall-off into shade across the
+   rest of the plate. Neither adds a hue; together they take the
+   ground from ~248 in the lit corner to ~226 in the far one.
+
+   Both layers ride OVER the grain, and that is what makes the panel
+   read louvred rather than merely shaded: a smooth gradient crossing
+   a field of parallel lines is exactly how light travels along a bank
+   of slats, each catching a slightly different amount of it. */
 .landing-hero-ground {
-  --hero-bloom: light-dark(--alpha(var(--color-signal-600) / 12%),
-                           --alpha(var(--color-signal-500) / 10%));
+  --hero-sheen: light-dark(oklch(100% 0 0 / 0.5), oklch(100% 0 0 / 0.045));
+  --hero-shade: light-dark(oklch(0% 0 0 / 0.045), oklch(0% 0 0 / 0.3));
   background-color: var(--ui-bg);
   background-image:
-    radial-gradient(1000px 560px at 88% -10%, var(--hero-bloom), transparent 62%),
+    radial-gradient(1100px 620px at 86% -12%, var(--hero-sheen), transparent 64%),
+    linear-gradient(158deg, transparent 28%, var(--hero-shade) 100%),
     var(--mill-grain);
 }
-/* The hero headline is worked INTO THE PAGE under a STILL lamp — final
-   relief split (2026-08-24): the plain words are CONVEX, pressed up out
-   of the page ground in its own material and carrying the full
-   playground chain right down to the twelve-step side wall, and the
-   brand lockups are the one CONCAVE element — engraved badges cut into
-   that same ground, holding dark matte graphite wordmark inlays and
-   vendor-hue enamel symbols. Raised sentence, inlaid marks: the two reliefs read
-   against each other, which is what makes both legible on a ground this
-   flat.
+
+/* -- THE PLATES --------------------------------------------------
+   The landing is read one plate at a time: every panel stands at
+   least a screen tall with its marking centred in the frame, and the
+   page snaps a plate's head to the top of the frame — plain CSS
+   scroll snapping, `mandatory` so a scroll always settles on a plate.
+   A plate taller than the frame (the spec sheet) scrolls freely
+   inside itself: the browser treats a snap area taller than the
+   frame as ground the scroll may rest anywhere on, so only its head
+   and foot snap. The colophon takes a snap position of its own so
+   the page can reach its end.
+
+   Reduced motion turns it off: snapping moves the page by an amount
+   the reader did not ask for, which is the motion that preference is
+   about. */
+html:has(.landing-panel) {
+  scroll-snap-type: y mandatory;
+}
+html:has(.landing-panel) footer {
+  scroll-snap-align: end;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing-panel) {
+    scroll-snap-type: none;
+  }
+}
+
+.landing-panel {
+  scroll-snap-align: start;
+  min-height: 100svh;
+  /* UPageHero and UPageSection both set `relative`; stated here so
+     anything positioned inside a plate takes the plate as its box
+     whatever the theme does. */
+  position: relative;
+  /* The header rail floats OVER the plates rather than standing above
+     them, so each plate holds that band clear itself: its marking then
+     centres in what the reader can actually see, and a plate that has
+     just landed never runs its first line under the rail. */
+  padding-top: var(--ui-header-height, 4rem);
+  display: grid;
+  align-content: center;
+}
+/* UPageSection's container opens with `lg:py-40` — 160px of lead-in
+   above the marking, on top of the 4rem the plate already spends
+   holding the rail clear. That figure is written for sections stacked
+   in a scrolling document, where the pad is what separates one block
+   from the last. Here nothing is above the marking but the plate's own
+   top edge: a plate LANDS, and 224px of empty ground before its first
+   word reads as a misprint rather than as breathing room. Half of it
+   goes. The bottom pad is left where it is — that one is doing real
+   work, keeping the last row of cards off the scribed edge on the
+   overflowing plates. The hero is exempt: it is a UPageHero laid out
+   on its own grid (`.landing-hero-ground`), and its lead-in is the
+   thing holding the headline off the rail. */
+.landing-panel:not(:first-child) > [data-slot="container"] {
+  padding-top: 6.25rem;
+}
+
+/* The plates are wider than the theme's container gutter is written for.
+   UContainer's `px-4 sm:px-6 lg:px-8` is a gutter for a column of prose on
+   a page that scrolls past; a landing plate is a FRAME — the scribed edge
+   is part of the drawing, and the spec sheet's outer cards were sitting
+   32px off it, close enough to read as a crop rather than as a margin.
+   Doubled at every breakpoint, so the ratio the theme chose is kept and
+   only the scale moves. It applies to the hero too (this is the page's
+   frame, not one plate's), which is why it is a separate rule from the
+   lead-in above — and the services rail on the hero's foot takes the same
+   figures on its own container so the two edges line up. */
+.landing-panel > [data-slot="container"] {
+  padding-inline: 2rem;
+}
+@media (width >= 40rem) {
+  .landing-panel > [data-slot="container"] {
+    padding-inline: 3rem;
+  }
+}
+@media (width >= 64rem) {
+  .landing-panel > [data-slot="container"] {
+    padding-inline: 4rem;
+  }
+}
+
+/* Plate one is the only one that starts BELOW the rail instead of
+   under it — the rail holds its own band of the document before the
+   first plate, and only floats over the frame afterwards. So plate
+   one is a screen minus that band, and skips the padding the others
+   need. The scroll-margin hands the band back to its snap area,
+   which puts a snap position at the very top of the document: without
+   it the page would snap 4rem down on arrival and open with the top
+   of the hero already under the rail. */
+.landing-panel:first-child {
+  min-height: calc(100svh - var(--ui-header-height, 4rem));
+  padding-top: 0;
+  scroll-margin-top: var(--ui-header-height, 4rem);
+}
+
+/* Screen one ends on "works with": the compatibility rail is the
+   hero's own last row (UPageHero's `#bottom` slot, which renders
+   outside the container and so stays full-bleed), not a strip handed
+   to the plate below. 1fr holds the hero copy in the light and drops
+   the rail on the foot of the plate. */
+.landing-hero-ground {
+  grid-template-rows: 1fr auto;
+}
+/* AND IT HAS TO CLOSE ON IT. "Ends on the rail" is only true while the
+   copy above leaves room for one: UPageHero's container opens with
+   `lg:py-40`, and 320px of lead-in and run-out around a copy block
+   that is already ~490px tall put the hero plate 76px past its own
+   screen at a 900px frame — the rail rendered, on the plate, below the
+   fold, which is the one place it must never be.
+
+   That padding was never doing the spacing, only guaranteeing a
+   minimum: the plate centres its own content (`align-content: center`
+   on .landing-panel, `items-center` on the theme's two-column grid),
+   so on any frame with room to spare the hero looks the same with the
+   figure at 160px or at 54. What it has to be is a CLEARANCE that the
+   frame can actually afford, which is a fraction of the frame and not
+   a step on the type scale — hence svh. At 6svh a 900px frame spends
+   54px a side and lands the rail with ~135px to spare; a 768px laptop
+   spends 46 and still lands it; the 6rem ceiling holds the theme's own
+   proportion on the tall screens that can pay for it.
+
+   Measured (1366x768 through 2560x1440, and 1440x900 was the frame
+   this was found on): the rail's foot now lands ON the fold at every
+   one of them — plate 912px in an 836px slot before, 836 after.
+
+   THE GUARANTEE STOPS AT `lg`. Below the two-column breakpoint the
+   copy and the instrument stack instead of sitting side by side, and
+   two full-height blocks in one screen is not a padding problem — the
+   hero plate is taller than the frame there by construction and the
+   rail is meant to be scrolled to. Nothing above buys that back; only
+   a shorter hero would. */
+.landing-hero-ground > [data-slot="container"] {
+  padding-block: clamp(1.5rem, 6svh, 6rem);
+}
+/* Under `lg` the hero's container is a flex column, where centring is
+   `justify-content`. At `lg` it becomes the two-column grid, which
+   centres itself already (a stretched row plus `items-center`) and
+   would read the same property as a COLUMN instruction — so the rule
+   stops at the breakpoint instead of re-laying the hero. */
+@media (width < 64rem) {
+  .landing-hero-ground > [data-slot="container"] {
+    justify-content: center;
+  }
+}
+
+/* The hero headline is worked OUT OF THE PAGE under a STILL lamp — one
+   relief, no split (2026-09-06): every word in the sentence is CONVEX,
+   pressed up out of the page ground and lit by the one lamp. The plain
+   words carry the full playground chain right down to the twelve-step
+   side wall; the two brand lockups carry the three passes of it a
+   filter chain can hold — lit rim, shaded rim, cast — over dark matte
+   graphite wordmarks and vendor-hue enamel symbols (see The badge
+   RELIEF).
+
+   The split this replaces (2026-08-24) had the marks CUT IN, engraved
+   badges inlaid in the raised sentence, on the theory that two reliefs
+   read against each other. They don't read against each other in a
+   line of type: they read as two words that fell into the page. One
+   surface, one lamp, one direction.
 
    The lamp does NOT turn any more. --light-angle is frozen at 330°, so
    every rim, wall, cast and face sweep resolves once and the sentence
-   is fixed premium relief. The hero's only motion is --shine-phase, the
-   specular travelling the two wordmarks (see the shine block).
+   is fixed premium relief. The hero's only motion is --ghost-phase, the
+   luminance band travelling the two wordmarks (see the ghostwrite
+   block).
 
    This is the text-depth playground's machinery VERBATIM (not the tiled
    melt — that system now lives only in ConvexText.vue / ConcaveText.vue):
@@ -163,12 +346,15 @@
                     number) because the whole chain is written in terms
                     of it and a future lamp move should stay one edit.
 
-     --shine-phase  the LIGHT BAR crossing the lockups, and the only
-                    animated value in the hero. Animated on the sweep
-                    STOPS themselves, in HeroBillet's zero-size defs svg
-                    (see the shine block), so nothing that paints is
-                    invalidated per frame — only the face copy's fills
-                    repaint, in their own compositor layer.
+     --ghost-phase  the GHOSTWRITE BAND crossing the lockups, and the
+                    only animated value in the hero. A plain number, not
+                    an angle: it IS the CSS original's background-position
+                    on a 300%-wide tile, normalised — 0 is `0 0`, 1 is
+                    `300% 0`. Animated on the band STOPS themselves, in
+                    HeroBillet's zero-size defs svg (see the ghostwrite
+                    block), so nothing that paints is invalidated per
+                    frame — only the face copy's fills repaint, in their
+                    own compositor layer.
 
    Splitting these was the point of the 2026-08-24 pass: "make only
    logos texts animated… leave the other title text as convex". Don't
@@ -179,10 +365,16 @@
   inherits: true;
   initial-value: 330deg;
 }
-@property --shine-phase {
-  syntax: "<angle>";
+@property --ghost-phase {
+  syntax: "<number>";
   inherits: true;
-  initial-value: 250deg;
+  /* Parked in the QUIET part of the cycle. The band spans
+     [centre-0.3, centre+0.3] on the shared axis and centre =
+     1.5 - 6 x phase, so a phase of 0.6 puts it at -2.1 — two reference
+     widths clear of the left end of both words, nothing lit. Reduced
+     motion leans on that: it never starts the animation at all, and
+     gets a permanently unlit band over the graphite lockups. */
+  initial-value: 0.6;
 }
 .landing-billet {
   /* THE SCENE — and NOTHING ELSE. There is deliberately no plate here:
@@ -220,42 +412,61 @@
      slot's text-5xl/sm:text-7xl utilities. */
   font-size: clamp(3rem, 4vw, 4.5rem);
 }
-/* The travelling light bar — the hero's ONLY animation, and it is hung
-   DIRECTLY ON THE SWEEP STOPS in HeroBillet's zero-size .billet-sweeps
+/* The ghostwrite band — the hero's ONLY animation, and it is hung
+   DIRECTLY ON THE BAND STOPS in HeroBillet's zero-size .billet-sweeps
    defs svg. That scoping is load-bearing, not stylistic: the keyframes
    used to sit on the ink copy's .brand-lockup, and every frame of the
-   inherited --shine-phase dirtied the ink artwork's raster — seventeen
+   inherited phase dirtied the ink artwork's raster — seventeen
    text-shadows plus the badges' four-pass filter chains, ~1.1s a frame,
    1fps measured. On the stops, a frame invalidates only the empty
    resource svg and the face fills that reference it (which repaint in
    .billet-face's own compositor layer — see that rule). 60fps+ measured.
    Never re-hang this animation on anything that paints, and never move
-   the sweep gradients back into the artwork's own defs.
+   the band gradients back into the artwork's own defs.
 
-   The phase runs a full turn while the eleven sweep bearings sit inside
-   0°–100°; with the lobes' ±25° that is ~150° of pass and ~210° of quiet.
-   That gap is the whole rhythm: a glint is an event, not a scanline
-   sweeping forever.
+   2.8s linear infinite is the source recipe's own tempo, and its
+   geometry keeps the hero's rhythm intact for free: the band is 0.6 of
+   a mark wide and its centre travels 1.5 -> -4.5, so a mark is touched
+   only while the centre sits in [-0.3, 1.3] — 27% of the cycle, ~0.75s
+   of pass against ~2.05s of quiet. A glint is an event, not a scanline
+   sweeping forever, and the old raked bar's 150-degrees-of-360 duty was
+   the same bargain at a different tempo.
 
-   Reduced motion drops to the registered 250° initial value, which is
-   inside the quiet gap — motion-off visitors get the matte graphite ramp
-   with no bar, which is exactly the static finish anyway. */
+   Reduced motion never starts it: --ghost-phase holds its registered
+   0.6, the band sits off the left edge, and the ink copy keeps the
+   static matte-graphite lockups (the muting below is gated on the same
+   query). Motion-off visitors get the pre-ghostwrite finish rather than
+   two words parked at 16% ink forever. */
 @media (prefers-reduced-motion: no-preference) {
   .hero-billet-line .billet-sweeps stop {
-    animation: wordmark-shine 6.5s linear infinite;
+    animation: ghostwrite 2.8s linear infinite;
   }
-  /* Convex is the first mark in the sentence and Nuxt the second, so the bar
-     reaches Nuxt a beat later — one light crossing two lines, not two marks
-     firing in lockstep. A POSITIVE delay, deliberately: a negative one would
-     ADVANCE Nuxt's phase and put it in front. Until it elapses --shine-phase
-     holds its registered 250°, which is inside the quiet gap, so the first
-     pass simply starts late instead of jumping mid-sweep. */
-  .hero-billet-line .billet-sweeps #brand-nuxt-sweep stop {
-    animation-delay: 1.05s;
+  /* The band runs right-to-left (that is what `to { background-position:
+     300% 0 }` does on a 300% tile — the image slides LEFT by 6 widths),
+     so it crosses "application" before "Use". BOTH MARKS RUN ON ONE
+     PHASE, with no delay between them: a 0.45s stagger used to hold
+     Nuxt back so the two glints read as a beat rather than a flash,
+     which was the right answer while they were two independent bands
+     and the wrong one now that they are two windows onto the same
+     travelling line. Give either of them a delay again and the line
+     breaks in half. */
+  @keyframes ghostwrite {
+    from { --ghost-phase: 0; }
+    to   { --ghost-phase: 1; }
   }
-  @keyframes wordmark-shine {
-    from { --shine-phase: 0deg; }
-    to   { --shine-phase: 360deg; }
+  /* OFF-STAGE, THE BAND STOPS. A CSS animation keeps ticking when its
+     element has scrolled out of the frame, and this one ticks
+     forty-two stops: measured (Chrome 153, production build) that was
+     a style recalculation of ~90 elements plus a root-layer repaint
+     on EVERY frame, ~5ms of main thread out of every 16, for as long
+     as the landing was open — on the spec sheet, the bench, the
+     deploy plate, where nothing of the hero is visible. HeroBillet
+     sets `data-offstage` from an IntersectionObserver once the line
+     has left the frame and clears it on the way back in; paused, not
+     stopped, so the pass resumes where it was rather than restarting
+     mid-sweep. */
+  .hero-billet-line[data-offstage] .billet-sweeps stop {
+    animation-play-state: paused;
   }
 }
 .hero-billet-line {
@@ -391,7 +602,7 @@
     calc(var(--lx) * -1)   calc(var(--ly) * -1)   calc(var(--softness) * 1.2) var(--lo-surf),
     calc(var(--lx) * -2.1) calc(var(--ly) * -2.1) calc(var(--softness) * 2.8) var(--lo-cast);
 }
-/* The sweep gradients' host (HeroBillet) — a resource-only svg that must
+/* The band gradients' host (HeroBillet) — a resource-only svg that must
    never paint or take space: out of flow so the 0×0 box can't grow the
    first line's strut or slide the copies out of register. */
 .hero-billet-line > .billet-sweeps {
@@ -404,8 +615,8 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* Its own compositor layer, and this is the shine's other half: the
-     face fills repaint every frame of the bar, and without the layer
+  /* Its own compositor layer, and this is the band's other half: the
+     face fills repaint every frame of the pass, and without the layer
      that damage lands in tiles shared with the ink copy underneath —
      whose text-shadows and filter chains then re-raster too (2fps
      measured; 60fps+ with it). Nothing here transforms; the hint is
@@ -421,7 +632,7 @@
   -webkit-text-stroke: var(--edge-w) var(--edge-c);
   paint-order: stroke fill;
 }
-/* -- The badge LIFT -----------------------------------------------
+/* -- The badge RELIEF ---------------------------------------------
    What used to be here, and why it is not (2026-08-31). Three builds
    of the playground's embossed preset ran on these two marks: first
    .depth-text.convex, then .depth-icon.convex chained properly, then
@@ -442,13 +653,26 @@
         graphite descent (lit crown → baseline shade → a bounce of
         ground light at the feet) and the enamel's five-stop domes.
         Untouched.
-     2. ONE soft shadow per path: a pixel down-light, blurred twice
-        that, at 24%. A LIFT off the plate rather than an extrusion
-        into it. One pass is the whole trick — nothing chains, nothing
-        compounds, and a single blurred copy has no hard boundary left
-        to be a border with.
-     3. The travelling light bar, now the mark's only animation and its
-        main specular event. See the sweep block below.
+     2. A THREE-PASS CONVEX CHAIN (2026-09-06): a lit rim toward the
+        lamp, a shaded rim away from it, and the soft cast pooling
+        below that used to stand here alone. The marks are the two
+        WORDS in this sentence that were still lying flat on the page
+        while every letter around them stood off it, and a lift with no
+        rims is exactly what a flat thing casting a shadow looks like.
+        Same lamp, same em-scaled depth as the words: --mark-relief is
+        --depth's own figure, so the rim lands on the page at the same
+        offset the letters' does.
+
+        THREE, not seventeen, and the paragraph above is why. A chained
+        drop-shadow compounds — each pass casts from the result of the
+        last — so a twelve-step side wall composites into that hairline
+        border, and no amount of tuning gets it out. Rim, rim, cast is
+        the most a chain holds and still reads as relief; the wall's
+        job (thickness) is left to the fills, which is where it always
+        actually lived.
+     3. The ghostwrite band, the mark's only animation — which also
+        took the wordmark's fill off (1) and left the relief below to
+        the enamel alone. See the ghostwrite block.
 
    The MATERIAL rules survive the demolition intact, because they were
    always about colour rather than about the renderer: the wordmark's
@@ -460,8 +684,8 @@
 
    The face copy's duplicate mark keeps its width but never paints
    (display:none would slide the copies out of register) — except for
-   the light bar, which is exactly what that registered duplicate is
-   good for. */
+   the ghostwrite band on the letterforms, which is exactly what that
+   registered duplicate is good for. */
 .hero-billet-line .billet-ink .brand-lockup {
   /* ---- KNOBS ----
      --mark-lift is the shadow's offset ON THE PAGE, as a fraction of
@@ -497,6 +721,34 @@
   --mark-ly: calc(cos(var(--light-angle)) * var(--mark-depth));
   --mark-blur: calc(var(--mark-depth) * var(--mark-spread));
 
+  /* ---- THE RIMS ----
+     How far off the page the mark stands, as a fraction of the
+     headline's em — and these are not knobs so much as a QUOTE: the
+     four below are --depth, --softness, --highlight and --side from
+     the block above, written out as plain numbers because the
+     derivation runs in the artwork's user units and there is no em
+     left in that chain to divide out. The two lockups are words in the
+     same sentence as "Use" and "backend"; a mark standing off the page
+     by a different amount than the letters touching it is the one
+     thing that reads as a sticker. MOVE THEM WITH THE WORDS' KNOBS.
+
+     The offsets are the same lamp read the same way, only mirrored:
+     --mark-lx/--mark-ly point AWAY from the light (they were written
+     for the cast), so the lit rim is that vector negated and the
+     shaded rim is the vector itself — both at half depth, the words'
+     own ±0.5. */
+  --mark-relief: 0.0364;      /* = --depth */
+  --mark-relief-soft: 0.0409; /* = --softness */
+  --mark-highlight: 75;       /* = --highlight */
+  --mark-side: 40;            /* = --side */
+  --mark-relief-depth: calc(var(--mark-relief) * var(--mark-per-em) * 1px);
+  --mark-rim-x: calc(sin(var(--light-angle)) * var(--mark-relief-depth) * -0.5);
+  --mark-rim-y: calc(cos(var(--light-angle)) * var(--mark-relief-depth) * 0.5);
+  /* The contact blur carries --crisp, exactly as the words' rims do —
+     a rim is where the face turns over, not where it fades out. */
+  --mark-rim-blur: calc(var(--mark-relief-soft) * var(--mark-per-em) * 1px
+      * 0.35 * var(--crisp));
+
   /* the wordmark's material — the fill ramp's MID tone per scheme */
   --mark-color: light-dark(oklch(0.455 0.008 255), oklch(0.37 0.012 255));
   color: light-dark(#16181d, #101215); /* plate-ink fallback under the fills */
@@ -510,7 +762,38 @@
   /* --mat-shade is the two blocks below; every path matches one of them */
   --mark-cast: color-mix(in oklab, var(--mat-shade)
       calc(var(--mark-shadow) * 1%), transparent);
-  filter: drop-shadow(var(--mark-lx) var(--mark-ly) var(--mark-blur) var(--mark-cast));
+  /* THE LIT RIM IS THE MATERIAL'S OWN LIGHT, never the room's — the
+     words' --ink-light formula verbatim, run on --mat instead of on
+     --text-color. Which is what keeps the enamel symbols' crowns their
+     own hue lifted toward the lamp rather than four grey glints: the
+     one rule this whole block exists to hold (see the MATERIAL note
+     below). On the graphite wordmark the same formula lands ~0.76 — a
+     silver, not a white, because the letters are a 0.455 material and
+     a near-white rim on them would read as the ghostwrite band stuck
+     mid-pass.
+
+     THE SHADED RIM COMES OFF --mat-shade, not off a new dark. The two
+     blocks below tuned that value against a real constraint — the
+     wordmark's fourteen counters and stems sit a couple of pixels
+     apart at the x-height, and anything darker silts the gaps up — and
+     a rim under those same letters is the same constraint again. So it
+     is the cast's own ink at a lower alpha, which is also what a rim
+     and a cast physically are: one shade, two distances. */
+  --mat-light: color-mix(in oklab,
+      oklch(from var(--mat) min(calc(l + 0.22), 0.96) calc(c * 0.85) h), white 22%);
+  --mark-rim-hi: color-mix(in oklab, var(--mat-light)
+      calc(var(--mark-highlight) * 1%), transparent);
+  --mark-rim-lo: color-mix(in oklab, var(--mat-shade)
+      calc(var(--mark-side) * 1%), transparent);
+  /* Lit rim, shaded rim, cast — in that order, because a drop-shadow
+     paints BEHIND what it is cast from and the chain composites
+     forward: the cast has to be last to end up furthest back. */
+  filter:
+    drop-shadow(calc(var(--mark-rim-x) * -1) calc(var(--mark-rim-y) * -1)
+      var(--mark-rim-blur) var(--mark-rim-hi))
+    drop-shadow(var(--mark-rim-x) var(--mark-rim-y)
+      var(--mark-rim-blur) var(--mark-rim-lo))
+    drop-shadow(var(--mark-lx) var(--mark-ly) var(--mark-blur) var(--mark-cast));
 }
 /* The WORDMARKS shade neutral. Their face is graphite at 0.008 chroma,
    and a lightness drop on a near-neutral face lands the shadow within
@@ -555,81 +838,199 @@
 .hero-billet-line .billet-ink .brand-lockup path[fill="#8D2676"] { --mat: #8d2676; }
 .hero-billet-line .billet-ink .brand-lockup path[fill="#EE342F"] { --mat: #ee342f; }
 .hero-billet-line .billet-ink .brand-lockup path[fill="#00DC82"] { --mat: #00dc82; }
-/* -- THE LIGHT BAR ------------------------------------------------
-   A specular band raked to the lamp, crossing each lockup symbol-first
-   and leaving off its far end. It is painted by the FACE COPY.
+/* -- THE GHOSTWRITE BAND ------------------------------------------
+   A soft SILVER band sweeping the two dark wordmarks — the "82
+   Ghostwrite" recipe's geometry, ported off a `background-clip: text`
+   gradient onto two SVG wordmarks and then turned over (see the KNOBS
+   for the why). It replaces the raked specular bar that stood here (a
+   330-degree-lit band crossing each lockup symbol-first): that was a
+   LIGHT on metal, this is a WRITING gesture, and the two do not layer.
+   The lamp is untouched — every rim, wall and cast on the words beside
+   the marks still derives from --light-angle. Only the marks left the
+   relief scene.
 
-   That copy has always been in the markup and has always been dead
-   weight — a pixel-registered duplicate of the artwork, hidden outright
-   (it can't be display:none; that would slide the two copies out of
-   register). Filling ITS paths with a mostly-transparent sweep gradient
-   lays the specular exactly over the ink copy's letters: no second set
-   of path data, no <mask>, no <use>, no blend mode, and the ink copy's
-   concave staging underneath is left completely alone.
+   What survives of the source is its PROFILE, which is the part worth
+   keeping — a soft two-stage falloff rather than a hard-edged wipe:
 
-   url() resolves by document order, and HeroBillet puts the sweep
-   gradients in a zero-size svg AHEAD of both copies — so these fills
-   bind to that resource-only svg, and animating its stops never dirties
-   either artwork (the shine block has the 1fps story). The base ramps'
-   ids still exist twice — both copies render the same component — and
-   those references land on the INK copy's elements, which is fine
-   because the ramps are static.
+     sheen 38%   the band's shoulders, +/-0.12 of a reference width
+                 from centre
+     sheen 100%  the core, at centre; +/-0.3 is the band's outer edge
 
-   Both path classes have to be named explicitly: the face's inherited
-   `color` is transparent, so `fill="currentColor"` would paint nothing,
-   and the enamel paths carry hard-coded vendor hex, which would double
-   the symbols in flat colour if left alone. */
-.hero-billet-line .billet-face [aria-label="Convex"] path { fill: url(#brand-convex-sweep); }
-.hero-billet-line .billet-face [aria-label="Nuxt"] path { fill: url(#brand-nuxt-sweep); }
-/* Enamel is glossier than the matte wordmark, but it is also COLOURED: a
-   full-strength bar over the swirl reads as a smudge rather than gloss.
-   Held to a third so the vendor hue survives the pass. */
+   The recipe's third number, the 16% resting ink, has no counterpart
+   any more: the letters rest at full graphite, so there is nothing
+   being written back in — there is a polish crossing something that
+   was already there.
+
+   WHERE EACH HALF PAINTS is the render-loop constraint, not a style
+   choice. The graphite is STATIC, so it stays on the ink copy, where
+   it costs one raster. The band MOVES, so it goes on the face copy —
+   the pixel-registered duplicate that has been in this markup all along
+   — whose fills repaint in their own compositor layer without dirtying
+   the ink copy's shadows and filter chains. The two are composited by
+   the page rather than by arithmetic: silver at alpha over opaque
+   graphite is just alpha blending, which is what let the old
+   --ghost-lift go.
+
+   The band paints the LETTERFORMS only. The enamel symbols are not
+   words: they keep their five-stop domes and their lift, at full vendor
+   hue, and the face copy's duplicate of them is switched off outright
+   (it only ever existed to carry the old bar). A ghosted brand symbol
+   is a broken brand symbol — the letters are what the effect was asked
+   for. */
+.hero-billet-line {
+  /* ---- KNOBS ----
+     THE POLARITY IS INVERTED FROM THE SOURCE RECIPE (2026-09-05: "the
+     words convex and Nuxt should be dark, and the animation itself
+     should be lighter — a silver color"). Ghostwrite's own arrangement
+     was a DARK band read across letters muted to a 16% whisper: the
+     mark spent 73% of every cycle nearly gone, and the thing that
+     travelled was the darkest ink on the plate. Both halves swap. The
+     letters keep the full dark matte graphite they are cut in — the
+     eight-stop ramp below is the shipped finish now, not a fallback —
+     and the band is a SILVER polish laid over them, the light a hand
+     catches on a machined face rather than the writing itself.
+
+     Which is why --ghost-floor, --ghost-ink and --ghost-lift are gone
+     rather than retuned. They were the arithmetic of compositing a
+     band onto a translucent floor; over opaque graphite there is no
+     floor to composite against, and the band's alpha is simply its
+     own. --ghost-shoulder is what the band lays down at its edges;
+     the core always reaches full sheen. */
+  --ghost-shoulder: 0.38;
+  /* The polish. Not white and not the plate: the silver has to sit
+     ABOVE the graphite ramp's 0.56 lit crown AND above the plain
+     words' own 0.83/0.76 fill, or the pass reads as the badge briefly
+     turning into the sentence rather than as a highlight crossing it.
+     0.84 was exactly that — indistinguishable from "backend" at the
+     core; 0.88 clears it with the 0.922 ground still 0.04 away, which
+     the relief under the face copy is more than enough to hold the
+     letterforms against. Light scheme has the narrower window of the
+     two, and this is most of it. */
+  --ghost-sheen: oklch(0.88 0.008 255);
+}
+:root.dark .hero-billet-line {
+  /* On the 0.205 plate the graphite runs 0.27 -> 0.46 and the plain
+     words sit at 0.44, so the sheen has further to climb before it
+     reads as polish rather than as another grey. 0.9, just short of
+     the recipe's own #fff — a specular that hits paper white on a
+     dark ground stops being metal and starts being a lamp. */
+  --ghost-sheen: oklch(0.9 0.005 255);
+}
+.hero-billet-line .billet-face [aria-label="Convex"] path[fill="currentColor"] { fill: url(#brand-convex-ghost); }
+.hero-billet-line .billet-face [aria-label="Nuxt"] path[fill="currentColor"] { fill: url(#brand-nuxt-ghost); }
+/* The face copy's enamel duplicate carried the old bar and nothing
+   else. It has to be named explicitly either way: its fill is a
+   hard-coded vendor hex on the attribute, so left alone it would paint
+   a flat second symbol straight over the ink copy's domed one. */
 .hero-billet-line .billet-face .brand-lockup path:not([fill="currentColor"]) {
-  opacity: 0.34;
+  fill: none;
 }
-/* The bar itself. A stop's `offset` is not a CSS property, so a moving
-   band has to be a STANDING ramp whose alphas travel: eleven fixed stops,
-   bearings ascending with offset, and two lobes evaluated per stop
-   against --shine-phase — --core is the specular, --wash the luster
-   spreading ahead of and behind it. As the phase runs its turn the lit
-   stops walk from offset 0 to offset 1 and the band crosses the mark.
+/* The band itself. A stop's `offset` is not a CSS property, so a moving
+   band has to be a STANDING ramp whose colours and alphas travel:
+   twenty-one fixed stops, each holding its position along the wordmark
+   in --stop-at, each evaluating the same profile against the band's
+   current centre. As --ghost-phase runs 0 -> 1 the lit stops walk from
+   offset 1 to offset 0 and the band crosses the word.
 
-   Alphas, not lightnesses, and that is the difference from the old
-   effect: this is an OVERLAY, so everything the bar is not touching has
-   to stay fully transparent or it would flatten the graphite below it.
-   The peak lands at 0.78 — over the ~0.28 L wordmark that composites to
-   roughly 0.74 L, a bright band that still reads darker than the light
-   ground it sits on. Warm silver rather than white: the lamp is the same
-   one lighting the rest of the page.
+   ONE BAND, ONE AXIS, BOTH WORDS (2026-09-05: "make this animation a
+   single line for both words… I want both words to animate at the same
+   time, in one direction"). It used to be two: each gradient measured
+   the band in ITS OWN width, so the same 0.6-wide core came out 2.01em
+   across "convex" and 1.13em across "Nuxt" and travelled at half the
+   speed on the wider word — two glints, different sizes, different
+   speeds, and a 0.45s stagger on top. That is what read as chaos, and
+   none of it was fixable by deleting the stagger alone: two bands at
+   two speeds fired together are still two bands.
 
-   Lobe WIDTHS are the difference between a bar and a lit half. The stops
-   are 10° apart, so ±13° of core is ~2.6 stops — a band about a quarter of
-   the mark wide — with the wash carrying another quarter either side as
-   luster. A first cut at ±19°/±34° lit two thirds of the lockup at once
-   and read as "the left half of this is silver" rather than as a light
-   crossing it. Widen these and the bar dissolves; narrow them past ~±10°
-   and it starts to hop stop to stop instead of travelling. */
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop {
-  --core: max(calc((cos(var(--shine-phase) - var(--stop-bearing)) - 0.974) * 38.5), 0);
-  --wash: max(calc((cos(var(--shine-phase) - var(--stop-bearing)) - 0.906) * 10.6), 0);
-  stop-color: light-dark(oklch(0.88 0.02 62), oklch(0.9 0.028 58));
-  /* 0.62/0.16 → 0.72/0.19 (2026-08-31): the bar used to be one effect
-     among several and is now the mark's only light. A tenth more peak
-     is what keeps the graphite reading as metal rather than as flat
-     dark type once the relief chain came off. */
-  stop-opacity: calc(min(var(--core), 1) * 0.72 + min(var(--wash), 1) * 0.19);
+   So --stop-at is no longer the position the profile is measured at.
+   The stops now resolve onto a SHARED axis laid across the headline,
+   measured in Convex-wordmark widths from Convex's first letter, and
+   each gradient states where it sits on that axis:
+
+     --ghost-lead  the word's left edge, in reference widths
+     --ghost-span  the word's width, ditto
+
+   --ghost-at maps a stop through those, and everything downstream is
+   untouched. The two words are then crossed by one band of one width
+   travelling at one speed, and their overlap on the axis ([0, 1] and
+   [0.13, 0.69]) is real page overlap — the marks sit almost above one
+   another on the headline's two lines, so a vertical band walking
+   right-to-left genuinely passes through both at once. That is the
+   single line; the figures are measured, see the pair of rules below.
+
+   --ghost-centre is the port's one piece of arithmetic. On a 300%-wide
+   tile, `background-position: X%` resolves against (element - image) =
+   -2 widths, so the tile's 50% mark — the band's core — sits at
+   1.5 - 6 x phase reference-widths from the axis origin. Nothing else
+   about the CSS original survives translation; this is the whole of it.
+   The range still spends 73% of the cycle with the band clear of both
+   marks, so the glint stays an event rather than a scanline.
+
+   --wash and --core are the recipe's two ramps read as distances from
+   that centre: the shoulders climbing from nothing at 0.3 to full at
+   0.12, and the core climbing from nothing at 0.12 to full at 0. They
+   are written as clamps rather than as gradient stops because that is
+   what a standing ramp needs — a value per stop per frame.
+
+   The colour no longer travels with the alpha. The band is one silver
+   throughout and only its opacity is profiled: over an opaque graphite
+   letter that IS the gradation — shoulders let the metal through,
+   the core covers it — and mixing a second colour in on top of that
+   was modelling the same falloff twice.
+
+   abs() would say --ghost-d more plainly and is now widely enough
+   supported; max(x, -x) is kept because it always was, and this file
+   has no build step to polyfill behind it. */
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop {
+  --ghost-at: calc(var(--ghost-lead) + var(--stop-at) * var(--ghost-span));
+  --ghost-centre: calc(1.5 - 6 * var(--ghost-phase));
+  --ghost-d: max(calc(var(--ghost-at) - var(--ghost-centre)),
+                 calc(var(--ghost-centre) - var(--ghost-at)));
+  --wash: clamp(0, calc((0.3 - var(--ghost-d)) / 0.18), 1);
+  --core: clamp(0, calc((0.12 - var(--ghost-d)) / 0.12), 1);
+  stop-color: var(--ghost-sheen);
+  stop-opacity: calc(var(--wash) * var(--ghost-shoulder)
+                     + var(--core) * (1 - var(--ghost-shoulder)));
 }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(1)  { --stop-bearing: 0deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(2)  { --stop-bearing: 10deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(3)  { --stop-bearing: 20deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(4)  { --stop-bearing: 30deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(5)  { --stop-bearing: 40deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(6)  { --stop-bearing: 50deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(7)  { --stop-bearing: 60deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(8)  { --stop-bearing: 70deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(9)  { --stop-bearing: 80deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(10) { --stop-bearing: 90deg; }
-:is(#brand-convex-sweep, #brand-nuxt-sweep) stop:nth-of-type(11) { --stop-bearing: 100deg; }
+/* WHERE EACH WORD SITS ON THE SHARED AXIS. Measured off the rendered
+   headline (Chrome 153, 1366x1024, headline at 54.64px), in ems of the
+   headline's own type — which is what makes the two numbers constants
+   rather than a breakpoint's worth of them: everything inside this
+   line is type on two hand-set lines, so every horizontal distance in
+   it scales with the same font-size and the RATIOS hold at every width
+   the clamp passes through.
+
+     Convex letters   left 2.8617em, width 3.3576em   <- the reference
+     Nuxt letters     left 3.2984em, width 1.8749em
+
+   lead = (left - 2.8617) / 3.3576, span = width / 3.3576. Re-measure
+   both if the headline's wording, its hard break, or either kit's
+   viewBox crop ever changes — nothing here can derive them, and a
+   stale pair shows up as the band arriving at the second word early
+   or late rather than as anything that looks broken. */
+#brand-convex-ghost stop { --ghost-lead: 0;      --ghost-span: 1; }
+#brand-nuxt-ghost   stop { --ghost-lead: 0.1301; --ghost-span: 0.5584; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(1)  { --stop-at: 0; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(2)  { --stop-at: 0.05; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(3)  { --stop-at: 0.1; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(4)  { --stop-at: 0.15; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(5)  { --stop-at: 0.2; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(6)  { --stop-at: 0.25; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(7)  { --stop-at: 0.3; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(8)  { --stop-at: 0.35; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(9)  { --stop-at: 0.4; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(10) { --stop-at: 0.45; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(11) { --stop-at: 0.5; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(12) { --stop-at: 0.55; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(13) { --stop-at: 0.6; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(14) { --stop-at: 0.65; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(15) { --stop-at: 0.7; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(16) { --stop-at: 0.75; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(17) { --stop-at: 0.8; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(18) { --stop-at: 0.85; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(19) { --stop-at: 0.9; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(20) { --stop-at: 0.95; }
+:is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(21) { --stop-at: 1; }
 /* User units per em of page type — see --mark-lift. 51.5 × 0.6893 ÷
    0.537 and 32 × 0.75 ÷ 0.625; the second number is the artwork's
    --brand-ratio and the third its --brand-ref's coefficient. */
@@ -641,7 +1042,16 @@
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#EE342F"] { fill: url(#brand-convex-eng-red); }
 .hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="currentColor"] { fill: url(#brand-nuxt-eng-w); }
 .hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="#00DC82"] { fill: url(#brand-nuxt-eng-green); }
-/* -- The wordmark GRAPHITE ----------------------------------------
+/* -- THE WORDMARK GRAPHITE ----------------------------------------
+   THE LETTERFORMS' FINISH, ALWAYS — there is no longer a muted state
+   for it to be the fallback to. The ghostwrite band took this ramp off
+   the default path for a while (the letters were dropped to a flat 16%
+   whisper so a dark band could write them back in); the band is silver
+   now and rides OVER the graphite instead of standing in for it, so
+   this is what "convex" and "Nuxt" are made of at every moment of the
+   cycle, in both schemes, motion or no motion. Everything below
+   describes that finish.
+
    The lockups' letters are DARK MATTE metal — gun-blued graphite, not
    silver (2026-08-25: "dark matte color instead of silver, but still
    put some shiny animation"). Two things keep it reading as machined
@@ -651,13 +1061,13 @@
         the convex descent below is a smooth ~0.22 L fall from crown to
         baseline — enough to model the face turning away from the lamp,
         never a chrome reflection with its horizon bands.
-     2. The shine is not in this ramp at all any more. It used to be —
-        --shine-phase modulated these very stops, which meant the glint
-        could only ever travel the ramp's own VERTICAL axis and had to
-        share its amplitude with the groove modelling. It is now a
-        separate raked overlay on the face copy (the light-bar block
-        above), which leaves this ramp free to be nothing but a static
-        matte groove and lets the bar cross the mark's WIDTH.
+     2. The moving light is not in this ramp at all any more. It used
+        to be — an animated phase modulated these very stops, which
+        meant the glint could only ever travel the ramp's own VERTICAL
+        axis and had to share its amplitude with the groove modelling.
+        It moved to the face copy (first as a raked bar, now as the
+        ghostwrite band), which left this ramp free to be nothing but a
+        static matte groove.
 
    gradientUnits is userSpaceOnUse with a VERTICAL axis over the
    wordmark's own y-range, which fixes two things objectBoundingBox got
@@ -670,9 +1080,8 @@
 
    The enamel symbol gradients stay as shipped — enamel is enamel. */
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop {
-  /* Static. --stop-bearing is gone from this ramp: the stops below now
-     carry position (offset) and tone (--stop-l) only, and the moving
-     light lives on the face copy's sweep gradient. */
+  /* Static. The stops below carry position (offset) and tone
+     (--stop-l) only; the moving light lives on the face copy. */
   stop-color: light-dark(oklch(var(--stop-l) 0.008 255),
                          oklch(var(--stop-l-dark) 0.012 255));
 }
@@ -688,16 +1097,16 @@
    reflection.
 
    Still matte: the descent is diffuse, ~0.035 L steps with no
-   specular band in the base — the shine lives entirely on the face
-   copy's raked bar. And still DARK metal: the whole ramp sits under
-   the plain words' 0.83/0.76 fill in light scheme, so the sentence
-   reads as pale aluminium words around a darker graphite badge.
+   specular band in the base. And still DARK metal: the whole ramp
+   sits under the plain words' 0.83/0.76 fill in light scheme, so the
+   sentence reads as pale aluminium words around a darker graphite
+   badge.
 
    The dark scheme keeps its one rule — ride ABOVE the ground's
    0.205 L so the page can silhouette the mark — and its crown tops
    out at 0.46, just over the plain words' 0.44 fill: on a dark
    ground the lit face of a raised object IS the brightest thing on
-   it, and the bar still reads the letters out on each pass. */
+   it, and this ramp is all the letters get when nothing moves. */
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(1) {
   --stop-l: 0.56; --stop-l-dark: 0.46; /* lit crown */
 }
@@ -727,7 +1136,7 @@
    stop the lamp (an animated no-op costs frames for nothing). */
 @media (forced-colors: active) {
   .hero-billet-line .billet-sweeps stop {
-    /* the shine is the hero's only animation, and every value it
+    /* the band is the hero's only animation, and every value it
        drives is overridden below — stop it rather than spend frames
        recolouring gradients nothing paints. */
     animation: none;
@@ -740,6 +1149,7 @@
     fill: currentColor;
   }
 }
+
 /* Scroll-driven section-header reveal (progressive enhancement). */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

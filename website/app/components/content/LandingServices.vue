@@ -32,12 +32,14 @@ const RAIL: Array<ServiceEntry | null> = [
 </script>
 
 <template>
-  <!-- landing-mill: the rail is part of the same milled billet as the
-       sections around it — an untextured strip here would read as a
-       different material between two brushed plates. -->
-  <div class="landing-mill border-b border-default">
-    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 py-5 lg:justify-between">
-      <p class="concave-text m-0 font-mono text-[0.6rem] font-semibold tracking-[0.14em] text-dimmed">
+  <!-- The rail is the ONE flat surface on the landing: no mill finish of its
+       own, and an opaque fill so the hero's grain stops at its top edge. The
+       marks it carries are other people's brands — a texture running under them
+       is noise across nine logos. With the finish gone the strip needs its
+       own edges, so it takes a scribed hairline top and bottom. -->
+  <div class="landing-services border-t border-b border-default">
+    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-8 py-9 sm:px-12 lg:justify-between lg:px-16">
+      <p class="concave-text m-0 font-mono text-[0.725rem] font-semibold tracking-[0.14em] text-dimmed">
         WORKS WITH · OFFICIAL ADD-ONS
       </p>
       <ul
@@ -83,6 +85,12 @@ const RAIL: Array<ServiceEntry | null> = [
 </template>
 
 <style scoped>
+/* Flat ground, painted opaquely: the hero's bloom and grain wash over
+   everything above this strip and must not carry into it. */
+.landing-services {
+  background-color: var(--ui-bg);
+}
+
 /* Rest state is uniform brushed ink; hover hands a mark its vendor's own
    color (ink-only brands resolve currentColor to full page ink via the
    opacity step). Color and opacity only — the plate doesn't move. */

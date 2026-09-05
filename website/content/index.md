@@ -7,11 +7,46 @@ seo:
 :::u-page-hero
 ---
 orientation: horizontal
-class: "landing-hero-ground border-b border-default"
-headline: "NUXT MODULE · CONVEX INTEGRATION"
+class: "landing-hero-ground landing-panel"
 ui:
+  # THE PAIR, past 1280. The theme's `lg:grid-cols-2` splits the container
+  # down the middle, and the plate is capped at 32rem — so everything the
+  # half-track had spare piled up as dead air between the copy and the
+  # instrument (~200px at 1366, on top of the 64px gutter). The panel track
+  # is now the plate's own width and the copy takes the rest, which turns
+  # that slack into an 80px gutter and hands the difference to the copy.
+  #
+  # Deliberately xl and not lg: at 1024 the two tracks are 448px each, the
+  # billet is already wrapping to four lines, and the code well is already
+  # at its 12px floor. There is no slack to redistribute down there — 880px
+  # cannot hold a 448px copy AND a 512px plate — so the split would come
+  # straight out of the headline. Below 1280 the theme's halves stand.
+  container: "xl:grid-cols-[minmax(0,1fr)_32rem] xl:gap-x-20"
   header: "motion-safe:animate-fade-up"
   title: "landing-billet"
+  # The relief headline is a physical object on the plate, not a line of
+  # type: it needs a margin the way a stamped part needs clearance, or the
+  # sentence under it reads as a caption stuck to its foot.
+  #
+  # Two points off the theme's own scale (lg/xl -> base/lg): at 20px the
+  # copy was reading as a second headline rather than as the sentence
+  # under one, and the hero already carries three competing voices —
+  # the relief billet, the spec board and the primary call. The line
+  # height comes down with it so the three beats stay one block.
+  description: "mt-12 text-base sm:text-lg/7"
+  # The spec stamp sits in #body, between the copy and the calls to
+  # action, at the theme's own distance from the text (mt-10, 40px). The
+  # footer then closes up UNDER that: the stamp is the line directly
+  # above the buttons, and it belongs to them — a nameplate over the
+  # controls — not to the sentence it has just left behind.
+  #
+  # 32px, not the 24px it opened on. At 24 the board's bottom lip and
+  # the button's top edge were reading as one stacked part rather than
+  # as a readout with its controls under it — the two are the same
+  # width to within a few pixels, which is exactly the coincidence that
+  # makes a tight gap look like a seam. It stays short of the 40px
+  # above the board, so the stamp still belongs downward.
+  footer: "mt-8"
 links:
   - label: get started
     to: /getting-started/introduction
@@ -20,22 +55,67 @@ links:
     # trailing, where they mean direction).
     icon: i-nc-book-open
     color: primary
+    # A KEY, cut to a fixed 160x44 rather than grown out of its padding —
+    # the page's one primary control, and the only accent part above the
+    # fold, so it is sized like a switch you reach for rather than like a
+    # link. Both figures are set, not inferred: a part whose outline moves
+    # with its label is a link with a background, and this one has to hold
+    # the same rectangle whatever the string in it. `justify-center` is
+    # what a fixed width needs — the theme's base is `inline-flex
+    # items-center` with no main-axis rule, so contents would otherwise
+    # pack to the leading edge inside the extra room.
+    #
+    # px-3, down from the px-7 that used to BE the width. It is a floor
+    # now, not a measurement: 160 - 24 leaves 136px of key face against
+    # ~119px of icon + gap + label at 18px, so the label clears its
+    # `truncate` with room to spare and the two never fight. It came
+    # down a step when the label went 16 -> 18px: the padding is the
+    # only thing standing between a wider string and an ellipsis.
+    #
+    # The cast goes HARD with it (`hard-cast`, depth.css): with nothing
+    # else standing on this stretch of plate, the soft bloom under the
+    # part had no neighbour to be read against and came out as a glow
+    # around the button instead of as its contact with the ground. That
+    # utility now hardens the label's cut to match — see THE CRISP CAST.
+    class: h-11 w-40 justify-center px-3 text-lg hard-cast
     ui:
-      # size xl ships a 24px icon — oversized next to its 16px label.
+      # size xl ships a 24px icon — oversized next to an 18px label.
       leadingIcon: size-4.5
+      # THE LABEL IS CENTRED ON ITS LETTERS, not on its em box. `items-
+      # center` centres the line box, which carries the font's full
+      # ascent and descent — space reserved for accents and capitals
+      # this page never sets, and unevenly, since ascent runs deeper
+      # than descent. Trimming both edges back to cap-height and the
+      # baseline hands the flexbox the block the reader actually sees,
+      # and the 44px key then centres THAT.
+      #
+      # `overflow-visible!` is the price: trimming to the baseline puts
+      # the descender of the g outside the content box, and the theme's
+      # own `truncate` on this slot would clip it off. Important, not
+      # merely later — both classes survive the merge (tailwind-merge
+      # does not read them as one axis) and their order in the sheet is
+      # not ours to fix. The ellipsis and the nowrap from `truncate`
+      # stay; only the clipping goes, and at a fixed 160px with 18px of
+      # slack there is nothing here left to clip.
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
   - label: github
     to: https://github.com/qruto/nuxt-convex-module
     target: _blank
     icon: i-simple-icons-github
     color: neutral
     variant: ghost
-  - label: see it run
-    to: "#operation"
-    trailingIcon: i-nc-arrow-down
-    color: neutral
-    variant: link
+    # 18px to match the key. The two are one control group — a pair of
+    # calls sitting on one line, at one height — and a half-step of type
+    # between them would read as a mistake rather than as hierarchy.
+    # Weight, colour and the plate under the key carry that instead.
+    class: text-lg
     ui:
-      trailingIcon: size-4
+      # Trimmed on the same metric as the key beside it — the two labels
+      # are centred in boxes of the same height (the links row stretches
+      # this one to the key's 44px), so if only one were trimmed they
+      # would sit on two different baselines a pixel or so apart, which
+      # on a pair this close reads as a misprint.
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
 ::landing-hero-panel
 ```ts
@@ -86,29 +166,46 @@ in a :brand-nuxt application
      plain — it is an aside, not a third pitch. -->
 **One install wires Convex into Nuxt.**
 
-Live queries, mutations, actions, cursor pagination, file storage and SSR —
-all [auto-imported and typed]{.text-primary} against your deployment.
+<!-- Hard break BEFORE the dash, not after it. The three beats are one
+     sentence with an aside hung off the end, and left to wrap on its own
+     the aside opened with an orphaned "— all" trailing the first line:
+     the dash read as a hyphen breaking "SSR", and the claim it introduces
+     started mid-line where nothing marks it. Broken here, the dash LEADS
+     its own line, which is the job a dash has. -->
+Live queries, mutations, actions, cursor pagination, file storage and SSR\
+— all [auto-imported and typed]{.text-primary} against your deployment.
 
 The same client runs standalone in any Vue app.
 
-:landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5]
-:::
+#body
+<!-- The spec board — version, the peer ranges, and the upstream Convex
+     release the port matches — set as a scoreboard: one recessed readout,
+     a cell per figure, directly above the calls to action. In #body rather
+     than the description because it is a nameplate, not a sentence. The
+     peer ranges are this page's copy and travel as props; the version and
+     the Convex figure the component reads for itself. -->
+:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5"}
 
+#bottom
 :landing-services
+:::
 
 ::u-page-section
 ---
 id: spec
-class: "landing-mill-grid landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "01 · SPEC SHEET"
+# pb-5: the one plate that overflows the screen ends on its last row of
+# cards, and they sat 20px too close to the scribed edge for a sheet
+# that is read to its foot.
+class: "landing-mill-grid landing-panel landing-reveal pb-5 border-b border-default"
 ---
 #title
 :concave-text[Everything the module ships]
 
-#description
-The whole surface on one plate — nine numbered figures, each **color-banded**
-and working live on its own **engraved stage**. Every card links to the page
-that proves it.
+<!-- No description. The one that stood here narrated the plate — numbered
+     figures, colour bands, engraved stages, cards that link — which is a
+     caption for a layout, not a claim about the package. The nine cards
+     below each make their own claim; a paragraph restating that they are
+     nine cards adds nothing a reader cannot see. -->
 
 #body
 :landing-spec-sheet
@@ -117,18 +214,20 @@ that proves it.
 :::u-page-section
 ---
 id: operation
-class: "landing-mill-rings landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "02 · LIVE OPERATION"
+class: "landing-mill-rings landing-panel landing-reveal border-b border-default"
 ---
 #title
-:concave-text[One table, every client]
+:concave-text[One table, live in every client]
 
 #description
-The sync loop, staged: two clients, one `useQuery` subscription each, **no
-props between them** — a write from either side lands in **both panes on the
-same commit**. The recording drives itself and loops; touch anything and the
-controls are yours. Simulated in-page with zero network — the hero above
-and the [live demos in the guide](/guide/queries) run the real thing.
+<!-- Two short sentences, no markup. The build before this one named the
+     composables and set two bold spans and two code spans across three
+     lines — every device the page has, spent on a claim the stage under it
+     demonstrates anyway. The panes are labelled CLIENT A and CLIENT B and
+     stamp SIMULATED · ZERO NETWORK on their own foot; the sentence only has
+     to say what the reader is about to watch happen. -->
+Two isolated clients, no shared props. A write from either side shows up in
+both on the same commit.
 
 #body
 ::landing-operation
@@ -159,16 +258,21 @@ await send({
 :::u-page-section
 ---
 id: bench
-class: "landing-mill-hatch landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "03 · BENCH TESTS"
+class: "landing-mill-hatch landing-panel landing-reveal border-b border-default"
 ---
 #title
-:concave-text[Three mechanisms on replay]
+:concave-text[Optimistic writes, pagination and uploads]
 
 #description
-**Optimistic writes**, **cursor pagination**, **file upload** — looping
-readouts, simulated in-page with zero network. The guide's
-[live demos](/guide/pagination) run them against a real deployment.
+<!-- Down to the one thing the plate does not already say. The three cards
+     below name their own composable and state what it does — a paragraph
+     above them restating all three in the same words is the spec sheet's
+     mistake repeated. What is left is the caveat, and it has to stay:
+     unlike the sync loop above, this stage carries no SIMULATED stamp of
+     its own, so the sentence is the only place a reader is told these
+     three run dry. -->
+Staged here with no network — the guide's [live demos](/guide/pagination)
+run all three against a real deployment.
 
 #body
 ::landing-bench
@@ -196,8 +300,7 @@ const storageId = await upload(file)
 :::u-page-section
 ---
 id: deploy
-class: "landing-mill-knurl landing-reveal scroll-mt-(--ui-header-height)"
-headline: "04 · DEPLOYMENT"
+class: "landing-mill-knurl landing-panel landing-reveal"
 links:
   - label: Install the kit
     to: /getting-started/installation
@@ -212,7 +315,7 @@ links:
     variant: outline
 ---
 #title
-:convex-text[In your pocket in three moves]
+:convex-text[Up and running in three moves]
 
 #body
 ::landing-deploy

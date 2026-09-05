@@ -40,10 +40,11 @@ defineProps<{ mono?: boolean }>()
            graphite badge, RAISED like the words around it: the stops
            model a convex face under the overhead-ish lamp — lit crown
            at the top falling into shade toward the baseline, with a
-           sliver of ground light bouncing back at the feet. The shine
-           is not in this ramp (landing.css sweeps a raked light bar
-           across the face copy instead); the values here are the
-           static light base.
+           sliver of ground light bouncing back at the feet. Nothing
+           moves in this ramp (landing.css runs the ghostwrite band
+           across the face copy instead), and on the hero it is the
+           REDUCED-MOTION finish: the band's own block mutes these
+           letters to a flat 16% whenever it is allowed to run.
 
            The SYMBOLS are domed enamel: FIVE stops each, lit crown
            toward the 330° lamp (up-left) → a lit shoulder → the vendor
@@ -86,7 +87,7 @@ defineProps<{ mono?: boolean }>()
           <stop offset="0.79" stop-color="#c02320" />
           <stop offset="1" stop-color="#a31c1a" />
         </linearGradient>
-        <!-- THE LIGHT BAR's sweep gradient is NOT here: it lives in
+        <!-- THE GHOSTWRITE BAND's gradient is NOT here: it lives in
              HeroBillet's own zero-size defs svg, ahead of both billet
              copies, so that animating its stops never dirties this
              artwork's raster (the ~1fps lesson — see the note there). -->

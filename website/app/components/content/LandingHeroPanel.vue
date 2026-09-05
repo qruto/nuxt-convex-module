@@ -212,10 +212,41 @@ watch(state, (value) => {
 <template>
   <!-- The instrument panel — the deepest convex step on the page, at a
        radius no other surface uses. Its own size container: the narrow
-       tweaks query the panel, not the viewport. -->
+       tweaks query the panel, not the viewport.
+
+       Capped at 32rem rather than filling the hero's right column: the
+       plate is an instrument, and an instrument that stretches to
+       whatever room it is given reads as a panel of the page instead of
+       a part on it. 32rem is about as narrow as it goes — below it the
+       longest scene line drives the code type under its 12px floor. The
+       cap is spent on the RIGHT: `me-0` past lg parks the plate against
+       the page margin the header rail and the footer already hold, and
+       the slack falls into the gap beside the copy.
+
+       `end-4` then walks it 16px back off that margin, toward the copy
+       — a RELATIVE offset, not a margin, and deliberately so. The plate
+       fills its grid track exactly (`w-full` capped at the track's own
+       32rem past xl), so there is no free space for a margin to absorb:
+       `me-4` would either be swallowed whole by the alignment step or
+       come straight out of the plate's width, and the code well is
+       already sitting on its 12px type floor. A relative nudge moves
+       what is painted and leaves the track alone — the plate keeps its
+       512px and only the standoff changes.
+
+       `w-full` IS LOAD-BEARING, and not because anything needs to be
+       full width. An auto inline margin takes a grid item out of
+       `justify-self: stretch` — that is how the margin gets free space
+       to absorb — so the plate's width falls back to fit-content. On
+       any other element that is harmless; on this one `@container`
+       (container-type: inline-size) contains the inline axis, so
+       fit-content is measured with the CONTENTS TAKEN OUT and comes to
+       zero. The plate collapsed to its own 48px of padding, pinned to
+       the right, with five scenes and a rail hanging off it into the
+       margin. A definite `width: 100%` — capped by max-width, so still
+       32rem — is what containment needs to leave alone. -->
   <figure
     ref="plate"
-    class="convex-3 bevel sheen noise rounded-[26px] @container relative m-0 px-6 pt-5 pb-5 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
+    class="convex-3 bevel sheen noise rounded-[26px] @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
     aria-label="A recorded tour of the client's composables that ends on a live Convex query rendering real rows"
   >
     <!-- The header is the file tab and nothing else. It used to carry a
@@ -230,9 +261,14 @@ watch(state, (value) => {
 
     <!-- Source well. Five scene fences stacked in one grid cell — the tallest
          sets the height, so scene changes never pump the plate. Type is sized
-         off the panel (longest scene line is 55ch of 0.6em-advance mono) with
-         a floor that keeps phones readable; past the floor the pre scrolls. -->
-    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/32),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+         off the panel with a floor that keeps phones readable; past the floor
+         the pre scrolls. The divisor IS the longest scene line measured in
+         ems — 55ch of 0.6em-advance mono, so 33, plus a half-em of slack —
+         which is what makes the line land inside the pre at every width
+         instead of just at the clamp's ceiling. It was 32, and the 1em it
+         was short by never showed only because the panel used to be wide
+         enough to sit pinned at the 14px maximum. -->
+    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:border-(--recess-edge) [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33.5),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
       <div
         v-for="(part, index) in parts"
         :key="SCENES[index]!.id"
@@ -255,11 +291,17 @@ watch(state, (value) => {
     </div>
 
     <!-- Rendered readout — the active scene's result as UI while recording,
-         the real query result once live. Bottom-anchored like a log; bounded
-         rather than fixed so a near-empty list has no dead void. -->
-    <div class="concave-2 rounded-[14px] overflow-hidden px-4.5 py-3.5">
+         the real query result once live. Bottom-anchored like a log, and a
+         FIXED height: it was bounded (3.3rem to 6.6rem) so a near-empty list
+         had no dead void, but the well is the only part of the plate whose
+         content varies, so every row the recording landed grew the panel and
+         shoved the whole hero down under it. One height, cut for the four
+         rows VISIBLE allows plus their gaps, and the empty state sits at the
+         bottom of it — a readout with nothing on it is what an idle
+         instrument looks like, and it does not move. -->
+    <div class="concave-2 rounded-[14px] overflow-hidden border border-(--recess-edge) px-4.5 py-3.5">
       <ul
-        class="m-0 flex max-h-[6.6rem] min-h-[3.3rem] list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
+        class="m-0 flex h-26 list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
         aria-live="polite"
       >
         <template v-if="mode === 'live'">
@@ -328,7 +370,7 @@ watch(state, (value) => {
       @submit.prevent="submit"
     >
       <label
-        class="concave rounded-md flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
+        class="concave rounded-md flex min-w-0 flex-1 items-center gap-2 border border-(--recess-edge) px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
         :class="sending ? 'opacity-65' : undefined"
       >
         <span class="sr-only">Write a message to the live Convex table</span>
@@ -376,7 +418,7 @@ watch(state, (value) => {
            event    the last thing that happened: the sim chip, or the
                     hydration / commit latency / a rejected write.
            action   REPLAY, in its own bay past the last scribe. -->
-    <figcaption class="panel-rail concave rounded-[10px] mt-3.5 flex min-h-[2.15rem] items-stretch font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
+    <figcaption class="panel-rail concave rounded-[10px] mt-3.5 flex min-h-[2.15rem] items-stretch border border-(--recess-edge) font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
       <template v-if="mode === 'recording'">
         <span class="rail-cell">
           <i

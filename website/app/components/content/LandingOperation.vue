@@ -143,9 +143,17 @@ async function manualSend(side: 'A' | 'B') {
 </script>
 
 <template>
+  <!-- The two columns are CENTRED on one horizontal axis, not stretched to
+       a shared height. The code plate is the taller part by design — its
+       cell is sized to the longest step so a step change never pumps the
+       plate — and stretching the stage to match hung the two panes from the
+       top of that height with the slack dumped under them. Centred, the
+       extra sits half above and half below, which is how a shorter part
+       reads as mounted next to a taller one rather than dropped in above
+       a hole. -->
   <div
     ref="root"
-    class="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+    class="grid grid-cols-1 items-center gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
   >
     <!-- The code plate — the walkthrough's driver seat. -->
     <div class="convex bevel rounded-xl flex min-w-0 flex-col gap-3 px-5 pt-4 pb-5">

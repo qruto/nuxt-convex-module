@@ -28,8 +28,8 @@ const baseline = computed(() => upstreamBaselines[props.source])
     v-if="baseline"
     class="concave my-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg px-3.5 py-2.5 font-mono text-xs"
   >
-    <!-- The same accent tick the section eyebrows wear — this is a spec
-         label, so it opens the way every other one on the site does. -->
+    <!-- The same accent tick the docs page-header eyebrow wears — this is
+         a spec label, so it opens the way every other one on the site does. -->
     <span
       class="h-[3px] w-[22px] shrink-0 rounded-full bg-primary shadow-(--glow-primary-soft)"
       aria-hidden="true"
