@@ -8,13 +8,18 @@
      convex . convex-0 . convex-2 . convex-3     raised titanium
      bevel                                       + a machined edge
      concave . concave-2                         cut-in titanium
+     concave-ground                              cut into the PAGE
      convex-accent                               a raised accent part
+     hard-cast                                   + an unblurred cast
      concave-text                                glyphs cut in
+     convex-text                                 glyphs raised
      concave-icon                                mask icons cut in
 
    The numbers are one ladder of depth, not four vocabularies: 0 is
    flush, plain is the default step, 2 and 3 stand further off the
-   page. `concave` is the shallow press, `concave-2` the deep tray.
+   page. `concave` is the shallow press, `concave-2` the deep tray,
+   and `concave-ground` the tray cut into the page itself rather than
+   into a plate laid on it.
    Each recipe carries the LIGHT and the MATERIAL; geometry stays
    core Tailwind, so a surface reads:
 
@@ -137,6 +142,17 @@
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
     inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.055)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
+  /* The lip of a cut, as a BORDER colour — for the recesses that want a
+     drawn edge as well as the cast, so a stack of wells reads as one
+     machining pass instead of one boxed well over three unedged ones.
+     Alpha rather than a colour, so the same value reads right on the
+     page ground, on a plate, and over a background a code block paints
+     for itself. A SHADE in both schemes: Nuxt UI's dark --ui-border is
+     LIGHTER than the page, and a hole ringed in it reads as a raised
+     wire (the trap --rail-shade documents in chrome.css). Half the
+     weight of the hairline the ground uses — this is the wall of a
+     1px cut, not a rule drawing a box. */
+  --recess-edge: light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4));
 
   /* Glows — keyed to the semantic aliases. */
   --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
@@ -158,6 +174,22 @@
     color-mix(in srgb, var(--ui-bg-muted), #000 2%),
     var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
     color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+  /* THE SAME DISH CUT INTO THE PAGE, not into a plate: the floor is
+     --ui-bg, the ground's own colour, where the recipe above steps up
+     to --ui-bg-muted and reads as a lighter panel inset in the page.
+     Floor-matches-surface is the ConcaveText law applied to a box — a
+     cut has no colour of its own, only walls — so the relief has to do
+     ALL the drawing here and the turns at the lip and floor run
+     harder (3.5% / 3%) than the plate dish's 2%.
+
+     It is an OPAQUE fill, which is the other half of the job: the
+     landing grounds carry a brushed mill grain, and a readout cut into
+     one has to stop that texture at its own edge or the dish reads as
+     a window onto the pattern rather than as a recess in the plate. */
+  --gradient-recessed-ground: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg), #000 3.5%),
+    var(--ui-bg) 34%, var(--ui-bg) 76%,
+    color-mix(in srgb, var(--ui-bg), #fff 3%));
   /* 1px machined edge: specular top -> shaded bottom. Painted by
      every convex recipe on the border box, so it only shows where a
      `bevel` has opened a 1px transparent border for it. */
@@ -260,6 +292,18 @@
   --accent-cut-shadow-soft: --alpha(var(--color-signal-950) / 26%);
   --accent-cut-highlight: --alpha(var(--color-signal-300) / 60%);
   --accent-cut-highlight-soft: --alpha(var(--color-signal-300) / 30%);
+  /* NO PASS OF THE CUT CARRIES A BLUR (2026-09-06). The two outer
+     passes used to — 1px above the glyphs, 1.5px below — and that is
+     what made the marking read as a smudge under the letters rather
+     than as an edge: an engraving has walls, and a wall is the one
+     thing a blur cannot draw. They stay TOKENS rather than folding
+     into the literals below so the three offsets are still re-pointable
+     in one place, and because `hard-cast` documented the same
+     conclusion for one part before it became the rule for every part.
+     Kept as lengths (never 0 as a bare number) so both the text-shadow
+     and the icon's drop-shadow chain can drop them straight in. */
+  --accent-cut-shadow-soft-blur: 0px;
+  --accent-cut-highlight-soft-blur: 0px;
 }
 /* Dark ground: the plate is the brightest thing around, so its cast
    is genuinely leaked light — a different layer shape, not a recolor. */
@@ -331,6 +375,25 @@
   box-shadow: var(--inset-shadow-2);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
+/* `concave-ground` is the deep tray cut into the PAGE rather than into
+   a plate — the ground's own colour on the floor (see
+   --gradient-recessed-ground), so nothing about it reads as an inset
+   panel, and the walls carry the whole recess. It takes the deep
+   well's shadow plus a floor catch of its own: with no tonal step
+   between the dish and the page there is nothing else to see it by,
+   and the catch is what makes the cut read as lit from overhead rather
+   than as a smudge. Pair it with `border-(--recess-edge)` for the lip.
+
+   For a readout sitting directly on a section ground — the hero's spec
+   board — where `concave` would put a lighter tile on the page. */
+@utility concave-ground {
+  --depth: concave;
+  background: var(--gradient-recessed-ground);
+  box-shadow:
+    var(--inset-shadow-2),
+    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.05));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
 
 /* -- CONVEX-ACCENT: the raised part, in the accent material -------
    One word for the whole part: face, keyline, body, cast, the label
@@ -342,10 +405,17 @@
   --depth: convex;
   background-image: var(--gradient-accent);
   box-shadow: var(--accent-edge), var(--elevation-accent), var(--accent-cast);
+  /* THE CUT IS SHALLOW AND HARD. Three offsets, 1px apart at most and
+     none of them blurred: shade above the glyphs, the lit surface
+     directly below, one step of falloff under that. It ran a third
+     deeper (-1.5 / +1 / +2, the outer two blurred) and at an 18px
+     label that stopped reading as a marking in the face and started
+     reading as a second, paler label printed under the first. A cut
+     into a plate is a millimetre of travel, not a drop shadow. */
   text-shadow:
-    0 -1.5px 1px var(--accent-cut-shadow-soft),
+    0 -1px var(--accent-cut-shadow-soft-blur) var(--accent-cut-shadow-soft),
     0 1px 0 var(--accent-cut-highlight),
-    0 2px 1.5px var(--accent-cut-highlight-soft);
+    0 1.5px var(--accent-cut-highlight-soft-blur) var(--accent-cut-highlight-soft);
   /* The label and icon ride the face, so they carry the travel; the
      transition on the button itself does not reach them. */
   & > * {
@@ -379,17 +449,89 @@
   }
 }
 
-/* -- CONCAVE type and icons ---------------------------------------
-   The same cut, in the channels a glyph can carry it. Text and mask
-   icons need different CSS properties (text-shadow can't reach a
-   masked icon, a filter would blur live text), which is the only
-   reason these are two classes and not one.
+/* -- THE CRISP CAST ------------------------------------------------
+   `hard-cast` is `convex-accent` with every blurred layer taken out —
+   for the one part that sits on an empty plate with nothing else near
+   it (the hero's primary call), where the soft cast stops reading as
+   contact with the ground and starts reading as a glow around the
+   button.
+
+   It sets no box-shadow of its own: it re-points the three TOKENS the
+   accent recipe already composes, so rest, hover and press keep
+   working through their own rules and there is no specificity race
+   with `convex-accent`'s own `&:hover` / `&:active` (which a plain
+   override would lose, and which the alphabetical emission order must
+   never be asked to settle). Pair it with `convex-accent`; alone it
+   does nothing.
+
+   What replaces the bloom is a STEP CAST: three hard one-pixel offsets
+   at falling alpha, the way a milled part stacks against the surface
+   it stands on. The part's own two 1px lines were already hard and
+   carry over unchanged; only --elevation-accent's two soft outer
+   layers go. In dark the cast is leaked light rather than shade, so
+   the steps are signal, not black — same shape, the scheme's own
+   material.
+
+   THE CUT NEEDS NOTHING FROM THIS UTILITY ANY MORE. It used to zero
+   --accent-cut-*-blur here, because on a part whose every other layer
+   was a crisp step a blurred marking read as a smudge under the
+   letters rather than as an edge. That argument was never about THIS
+   part: the cut went hard and shallow for every accent part instead
+   (see the token block and `convex-accent`'s text-shadow), so the two
+   re-points are gone from here as redundant, not as reverted. */
+@utility hard-cast {
+  --elevation-accent:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.28)),
+    inset 0 -1px 0 light-dark(
+      color-mix(in oklab, var(--color-signal-950) 30%, transparent),
+      rgb(0 0 0 / 0.3));
+  --accent-cast:
+    0 1px 0 light-dark(
+      --alpha(var(--color-signal-950) / 26%), --alpha(var(--color-signal-500) / 62%)),
+    0 2px 0 light-dark(
+      --alpha(var(--color-signal-900) / 16%), --alpha(var(--color-signal-500) / 34%)),
+    0 3px 0 light-dark(
+      --alpha(var(--color-signal-800) / 8%), --alpha(var(--color-signal-400) / 16%));
+  /* Hover lifts by one more step — the gap under the part grows, and
+     that is the whole animation a hard cast can carry. */
+  --accent-cast-lifted:
+    0 1px 0 light-dark(
+      --alpha(var(--color-signal-950) / 28%), --alpha(var(--color-signal-400) / 72%)),
+    0 2px 0 light-dark(
+      --alpha(var(--color-signal-900) / 20%), --alpha(var(--color-signal-500) / 46%)),
+    0 3px 0 light-dark(
+      --alpha(var(--color-signal-900) / 13%), --alpha(var(--color-signal-500) / 28%)),
+    0 4px 0 light-dark(
+      --alpha(var(--color-signal-800) / 7%), --alpha(var(--color-signal-400) / 15%));
+  /* Seated: the gap is closed, so one contact line is all that is
+     left — and in dark the emitter dims rather than switching off. */
+  --accent-cast-pressed:
+    0 1px 0 light-dark(
+      --alpha(var(--color-signal-950) / 24%), --alpha(var(--color-signal-500) / 40%));
+}
+
+/* -- CONCAVE and CONVEX type, and icons ---------------------------
+   The same two shapes, in the channels a glyph can carry them. Text
+   and mask icons need different CSS properties (text-shadow can't
+   reach a masked icon, a filter would blur live text), which is the
+   only reason these are separate classes and not one.
 
    `concave-text` is the 1px marking: a light catch under the glyphs
    in light, a groove shadow in dark. Texture only — pair it with a
    text-* colour; baking one in here would race core text-* utilities
    inside @layer utilities. Below ~18px a deeper cut turns to mush, so
    it stays at one pixel.
+
+   `convex-text` is its inverse at the same one pixel — a lit rim on
+   the top edge (toward the light) and the glyph's own cast on the
+   surface below it, so a small readout stands PROUD of the plate
+   instead of being scribed into it. ConvexText.vue is the display-size
+   version of the same idea and owns the accent ramp; this is the
+   figure-on-a-dial rung, neutral and pairable with any text-* colour.
+   Both channels are needed in light — the top rim alone is invisible
+   against a light ground, the cast alone reads as a drop shadow — and
+   in dark the rim carries it, because a black cast on a dark plate has
+   nothing to fall on.
 
    `concave-icon` is the accent part's icon marking: a mask icon takes
    no text-shadow, so the LABEL'S OWN cut is chained as drop-shadows at
@@ -412,15 +554,20 @@
 @utility concave-text {
   text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
 }
+@utility convex-text {
+  text-shadow:
+    0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.22), rgb(0 0 0 / 0.6));
+}
 @utility concave-icon {
   &.iconify {
     background: none;
     mask: none;
     position: relative;
     filter:
-      drop-shadow(0 -1.5px 1px var(--accent-cut-shadow-soft))
+      drop-shadow(0 -1px var(--accent-cut-shadow-soft-blur) var(--accent-cut-shadow-soft))
       drop-shadow(0 1px 0 var(--accent-cut-highlight))
-      drop-shadow(0 2px 1.5px var(--accent-cut-highlight-soft));
+      drop-shadow(0 1.5px var(--accent-cut-highlight-soft-blur) var(--accent-cut-highlight-soft));
     &::before {
       content: '';
       position: absolute;

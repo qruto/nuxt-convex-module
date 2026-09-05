@@ -145,22 +145,26 @@ function segments(body: string) {
 </script>
 
 <template>
-  <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+  <ul class="m-0 grid list-none grid-cols-1 gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
     <li
       v-for="(entry, index) in ENTRIES"
       :key="entry.label"
       class="m-0 p-0"
     >
+      <!-- The foot pad runs 8px past the head pad: the body copy is the
+           last thing on the card, and set flush to the foot its final
+           line read as cropped where the label at the head has the stage
+           below it for air. -->
       <NuxtLink
         :to="entry.to"
         :style="{ '--band': entry.band }"
         :data-face="entry.face"
-        class="convex-0 hover:convex-2 rounded-lg spec-card group flex h-full flex-col gap-1.5 px-5 pt-4 pb-4.5 no-underline transition-shadow duration-180 ease-out focus-visible:outline-2 focus-visible:outline-(--band)"
+        class="convex-0 hover:convex-2 rounded-lg spec-card group flex h-full flex-col gap-1.5 px-5 pt-4 pb-6.5 no-underline transition-shadow duration-180 ease-out focus-visible:outline-2 focus-visible:outline-(--band)"
       >
         <span class="flex items-baseline justify-between gap-3 font-mono text-[0.6rem] font-semibold tracking-[0.14em]">
           <span class="flex flex-none items-baseline gap-1.5">
             <!-- The band tick — this card's line of the spectrum, echoing the
-                 section headline's signal tick at card scale. -->
+                 docs page-header's signal tick at card scale. -->
             <i
               aria-hidden="true"
               class="band-tick h-0.75 w-2.5 flex-none self-center rounded-full"
@@ -171,9 +175,14 @@ function segments(body: string) {
         </span>
         <!-- The card's working illustration — its own recessed stage wearing
              its own engraved face (see the per-face CSS below); hover floods
-             the stage with a whisper of the card's band. -->
+             the stage with a whisper of the card's band. The stage is a
+             FIGURE PLATE, not a strip: the illustrations are the argument
+             each card makes, so the well is given room to be looked at
+             rather than sized to the tallest drawing in it. The foot
+             margin runs past the head one: a figure wants clear ground
+             between its plate and the caption that reads it. -->
         <span
-          class="concave-2 rounded-md spec-stage mt-1 mb-1.5 grid min-h-24 place-items-center overflow-hidden px-3.5 py-3"
+          class="concave-2 rounded-md spec-stage mt-1 mb-4 grid min-h-36 place-items-center overflow-hidden px-3.5 py-4"
           aria-hidden="true"
         >
           <component :is="entry.art" />

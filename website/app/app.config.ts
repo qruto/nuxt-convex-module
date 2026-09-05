@@ -28,7 +28,7 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground'],
           },
         },
       },
@@ -96,14 +96,21 @@ export default defineAppConfig({
       ],
     },
 
-    // The header as a raised metal rail — a lighter plate with the
-    // brushed grain running along it, over a real cast. `border-b-0`
-    // is load-bearing: --elevation-header's `0 1px 0` solid layer IS the
-    // bottom edge now, and leaving the theme's border-b in place draws
-    // it twice. See chrome.css for the recipe.
+    // The header as a raised GLASS rail — a sheer plate over a real
+    // cast, carrying no finish of its own so the section's shows
+    // through it. `border-b-0` is load-bearing: --elevation-header's
+    // `0 1px 0` solid layer IS the bottom edge now, and leaving the
+    // theme's border-b in place draws it twice. See chrome.css.
+    //
+    // The theme's `backdrop-blur-sm` is switched OFF, not reduced. Any
+    // blur wide enough to matter is wider than the grain's own 3px/7px
+    // pitch, so it averages the finish under the bar into exactly the
+    // flat wash the sheer fill exists to avoid — measured, 8px and even
+    // 1px left the bar with a 2-level ripple against the ground's 13.
+    // Sheer and unblurred, the pattern comes through at ~40%.
     header: {
       slots: {
-        root: 'app-header border-b-0 bg-transparent bg-(image:--gradient-header-image) shadow-(--elevation-header)',
+        root: 'app-header border-b-0 bg-transparent bg-(image:--gradient-header-image) backdrop-blur-none shadow-(--elevation-header)',
       },
     },
 
@@ -165,9 +172,9 @@ export default defineAppConfig({
       ],
     },
 
-    // The docs page header: the same mono eyebrow the landing sections
-    // wear, a display-font title cut into the plate, and the border-b
-    // traded for a scribed seam (shade, then catch one pixel below).
+    // The docs page header: a mono eyebrow with the glowing accent tick,
+    // a display-font title cut into the plate, and the border-b traded
+    // for a scribed seam (shade, then catch one pixel below).
     pageHeader: {
       slots: {
         root: 'relative py-8 border-b-0 shadow-(--seam-x)',
@@ -216,9 +223,9 @@ export default defineAppConfig({
       },
     },
 
-    // Landing chrome: mono eyebrows with the glowing accent tick,
-    // display-font titles (replaces the bespoke LandingSection/
-    // LandingEyebrow components).
+    // Landing chrome: display-font titles, no eyebrows — the section
+    // titles carry their own meaning (replaces the bespoke
+    // LandingSection/LandingEyebrow components).
     //
     // Descriptions carry a two-step emphasis scale so the key things in them
     // scan without turning into a bullet list: `**term**` steps the ink up to
@@ -228,16 +235,19 @@ export default defineAppConfig({
     // has to be spelled out here or bold reads as plain body copy.
     pageHero: {
       slots: {
-        headline:
-          'font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
         title: 'font-display',
         description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },
     },
     pageSection: {
       slots: {
-        headline:
-          'font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
+        // More air than the Nuxt UI default (py-16/24/32, gap-8/16):
+        // every section is now a screen-tall plate the page snaps to
+        // (see THE PLATES in landing.css), and a plate wants margin
+        // around its marking. The short plates take most of this from
+        // `align-content: center` in the leftover screen; the spec
+        // sheet, which is taller than the screen, takes it from here.
+        container: 'py-24 sm:py-32 lg:py-40 gap-12 sm:gap-20',
         title: 'font-display',
         description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },

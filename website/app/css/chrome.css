@@ -59,7 +59,6 @@
       light-dark(oklch(100% 0 0 / 0.3), oklch(100% 0 0 / 0.04)),
       transparent 68%);
   --mill-rule-lo: light-dark(oklch(0% 0 0 / 0.05), oklch(100% 0 0 / 0.03));
-  --mill-rule-major: light-dark(oklch(0% 0 0 / 0.08), oklch(100% 0 0 / 0.048));
   --mill-rule-hi: light-dark(oklch(100% 0 0 / 0.5), oklch(0% 0 0 / 0.5));
   --mill-lip: inset 0 14px 18px -14px light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.65));
 }
@@ -67,7 +66,7 @@
    on that fill. Every landing finish class carries an opaque
    background-color of its own so it OCCLUDES this one instead of
    stacking a second, out-of-phase grain over it — see the note above
-   .landing-mill in landing.css. */
+   the finishes in landing.css. */
 body {
   background-image: var(--mill-grain-page);
 }
@@ -188,28 +187,94 @@ body {
   --header-crown: light-dark(var(--ui-bg-accented), oklch(30% 0 0));
   --header-foot: light-dark(var(--ui-bg-elevated), var(--ui-color-neutral-800));
   --gradient-header: linear-gradient(180deg,
-    color-mix(in srgb, var(--header-crown) 88%, transparent),
-    color-mix(in srgb, var(--header-foot) 88%, transparent));
-  /* Grain first — background layers paint front to back. */
-  --gradient-header-image: var(--mill-grain), var(--gradient-header);
+    color-mix(in srgb, var(--header-crown) 72%, transparent),
+    color-mix(in srgb, var(--header-foot) 72%, transparent));
+  /* No finish of its own. The rail is GLASS over the plate: the grain
+     it used to carry was a SECOND texture crossing the section's own
+     one at a different phase, and the honest way for a floating bar to
+     look like metal is to let the metal below show through it. So the
+     dome is the only layer, and it is pulled down to 72% — enough tint
+     to hold its own tone and keep the header legible, sheer enough that
+     the finish under it (grain, grid, rings, hatch, knurl) reads
+     faintly through, and CHANGES as each plate passes beneath. */
+  --gradient-header-image: var(--gradient-header);
 
+  /* The cast under the rail is a soft GRAY, not black. Three layers of
+     black at low alpha overlap into a smudge — the bar was dragging dirt
+     down the page rather than casting a shadow onto it. A light neutral
+     (pure grey; titanium has no hue, same call as the palette) stays shade
+     wherever the layers stack, and the near field is blurred wider and
+     offset less so the band under the bar fades out instead of ending.
+     Dark mode keeps black — on a dark ground a grey cast is a LIFT. */
+  --header-cast: oklch(76% 0 0);
   --elevation-header:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.07)),
-    0 1px 0 light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.5)),
-    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
-    0 10px 20px -8px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5));
+    0 1px 0 light-dark(--alpha(var(--header-cast) / 16%), rgb(0 0 0 / 0.5)),
+    0 4px 10px -4px light-dark(--alpha(var(--header-cast) / 12%), rgb(0 0 0 / 0.4)),
+    0 16px 32px -16px light-dark(--alpha(var(--header-cast) / 18%), rgb(0 0 0 / 0.5));
 }
 
-/* The bar is brighter than the page now, and the search trigger's dish is
+/* The bar is brighter than the page, and the search trigger's dish is
    `concave` over `bg-muted` — so untouched it would sit a single point
    below its own surround and read flat. Re-point --ui-bg-muted INSIDE the
    header: `bg-muted` resolves it at use time, so the dish deepens by
-   itself and nothing outside the bar moves. */
+   itself and nothing outside the bar moves.
+
+   How deep is set by the dish's own FLOOR, not by its mid-tone. The
+   recessed ramp turns UP at the bottom (bounce off the floor of a cut)
+   and --inset-shadow-1 lays a white catch along that same edge, so the
+   lowest point of the well is its LIGHTEST — and at 95.2% that floor
+   came out level with the rail around it. The dish had a lip and
+   no bottom: cut on three sides, dissolved on the fourth. Dropped far
+   enough that the floor still clears the rail by ~10 levels with both
+   of those lightening steps applied, which is what gives the cut an
+   edge the whole way round without a border drawn on it. */
 /* `.app-header` rather than the bare element: `header` would also
    catch any <header> a content page renders. Hung on the root slot in
    app.config. */
 .app-header {
-  --ui-bg-muted: light-dark(oklch(95.2% 0 0), oklch(22.5% 0 0));
+  --ui-bg-muted: light-dark(oklch(91.5% 0 0), oklch(20.5% 0 0));
+  /* The line above, on its own, did NOTHING for years. `concave` fills
+     with --gradient-recessed, which is declared on :root — and a custom
+     property's var()s are substituted at computed-value time ON THE
+     ELEMENT THAT DECLARES IT. So --gradient-recessed had already baked
+     in :root's --ui-bg-muted before it ever inherited down here, and the
+     dish sat at the page's muted tone no matter what the rail said.
+     Redeclaring the ramp here re-runs that substitution against the
+     value above. The stops themselves are depth.css's, unchanged — this
+     is the site's dish ramp resolved in a different scope, not a
+     different ramp. */
+  --gradient-recessed: linear-gradient(180deg,
+    color-mix(in srgb, var(--ui-bg-muted), #000 2%),
+    var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
+    color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+
+  /* The well's shadows come along for the same reason and by the same
+     mechanism — depth.css declares these on :root too, so a scoped
+     override has to restate them. These ARE depth.css's, layer for
+     layer, with exactly one value changed: the floor's catch line, from
+     0.8 white to opaque #fff in the light scheme.
+
+     Why that one. 0.8 white over a 231 floor composites to 250 — a
+     light GREY hairline, sitting between a grey floor and a grey rail,
+     and the eye reads a light grey in that company as cool: the line
+     looked faintly blue while measuring dead neutral (247,247,247).
+     #fff is the one value that cannot do that, and it makes the floor's
+     edge the brightest pixel on the rail, which is what a lit edge
+     should be.
+
+     Dark keeps its alpha. Solid white on a 23 floor is a lit wire, not
+     a machined edge — four times the light room's contrast. */
+  --inset-shadow-1:
+    inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
+    inset 0 -1px 0 light-dark(#fff, rgb(255 255 255 / 0.05)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
+  --inset-shadow-2:
+    inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
+    inset 0 -1px 0 light-dark(#fff, rgb(255 255 255 / 0.055)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
 }
 
 /* -- THE FIELD-GROUP SEAM ----------------------------------------
