@@ -80,19 +80,6 @@
         "maxCyclomatic": 25,
         "maxCognitive": 30,
         "reason": "Verbatim ports of convex/react (PARITY.md): the structure follows upstream so releases stay diffable file-for-file."
-      },
-      {
-        "files": ["website/app/components/content/LandingHeroPanel.vue"],
-        "functions": ["<template>"],
-        "maxCyclomatic": 30,
-        "maxCognitive": 55,
-        "reason": "One plate renders two acts (recording, live) from shared state; splitting the markup would spread the SSR/hydration contract across components."
-      },
-      {
-        "files": ["website/app/components/content/PlaygroundFiles.vue"],
-        "functions": ["<template>"],
-        "maxCognitive": 40,
-        "reason": "Docs demo: three storage composables shown side by side in one file on purpose, so the reader sees composable and markup together."
       }
     ]
   }

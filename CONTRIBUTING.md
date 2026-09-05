@@ -164,13 +164,18 @@ They mirror CI, split by how often each check can afford to run:
 |---|---|---|---|
 | [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `quality`, `lint` | ~6s |
 | [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `commit-lint` | instant |
-| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `test:types:lib`, `test`, API-reference drift | `quality`, `typecheck`, `test` | ~20s |
+| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `test:types:lib`, `test`, API-reference drift | `quality`, `typecheck`, `test` | ~20s |
 
 `pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
 — only findings your change *introduces*, in the files it touched. `pre-push` runs once per
 push and can afford the whole picture: the full `fallow` run (which, unlike the scoped audit,
-notices a config edit that strands a file elsewhere in the repo), the type check, the test
-suite, and the API-reference drift check. A delete-only push skips it.
+notices a config edit that strands a file elsewhere in the repo), the security-candidate scan,
+the type check, the test suite, and the API-reference drift check. A delete-only push skips it.
+
+`fallow security` is a separate command rather than a flag, because fallow keeps security
+findings out of both its default run and its audit gate. What it covers, what it deliberately
+leaves to GitHub, and the deeper review pass that complements it are in
+[SECURITY.md](./SECURITY.md#how-this-repository-is-checked).
 
 Every tool runs through `pnpm exec` / `pnpm run`, because each CLI is a devDependency and is on
 `PATH` only inside a pnpm script. Bypass once with `git commit --no-verify` or

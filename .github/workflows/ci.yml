@@ -210,6 +210,26 @@ jobs:
         with:
           command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
 
+      # Security candidates. A second step rather than another flag on the one
+      # above: a step runs exactly one fallow command, and security is its own —
+      # fallow keeps these findings out of both the default run and the audit
+      # gate, so neither would ever report one. `auto-changed-since: false`
+      # because the action otherwise scopes to the PR's changed files; the scan
+      # costs ~0.14s and the repo is at zero, so there is no backlog worth
+      # grandfathering and a candidate on an untouched file should still block.
+      # This runs the ordinary catalogue (injection sinks, SSRF, path traversal,
+      # unsafe deserialization, weak crypto, …). The two include-required
+      # categories, hardcoded-secret and secret-to-network, are left to GitHub's
+      # own secret scanning: naming them in `security.categories.include` turns
+      # that setting into a whitelist and would silently drop every category
+      # fallow adds later. Findings are unverified candidates by design, which
+      # is why they gate the build but are not uploaded to Code Scanning.
+      - name: Security candidates (fallow)
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          command: security
+          auto-changed-since: false
+
       # No `dev:prepare` needed: TypeDoc runs on the standalone
       # tsconfig.typedoc.json with `skipErrorChecking`.
       - name: API reference drift
