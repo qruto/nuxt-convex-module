@@ -15,6 +15,9 @@ overrides:
   giget>tar: ^7.5.18
   fontless>esbuild: ^0.28.1
 
+patchedDependencies:
+  docus: 59dd3a8d3a678ef9b8e6c723b3b45c457c011f3544b8a66337c25954f9d4c9cc
+
 importers:
 
   .:
@@ -181,7 +184,7 @@ importers:
         version: 1.45.0(react@19.2.8)
       docus:
         specifier: ^5.13.0
-        version: 5.13.0(1d069846332444e9e4c1bf282b939b6b)
+        version: 5.13.0(patch_hash=59dd3a8d3a678ef9b8e6c723b3b45c457c011f3544b8a66337c25954f9d4c9cc)(1d069846332444e9e4c1bf282b939b6b)
       nuxt:
         specifier: 'catalog:'
         version: 4.5.2(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@oxc-project/types@0.147.0)(@types/node@26.4.1)(@vue/compiler-sfc@3.5.42)(better-sqlite3@12.11.1)(cac@6.7.14)(commander@14.0.3)(db0@0.4.0)(esbuild@0.28.2)(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))(ioredis@5.11.1(supports-color@10.2.2))(lightningcss@1.33.0)(magicast@0.5.4)(optionator@0.9.4)(oxc-parser@0.143.0)(rolldown@1.2.6)(rollup-plugin-visualizer@7.1.1(rolldown@1.2.6)(rollup@4.63.1))(rollup@4.63.1)(srvx@0.12.7)(supports-color@10.2.2)(terser@5.51.2)(typescript@6.0.3)(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0))(vue-tsc@3.3.11(typescript@6.0.3))(webpack@5.109.2(cssnano@8.0.10(postcss@8.5.26))(csso@5.0.5)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.26))(yaml@2.9.0)
@@ -16271,7 +16274,7 @@ snapshots:
 
   diff@8.0.4: {}
 
-  docus@5.13.0(1d069846332444e9e4c1bf282b939b6b):
+  docus@5.13.0(patch_hash=59dd3a8d3a678ef9b8e6c723b3b45c457c011f3544b8a66337c25954f9d4c9cc)(1d069846332444e9e4c1bf282b939b6b):
     dependencies:
       '@ai-sdk/gateway': 4.0.69(zod@4.5.4)
       '@ai-sdk/mcp': 2.0.41(zod@4.5.4)
@@ -17783,7 +17786,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.4.0
+      '@types/node': 26.4.1
       merge-stream: 2.0.0
       supports-color: 8.1.1
 

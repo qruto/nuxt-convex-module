@@ -1,0 +1,83 @@
+diff --git a/app/composables/useSeo.ts b/app/composables/useSeo.ts
+index 6ac2f16a2b26178f37bf3fe66fafbfbf6090ec43..bb5b7141765e04a3b458cfe26f2ed9323f854e77 100644
+--- a/app/composables/useSeo.ts
++++ b/app/composables/useSeo.ts
+@@ -1,5 +1,5 @@
+ import type { MaybeRefOrGetter } from 'vue'
+-import type { AppConfig } from 'nuxt/schema'
++import type { ResolvableLink, ResolvableScript } from '@unhead/vue'
+ import type { BreadcrumbItem } from '../utils/navigation'
+ import { joinURL, withoutTrailingSlash } from 'ufo'
+ 
+@@ -34,9 +34,28 @@ export interface UseSeoOptions {
+   breadcrumbs?: MaybeRefOrGetter<BreadcrumbItem[] | undefined>
+ }
+ 
+-type SeoSchemaConfig = NonNullable<AppConfig['seo']['schema']>
++/**
++ * JSON-LD identity settings read from `appConfig.seo.schema`. Declared here
++ * because the Studio schema (`nuxt.schema.ts`) only describes `seo.title` and
++ * `seo.description`, so the resolved `AppConfig['seo']` type carries no `schema`.
++ */
++interface SeoOrganizationConfig {
++  name?: string
++  url?: string
++  logo?: string
++  sameAs?: string[]
++  parentOrganization?: SeoOrganizationConfig
++}
+ 
+-type SeoOrganizationConfig = NonNullable<SeoSchemaConfig['organization']>
++interface SeoSchemaConfig {
++  type?: string
++  organization?: SeoOrganizationConfig
++  sameAs?: string[]
++  applicationCategory?: string
++  operatingSystem?: string
++  price?: number
++  priceCurrency?: string
++}
+ 
+ /**
+  * `contactPoint` and `address` are intentionally not derived: they can only come
+@@ -136,7 +155,9 @@ function buildIdentitySchema(
+ export function useSeo(options: UseSeoOptions) {
+   const route = useRoute()
+   const site = useSiteConfig()
+-  const seoSchema = useAppConfig().seo?.schema
++  // App config is user data: the `schema` group is not in the Studio schema, so
++  // it is read through the local type above.
++  const seoSchema = (useAppConfig().seo as { schema?: SeoSchemaConfig } | undefined)?.schema
+   const { locale, locales, isEnabled: isI18nEnabled, switchLocalePath } = useDocusI18n()
+ 
+   const title = computed(() => toValue(options.title))
+@@ -170,7 +191,7 @@ export function useSeo(options: UseSeoOptions) {
+   // Set canonical link
+   useHead({
+     link: computed(() => {
+-      const links: Array<{ rel: string, href?: string, hreflang?: string }> = []
++      const links: ResolvableLink[] = []
+ 
+       // Canonical URL
+       if (canonicalUrl.value) {
+@@ -219,7 +240,7 @@ export function useSeo(options: UseSeoOptions) {
+   // JSON-LD structured data
+   useHead({
+     script: computed(() => {
+-      const scripts: Array<{ type: string, innerHTML: string }> = []
++      const scripts: ResolvableScript[] = []
+ 
+       if (!baseUrl.value || !title.value) return scripts
+ 
+diff --git a/package.json b/package.json
+index 330ae5f6f7af9439ccc5d6317dd12f9d78537309..2850405f5336a41303e6f48c5819951efc59b51f 100644
+--- a/package.json
++++ b/package.json
+@@ -4,6 +4,7 @@
+   "version": "5.13.0",
+   "type": "module",
+   "main": "./nuxt.config.ts",
++  "types": "./index.d.ts",
+   "repository": {
+     "type": "git",
+     "url": "git+https://github.com/nuxt-content/docus.git"

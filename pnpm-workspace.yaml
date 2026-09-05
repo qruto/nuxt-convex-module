@@ -98,3 +98,17 @@ overrides:
 # Fail a script outright when node_modules is out of sync with the lockfile, so
 # a stale install can never silently produce a passing build or test run.
 verifyDepsBeforeRun: error
+
+# --- Patches -----------------------------------------------------------------
+# docus 5.13.0 fails `nuxt typecheck website` with errors inside its own sources
+# (two upstream bugs; nothing in this repo can reach them because Nuxt type-checks
+# the layer's files): the package has `main: ./nuxt.config.ts` and no `types`, so
+# Nuxt's `/// <reference types="docus" />` type-checks the config file itself;
+# and `useSeo` reads `appConfig.seo.schema`, which its own Studio schema never
+# declares, while its `link`/`script` arrays predate unhead 3.4's stricter types.
+# Keyed by name so the patch follows Dependabot bumps; pnpm fails the install the
+# moment it no longer applies, which is the cue to re-check upstream and drop or
+# regenerate it. Remove when docus ships a `types` field, a typed `seo.schema`,
+# and an unhead-3.4-compatible `useSeo`.
+patchedDependencies:
+  docus: patches/docus.patch
