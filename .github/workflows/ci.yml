@@ -162,6 +162,15 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
+      # Audit-mode egress monitoring. Applied to the jobs that build and run
+      # PR-authored code against the network, not to every job — harden-runner is
+      # itself a third-party action, so it is worth its surface where there is
+      # untrusted code and outbound traffic to observe, and not elsewhere.
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -253,6 +262,11 @@ jobs:
   pack:
     runs-on: ubuntu-latest
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -304,3 +318,11 @@ jobs:
           cd "$SMOKE"
           npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL"
           npx --yes npm@11.17.0 run build
+
+      # Verifies the registry signature and provenance attestation of every
+      # dependency the smoke install pulled. pnpm's `trustPolicy: no-downgrade`
+      # refuses a package whose trust evidence weakens between versions; this
+      # checks that the evidence actually validates, on the consumer's npm path.
+      - name: Verify dependency signatures
+        working-directory: ${{ runner.temp }}/smoke
+        run: npx --yes npm@11.17.0 audit signatures # zizmor: ignore[adhoc-packages]

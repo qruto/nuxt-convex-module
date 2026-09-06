@@ -1,0 +1,59 @@
+name: codeql
+
+# GitHub's static analysis for the published surface. Complements, rather than
+# repeats, what already runs: eslint covers style and correctness lint, fallow
+# covers dead code, duplication and architecture, deepsec covers the
+# security-sensitive surface locally. CodeQL adds the taint-tracking classes
+# none of them model — injection, unsafe deserialization, path traversal.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '41 6 * * 1' # Mondays: catches new queries landing in the CodeQL bundle
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # read the workflow run's own metadata for the SARIF upload
+      security-events: write # publish results to the Security tab
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No build step and no `pnpm install`: javascript-typescript is an
+      # interpreted language for CodeQL, which extracts straight from source.
+      #
+      # The default query suite (security) rather than security-and-quality —
+      # the quality half overlaps eslint and fallow, and its findings would be
+      # triaged away rather than acted on. Widen to `security-extended` here if
+      # the signal turns out to be too thin.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@486fec2a3ea2626afcd8c7e9208b4f515078dd7e # codeql-bundle-v2.26.4
+        with:
+          languages: javascript-typescript
+          config: |
+            paths-ignore:
+              - website
+              - devtools-client-app
+              - examples
+              - test/fixtures
+              - dist
+              - scripts
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@486fec2a3ea2626afcd8c7e9208b4f515078dd7e # codeql-bundle-v2.26.4
+        with:
+          category: /language:javascript-typescript

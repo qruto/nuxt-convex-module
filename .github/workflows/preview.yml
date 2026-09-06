@@ -24,6 +24,15 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     steps:
+      # This job builds PR-authored code — from forks included — and then talks
+      # to an external service. Audit-mode egress monitoring gives that a
+      # baseline; there are no secrets here to protect, but there is untrusted
+      # code with network access, which is the case worth observing.
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -41,5 +50,11 @@ jobs:
 
       # --pnpm packs with `pnpm pack` so `catalog:` ranges are rewritten,
       # exactly like a real `pnpm publish`. Packing runs `prepack` (the build).
+      #
+      # `pnpm exec`, not `pnpm dlx`: pkg-pr-new is a devDependency, so the
+      # version that runs here is the one in the lockfile — under pnpm's
+      # minimumReleaseAge cooldown and under Dependabot, like every other
+      # dependency. `dlx` resolved whatever was newest at run time and executed
+      # it on every PR.
       - name: Publish preview
-        run: pnpm dlx pkg-pr-new publish --pnpm --comment=update
+        run: pnpm exec pkg-pr-new publish --pnpm --comment=update

@@ -132,17 +132,24 @@ third-party app holds write access to this repository.
 
 ### CI and release hardening
 
-- Every third-party action is pinned to a full commit SHA, never a tag.
-- `persist-credentials: false` on every checkout except the release one, which must push the
-  release commit back; that exception is declared in [`.github/zizmor.yml`](./.github/zizmor.yml)
-  rather than left implicit.
+- Every third-party action is pinned to a full commit SHA, never a tag — and GitHub enforces it
+  (`sha_pinning_required`), so a floating tag is refused before zizmor ever sees it.
+- `persist-credentials: false` on every checkout. The one job that pushes carries the token in a
+  single step's environment, so it never sits in `.git/config` while dependencies install.
 - [zizmor](https://docs.zizmor.sh) statically analyses the workflows themselves — template
-  injection, unpinned actions, credential persistence. Accepted findings carry their reasoning.
-- `step-security/harden-runner` guards the release job (`egress-policy: audit` for now; it
-  tightens to `block` with an allowlist once the first releases have produced a baseline).
-- Publishing uses npm **Trusted Publishing** over OIDC, so no long-lived registry token exists
-  in the repository or its secrets.
-- The release job refuses to publish a commit whose `ci` run is not a completed success.
+  injection, unpinned actions, impostor commits, credential persistence. Accepted findings carry
+  their reasoning.
+- The release is three jobs so the credentials never meet the code: the job that writes to the
+  repository holds no npm credential and cannot start until a maintainer approves the run; the job
+  that builds holds nothing; the job that publishes holds only the OIDC token, checks out nothing,
+  installs nothing, and runs behind `step-security/harden-runner` in `block` mode with an
+  allowlist of npm, GitHub and Sigstore.
+- Publishing uses npm **Trusted Publishing** over OIDC bound to a `main`-only environment, so no
+  long-lived registry token exists anywhere and a workflow edited on a branch cannot reach npm.
+  Releases are **staged**: nothing becomes installable until a maintainer approves it with 2FA,
+  after npm's malware scan — provenance says where a package came from, not what is in it.
+- The release refuses a commit whose `ci` run is not a completed success, and waits for one that
+  is still running rather than re-running its jobs.
 
 ### GitHub-native
 
