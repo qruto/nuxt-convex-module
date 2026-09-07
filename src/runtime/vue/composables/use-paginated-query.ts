@@ -64,6 +64,8 @@ type UsePaginatedQueryState = {
 // translation of upstream's `setState(updater)`. The `!` assertions cover
 // `noUncheckedIndexedAccess` (upstream indexes directly); the call site only
 // splits pages whose results exist.
+// PARITY: D-07 — spreading the split page's own `paginationOpts` carries its
+// start cursor and `numItems` into both halves.
 const splitQuery
   = (key: QueryPageKey, splitCursor: string, continueCursor: string) =>
     (prevState: UsePaginatedQueryState) => {

@@ -75,6 +75,7 @@ export async function consumeCrossDomainOneTimeToken(
     const authClientWithCrossDomain = authClient as AuthClientWithCrossDomain
     url.searchParams.delete('ott')
     window.history.replaceState({}, '', url)
+    // PARITY: A-13
     // Port-only guard: the aliased client may not install the cross-domain
     // plugin (upstream requires it whenever an `ott` parameter appears).
     if (!authClientWithCrossDomain.crossDomain) {

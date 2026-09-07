@@ -41,6 +41,7 @@ const parseConvexSiteUrl = (url: string | undefined) => {
       + `Currently set to ${url}.`,
     )
   }
+  // PARITY: A-14
   // Additive guard with no upstream counterpart: every auth request — session
   // cookies included — is proxied to this origin, and it is the only thing
   // pinning the proxy's destination host. An unparseable or non-HTTP value has
@@ -102,6 +103,7 @@ const handler = async (request: Request, siteUrl: string) => {
   // fallow-ignore-next-line security-sink -- destination host is pinned by config; verified 2026-09-02
   const response = await fetch(nextUrl, init)
 
+  // PARITY: D-04
   // Forced Nitro deviation from upstream's bare `return fetch(nextUrl, init)`:
   // `fetch` transparently decompresses the upstream body but leaves the
   // `Content-Encoding`/`Content-Length` headers untouched. Forwarding those
@@ -232,6 +234,7 @@ export interface ConvexAuthService {
  * @public
  */
 export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuthService {
+  // PARITY: N-09
   // Upstream requires `opts.convexSiteUrl`; Nuxt auto-provides it from runtime
   // config / env when the override is omitted.
   const siteUrl = parseConvexSiteUrl(
@@ -277,12 +280,13 @@ export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuth
       return await fn(token?.token)
     }
     catch (error) {
+      // PARITY: D-08
       // Intentional divergence from upstream v0.12.5 `callWithToken`, whose
       // predicate is inverted (it rethrows on auth errors and retries
       // non-auth errors — almost certainly an upstream bug). We retry with a
       // force-refreshed token exactly when the cached JWT is rejected as an
       // auth error, which is what the JWT cache's `isAuthError` option
-      // exists for. Documented in AGENTS.md/PARITY.md; do not "sync" back.
+      // exists for. Documented in PARITY.md; do not "sync" back.
       if (
         !opts?.jwtCache?.enabled
         || token.isFresh

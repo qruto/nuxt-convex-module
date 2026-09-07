@@ -3,6 +3,7 @@ import { computed, ref, watch, type ComputedRef, type MaybeRefOrGetter } from 'v
 import { useConvexAuth } from '../../vue/auth/index'
 import { usePreloadedPayload, useReactiveQuery, type Preloaded } from '../../vue/hydration'
 
+// PARITY: D-11
 // The declared return adds `| undefined`: the live query yields `undefined`
 // while loading/skipped (upstream's narrower declaration returns the same values).
 const useConvexPreloadedQuery = <Query extends FunctionReference<'query'>>(

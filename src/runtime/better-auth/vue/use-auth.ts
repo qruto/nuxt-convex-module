@@ -119,6 +119,7 @@ export function useAuth(initialToken?: string | null): UseAuthService {
 
   return {
     isLoading: computed(() => session.value.isPending && !cachedToken.value),
+    // PARITY: D-03
     // Diverges from upstream's `Boolean(session?.session) || cachedToken !== null`:
     // a settled signed-out session must read unauthenticated immediately (Vue has
     // no re-render to run upstream's cache-clearing effect first), and Better Auth
@@ -127,7 +128,7 @@ export function useAuth(initialToken?: string | null): UseAuthService {
       () => !!session.value.data || (session.value.isPending && cachedToken.value !== null),
     ),
     fetchAccessToken,
-    // Vue-only service extensions (documented in PARITY.md).
+    // PARITY: A-06 — Vue-only service extensions.
     client,
     session,
     user: computed<AuthUser | null>(() => {

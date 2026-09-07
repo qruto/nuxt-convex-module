@@ -263,6 +263,7 @@ export class ConvexVueClient {
     if (this.cachedSync) {
       return this.cachedSync
     }
+    // PARITY: D-06
     // Unlike upstream — which passes a no-op handler here and routes every
     // transition through its internal (non-public) PaginatedQueryClient — the
     // base client's transition callback is wired straight to `transition()`;
@@ -454,6 +455,8 @@ export class ConvexVueClient {
    * page-management engine as {@link usePaginatedQuery}, so both hooks work
    * without ever calling this method (only the experimental single-request
    * network path is not reproduced).
+   *
+   * PARITY: D-05
    *
    * @internal
    */

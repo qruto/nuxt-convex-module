@@ -180,6 +180,7 @@ export const CheckoutLink = defineComponent({
             await PolarEmbedCheckout.create(url, { theme: props.theme })
           }
           else {
+            // PARITY: D-09
             // `noopener` is a deliberate divergence from upstream's bare
             // `window.open(url, '_blank')`: unlike `<a target="_blank">`, `window.open`
             // keeps `window.opener` live, letting the checkout tab navigate this one.

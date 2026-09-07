@@ -1,3 +1,4 @@
+// PARITY: A-04
 /**
  * Nuxt-idiomatic data fetching for Convex queries.
  *

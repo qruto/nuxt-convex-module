@@ -106,7 +106,7 @@ export { useConvexConnectionState } from './composables/use-connection-state'
 export type { QueryOptions } from 'convex/browser'
 
 // --- Vue-only additions beyond the upstream `convex/react` index surface ---
-// (see PARITY.md "Vue-only additions"; keep grouped here, after the mirrored exports)
+// (see PARITY.md §3.3; keep grouped here, after the mirrored exports)
 
 // `useConvex*` aliases avoid name clashes with other auto-imported composables.
 export { useConvexQueries } from './composables/use-queries'
@@ -114,16 +114,19 @@ export { useConvexQuery } from './composables/use-query'
 export { useConvexMutation } from './composables/use-mutation'
 export { useConvexAction } from './composables/use-action'
 
-// Barrel type conveniences from the client module.
-// `VueMutationOptions` is the Vue-family alias of upstream's `MutationOptions`
-// (same treatment as `VueMutation` / `VueAction`).
+// PARITY: A-05
+// Types that exist only in the port, so there is no upstream path to import
+// them from. `VueMutationOptions` is the Vue-family alias of upstream's
+// `MutationOptions` (same treatment as `VueMutation` / `VueAction`).
 export {
   type PaginatedWatch,
   type VueMutationOptions,
   type ConvexLogger,
 } from './client'
 
-// Type re-exports for convenience.
+// PARITY: A-05
+// Re-exported from the other `convex/*` entry points so an annotation never
+// forces a hand-written import into an otherwise auto-imported file.
 export type {
   ConnectionState,
   OptimisticUpdate,

@@ -103,6 +103,7 @@ export function useQueriesHelper(
   watchEffect((onCleanup) => {
     const currentQueries = toValue(queries)
 
+    // PARITY: D-01
     // Upstream subscribes inside a passive effect (useEffect), which React
     // never runs during SSR — only the render-time `getLocalResults` read
     // happens on the server. Vue's watchEffect *does* run during SSR setup, so

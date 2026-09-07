@@ -98,6 +98,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
 
   const results = useConvexQueries(queries)
 
+  // PARITY: D-02
   // Derived state → a `computed`. Mirroring upstream's render-time throw, the
   // getter throws on error — Vue surfaces that when `.value` is read during
   // render and propagates it to the nearest `errorCaptured` boundary (React's

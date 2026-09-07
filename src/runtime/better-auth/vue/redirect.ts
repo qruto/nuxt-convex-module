@@ -1,3 +1,4 @@
+// PARITY: A-12
 /**
  * Safe handling of the `?redirect=` destination the `auth` route middleware
  * attaches when it sends an unauthenticated visitor to the login page.

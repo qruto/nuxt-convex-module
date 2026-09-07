@@ -1,6 +1,7 @@
 import type { AuthTokenFetcher } from 'convex/browser'
 import { computed, effectScope, inject, provide, ref, toValue, unref, watch, watchEffect, type ComputedRef, type EffectScope, type InjectionKey, type MaybeRef, type MaybeRefOrGetter } from 'vue'
 
+// PARITY: A-10
 // Mirrors upstream's `IConvexReactClient` — just describe the interface enough
 // to help users pass the right type. Exported (upstream keeps it private) so
 // wrappers or test doubles that only implement `setAuth`/`clearAuth` are
@@ -209,6 +210,7 @@ export function createConvexAuthState(
     // first/last-child ordering guarantees relative to sibling components'
     // query subscriptions have no Vue watcher-scheduling equivalent).
     watchEffect((onCleanup) => {
+      // PARITY: D-01
       // Upstream runs this in a passive effect (useEffect), which React never
       // executes during SSR. Vue *does* run a watchEffect body once during SSR
       // setup — and `onCleanup` never fires there — so `setAuth` would lazily
@@ -295,6 +297,7 @@ export function createConvexAuthState(
  * Create a fresh {@link EffectScope} and build a Convex auth state inside it.
  * The scope is returned so the caller can `.stop()` it on teardown.
  */
+// PARITY: A-08
 export function createScopedConvexAuthState(
   options: ConvexAuthProviderOptions,
 ): { state: ConvexAuthState, scope: EffectScope } {

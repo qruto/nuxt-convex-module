@@ -1,3 +1,4 @@
+// PARITY: A-14
 import { defineEventHandler } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { convexAuth } from './server'

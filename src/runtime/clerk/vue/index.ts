@@ -15,6 +15,7 @@ import type { AuthTokenFetcher } from 'convex/browser'
 import { provideConvexAuth, type ConvexAuthState, type IConvexVueClient } from '../../vue/auth/index'
 import { useConvexOrThrow } from '../../vue/client'
 
+// PARITY: A-10
 // https://clerk.com/docs/reference/clerk-react/useauth — `@clerk/vue` returns
 // each field as a `ComputedRef`. Hand-written like upstream's `UseAuth` (the
 // real composable's return type references Clerk-internal types that cannot be

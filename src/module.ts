@@ -780,6 +780,7 @@ function registerServerImports(resolver: Resolver): void {
 // when it is installed, and this module must still compile when it is not.
 type SecurityRouteRules = NonNullable<Parameters<typeof extendRouteRules>[1]['security']>
 
+// PARITY: A-14
 const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
   xssValidator: false,
   allowedMethodsRestricter: { methods: ['GET', 'HEAD', 'POST', 'OPTIONS'] },

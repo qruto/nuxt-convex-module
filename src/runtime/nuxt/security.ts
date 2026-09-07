@@ -1,3 +1,4 @@
+// PARITY: A-11
 import { getConvexRuntimeConfig } from './config'
 import { applyConvexSecurityDefaults, convexConnectSrc, convexResourceSrc, type SecurityRules } from './csp'
 
