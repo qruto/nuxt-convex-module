@@ -245,7 +245,7 @@ This package is intentionally kept **diffable against the upstream React/Next so
 | `src/runtime/better-auth/**` | `@convex-dev/better-auth/src/{react,nextjs}/**` |
 | `src/runtime/polar/**` | `@convex-dev/polar/src/react/**` |
 
-The authoritative file-by-file map, pinned upstream baseline versions, and out-of-scope list live in [`PARITY.md`](./PARITY.md); the React→Vue translation rules an automated sync agent follows are in [`AGENTS.md`](./AGENTS.md).
+[`PARITY.md`](./PARITY.md) is the authoritative ledger: pinned upstream baselines, the file-by-file map, a compatibility matrix per upstream entry point, and every deliberate divergence with its reason and the test that pins it. It also carries the migration contract and the React→Vue translation rules the port is held to. The sync procedure itself is packaged as the [`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md).
 
 ## Contributing
 

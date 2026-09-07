@@ -79,7 +79,13 @@ src/                  # Module source (Nuxt module + Convex component)
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
 test/                 # Vitest unit & integration tests
 website/              # Nuxt app: product homepage · docs (Docus) with live Convex demos
+.agents/skills/       # Agent skills — one committed copy, read by most agents directly
+.claude/skills/       # Symlinks into the above, since Claude Code reads only this path
 ```
+
+Both skill directories are committed, so a fresh clone works with no setup. `npx skills add
+<owner/repo> --agent claude-code` writes both sides; the `lint` job in CI fails if they drift
+apart or a skill's file is not named exactly `SKILL.md`.
 
 ## Submitting Changes
 
