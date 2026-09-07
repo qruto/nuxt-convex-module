@@ -6,7 +6,7 @@ import { upstreamBaselines } from '../../website/app/utils/upstream-baselines'
 // The docs site now STATES the ported upstream version — in the hero chip, in
 // the introduction, and on every component page — all of it read off
 // `website/app/utils/upstream-baselines.ts`. PARITY.md stays the repository's
-// authority (AGENTS.md's sync procedure updates it first), so this test pins
+// authority (the upstream-parity skill updates it first), so this test pins
 // the site's copy, the README's prose and the components overview to it: a
 // baseline bump that misses one of them fails here instead of shipping a
 // confidently wrong version number to readers.

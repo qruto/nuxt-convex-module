@@ -108,7 +108,7 @@ describe('auth/nuxt/server', () => {
 
   // Asserts the port's deliberate inversion of upstream v0.12.5's
   // `callWithToken` predicate (upstream rethrows on auth errors — a bug; see
-  // the comment in server.ts and AGENTS.md "Known intentional divergences").
+  // the comment in server.ts and PARITY.md's D-08 entry).
   // A future upstream sync must not "fix" this back.
   it('refreshes the token once when jwt cache marks the first error as auth-related', async () => {
     const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
