@@ -11,8 +11,14 @@
       <button type="submit">Send</button>
     </form>
 
-    <p v-if="status === 'pending'">Loading…</p>
-    <p v-else-if="error">{{ error.message }}</p>
+    <!--
+      Branch on `status`, not `error`: `useAsyncQuery` keeps an SSR error
+      exposed after live data arrives, so testing `error` first would pin this
+      view on a transient first-fetch failure even once the WebSocket is
+      delivering rows.
+    -->
+    <p v-if="status === 'pending' || status === 'idle'">Loading…</p>
+    <p v-else-if="status === 'error'">{{ error?.message }}</p>
     <ul v-else>
       <li v-for="message in messages" :key="message._id">
         {{ message.body }}
