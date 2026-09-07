@@ -127,7 +127,8 @@
    The landing is read one plate at a time: every panel stands at
    least a screen tall with its marking centred in the frame, and the
    page snaps a plate's head to the top of the frame — plain CSS
-   scroll snapping, `mandatory` so a scroll always settles on a plate.
+   scroll snapping, `proximity` so a scroll that ends near a plate's
+   head settles on it, and one that ends mid-plate stays put.
    A plate taller than the frame (the spec sheet) scrolls freely
    inside itself: the browser treats a snap area taller than the
    frame as ground the scroll may rest anywhere on, so only its head
@@ -138,7 +139,7 @@
    the reader did not ask for, which is the motion that preference is
    about. */
 html:has(.landing-panel) {
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
 }
 html:has(.landing-panel) footer {
   scroll-snap-align: end;
@@ -653,191 +654,184 @@ html:has(.landing-panel) footer {
         graphite descent (lit crown → baseline shade → a bounce of
         ground light at the feet) and the enamel's five-stop domes.
         Untouched.
-     2. A THREE-PASS CONVEX CHAIN (2026-09-06): a lit rim toward the
-        lamp, a shaded rim away from it, and the soft cast pooling
-        below that used to stand here alone. The marks are the two
-        WORDS in this sentence that were still lying flat on the page
-        while every letter around them stood off it, and a lift with no
-        rims is exactly what a flat thing casting a shadow looks like.
-        Same lamp, same em-scaled depth as the words: --mark-relief is
-        --depth's own figure, so the rim lands on the page at the same
-        offset the letters' does.
+     2. ONE PASS — THE LIT RIM (2026-09-06), toward the lamp, and
+        nothing else. Same lamp, same em-scaled depth as the words:
+        --mark-relief is --depth's own figure, so the rim lands on the
+        page at the same offset the letters' does.
 
-        THREE, not seventeen, and the paragraph above is why. A chained
-        drop-shadow compounds — each pass casts from the result of the
-        last — so a twelve-step side wall composites into that hairline
-        border, and no amount of tuning gets it out. Rim, rim, cast is
-        the most a chain holds and still reads as relief; the wall's
-        job (thickness) is left to the fills, which is where it always
-        actually lived.
+        NO DARK, ON INSTRUCTION, and this is the whole shape of the
+        day's work. The marks used to carry both halves of the words'
+        relief — the lit rim toward the lamp AND a shaded rim plus a
+        cast away from it — and on a DARK badge those two halves do not
+        weigh the same. A shadow paints BEHIND its shape, so each rim
+        is the sliver of a copy peeking out past the silhouette; on the
+        light-grey letters both slivers are almost invisible, but
+        against a 0.455 graphite wordmark or a bottle-green triangle
+        the pale one reads as the mark's lit edge and the dark one
+        reads as a second, separate shadow ringing the logo. Two
+        shadows, one light and one darker, on marks set in a sentence
+        whose letters show one. The light half is the half that says
+        "raised"; it stays, and the dark half is gone.
+
+        Two earlier passes at the same complaint are worth not
+        repeating. The first kept the dark and only re-threw it: the
+        cast used to be a lift of its own (0.026em, blurred x1.7, at
+        30%) chained BEHIND the rims, and a chained drop-shadow casts
+        from the RESULT of the pass before it — so it left from a
+        silhouette already dilated by the lit rim and came back out
+        past the artwork's own edge on the LIT side, a dark contour
+        drawn outside a bright one. Quoting the words' own throw fixed
+        that particular ring but left the dark there. The second pass
+        deleted the wrong half — the lit rim — on the argument that a
+        pale sliver outside a dark shape can only be a glow; what that
+        actually produced was a badge with nothing but shading on it,
+        which is the opposite of the ask.
+
+        ONE, not seventeen, and the paragraph above the list is why. A
+        chained drop-shadow compounds — each pass casts from the result
+        of the last — so a twelve-step side wall composites into that
+        hairline border, and no amount of tuning gets it out. The
+        wall's job (thickness) is left to the fills, which is where it
+        always actually lived. A single pass compounds with nothing at
+        all, which is the other thing to like about it.
+
+        The marks therefore cast NOTHING onto the plate, while every
+        word beside them casts twice. That is a deliberate exception,
+        not an oversight: put a cast back and the badge has a dark
+        shadow again. If one is ever wanted, it is the words' own —
+        --lx x1 blurred --softness x 1.2 at --shade x 0.35%, then x2.1
+        blurred x2.8 at x 0.25%, in --surf-dark for the wordmarks and
+        each symbol's own hue for the enamel — and it goes AFTER the
+        rim in the chain, never before.
      3. The ghostwrite band, the mark's only animation — which also
         took the wordmark's fill off (1) and left the relief below to
         the enamel alone. See the ghostwrite block.
 
-   The MATERIAL rules survive the demolition intact, because they were
-   always about colour rather than about the renderer: the wordmark's
-   shadow is the ground's neutral ink (--surf-dark — the same one the
-   words beside it cast in, since a shadow lands on the plate and takes
-   the plate's colour), and each enamel symbol's is its own hue nearly
-   out of light. No grey ink touches a coloured element, and nothing
-   casts black.
+   NO MATERIAL RULE SURVIVES ON THE RIM, and that is the last thing
+   this block let go of (2026-09-06: "make it white"). The badge's
+   materials — the graphite mid-tone, the four vendor hues — used to
+   compute a per-symbol tint for it. Two arguments retired them. The
+   material's own LIGHT was never available: the words' --ink-light
+   formula run on the graphite returns 0.74, DARKER than the 0.922
+   plate, a shadow wearing a highlight's name. And the tint on top of a
+   fixed near-white — cream, lilac, blush, mint — is invisible at half
+   a pixel of crisp edge, which is all a rim is. So the rim is the
+   WORDS' white, unmodified, and the vendor hues live where they are
+   actually seen: in the fills.
 
    The face copy's duplicate mark keeps its width but never paints
    (display:none would slide the copies out of register) — except for
    the ghostwrite band on the letterforms, which is exactly what that
    registered duplicate is good for. */
 .hero-billet-line .billet-ink .brand-lockup {
-  /* ---- KNOBS ----
-     --mark-lift is the shadow's offset ON THE PAGE, as a fraction of
-     the headline's em (depth.css calls the same idea --lift: a part
-     held above its plate rather than cut into it). --mark-spread turns
-     it into the blur, and --mark-shadow is the ink's alpha in the
-     playground's percent.
-
-     Lift is NOT a plain em, and that is the trap this file paid for
+  /* ---- THE SCALE TRAP ----
+     Every length below is a fraction of the headline's em, and NONE of
+     them can be written as one, which is the trap this file paid for
      twice. A CSS filter on an SVG element measures in USER UNITS, so
      one shared em was scaled by each kit's own viewBox-to-render
      factor: Convex's 51.5-unit box draws at 0.537em / 0.6893 = 0.779em
      (one unit = 0.0151em), Nuxt's 32-unit box at 0.625em / 0.75 =
      0.833em (one unit = 0.0260em) — 1.72x apart, one mark lifted
-     nearly twice as far as the other in the same sentence. So the knob
-     is the lift we want on the PAGE and each artwork converts it with
-     its own --mark-per-em (down by the fill swaps): viewBox height x
-     --brand-ratio / the --brand-ref coefficient. A lockup with no
-     --mark-per-em leaves --mark-depth invalid and drops the filter
-     whole — flat, rather than lifted at some other artwork's scale,
-     which is the failure you want to see. And a constant in user units
-     is a constant fraction of the ARTWORK, so this scales with the
-     mark at every type size with no em left in the chain. */
-  --mark-lift: 0.026; /* 1.5px at the hero's 57.6px */
-  --mark-spread: 1.7; /* → a 2.5px blur: soft enough to have no edge to
-                         read as a border, tight enough to stay a
-                         shadow rather than a glow */
-  --mark-shadow: 30;
-  --mark-depth: calc(var(--mark-lift) * var(--mark-per-em) * 1px);
+     nearly twice as far as the other in the same sentence. So each
+     figure is the distance we want on the PAGE and each artwork
+     converts it with its own --mark-per-em (down by the fill swaps):
+     viewBox height x --brand-ratio / the --brand-ref coefficient. A
+     lockup with no --mark-per-em leaves every length invalid and drops
+     the filter whole — flat, rather than lifted at some other
+     artwork's scale, which is the failure you want to see. And a
+     constant in user units is a constant fraction of the ARTWORK, so
+     this scales with the mark at every type size with no em left in
+     the chain.
 
-  /* the shadow's vector — the sentence's one lamp, thrown away from it */
-  --mark-lx: calc(sin(var(--light-angle)) * var(--mark-depth) * -1);
-  --mark-ly: calc(cos(var(--light-angle)) * var(--mark-depth));
-  --mark-blur: calc(var(--mark-depth) * var(--mark-spread));
-
-  /* ---- THE RIMS ----
+     ---- THE LIT RIM ----
      How far off the page the mark stands, as a fraction of the
-     headline's em — and these are not knobs so much as a QUOTE: the
-     four below are --depth, --softness, --highlight and --side from
-     the block above, written out as plain numbers because the
-     derivation runs in the artwork's user units and there is no em
-     left in that chain to divide out. The two lockups are words in the
-     same sentence as "Use" and "backend"; a mark standing off the page
-     by a different amount than the letters touching it is the one
-     thing that reads as a sticker. MOVE THEM WITH THE WORDS' KNOBS.
+     headline's em. --mark-relief is a QUOTE — --depth from the block
+     above, written out as a plain number because the derivation runs
+     in the artwork's user units and there is no em left in that chain
+     to divide out. The two lockups are words in the same sentence as
+     "Use" and "backend"; a mark standing off the page by a different
+     amount than the letters touching it is the one thing that reads as
+     a sticker. MOVE IT WITH THE WORDS' KNOB.
 
-     The offsets are the same lamp read the same way, only mirrored:
-     --mark-lx/--mark-ly point AWAY from the light (they were written
-     for the cast), so the lit rim is that vector negated and the
-     shaded rim is the vector itself — both at half depth, the words'
-     own ±0.5. */
-  --mark-relief: 0.0364;      /* = --depth */
-  --mark-relief-soft: 0.0409; /* = --softness */
-  --mark-highlight: 75;       /* = --highlight */
-  --mark-side: 40;            /* = --side */
+     --mark-rim-x/--mark-rim-y are the lamp read the same way the words
+     read it, only mirrored: the pair points AWAY from the light, so
+     the lit rim is that vector NEGATED — at half depth, the words' own
+     0.5. It is written this way round because the pair is also where a
+     cast would go if one is ever put back (see the demolition note),
+     and one lamp over the sentence is the point of writing it once.
+
+     --mark-highlight is the one figure that is NOT a quote. The words
+     run --highlight 75 (91.9% after the --solidness factor) and so did
+     this for a while, but the same number does not land the same way
+     on the two: the words' rim is BLURRED and mostly buried behind a
+     0.83 glyph, so what shows is a soft lift at the top-left edge,
+     while the mark's runs crisp (below) and fully exposed against a
+     dark badge, where it reads as a drawn white line. 53 puts it at
+     64.9% and lands the same EDGE, which is what "the same effect" is
+     about. Re-tune this one against the marks, not against 75. */
+  --mark-relief: 0.0364;  /* = --depth */
+  --mark-highlight: 53;   /* the words' --highlight 75, taken down */
   --mark-relief-depth: calc(var(--mark-relief) * var(--mark-per-em) * 1px);
   --mark-rim-x: calc(sin(var(--light-angle)) * var(--mark-relief-depth) * -0.5);
   --mark-rim-y: calc(cos(var(--light-angle)) * var(--mark-relief-depth) * 0.5);
-  /* The contact blur carries --crisp, exactly as the words' rims do —
-     a rim is where the face turns over, not where it fades out. */
-  --mark-rim-blur: calc(var(--mark-relief-soft) * var(--mark-per-em) * 1px
-      * 0.35 * var(--crisp));
 
-  /* the wordmark's material — the fill ramp's MID tone per scheme */
-  --mark-color: light-dark(oklch(0.455 0.008 255), oklch(0.37 0.012 255));
   color: light-dark(#16181d, #101215); /* plate-ink fallback under the fills */
 }
-/* Every path in both lockups runs the same one-pass shadow; only the
-   material changes. Attribute selectors keep working after the url()
-   fill swaps further down, because they read the attribute, not the
-   computed paint. */
+/* Every path in both lockups runs the SAME rim — one pass, one white,
+   no per-material anything. Attribute selectors keep working after the
+   url() fill swaps further down, because they read the attribute, not
+   the computed paint. */
 .hero-billet-line .billet-ink .brand-lockup path {
-  --mat: var(--mark-color);
-  /* --mat-shade is the two blocks below; every path matches one of them */
-  --mark-cast: color-mix(in oklab, var(--mat-shade)
-      calc(var(--mark-shadow) * 1%), transparent);
-  /* THE LIT RIM IS THE MATERIAL'S OWN LIGHT, never the room's — the
-     words' --ink-light formula verbatim, run on --mat instead of on
-     --text-color. Which is what keeps the enamel symbols' crowns their
-     own hue lifted toward the lamp rather than four grey glints: the
-     one rule this whole block exists to hold (see the MATERIAL note
-     below). On the graphite wordmark the same formula lands ~0.76 — a
-     silver, not a white, because the letters are a 0.455 material and
-     a near-white rim on them would read as the ghostwrite band stuck
-     mid-pass.
+  /* THE RIM IS THE WORDS' OWN WHITE. --ink-light, inherited straight
+     off .hero-billet-line — the very colour "Use" and "backend" are
+     rimmed in — run through the words' --hi formula, --solidness
+     factor included. Not a colour of the badge's own: same lamp, same
+     white, which is what makes the marks read as words in the sentence
+     rather than as artwork sitting in it.
 
-     THE SHADED RIM COMES OFF --mat-shade, not off a new dark. The two
-     blocks below tuned that value against a real constraint — the
-     wordmark's fourteen counters and stems sit a couple of pixels
-     apart at the x-height, and anything darker silts the gaps up — and
-     a rim under those same letters is the same constraint again. So it
-     is the cast's own ink at a lower alpha, which is also what a rim
-     and a cast physically are: one shade, two distances. */
-  --mat-light: color-mix(in oklab,
-      oklch(from var(--mat) min(calc(l + 0.22), 0.96) calc(c * 0.85) h), white 22%);
-  --mark-rim-hi: color-mix(in oklab, var(--mat-light)
-      calc(var(--mark-highlight) * 1%), transparent);
-  --mark-rim-lo: color-mix(in oklab, var(--mat-shade)
-      calc(var(--mark-side) * 1%), transparent);
-  /* Lit rim, shaded rim, cast — in that order, because a drop-shadow
-     paints BEHIND what it is cast from and the chain composites
-     forward: the cast has to be last to end up furthest back. */
+     It is also per-scheme for free. --ink-light derives from
+     --text-color, so it is L 0.9688 on the light plate and ~0.73 on
+     the dark one without a light-dark() anywhere in this block — the
+     figure the marks used to hard-code twice.
+
+     What went with it (2026-09-06, on instruction: "make it white"):
+     the rim used to be tinted a third of each material's chroma —
+     cream on the gold lobe, pale lilac on the magenta, blush on the
+     oxblood, mint on Nuxt's triangle — on the argument that four
+     materials sharing one grey glint is the tell that a relief was
+     painted on rather than lit. True of a real lamp; at half a pixel
+     of crisp edge it is invisible, and computing it cost this block a
+     per-path material variable, a graphite mid-tone and four vendor-hue
+     rules — all deleted with it. The hues still live where they are
+     actually seen, in the FILLS (BrandConvex.vue / BrandNuxt.vue and
+     the ramp blocks below). */
+  --mark-rim-hi: color-mix(in oklab, var(--ink-light)
+      min(calc(var(--mark-highlight) * 1% * (1 + var(--solidness) * 0.005)), 98%),
+      transparent);
+  /* One pass, toward the lamp, ZERO BLUR (2026-09-06, on instruction —
+     the same call ConcaveText.vue's white passes took the same day: a
+     surface edge catching light is a hard line, and blurred it smears
+     into the ground and reads as a glow rather than an edge). The
+     words' own rim still carries --softness x 0.35 x --crisp, but
+     theirs is half-buried behind a light glyph; this one is fully
+     exposed against a dark badge, where any blur at all is the halo.
+
+     A drop-shadow paints BEHIND what it is cast from, so this is the
+     sliver of a white copy showing along the mark's lit edge — and
+     with nothing chained after it, nothing casts from a dilated
+     silhouette and no second contour can appear. See the demolition
+     note for why there is no dark half. */
   filter:
     drop-shadow(calc(var(--mark-rim-x) * -1) calc(var(--mark-rim-y) * -1)
-      var(--mark-rim-blur) var(--mark-rim-hi))
-    drop-shadow(var(--mark-rim-x) var(--mark-rim-y)
-      var(--mark-rim-blur) var(--mark-rim-lo))
-    drop-shadow(var(--mark-lx) var(--mark-ly) var(--mark-blur) var(--mark-cast));
+      0 var(--mark-rim-hi));
 }
-/* The WORDMARKS shade neutral. Their face is graphite at 0.008 chroma,
-   and a lightness drop on a near-neutral face lands the shadow within
-   a hair of black — the one ink on this page that would be a pure
-   value with no hue in it, which reads as a printing artefact next to
-   a plate whose every other shadow is tinted. The playground has the
-   principled answer and it is not a hue choice at all: depth.css
-   derives a cast from --shaded-ground, the SURFACE's tint, and only
-   rims and walls from the material. Our port of that ink is
-   --surf-dark (on .hero-billet-line, feeding the words' own
-   --lo-cast), dead-neutral oklch(0.22 0 0) on this page because the
-   ground carries no chroma to lend. Deriving from it rather than
-   writing a grey keeps that true if --ui-bg is ever tinted.
-
-   Only the LIGHTNESS is ours, and it rides high — "lighter for texts
-   in logos". The letters are the busiest shape in the lockup:
-   fourteen counters and stems a couple of pixels apart at the
-   x-height, so a dark pool under every one of them silts up the gaps.
-   Per scheme, because the two grounds want opposite things: 0.54 on
-   the light plate (it only has to beat 0.89, and past ~0.6 it stops
-   being visible at this alpha), 0.16 on the dark one (it has to sit
-   UNDER the 0.205 ground or it stops reading as shadow at all).
-   light-dark() picks a COLOR, never a channel, so the relative-color
-   expression is written out twice. */
-.hero-billet-line .billet-ink .brand-lockup path[fill="currentColor"] {
-  --mat-shade: light-dark(oklch(from var(--surf-dark) 0.54 c h),
-                          oklch(from var(--surf-dark) 0.16 c h));
-}
-/* The ENAMEL symbols keep their own hue, nearly out of light. l x 0.45
-   with chroma riding UP on the way down, the way paint does as it
-   leaves the light — which is what keeps four dark inks unmistakably
-   plum, amber, oxblood and bottle-green instead of four near-blacks.
-   They run DARKER than the wordmark on instruction, and it is also
-   what the shapes want: three or four fat closed bodies with nothing
-   to silt up. The floor catches magenta, whose 0.42 L face would
-   otherwise shade to 0.19. */
-.hero-billet-line .billet-ink .brand-lockup path:not([fill="currentColor"]) {
-  --mat-shade: oklch(from var(--mat) max(calc(l * 0.45), 0.24) calc(c * 1.1) h);
-}
-/* each enamel symbol's material — its own vendor hue */
-.hero-billet-line .billet-ink .brand-lockup path[fill="#F3B01C"] { --mat: #f3b01c; }
-.hero-billet-line .billet-ink .brand-lockup path[fill="#8D2676"] { --mat: #8d2676; }
-.hero-billet-line .billet-ink .brand-lockup path[fill="#EE342F"] { --mat: #ee342f; }
-.hero-billet-line .billet-ink .brand-lockup path[fill="#00DC82"] { --mat: #00dc82; }
+/* No :root.dark block down here any more. The dark plate wants a
+   dimmer rim — a mark rimmed in paper white on a dark ground stops
+   being metal and starts being a lamp, the same argument --ghost-sheen
+   settles a few blocks down — and it gets one automatically now that
+   the rim IS --ink-light: that derives from --text-color, which the
+   dark block a few blocks up already moves to 0.44, landing the rim at
+   ~0.73. One knob, two schemes, no second copy to drift. */
 /* -- THE GHOSTWRITE BAND ------------------------------------------
    A soft SILVER band sweeping the two dark wordmarks — the "82
    Ghostwrite" recipe's geometry, ported off a `background-clip: text`
@@ -1031,7 +1025,7 @@ html:has(.landing-panel) footer {
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(19) { --stop-at: 0.9; }
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(20) { --stop-at: 0.95; }
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(21) { --stop-at: 1; }
-/* User units per em of page type — see --mark-lift. 51.5 × 0.6893 ÷
+/* User units per em of page type — see THE SCALE TRAP. 51.5 × 0.6893 ÷
    0.537 and 32 × 0.75 ÷ 0.625; the second number is the artwork's
    --brand-ratio and the third its --brand-ref's coefficient. */
 .hero-billet-line .billet-ink [aria-label="Convex"] { --mark-per-em: 66.11; }
@@ -1117,7 +1111,7 @@ html:has(.landing-panel) footer {
   --stop-l: 0.49; --stop-l-dark: 0.4;
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(4) {
-  --stop-l: 0.455; --stop-l-dark: 0.37; /* the mid face — --mark-color */
+  --stop-l: 0.455; --stop-l-dark: 0.37; /* the mid face */
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(5) {
   --stop-l: 0.42; --stop-l-dark: 0.34;

@@ -84,7 +84,7 @@ onUnmounted(() => clearTimeout(manualTimer))
           :class="row.pending ? 'text-dimmed' : 'text-default'"
         >
           <span
-            class="flex-none rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em]"
+            class="flex-none rounded-chip border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em]"
             :class="row.pending
               ? 'border-dashed border-primary/40 text-primary-700 dark:text-primary-300'
               : 'border-accented text-muted'"

@@ -244,10 +244,18 @@ body {
      value above. The stops themselves are depth.css's, unchanged — this
      is the site's dish ramp resolved in a different scope, not a
      different ramp. */
+  /* --dish-body has to be restated for the SAME reason the ramp does,
+     and one line earlier: it is declared on :root too, so it had
+     already resolved against :root's --ui-bg-muted before it could
+     inherit down here. Depth.css's definition, verbatim, re-run
+     against the line above. */
+  --dish-body: light-dark(
+      var(--ui-bg-muted),
+      color-mix(in srgb, var(--ui-bg-muted), #000 20%));
   --gradient-recessed: linear-gradient(180deg,
-    color-mix(in srgb, var(--ui-bg-muted), #000 2%),
-    var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
-    color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+    color-mix(in srgb, var(--dish-body), #000 2%),
+    var(--dish-body) 34%, var(--dish-body) 76%,
+    color-mix(in srgb, var(--dish-body), var(--dish-floor-lift) 2%));
 
   /* The well's shadows come along for the same reason and by the same
      mechanism — depth.css declares these on :root too, so a scoped
@@ -264,16 +272,33 @@ body {
      should be.
 
      Dark keeps its alpha. Solid white on a 23 floor is a lit wire, not
-     a machined edge — four times the light room's contrast. */
+     a machined edge — four times the light room's contrast.
+
+     AND IT KEEPS IT NOW THAT depth.css HAS COME DOWN (2026-09-06).
+     The site's dark floor catches dropped to roughly a third there,
+     because a well cut into the 21/255 page ground was pooling at 60
+     and reading as a lamp. This scope is the exception, and the same
+     figure is what says so: a floor catch is not a fixed brightness,
+     it is a brightness ABOVE THE SURFACE THE CUT IS IN, and the rail
+     is not the page — it sits at 35. At depth.css's new alpha the
+     dish's floor came out at 31, BELOW the rail around it, which is
+     precisely the lip-and-no-bottom failure the paragraph above exists
+     to prevent. The old 0.09 puts it back at ~45: the same ~10 levels
+     over its own surround that the light scheme reads, on a plate that
+     happens to be dark. Both scopes obey one rule; only the ground
+     under them differs. It takes depth.css's WARM tone with them: the
+     alpha is this scope's to set, the colour is not, and a cold floor
+     line in the one dish that sits at eye level all the way down the
+     site is the last place to keep one. */
   --inset-shadow-1:
     inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
-    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
-    inset 0 -1px 0 light-dark(#fff, rgb(255 255 255 / 0.05)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.09)),
+    inset 0 -1px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.05)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
   --inset-shadow-2:
     inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
-    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
-    inset 0 -1px 0 light-dark(#fff, rgb(255 255 255 / 0.055)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.11)),
+    inset 0 -1px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.055)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
 }
 

@@ -47,6 +47,11 @@
    The recipes are @utility, so they land in @layer utilities and any
    unlayered component CSS still wins. They deliberately do NOT set
    border-radius: `rounded-*` is core Tailwind and would race them.
+   That still holds — but "the recipe does not set the shape" was
+   read for a while as "every component picks its own", and the page
+   drifted to seven radii. Shape is now its own named ladder (THE
+   SHAPE LADDER below): the recipe gives a surface its material, a
+   rung gives it its shape, and neither races the other.
 
    A surface has ONE shape. Where a component's theme has to overrule
    another's — Docus's search field is a neutral `soft` button, so it
@@ -82,6 +87,70 @@
 :root {
   --ui-radius: 0.5rem; /* rounded-sm 8 . md 12 . lg 16 . xl 24 */
 }
+
+/* -- THE SHAPE LADDER ---------------------------------------------
+   Radius is DERIVED, not chosen. Two nested rounded boxes only read
+   as one machined part when their corner arcs are concentric, and
+   that is a formula, not a taste:
+
+       R_inner = R_outer - gap        (gap = the padding between them)
+       R_outer = R_inner + gap
+
+   Break it and the distance between the two arcs is no longer
+   constant: it opens up along the 45 degree diagonal and pinches on
+   the straight runs. That is what "the corners do not match" always
+   turns out to be. Equal NUMBERS do not make equal-looking corners;
+   satisfying the formula does.
+
+   Everything below falls out of one chosen constant — the WELL, the
+   innermost cut, at 12. Every surface that encloses it is its
+   radius plus that surface's own inset:
+
+     well   12  the cut pocket. The one number picked by hand.
+     card   28  = well 12 + a card's 16 inset
+     plate  36  = well 12 + a plate's 24 inset
+
+   So a plate is not "rounder because it is bigger" — it is rounder
+   by exactly the distance its wall stands off the pocket inside it.
+   Change a component's padding and its radius has to move with it.
+
+   Corollaries worth knowing before reaching for a number:
+
+   - Everything at the SAME inset takes the SAME radius, whatever
+     its height. The hero's composer and status rail sit at the
+     plate's 24 inset exactly like the code well does, so all three
+     are 12. A short strip does read proportionally rounder than a
+     tall well, and that tempts you to shave it — do not. Its arc
+     has to stay parallel to the plate it is cut into, and that
+     relationship is the one the eye actually checks.
+   - The chain bottoms out fast. Each level costs its own inset, so
+     after two you are at zero. That is a real limit, not a bug: a
+     pocket inside a pocket inside a pocket cannot all be round.
+   - It only governs CUTS. A row's tint and a badge's border are
+     marks printed ON a surface, not pockets milled INTO one —
+     nothing is nested, so nothing has to be concentric. They keep
+     small hand-set radii (strip 8, chip 5) and stay out of the
+     chain.
+
+   Why plain custom properties and not @theme: `@theme` blocks never
+   compile down this import chain (see the header of theme.css), so
+   the `rounded-*` utilities that an @theme key would have generated
+   are hand-shimmed below — the same shim pattern theme.css uses for
+   --font-display and the --animate-* tokens. */
+:root {
+  --radius-well:  0.75rem; /* 12 . the cut pocket — the one constant */
+  --radius-card:  1.75rem; /* 28 = well + 16 card inset             */
+  --radius-plate: 2.25rem; /* 36 = well + 24 plate inset            */
+  --radius-strip: 0.5rem;  /*  8 . a printed row, not a cut         */
+  --radius-chip: 0.3125rem;/*  5 . a printed badge, not a cut       */
+}
+
+@utility rounded-plate { border-radius: var(--radius-plate); }
+@utility rounded-card  { border-radius: var(--radius-card); }
+@utility rounded-well  { border-radius: var(--radius-well); }
+@utility rounded-strip { border-radius: var(--radius-strip); }
+@utility rounded-chip  { border-radius: var(--radius-chip); }
+
 :root:not(.dark) {
   --ui-bg:          oklch(93.8% 0 0);
   --ui-bg-muted:    var(--ui-color-neutral-100);
@@ -131,16 +200,56 @@
   /* --elevation-header lives in chrome.css with the rest of the header
      rail: it is one plate's recipe, not a rung on this ladder. */
 
-  /* Wells — lip shade on top, light pooling at the floor. */
+  /* Wells — lip shade on top, light pooling at the floor.
+
+     THE DARK FLOOR CATCH RUNS AT A THIRD OF THE LIGHT ONE (2026-09-06).
+     Both schemes used to pool the same white at the same alpha, on the
+     argument that a floor catch is the room's light and the room does
+     not change. It does: on a 0.9-white plate a 0.09 white pool lands
+     four points of luminance above the floor and reads as a soft turn,
+     but on the 0.09 anodize the SAME layer lands the last band of the
+     dish at 60/255 against a 21/255 ground — measured on the hero's
+     spec board — which is not a floor catching light, it is a lamp
+     switched on inside the cut. The end of every well's gradient was
+     the brightest thing on the plate.
+
+     A first pass took them to roughly a third (0.032 / 0.038) and the
+     board still read the same: 36/255 on a 21 ground is a third of
+     the old lift and still the brightest thing in the hero's left
+     column, because what the eye picks up is the PRESENCE of a lit
+     edge, not its amplitude. So the dark pools come down to about an
+     eighth of the light scheme's — 0.09 -> 0.012, 0.11 -> 0.014, the
+     1px floor lines with them — which lands the board's last band at
+     ~28: a floor that has turned, not a floor that is lit.
+
+     What draws the cut instead is the LIP — and, since --dish-body
+     landed below, the FLOOR's own tone. That is the trade the dark
+     scheme wants and the light scheme cannot make: on a 0.9 plate
+     there is no room below the floor to cut into, so light has to
+     model the recess with its catch, and its figures stay exactly
+     where they were. Same recipe, two rooms, opposite ends of it
+     doing the work.
+
+     WHAT LITTLE CATCH DARK KEEPS IS WARM (2026-09-06: "make the white
+     shadow on the bottom without blue"). Pure white at 1% over a
+     neutral near-black composites to a dead-neutral grey and the eye
+     reads a neutral grey in that company as COLD — the identical
+     illusion chrome.css measures in the other direction on the rail.
+     The tone is oklch(80% 0.035 65): a warm off-white, far too little
+     chroma to read as a colour and just enough to stop the floor line
+     reading as a lit wire. It comes back up to 0.03/0.035 at the same
+     time, because with the floor now a step below the plate a small
+     turn at the bottom is a floor catching light again rather than
+     the only thing saying there is a floor. */
   --inset-shadow-1:
     inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
-    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09)),
-    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.05)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.03)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), oklch(80% 0.035 65 / 0.016)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
   --inset-shadow-2:
     inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
-    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.11)),
-    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.055)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.035)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.018)),
     inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
   /* The lip of a cut, as a BORDER colour — for the recesses that want a
      drawn edge as well as the cast, so a stack of wells reads as one
@@ -151,8 +260,26 @@
      LIGHTER than the page, and a hole ringed in it reads as a raised
      wire (the trap --rail-shade documents in chrome.css). Half the
      weight of the hairline the ground uses — this is the wall of a
-     1px cut, not a rule drawing a box. */
-  --recess-edge: light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4));
+     1px cut, not a rule drawing a box.
+
+     WHICH IS WHY DARK CAME DOWN, TWICE (0.4 -> 0.22 -> 0.1,
+     2026-09-06). A shade is a fraction of what it lands on, and the
+     two schemes hand it very different surfaces: 0.05 black on a 231
+     plate takes 12 levels off, 0.4 black on a 41 plate takes 16 — so
+     the same token was a lip in one room and an OUTLINE in the other,
+     and the hero's readout well read as a box drawn on the instrument
+     rather than as a well cut into it.
+
+     0.22 only made that outline fainter, which is not the same thing
+     as making it stop being one. What retired it is --dish-body: with
+     the floor a genuine step below the plate the recess is drawn by
+     tone from edge to edge, and the border's whole job — being the
+     ONLY evidence a dark well existed — is gone. At 0.1 it takes 4
+     levels, which lands it between the plate and the floor and turns
+     the boundary into the middle step of a ramp instead of a line
+     across it. The light figure was never the wrong one and does not
+     move. */
+  --recess-edge: light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.1));
 
   /* Glows — keyed to the semantic aliases. */
   --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
@@ -169,11 +296,69 @@
     color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
     var(--ui-bg-elevated) 58%,
     color-mix(in srgb, var(--ui-bg-elevated), #000 2.5%));
-  /* The dish holds its mid-tone; it only turns at the lip and floor. */
+  /* THE TONE A FLOOR TURNS TOWARD. Light pooling at the bottom of a
+     dish is the room's own light, and the two rooms do not have the
+     same light in them: mixing #fff into a 0.9 plate is a two-point
+     turn, mixing the SAME #fff into the 0.09 anodize lifts the floor
+     by a third of its own value and the dish stops matching the
+     surface it is cut into — which is the one law `concave-ground` is
+     built on. The dark room's light is a dim grey, so that is what its
+     floors turn toward; the percentages below stay per-recipe and
+     stay the same in both schemes (2026-09-06). Same correction as the
+     dark floor catch in --inset-shadow-1/2 above, and it took the same
+     second pass: at 45% the ground dish still ended four levels over
+     its own floor, which on a surface this dark is a visible step.
+     30% is a turn you can measure and not one you can point at.
+
+     IT IS WARM in dark. A neutral grey read against a near-black
+     ground reads COOL — the same simultaneous-contrast effect the
+     header rail's floor line documents in light — and a cold line at
+     the bottom of a cut looks like an LED behind it rather than light
+     landing on a floor. A trace of the room's own warmth (C 0.02 at
+     65deg, well under the threshold where it reads as a colour) is
+     what makes it read as light instead. */
+  --dish-floor-lift: light-dark(#fff, oklch(30% 0.02 65));
+  /* ================================================================
+     THE DARK ROOM'S CUTS ARE DARKER THAN WHAT THEY ARE CUT INTO.
+
+     Everything above this line modelled a recess the way a lit room
+     makes one: hold the surface's own tone, shade the lip, and let
+     light POOL at the floor. That is right on the white plate and it
+     is why the light figures never moved. In dark it was never right,
+     and one number says why — Nuxt UI resolves --ui-bg-muted and
+     --ui-bg-elevated to the SAME 0.269 there. A well cut into a plate
+     came out exactly the tone of the plate, so nothing but a drawn
+     1px ring said it was a well at all, and every recess on the page
+     read as a box outlined on the instrument rather than as a hole in
+     it (2026-09-06: "some white line ... I want to make it smoother
+     without such clear edges", and it is only ever seen in dark).
+
+     Less light reaches the bottom of a hole. That is the whole model,
+     and it is the one the dark room can actually afford: the dish
+     body drops ~20% below its surface and the recess is then drawn by
+     TONE, continuously, with no edge anywhere in it. The ring goes to
+     a whisper (--recess-edge below), the floor catch stays the small
+     warm turn it became, and what used to need a line now needs
+     nothing. Light passes both tokens straight through unchanged —
+     `light-dark()` takes two colours and a color-mix() is a colour,
+     which is the whole trick here. */
+  --dish-body: light-dark(
+      var(--ui-bg-muted),
+      color-mix(in srgb, var(--ui-bg-muted), #000 20%));
+  /* The same step for the tray cut into the PAGE. Shallower (12%):
+     the ground is already the darkest surface the site has, and a
+     hole in it has correspondingly less room to go down before the
+     floor stops being a tone and starts being an absence. */
+  --dish-body-ground: light-dark(
+      var(--ui-bg),
+      color-mix(in srgb, var(--ui-bg), #000 12%));
+  /* The dish holds its mid-tone; it only turns at the lip and floor.
+     That mid-tone is --dish-body, which IS --ui-bg-muted in light and
+     a step below it in dark — see the block above. */
   --gradient-recessed: linear-gradient(180deg,
-    color-mix(in srgb, var(--ui-bg-muted), #000 2%),
-    var(--ui-bg-muted) 34%, var(--ui-bg-muted) 76%,
-    color-mix(in srgb, var(--ui-bg-muted), #fff 2%));
+    color-mix(in srgb, var(--dish-body), #000 2%),
+    var(--dish-body) 34%, var(--dish-body) 76%,
+    color-mix(in srgb, var(--dish-body), var(--dish-floor-lift) 2%));
   /* THE SAME DISH CUT INTO THE PAGE, not into a plate: the floor is
      --ui-bg, the ground's own colour, where the recipe above steps up
      to --ui-bg-muted and reads as a lighter panel inset in the page.
@@ -187,9 +372,9 @@
      one has to stop that texture at its own edge or the dish reads as
      a window onto the pattern rather than as a recess in the plate. */
   --gradient-recessed-ground: linear-gradient(180deg,
-    color-mix(in srgb, var(--ui-bg), #000 3.5%),
-    var(--ui-bg) 34%, var(--ui-bg) 76%,
-    color-mix(in srgb, var(--ui-bg), #fff 3%));
+    color-mix(in srgb, var(--dish-body-ground), #000 3.5%),
+    var(--dish-body-ground) 34%, var(--dish-body-ground) 76%,
+    color-mix(in srgb, var(--dish-body-ground), var(--dish-floor-lift) 3%));
   /* 1px machined edge: specular top -> shaded bottom. Painted by
      every convex recipe on the border box, so it only shows where a
      `bevel` has opened a 1px transparent border for it. */
@@ -376,22 +561,35 @@
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 /* `concave-ground` is the deep tray cut into the PAGE rather than into
-   a plate — the ground's own colour on the floor (see
+   a plate — the ground's own tone on the floor in light (see
    --gradient-recessed-ground), so nothing about it reads as an inset
-   panel, and the walls carry the whole recess. It takes the deep
+   panel, and the walls carry the whole recess. In DARK the floor is
+   the ground taken 12% down, for the reason the --dish-body block
+   gives: a hole in a dark room is darker than the room. It takes the deep
    well's shadow plus a floor catch of its own: with no tonal step
    between the dish and the page there is nothing else to see it by,
    and the catch is what makes the cut read as lit from overhead rather
    than as a smudge. Pair it with `border-(--recess-edge)` for the lip.
 
    For a readout sitting directly on a section ground — the hero's spec
-   board — where `concave` would put a lighter tile on the page. */
+   board — where `concave` would put a lighter tile on the page.
+
+   THE EXTRA CATCH IS THE PART DARK CANNOT AFFORD AT FULL STRENGTH.
+   It stacks on --inset-shadow-2's own pool along the same 2px of
+   floor, so on the light plate the two together are a turn and on the
+   0.09 anodize they were a second light source under the first: the
+   spec board's last band measured 60/255 against a 21/255 page, the
+   brightest thing in the hero after the primary key. It is 0.014 of
+   the warm tone now (from 0.05 via 0.016 and 0.006, 2026-09-06) — a
+   turn at the foot of a floor that is already a step down, rather
+   than the one thing proving the floor was there. The light scheme's
+   0.85 is untouched. */
 @utility concave-ground {
   --depth: concave;
   background: var(--gradient-recessed-ground);
   box-shadow:
     var(--inset-shadow-2),
-    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.05));
+    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014));
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
