@@ -232,6 +232,8 @@ const send = useMutation(api.messages.send)
 
 A runnable version lives in [`examples/minimal`](examples/minimal) — or open it directly in [StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/minimal).
 
+For something you can click around in, [`examples/playground`](examples/playground) is a live message board covering the same ground plus mutations and connection state — [open it in StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/playground). It's also what the **Open in StackBlitz** link on every pull request opens, with that commit's build already wired in, so a change can be tried in a real Nuxt app without setting one up. Both examples run against a Convex deployment of your own — add `NUXT_PUBLIC_CONVEX_URL` and you're live.
+
 ## Relationship to upstream
 
 This package is intentionally kept **diffable against the upstream React/Next sources** so it can track new Convex / Better Auth / Polar releases. Each file mirrors its origin:

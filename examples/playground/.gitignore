@@ -1,0 +1,24 @@
+# Also read by pkg.pr.new: it filters the StackBlitz template with THIS file
+# (only `node_modules` and `.git` are excluded unconditionally), so anything
+# that must not ship to the sandbox has to be listed here, not just in the
+# repository root .gitignore.
+node_modules
+.nuxt
+.output
+.data
+
+# Where the visitor puts their own NUXT_PUBLIC_CONVEX_URL (and what the Convex
+# CLI writes to, for anyone running this app locally). Never ours to ship.
+.env
+.env.*
+
+# A lockfile would ship to StackBlitz and pin the *registry* version of
+# nuxt-convex-module, defeating the preview build the template exists to
+# exercise.
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+
+# NOT ignored, on purpose: convex/_generated. Committing the codegen is what
+# lets the sandbox type-check and build before `npx convex dev` has ever run.

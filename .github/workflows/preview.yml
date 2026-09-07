@@ -3,6 +3,9 @@ name: preview
 # Continuous preview releases via pkg.pr.new (StackBlitz): every PR and every
 # push to main gets an installable build —
 #   npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>
+# — and a runnable one, as a StackBlitz playground built from
+# `examples/playground` with that same build wired in, so a change can be tried
+# in a real Nuxt app straight from the PR comment.
 # Auth is handled by the pkg.pr.new GitHub App installed on the repository;
 # the workflow token needs no extra permissions.
 on:
@@ -56,5 +59,22 @@ jobs:
       # minimumReleaseAge cooldown and under Dependabot, like every other
       # dependency. `dlx` resolved whatever was newest at run time and executed
       # it on every PR.
+      #
+      # --template is not optional. pkg.pr.new only skips its synthesised
+      # "default" template when an explicit one is given, and that default is an
+      # empty index.js beside a package.json whose sole dependency is the
+      # tarball — no nuxt, no vue, no convex — so the "Open in StackBlitz" link
+      # opened something that could not run. `examples/playground` replaces it
+      # with a real app. Two constraints follow from how templates are shipped:
+      # the directory is uploaded standalone (no workspace, no lockfile), and
+      # only our own package names are rewritten to pkg.pr.new URLs — so a
+      # `catalog:` or `workspace:` range in there would reach npm verbatim and
+      # fail. The path is explicit rather than './examples/*' so a new example
+      # cannot start appearing in public PR comments before it is ready.
+      #
+      # Note this step runs on pull_request, forks included: what the template
+      # contains, and the name it is linked under, are PR-authored. Sandboxed
+      # and plainly a PR artifact, but `examples/playground` is review surface
+      # in fork PRs the way workflow files already are.
       - name: Publish preview
-        run: pnpm exec pkg-pr-new publish --pnpm --comment=update
+        run: pnpm exec pkg-pr-new publish --pnpm --comment=update --template './examples/playground'

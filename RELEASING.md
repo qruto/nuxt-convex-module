@@ -115,7 +115,11 @@ first version was published manually (`v0.0.0`).
 
 2. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** on the
    repository so the `preview` workflow can publish continuous preview builds
-   (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`).
+   (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`). The same step
+   ships `examples/playground` as a StackBlitz template via `--template`, which
+   is what the **Open in StackBlitz** link in each PR comment opens. Drop that
+   flag and pkg.pr.new silently substitutes a synthesised template that cannot
+   run — see the comment in `preview.yml`.
 
 ## After the first publish
 
@@ -127,8 +131,11 @@ first version was published manually (`v0.0.0`).
   stats, description, and maintainers auto-sync afterwards.
 - **Add GitHub repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`,
   `realtime`.
-- The README's StackBlitz link (`examples/minimal`) starts working as soon as the package is
-  installable from npm.
+- The README's StackBlitz links (`examples/minimal`, `examples/playground`) start working as
+  soon as the package is installable from npm — they import from GitHub, so they resolve
+  `nuxt-convex-module` from the registry. The per-PR StackBlitz link is different and already
+  works: pkg.pr.new rewrites that dependency to the commit's preview tarball, so it needs no
+  npm release at all.
 
 ## Cutting a release
 

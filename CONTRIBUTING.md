@@ -77,6 +77,8 @@ Then open the website, launch Nuxt DevTools in the browser, and pick the Convex 
 ```
 src/                  # Module source (Nuxt module + Convex component)
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
+examples/             # Standalone consumer apps — the only code here that
+                      # installs the published package instead of using src/
 test/                 # Vitest unit & integration tests
 website/              # Nuxt app: product homepage · docs (Docus) with live Convex demos
 .agents/skills/       # Agent skills — one committed copy, read by most agents directly
@@ -86,6 +88,27 @@ website/              # Nuxt app: product homepage · docs (Docus) with live Con
 Both skill directories are committed, so a fresh clone works with no setup. `npx skills add
 <owner/repo> --agent claude-code` writes both sides; the `lint` job in CI fails if they drift
 apart or a skill's file is not named exactly `SKILL.md`.
+
+`examples/` sits outside the pnpm workspace and outside ESLint, the root
+`tsconfig.json` and fallow — each app has its own `package.json` and committed
+`convex/_generated`, so treating them as workspace source would be wrong. Both
+have a job beyond being documentation:
+
+- **[`examples/minimal/`](./examples/minimal)** — the smallest thing that works.
+  The `pack` CI job copies it, installs the packed tarball with plain `npm`, and
+  builds it: the only place a registry-shaped install (lifecycle scripts,
+  engines, export maps) is exercised at all.
+- **[`examples/playground/`](./examples/playground)** — the app behind the
+  **Open in StackBlitz** link on every pull request. `preview.yml` hands it to
+  pkg.pr.new as `--template`, and pkg.pr.new rewrites its `nuxt-convex-module`
+  dependency to that commit's preview build, so a reviewer can try a change in a
+  real Nuxt app from the PR comment. StackBlitz receives the directory
+  standalone, so it must stay self-contained: no `catalog:` or `workspace:`
+  ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
+  repository root's — is what filters the upload.
+
+Neither connects to a shared backend; both talk to a Convex deployment on the
+visitor's own account.
 
 ## Submitting Changes
 
