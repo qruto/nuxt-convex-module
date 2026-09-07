@@ -64,7 +64,7 @@ Convex [components](https://www.convex.dev/components) are backend modules, and 
 
 At parity with [`@convex-dev/better-auth@0.12.5`](https://github.com/get-convex/better-auth) (its `react` **and** `nextjs` halves) and [`@convex-dev/polar@0.9.2`](https://github.com/get-convex/polar).
 
-A component with **no** React/Next client has nothing to port. Install it in your Convex deployment and call its functions from Vue with the ordinary `useMutation` / `useAction` — [`@convex-dev/resend`](https://github.com/get-convex/resend) is the worked example.
+A component with **no** React/Next client has nothing to port. Install it in your Convex deployment and call its functions from Vue with the ordinary `useMutation` / `useAction`.
 
 Every surface above is auto-imported, and also reachable as a [subpath export](#manual-imports--subpath-exports) for explicit imports. The authoritative file-by-file map and pinned baselines live in [`PARITY.md`](./PARITY.md).
 

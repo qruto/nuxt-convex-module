@@ -2,7 +2,7 @@
   <!-- The shelf of official marks the client (or your Convex backend) speaks
        to. An ambient detection scan pings each mark in sequence — the module
        finding what's installed — and hovering the card lights the whole shelf
-       in the vendors' own brand colors (ink for the ink-only brands). The
+       in the vendors' own brand colors (ink for the ink-only brand). The
        stagger rides transition-delay, so reduced-motion visitors still see
        them brighten. Better Auth's mark is inlined from its brand SVG (no
        iconify set carries the official one); the rest resolve through the
@@ -34,13 +34,12 @@
 
 <script setup lang="ts">
 // Brand colors are the vendors' published values, verbatim — the same rule
-// the hero lockups follow. Ink-only brands (Better Auth, Resend) stay ink.
+// the hero lockups follow. The ink-only brand (Better Auth) stays ink.
 const LOGOS: Array<{ id: string, label: string, icon?: string, color?: string }> = [
   { id: 'better-auth', label: 'Better Auth' },
   { id: 'polar', label: 'Polar', icon: 'i-iconoir-polar-sh', color: '#0062ff' },
   { id: 'clerk', label: 'Clerk', icon: 'i-simple-icons-clerk', color: '#6c47ff' },
   { id: 'auth0', label: 'Auth0', icon: 'i-simple-icons-auth0', color: '#eb5424' },
-  { id: 'resend', label: 'Resend', icon: 'i-simple-icons-resend' },
 ]
 </script>
 

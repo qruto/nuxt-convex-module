@@ -109,7 +109,7 @@ const ENTRIES: SpecEntry[] = [
     label: 'ADD-ONS',
     stamp: '@convex-dev/*',
     title: 'Official add-ons, auto-detected',
-    body: 'Install `@convex-dev/better-auth`, `@convex-dev/polar`, `@clerk/vue`, or `@auth0/auth0-vue` and the client wires itself up — server-side components like Resend run in your Convex backend as-is.',
+    body: 'Install `@convex-dev/better-auth`, `@convex-dev/polar`, `@clerk/vue`, or `@auth0/auth0-vue` and the client wires itself up — server-side components run in your Convex backend as-is.',
     to: '/components',
     art: SpecAddons,
     face: 'addons',

@@ -59,7 +59,7 @@ Nitro server handlers, the Better Auth proxy routes, and the Convex-aware CSP th
 generates.
 
 Vulnerabilities in the upstream projects the module integrates with — [Convex](https://github.com/get-convex),
-[Better Auth](https://github.com/better-auth/better-auth), Polar, or Resend — belong in *their*
+[Better Auth](https://github.com/better-auth/better-auth), or Polar — belong in *their*
 security process, not here. Report them to that project directly. If you are unsure which side a
 finding lands on, report it here and we will route it.
 
