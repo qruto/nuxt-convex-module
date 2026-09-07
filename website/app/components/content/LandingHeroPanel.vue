@@ -183,6 +183,19 @@ async function playScene(index: number, t: DemoTools) {
   }
 }
 
+// The capability legend in the copy is this panel's key: it lights whichever
+// entry the plate is demonstrating. Scene id while recording, LIVE once the
+// real query is on the plate (the legend maps LIVE to live queries) — and
+// nothing while the socket is down: a lamp over "deployment unreachable"
+// would be the panel claiming a subscription it does not have. See
+// useHeroScene for why the served HTML never carries a lit entry.
+const heroScene = useHeroScene()
+watchEffect(() => {
+  heroScene.value = mode.value === 'recording'
+    ? SCENES[scene.value]!.id
+    : online.value ? 'LIVE' : null
+})
+
 const plate = ref<HTMLElement | null>(null)
 const { state, replay } = useDemoScript(plate, async (t) => {
   mode.value = 'recording'
@@ -246,7 +259,7 @@ watch(state, (value) => {
        32rem — is what containment needs to leave alone. -->
   <figure
     ref="plate"
-    class="convex-3 bevel sheen noise rounded-[26px] @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
+    class="convex-3 bevel sheen noise rounded-plate @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
     aria-label="A recorded tour of the client's composables that ends on a live Convex query rendering real rows"
   >
     <!-- The header is the file tab and nothing else. It used to carry a
@@ -268,7 +281,7 @@ watch(state, (value) => {
          instead of just at the clamp's ceiling. It was 32, and the 1em it
          was short by never showed only because the panel used to be wide
          enough to sit pinned at the 14px maximum. -->
-    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-[14px] [&_pre]:border-(--recess-edge) [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33.5),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-well [&_pre]:border-(--recess-edge) [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33.5),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
       <div
         v-for="(part, index) in parts"
         :key="SCENES[index]!.id"
@@ -298,8 +311,20 @@ watch(state, (value) => {
          shoved the whole hero down under it. One height, cut for the four
          rows VISIBLE allows plus their gaps, and the empty state sits at the
          bottom of it — a readout with nothing on it is what an idle
-         instrument looks like, and it does not move. -->
-    <div class="concave-2 rounded-[14px] overflow-hidden border border-(--recess-edge) px-4.5 py-3.5">
+         instrument looks like, and it does not move.
+
+         THE SHALLOW WELL, not the deep tray (2026-09-06). `concave-2` is
+         the rung for a stage cut straight into a plate — the spec sheet's
+         figure wells — and this readout is not that: it is the second of
+         two wells inside a plate that is ALREADY a raised part on the
+         hero ground, so the deep rung spent its whole depth budget
+         drawing a hard box in the middle of the instrument. At its
+         largest of any well on the page, and with an empty state that
+         shows the box and nothing else, that box was the loudest thing
+         on the panel. `concave` cuts it the same distance the composer
+         under it is cut, which is what makes the two read as one
+         instrument face rather than as a tray with a field beside it. -->
+    <div class="concave rounded-well overflow-hidden border border-(--recess-edge) px-4.5 py-3.5">
       <ul
         class="m-0 flex h-26 list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
         aria-live="polite"
@@ -308,10 +333,10 @@ watch(state, (value) => {
           <li
             v-for="m in liveShown"
             :key="m._id"
-            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-[7px] px-1.5 text-default motion-safe:animate-row-land"
+            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-strip px-1.5 text-default motion-safe:animate-row-land"
           >
             <span
-              class="max-w-[14ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
+              class="max-w-[14ch] flex-none truncate rounded-chip border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
               :class="m.author === handle
                 ? 'border-primary/40 text-primary-700 dark:text-primary-300'
                 : 'border-accented text-muted'"
@@ -331,11 +356,11 @@ watch(state, (value) => {
           <li
             v-for="row in simShown"
             :key="`${row.id}${row.pending ? ':pending' : ''}`"
-            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-[7px] px-1.5 text-default motion-safe:animate-row-land"
+            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-strip px-1.5 text-default motion-safe:animate-row-land"
             :class="row.pending ? 'opacity-60' : undefined"
           >
             <span
-              class="max-w-[14ch] flex-none truncate rounded-[5px] border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
+              class="max-w-[14ch] flex-none truncate rounded-chip border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
               :class="row.author === 'you'
                 ? `text-primary-700 dark:text-primary-300 ${row.pending ? 'border-dashed border-primary/60' : 'border-primary/40'}`
                 : 'border-accented text-muted'"
@@ -370,7 +395,7 @@ watch(state, (value) => {
       @submit.prevent="submit"
     >
       <label
-        class="concave rounded-md flex min-w-0 flex-1 items-center gap-2 border border-(--recess-edge) px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
+        class="concave rounded-well flex min-w-0 flex-1 items-center gap-2 border border-(--recess-edge) px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
         :class="sending ? 'opacity-65' : undefined"
       >
         <span class="sr-only">Write a message to the live Convex table</span>
@@ -418,7 +443,7 @@ watch(state, (value) => {
            event    the last thing that happened: the sim chip, or the
                     hydration / commit latency / a rejected write.
            action   REPLAY, in its own bay past the last scribe. -->
-    <figcaption class="panel-rail concave rounded-[10px] mt-3.5 flex min-h-[2.15rem] items-stretch border border-(--recess-edge) font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
+    <figcaption class="panel-rail concave rounded-well mt-3.5 flex min-h-[2.15rem] items-stretch border border-(--recess-edge) font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
       <template v-if="mode === 'recording'">
         <span class="rail-cell">
           <i

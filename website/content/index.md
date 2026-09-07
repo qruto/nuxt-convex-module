@@ -33,7 +33,12 @@ ui:
   # under one, and the hero already carries three competing voices —
   # the relief billet, the spec board and the primary call. The line
   # height comes down with it so the three beats stay one block.
-  description: "mt-12 text-base sm:text-lg/7"
+  #
+  # `text-pretty`: the closer is two claims on two lines at desktop width,
+  # and on a phone each of them wraps again — left to the greedy breaker
+  # the second one dropped "Vue app." alone on a fourth line. Pretty
+  # balances the last two lines instead of orphaning the final words.
+  description: "mt-12 text-base text-pretty sm:text-lg/7"
   # The spec stamp sits in #body, between the copy and the calls to
   # action, at the theme's own distance from the text (mt-10, 40px). The
   # footer then closes up UNDER that: the stamp is the line directly
@@ -158,23 +163,27 @@ in a :brand-nuxt application
 ::
 
 #description
-<!-- Three beats, two emphasis spans. The old build bolded all six capability
-     names, which is what made the block read as noise: a comma list is
-     already a list, and bolding every item in it emphasises nothing. Bold
-     now carries the CLAIM (one span, the lead), `.text-primary` the one
-     thing that is actually the module's argument, and the closer runs
-     plain — it is an aside, not a third pitch. -->
+<!-- Three beats, and the middle one is no longer a sentence. The six
+     capabilities used to run as a comma list inside the second line, where
+     a reader had to parse them out of the prose; they now stand as a part
+     legend (LandingCapabilities.vue) — mark, name, and the composable that
+     is that feature — which the instrument panel beside the copy lights
+     entry by entry as it demonstrates each one.
+
+     Hierarchy is held by material, not size. The billet and the primary key
+     stay first: the lead is the one bold line and the only headline-ink
+     text in the copy, the legend sits in body ink with cut mono stamps, and
+     the closer runs plain and muted. The `.text-primary` span the closer
+     used to carry is gone — the legend's lamp is the copy's accent now, and
+     a second one would have the two argue with the key. -->
 **One install wires Convex into Nuxt.**
 
-<!-- Hard break BEFORE the dash, not after it. The three beats are one
-     sentence with an aside hung off the end, and left to wrap on its own
-     the aside opened with an orphaned "— all" trailing the first line:
-     the dash read as a hyphen breaking "SSR", and the claim it introduces
-     started mid-line where nothing marks it. Broken here, the dash LEADS
-     its own line, which is the job a dash has. -->
-Live queries, mutations, actions, cursor pagination, file storage and SSR\
-— all [auto-imported and typed]{.text-primary} against your deployment.
+:landing-capabilities
 
+<!-- The closer is one aside on two lines: a hard break, so the two claims
+     land one per line at every width rather than splitting wherever the
+     column happens to run out. -->
+Auto-imported and typed against your deployment.\
 The same client runs standalone in any Vue app.
 
 #body
@@ -220,14 +229,21 @@ class: "landing-mill-rings landing-panel landing-reveal border-b border-default"
 :concave-text[One table, live in every client]
 
 #description
-<!-- Two short sentences, no markup. The build before this one named the
+<!-- Two short sentences, one device. The build before this one named the
      composables and set two bold spans and two code spans across three
      lines — every device the page has, spent on a claim the stage under it
      demonstrates anyway. The panes are labelled CLIENT A and CLIENT B and
      stamp SIMULATED · ZERO NETWORK on their own foot; the sentence only has
-     to say what the reader is about to watch happen. -->
-Two isolated clients, no shared props. A write from either side shows up in
-both on the same commit.
+     to say what the reader is about to watch happen.
+
+     A HARD BREAK, not a wrap: the two sentences are the setup and the
+     payoff, and left to reflow they landed the split wherever the viewport
+     happened to put it. Broken here each sentence gets its own line at
+     every width. The setup carries the accent — it is the premise the
+     stage is about to be tested against — and the payoff runs plain
+     underneath it, which is the same order the hero sets. -->
+[Two isolated clients, no shared props.]{.text-primary}\
+A write from either side shows up in both on the same commit.
 
 #body
 ::landing-operation

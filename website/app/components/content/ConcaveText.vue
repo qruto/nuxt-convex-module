@@ -43,13 +43,19 @@
    The landing sections carry no eyebrow above these titles, so the
    relief alone has to keep them legible.
 
-   The dark cut runs deeper still: a near-black ground has almost no
-   room below it, so the floor alone barely separates and the walls do
-   the drawing. */
+   The dark cut runs deeper still (black 45% over neutral-900, ~13/255
+   under a ~23 plate): a near-black ground has almost no room below it,
+   so the floor alone barely separates and the WALLS do the drawing —
+   and on dark the walls are no longer this tile alone. See the
+   text-shadow at the bottom of this rule: a lighter floor was tried
+   first (2026-09-07, the ground opened 22% toward white, on the
+   exposed-raw-metal argument) and it was legible, but it read as pale
+   type printed on the plate, not a cut. A recess is darker than what
+   it is cut into; the light has to come from the walls. */
 .face {
   --floor: light-dark(
       color-mix(in srgb, var(--ui-bg), black 22%),
-      color-mix(in srgb, var(--ui-bg), black 32%));
+      color-mix(in srgb, var(--ui-bg), black 45%));
   /* The paint has to reach BELOW the last line box or the descenders
      get no fill at all. Technor hangs them past the tile (to 105.5%),
      so their feet are painted by the NEXT tile down — which is how a
@@ -119,31 +125,131 @@
      end that was washing out. The dark figures stay where they were:
      on the black anodize the floor barely separates from the ground
      and the walls are the letterform, so the same step down there
-     (tried at 0.42 / 0.22) only dimmed the title. */
-  --shade: light-dark(oklch(0% 0 0 / 0.13), oklch(0% 0 0 / 0.55));
+     (tried at 0.42 / 0.22) only dimmed the title.
+
+     It steps down on dark now anyway (0.64 -> 0.35, 2026-09-07), not
+     because the title is too dark but because the occlusion moved: the
+     shape-following inner shadow below darkens the head of every glyph
+     on its own, and a full-strength tile shade on top of it took the
+     cap tops to nothing. The tile keeps the per-line tilt; the shadow
+     draws the edge. */
+  --shade: light-dark(oklch(0% 0 0 / 0.13), oklch(0% 0 0 / 0.35));
   /* Dark still runs the far wall harder than light — on the black
      anodize the lift toward the baseline is most of what separates a
-     letter from the ground — but it is a lift, not a glint. */
-  --catch: light-dark(oklch(100% 0 0 / 0.05), oklch(100% 0 0 / 0.32));
+     letter from the ground — but it is a lift, not a glint.
+
+     It ran at 0.32 and that was a glint (2026-09-06): over the 16/255
+     floor the far wall came out at 92/255 while the cap tops sat at
+     7, so the letter was five and a half times brighter at its feet
+     than at its head and the title read as type printed in a fade
+     from black to silver — the exact failure the floor went deeper to
+     fix, arriving from the other end of the same gradient.
+
+     It went to 0.21 first and that was the same title (~64 at the
+     baseline). Halving a wash does not stop it being a wash: what the
+     eye reads at display size is a pale band across the FEET of every
+     letter, and at 0.21 the band was still there, just dimmer. So the
+     correction is two-part and the second part is the one that
+     mattered — the band comes down to 0.13 AND it stops being a band.
+     Its ramp used to leave the tile transparent at 73% and reach full
+     at 86%, which lights the bottom QUARTER of the letter; it now
+     runs 82% to 90%, and the wrap stop drops from 65% to 30% of the
+     catch so the descender shank crosses the tile join dark. That is a
+     wall catching light where it turns, which is what a far wall is,
+     rather than the lower third of a glyph painted in silver.
+
+     The lamp's other half pays for it: --shade goes DEEPER (0.55 ->
+     0.64) as the catch comes down. A cut in a dark room is drawn by
+     its shadow, not by its glint — that is the whole of what "more
+     suitable for dark mode" means here — and the letter has to keep
+     the same total relief or it stops reading as a cut at all.
+
+     Back up a hair to 0.14 (2026-09-07) alongside the inner shadow
+     below: the far wall now has a shape-following lift of its own, so
+     the tile's straight band only has to meet it at the baseline. At
+     0.18 the two stacked into a bright pad under every descender at
+     the tile seam. */
+  --catch: light-dark(oklch(100% 0 0 / 0.05), oklch(100% 0 0 / 0.14));
   background-image:
     linear-gradient(180deg,
-      --alpha(var(--catch) / 65%) 0%,
+      --alpha(var(--catch) / 30%) 0%,
       transparent 9.5%,
       var(--shade) 21.5%,
       --alpha(var(--shade) / 58%) 40%,
       --alpha(var(--shade) / 22%) 58%,
-      transparent 73%,
-      var(--catch) 86%,
-      --alpha(var(--catch) / 65%) 100%),
+      transparent 82%,
+      var(--catch) 90%,
+      --alpha(var(--catch) / 30%) 100%),
     linear-gradient(var(--floor), var(--floor));
   background-size: 100% 1lh;
   background-clip: text;
+  /* THE WALLS THAT FOLLOW THE GLYPH (dark only, 2026-09-07). The tile
+     above shades every line with one straight ramp — right for a
+     baseline, wrong for the bowl of an e or the foot of a g. On light
+     the floor carries the letter and the tile only tilts it, so that
+     never showed; on dark the floor is nearly the plate and the walls
+     ARE the letter, so a wall that ignores the letterform reads as a
+     black smear. Three dark titles on the landing were unreadable
+     that way.
+
+     A text-shadow on THIS copy paints above the clipped background,
+     so a shifted copy of the glyph lands on the floor inside the
+     letter as well as on the plate outside it. Two of them, both
+     vertical (the lamp is overhead):
+
+     - a faint white copy pushed DOWN. Inside the glyph it lights
+       everything except the band under the top edge that it cannot
+       reach, and that band is the occlusion — dark under the lip,
+       0.07em deep, hugging the top of every stroke whatever its
+       shape. Outside it prints a 0.07em band under each letter, over
+       the ink copy's crisp rim.
+     - a heavy black copy pushed UP. Inside it darkens everything
+       except the band above the bottom edge, and that band is the
+       far wall catching the lamp — a lift that follows every bowl
+       and foot, meeting the tile's straight catch at the baseline.
+       Outside it prints a 0.05em line above each letter.
+
+     Both run with ZERO blur (on instruction, same day). Blurred at
+     0.035/0.025em the bands smeared into the plate outside the glyph
+     as a soft halo and the cut read as a pressed-in glow; a wall is a
+     hard edge, and the tile ramps already carry whatever softness the
+     floor needs. The black copy also eased from 0.7 to 0.45 — at 0.7
+     the crisp band above each letter printed as a rule, and the body
+     went to nothing. The body is now floor x 0.55 + a 0.055 white
+     wash — ~20/255 under a 23 plate, still DARKER than the ground, and
+     the recess is drawn by its head and its feet the way the hexagon
+     cut into a black part is. The two spills land on the plate, where
+     a recess casts nothing, so they stay small. Light passes
+     transparent here — its floor and tile were already right. */
+  text-shadow:
+    0 0.07em 0 light-dark(transparent, oklch(100% 0 0 / 0.055)),
+    0 -0.05em 0 light-dark(transparent, oklch(0% 0 0 / 0.45));
 }
 
 /* Em-scaled, so one recipe holds from a 30px h2 to a hero-size line —
    the text-depth playground's own proportions (4.5px at 110px).
    Occlusion tucked under the top lip (toward the light), then the
-   surface edge below the recess catching the overhead ray. */
+   surface edge below the recess catching the overhead ray.
+
+   The lit edge runs CRISP — zero blur on both white passes
+   (2026-09-06). Blurred, the white rim smeared out into the ground and
+   the cut read shallower than it is; a surface edge catching light is
+   a hard line, so only the occlusion keeps its softness.
+
+   The DARK pair steps down with the far wall's --catch above (0.19 ->
+   0.08, 0.10 -> 0.04): the rim and the wall stack on the same band of
+   pixels under every glyph, so the bottom of the letter was carrying
+   both at full strength. Crisp, not brighter, is what makes a lit edge
+   read — and on this ground a 0.19 white line under a 0.13 wall would
+   be the one part of the cut that got louder as the rest calmed, which
+   is exactly what a first pass at 0.14 left behind.
+
+   Back up on dark (0.08 -> 0.2, 0.04 -> 0.08, 2026-09-07): with the
+   tile's catch down to 0.14 and the far wall's lift now inside the
+   glyph (the .face text-shadow), the rim no longer stacks on a band
+   of silver, and a lit surface edge is what says the floor is BELOW
+   the plate — a bigger white under the letter, crisp, is the cue the
+   dark cut was missing. */
 .ink {
   --depth: 0.045em;
   --soft: 0.05em;
@@ -152,10 +258,10 @@
       light-dark(oklch(15% 0 0 / 0.46), oklch(0% 0 0 / 0.75)),
     0 calc(var(--depth) * -0.85) calc(var(--soft) * 1.1)
       light-dark(oklch(15% 0 0 / 0.2), oklch(0% 0 0 / 0.4)),
-    0 calc(var(--depth) * 0.5) calc(var(--soft) * 0.35)
-      light-dark(oklch(100% 0 0 / 0.85), oklch(100% 0 0 / 0.19)),
-    0 calc(var(--depth) * 0.9) var(--soft)
-      light-dark(oklch(100% 0 0 / 0.4), oklch(100% 0 0 / 0.1));
+    0 calc(var(--depth) * 0.5) 0
+      light-dark(oklch(100% 0 0 / 0.85), oklch(100% 0 0 / 0.2)),
+    0 calc(var(--depth) * 0.9) 0
+      light-dark(oklch(100% 0 0 / 0.4), oklch(100% 0 0 / 0.08));
 }
 
 /* Forced colors would strip the backgrounds and leave transparent

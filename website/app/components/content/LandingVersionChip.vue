@@ -68,7 +68,7 @@ const cells = computed(() => [
          stepped again — figures at `text-default`, labels back up to
          `text-toned`, where `text-muted` at 8.8px went to a whisper once
          the dish stopped being the lightest thing in the hero. -->
-    <dl class="board concave-ground rounded-lg m-0 border border-(--recess-edge)">
+    <dl class="board concave-ground rounded-card m-0 border border-(--recess-edge)">
       <div
         v-for="cell in cells"
         :key="cell.label"
