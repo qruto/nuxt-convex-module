@@ -492,7 +492,7 @@ mitigation.
 function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"] | null | undefined>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L64)
+Defined in: [src/runtime/better-auth/vue/hydration.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L65)
 
 Auth-aware version of usePreloadedQuery for payloads returned by
 `convexAuth(event).preloadAuthQuery(...)`.
@@ -531,7 +531,7 @@ compiling.
 function resolveAuthRedirect(value, fallback?): string;
 ```
 
-Defined in: [src/runtime/better-auth/vue/redirect.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L55)
+Defined in: [src/runtime/better-auth/vue/redirect.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L56)
 
 Validate a post-sign-in redirect destination, returning `fallback` unless it
 is a same-origin path.
