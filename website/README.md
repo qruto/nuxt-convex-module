@@ -16,9 +16,19 @@ dies at module resolution before rendering a page:
 [error] Cannot resolve module "nuxt-convex-module"
 ```
 
-`pnpm --dir .. run build` is the fix. The root `build` script rather than
-`dev:prepare:lib`: the stub symlinks `dist/runtime` at `src/`, which is a
-development shape, and this is a production deploy.
+`pnpm --dir .. run dev:prepare:lib && pnpm --dir .. run build` is the fix, and
+it needs both halves:
+
+- `dev:prepare:lib` generates the repository root's `.nuxt/tsconfig.json`.
+  Without it `nuxt-module-build` cannot resolve compiler options and dies with
+  `TSConfckParseError: failed to resolve "extends":"./.nuxt/tsconfig.json"`.
+  `release.yml`'s build job runs the same step before `pnpm pack`, for the same
+  reason.
+- `build` then replaces the stub with a real build. The stub symlinks
+  `dist/runtime` at `src/`, which is a development shape; this is a production
+  deploy.
+
+Verified from a clean state — `rm -rf .nuxt dist`, then the command above.
 
 `vercel.json` has no comments because Vercel's schema validation rejects
 unknown properties outright — including `$comment`. Hence this file.
