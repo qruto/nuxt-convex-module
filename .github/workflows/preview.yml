@@ -26,6 +26,7 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       # This job builds PR-authored code — from forks included — and then talks
       # to an external service. Audit-mode egress monitoring gives that a
@@ -40,16 +41,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: ./.github/actions/setup
         with:
-          runtime: node@lts
-          cache: true
-
-      # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends. Without
-      # it, `nuxt-module-build` can't resolve compiler options and prepack fails.
-      - name: Prepare
-        run: pnpm run dev:prepare
+          prepare: lib
 
       # --pnpm packs with `pnpm pack` so `catalog:` ranges are rewritten,
       # exactly like a real `pnpm publish`. Packing runs `prepack` (the build).

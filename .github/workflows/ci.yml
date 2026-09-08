@@ -1,10 +1,14 @@
 name: ci
 
-# Every job is two steps: checkout, then `pnpm/setup` — one action that
-# installs pnpm (version pinned by `packageManager` in package.json), downloads
-# the Node LTS runtime through it (`pnpm runtime`, so no actions/setup-node),
-# restores the pnpm store cache, and runs `pnpm install` — which pnpm switches
-# to frozen-lockfile mode automatically because CI is set.
+# Every per-commit gate lives here, in one file, so `ci-ok` can aggregate them
+# and there is one place to read the gate set.
+#
+# Never add a workflow-level `paths:`/`paths-ignore:` filter: a required workflow
+# that is skipped never reports, and the merge sits on "Expected — waiting for
+# status" forever.
+#
+# Setup is defined once, in .github/actions/setup — that is where the pnpm
+# version, the Node runtime and their action pin live.
 on:
   push:
     branches:
@@ -18,149 +22,145 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-# Least-privilege default for every job.
-permissions:
-  contents: read
+# Nothing by default — every job declares the minimum it needs.
+permissions: {}
 
 jobs:
-  lint:
+  # Everything that needs a checkout, an install and nothing else. One job rather
+  # than four: the setup is identical, and `if: !cancelled()` still gives a
+  # per-gate verdict, so one push surfaces every problem at once instead of
+  # stopping at the first.
+  static:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
-        with:
-          runtime: node@lts
-          cache: true
-
-      - name: Lint
-        run: pnpm run lint
-
-      # Claude Code reads `.claude/skills`, where `npx skills add --agent
-      # claude-code` writes a symlink to the canonical `.agents/skills` copy.
-      # A skill installed without that link — or one whose file is not exactly
-      # `SKILL.md` — is silently invisible to Claude Code on a fresh clone.
-      - name: Agent skills
-        run: |
-          diff <(ls .agents/skills) <(ls .claude/skills)
-          for skill in .claude/skills/*; do
-            test -f "$skill/SKILL.md" || { echo "::error::$skill has no SKILL.md"; exit 1; }
-          done
-
-  # Enforce Conventional Commits on PRs. The local commit-msg hook gives fast
-  # feedback but can be bypassed with --no-verify, so this is the gate that
-  # actually keeps the history clean. Pushes to main are skipped — those commits
-  # were already linted on their PR.
-  commit-lint:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # Full history so commitlint can read every commit in the PR range.
+          # Full history: commitlint reads the PR range and `fallow audit` diffs
+          # against the PR base commit.
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: ./.github/actions/setup
         with:
-          runtime: node@lts
-          cache: true
+          prepare: lib
 
-      - name: Lint PR commit messages
-        run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: pnpm run lint
 
-  # Inspects the dependency delta a PR introduces and fails on a known CVE or a
-  # package GitHub has flagged as malicious. Complements pnpm's cooldown, which
-  # only delays a new version — it never looks at what's inside it. PR-only:
-  # the action diffs two commits, so there is nothing to review on a push.
-  dependency-review:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Dependency review
-        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
-        with:
-          fail-on-severity: moderate
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
-        with:
-          runtime: node@lts
-          cache: true
-
-      # Type-checks the published surface (module + Convex code). The website app
-      # typecheck is intentionally excluded — it imports the app's
-      # `convex/_generated` code, which only exists with a Convex deployment.
+      # Type-checks the published surface (module + Convex code). The website and
+      # DevTools apps are checked by their own gates; the root tsconfig excludes
+      # them.
       - name: Type check
-        run: pnpm run test:types:lib
+        if: ${{ !cancelled() }}
+        run: pnpm exec vue-tsc --noEmit
+
+      # Enforce Conventional Commits on PRs. The local commit-msg hook gives fast
+      # feedback but can be bypassed with --no-verify, so this is the gate that
+      # actually keeps the history clean. Pushes to main are skipped — those
+      # commits were already linted on their PR.
+      - name: Commit messages
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+
+      # Dead code, unused exports/deps, duplication, complexity. The CLI rather
+      # than the fallow action: the version is the one in the lockfile (pinned
+      # exactly), failures print the real error, and this is byte-identical to
+      # what .githooks/pre-push runs.
+      #
+      # A PR is scoped to the files it changed and fails only on findings it
+      # introduces. A push to main runs the whole project, because the scoped
+      # audit passes on a config edit that strands a file elsewhere.
+      - name: Quality (fallow)
+        if: ${{ !cancelled() }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            pnpm exec fallow audit --changed-since "$BASE_SHA"
+          else
+            pnpm exec fallow --fail-on-issues
+          fi
+
+      # A separate surface: fallow keeps security candidates out of both the
+      # default run and the audit gate, so neither would ever report one.
+      - name: Security candidates (fallow)
+        if: ${{ !cancelled() }}
+        run: pnpm exec fallow security --fail-on-issues
+
+      # Regenerating the committed TypeDoc reference must produce no diff,
+      # otherwise source doc-comments and the published reference have diverged.
+      - name: API reference drift
+        if: ${{ !cancelled() }}
+        run: |
+          pnpm run docs:api
+          git diff --exit-code -- website/content/4.api-reference
+
+      # Static analysis of the workflows themselves (template injection,
+      # credential persistence, unpinned uses). Accepted findings live in
+      # .github/zizmor.yml.
+      - name: Workflow lint (zizmor)
+        if: ${{ !cancelled() }}
+        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
+        with:
+          advanced-security: false
 
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         # Windows is in the matrix because the module does real path work
-        # (alias maps, watcher path normalization) — the class of bug that
-        # only ships to Windows users.
+        # (alias maps, watcher path normalization) — the class of bug that only
+        # ships to Windows users.
         os: [ubuntu-latest, windows-latest]
-        # The project tracks the current LTS everywhere via the `lts` tag, so it
-        # follows new LTS lines without manual bumps. Kept as a matrix so an
-        # extra line can be slotted in later without restructuring.
+        # The project tracks the current LTS via the `lts` tag, so it follows new
+        # LTS lines without a manual bump. `lts/-1` is not an option: engines.node
+        # is >=24.11.0, which is above it.
         node: [lts]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: ./.github/actions/setup
         with:
           runtime: node@${{ matrix.node }}
-          cache: true
-
-      - name: Prepare
-        run: pnpm run dev:prepare
+          prepare: lib
 
       - name: Test
         run: pnpm run test:coverage
 
-      # Upload coverage once (from the ubuntu lts leg) to keep the Codecov badge fed.
-      - name: Upload coverage reports to Codecov
-        if: matrix.node == 'lts' && matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      # Handed to the `coverage` job, which holds the upload credential. This job
+      # runs PR-authored code, so it must never hold one itself.
+      - name: Upload coverage artifact
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: qruto/nuxt-convex-module
-
-      # Upload test results (run times, failure/flaky detection) to Codecov Test
-      # Analytics. Runs even when tests fail so failures are captured.
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() && matrix.node == 'lts' && matrix.os == 'ubuntu-latest' }}
-        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage
+          path: |
+            coverage/
+            test-report.junit.xml
+          retention-days: 1
+          if-no-files-found: error
 
   # Full-app end-to-end: builds the fixture apps with @nuxt/test-utils/e2e and
   # exercises the module against a real Nitro server (SSR data, auto-imports,
-  # CSP headers, the Better Auth proxy). Separate job so the unit/coverage
-  # feedback loop stays fast.
+  # CSP headers, the Better Auth proxy).
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       # Audit-mode egress monitoring. Applied to the jobs that build and run
       # PR-authored code against the network, not to every job — harden-runner is
@@ -175,92 +175,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: ./.github/actions/setup
         with:
-          runtime: node@lts
-          cache: true
-
-      - name: Prepare
-        run: pnpm run dev:prepare
+          prepare: lib
 
       - name: End-to-end tests
         run: pnpm run test:e2e
 
-  # Drift gates: fallow (dead code / duplication / health) and the committed
-  # TypeDoc API reference — regenerating it must produce no diff, otherwise
-  # source doc-comments and the published reference have diverged.
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # Full history: `fallow audit` diffs the PR against its base commit.
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
-        with:
-          runtime: node@lts
-          cache: true
-
-      # PR gate: `fallow audit` scopes to the files the PR changed (the action
-      # hands it the PR base SHA) and fails only on findings the PR introduces.
-      # Pushes to main run the whole-project analysis instead — every finding
-      # blocks — so the repo stays clean under .fallowrc.jsonc as a whole, not
-      # just along the edges a PR happened to touch. `version` is omitted on
-      # purpose: the action reads the `fallow` spec from package.json
-      # (action/scripts/install.sh) and installs the newest release matching
-      # it — so with a `^` range CI can run a newer 3.x than the locally
-      # installed one. Pin the devDependency exactly if the two must agree.
-      - name: Quality (fallow)
-        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
-        with:
-          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
-
-      # Security candidates. A second step rather than another flag on the one
-      # above: a step runs exactly one fallow command, and security is its own —
-      # fallow keeps these findings out of both the default run and the audit
-      # gate, so neither would ever report one. `auto-changed-since: false`
-      # because the action otherwise scopes to the PR's changed files; the scan
-      # costs ~0.14s and the repo is at zero, so there is no backlog worth
-      # grandfathering and a candidate on an untouched file should still block.
-      # This runs the ordinary catalogue (injection sinks, SSRF, path traversal,
-      # unsafe deserialization, weak crypto, …). The two include-required
-      # categories, hardcoded-secret and secret-to-network, are left to GitHub's
-      # own secret scanning: naming them in `security.categories.include` turns
-      # that setting into a whitelist and would silently drop every category
-      # fallow adds later. Findings are unverified candidates by design, which
-      # is why they gate the build but are not uploaded to Code Scanning.
-      - name: Security candidates (fallow)
-        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
-        with:
-          command: security
-          auto-changed-since: false
-
-      # No `dev:prepare` needed: TypeDoc runs on the standalone
-      # tsconfig.typedoc.json with `skipErrorChecking`.
-      - name: API reference drift
-        run: |
-          pnpm run docs:api
-          git diff --exit-code -- website/content/4.api-reference
-
-      # Static analysis of the workflows themselves (template injection,
-      # unpinned actions, credential persistence, …). Accepted findings live
-      # in .github/zizmor.yml.
-      - name: Workflow lint (zizmor)
-        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
-        with:
-          advanced-security: false
-
   # Publishable-package gate: build the real tarball (`pnpm pack` rewrites
-  # `catalog:` ranges exactly like `pnpm publish`), lint its shape, then
-  # install it into the minimal example with plain npm — the consumer path
-  # (registry-shaped install, lifecycle scripts, engines) that repo-internal
-  # jobs never exercise.
+  # `catalog:` ranges exactly like `pnpm publish`), lint its shape, then install
+  # it into the minimal example with plain npm — the consumer path
+  # (registry-shaped install, lifecycle scripts, engines) that repo-internal jobs
+  # never exercise.
   pack:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -271,33 +202,28 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: ./.github/actions/setup
         with:
-          runtime: node@lts
-          cache: true
+          prepare: lib
 
-      # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends. Without
-      # it, `nuxt-module-build` can't resolve compiler options and prepack fails.
-      - name: Prepare
-        run: pnpm run dev:prepare
-
-      # Runs `prepack` (the full build) and produces the exact artifact a
-      # release would publish.
+      # Runs `prepack` (the full build) and produces the exact artifact a release
+      # would publish.
       - name: Pack
         run: pnpm pack
 
       - name: Package shape (publint)
+        if: ${{ !cancelled() }}
         run: pnpm exec publint run ./nuxt-convex-module-*.tgz
 
-      # internal-resolution-error is ignored because `#convex/auth-client` in
-      # the Better Auth runtime types is a Nuxt alias for the app's own auth
-      # client, resolved at app build time — unresolvable outside a Nuxt app
-      # by design. Real resolution regressions surface in the smoke test below.
+      # internal-resolution-error is ignored because `#convex/auth-client` in the
+      # Better Auth runtime types is a Nuxt alias for the app's own auth client,
+      # resolved at app build time — unresolvable outside a Nuxt app by design.
       - name: Type resolution (arethetypeswrong)
+        if: ${{ !cancelled() }}
         run: pnpm exec attw ./nuxt-convex-module-*.tgz --profile esm-only --ignore-rules internal-resolution-error
 
       - name: Consumer smoke test (npm install + build)
+        if: ${{ !cancelled() }}
         env:
           NUXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
         # Lockfile-less install on purpose: simulates a fresh consumer. `npm`
@@ -324,5 +250,98 @@ jobs:
       # refuses a package whose trust evidence weakens between versions; this
       # checks that the evidence actually validates, on the consumer's npm path.
       - name: Verify dependency signatures
+        if: ${{ !cancelled() }}
         working-directory: ${{ runner.temp }}/smoke
         run: npx --yes npm@11.17.0 audit signatures # zizmor: ignore[adhoc-packages]
+
+  # Inspects the dependency delta a PR introduces and fails on a known CVE or a
+  # package GitHub has flagged as malicious. Complements pnpm's cooldown, which
+  # only delays a new version — it never looks at what's inside it. PR-only: the
+  # action diffs two commits, so there is nothing to review on a push. No install
+  # here, so no PR-authored code runs in this job.
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  # The only job that holds the coverage upload credential. It downloads an
+  # artifact and installs nothing, so PR-authored code never runs next to it.
+  coverage:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      # Codecov maps coverage paths against the repository, so the tree has to be
+      # present — but nothing here is installed or executed.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: qruto/nuxt-convex-module
+          disable_search: true
+          files: coverage/lcov.info
+
+      # Run times, failure and flaky detection. Runs even when tests fail so
+      # failures are captured.
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+          files: test-report.junit.xml
+
+  # The single required status check. Every job above is aggregated here, so
+  # adding, renaming or splitting a job never means touching the ruleset again.
+  # `skipped` counts as a pass — `dependency-review` is skipped on pushes by
+  # design.
+  ci-ok:
+    if: ${{ always() }}
+    # `coverage` is deliberately absent: Codecov is a reporting service, and a
+    # third party's outage must not block a merge. The coverage *thresholds* are
+    # enforced by vitest inside `test`, which is aggregated here.
+    needs:
+      - static
+      - test
+      - e2e
+      - pack
+      - dependency-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check required jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              failure|cancelled)
+                echo "::error::A required job did not pass: $result"
+                exit 1 ;;
+            esac
+          done
+          echo "All required jobs passed or were skipped."

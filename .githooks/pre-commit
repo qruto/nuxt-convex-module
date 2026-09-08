@@ -25,3 +25,24 @@ pnpm exec fallow audit --gate-marker pre-commit
 # `lint` job. Whole tree rather than staged files: the repo has no lint-staged,
 # and eslint over this project costs about five seconds.
 pnpm run lint
+
+# Claude Code reads `.claude/skills`, where `npx skills add --agent claude-code`
+# writes a symlink to the canonical `.agents/skills` copy. A skill installed
+# without that link — or one whose file is not exactly `SKILL.md` — is silently
+# invisible on a fresh clone.
+#
+# Local-developer convenience, so it belongs here and not in CI: nothing about it
+# reaches a consumer, and it has no business holding a required merge check.
+# Written without `diff <(...)` — this hook is /bin/sh, and process substitution
+# is a bashism.
+agent_skills=$(ls .agents/skills)
+claude_skills=$(ls .claude/skills)
+if [ "$agent_skills" != "$claude_skills" ]; then
+  echo "error: .claude/skills does not mirror .agents/skills" >&2
+  echo "  .agents/skills: $(echo "$agent_skills" | tr '\n' ' ')" >&2
+  echo "  .claude/skills: $(echo "$claude_skills" | tr '\n' ' ')" >&2
+  exit 1
+fi
+for skill in .claude/skills/*; do
+  test -f "$skill/SKILL.md" || { echo "error: $skill has no SKILL.md" >&2; exit 1; }
+done
