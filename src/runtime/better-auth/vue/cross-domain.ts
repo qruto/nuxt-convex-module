@@ -45,7 +45,12 @@ export interface ConsumeCrossDomainOneTimeTokenOptions {
 /** `/auth/callback/` compares equal to `/auth/callback`; a missing leading slash is tolerated. */
 const normalizePathname = (path: string): string => {
   const slashed = path.startsWith('/') ? path : `/${path}`
-  const trimmed = slashed.replace(/\/+$/, '')
+  // Scanned character by character rather than with `/\/+$/`: that pattern
+  // backtracks quadratically on a long run of slashes, and `path` here is a
+  // URL the browser hands us (CodeQL js/polynomial-redos).
+  let end = slashed.length
+  while (end > 0 && slashed[end - 1] === '/') end--
+  const trimmed = slashed.slice(0, end)
   return trimmed === '' ? '/' : trimmed
 }
 
