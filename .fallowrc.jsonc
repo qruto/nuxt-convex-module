@@ -11,6 +11,11 @@
     "build.config.ts", // unbuild config, read by nuxt-module-build
     "test/setup/**/*.ts", // vitest projects[].setupFiles — the plugin reads only the top level
     "test/fixtures/**", // Nuxt apps @nuxt/test-utils boots by rootDir
+    // Type-level tests. Deliberately outside every vitest project: the
+    // assertions ARE the compile, so `test:types:lib`'s vue-tsc run is what
+    // executes them and no runner ever imports the files. That makes them
+    // unreachable from fallow's graph without saying so here.
+    "test/types/**/*.test-d.ts",
     "website/app/app.css" // Docus convention load; seeds the @import chain into app/css/
   ],
 
