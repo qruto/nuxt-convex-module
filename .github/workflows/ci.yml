@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - uses: $/.github/actions/setup
         with:
           prepare: lib
 
@@ -105,10 +105,15 @@ jobs:
       # Static analysis of the workflows themselves (template injection,
       # credential persistence, unpinned uses). Accepted findings live in
       # .github/zizmor.yml.
+      # The action's `version` input defaults to `latest`, which makes zizmor an
+      # unpinned input in a repository that pins every action to a digest: a new
+      # release can add an audit and redden CI with no change here. Pin it, and
+      # bump deliberately — that is when you read the new findings.
       - name: Workflow lint (zizmor)
         if: ${{ !cancelled() }}
         uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
         with:
+          version: 1.30.0
           advanced-security: false
 
   test:
@@ -132,10 +137,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      # `full`, not `lib`: test/unit/upstream-baselines.test.ts imports
+      # website/app/utils/upstream-baselines.ts, and oxc resolves that file
+      # through website/.nuxt/tsconfig.app.json — which only `nuxt prepare
+      # website` generates.
+      - uses: $/.github/actions/setup
         with:
           runtime: node@${{ matrix.node }}
-          prepare: lib
+          prepare: full
 
       - name: Test
         run: pnpm run test:coverage
@@ -175,7 +184,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - uses: $/.github/actions/setup
         with:
           prepare: lib
 
@@ -202,7 +211,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - uses: $/.github/actions/setup
         with:
           prepare: lib
 
