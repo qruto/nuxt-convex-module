@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { step } from './lib/step.mjs'
 
 const root = process.cwd()
 const tarballs = readdirSync(root).filter(f => /^nuxt-convex-module-.*\.tgz$/.test(f))
@@ -27,11 +28,7 @@ if (tarballs.length > 1) {
 const tarball = join(root, tarballs[0])
 console.log(`check:tarball: ${tarballs[0]}\n`)
 
-const run = (label, file, args) => {
-  console.log(`── ${label} ${'─'.repeat(Math.max(0, 46 - label.length))}`)
-  execFileSync(file, args, { stdio: 'inherit', cwd: root })
-  console.log()
-}
+const run = (label, file, args) => step(label, file, args, { cwd: root })
 
 // Manifest and exports shape.
 run('Package shape (publint)', 'pnpm', ['exec', 'publint', 'run', tarball])
