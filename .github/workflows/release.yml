@@ -6,7 +6,7 @@ name: Release
 #
 #   tag      wait for ci · changelogen: bump → CHANGELOG.md → commit → tag     contents: write
 #            → push → changelogen gh release (immutable)                       environment: release
-#   build    check out the tag · pack · publint · attw                         contents: read
+#   build    check out the tag · pack · check:tarball                          contents: read
 #   publish  pnpm stage publish (Trusted Publishing/OIDC + provenance)         id-token: write
 #                                                                              environment: release
 #   laptop   pnpm stage approve <id>     2FA — the moment the version goes live
@@ -275,16 +275,10 @@ jobs:
       - name: Pack
         run: pnpm pack
 
-      # The same shape gates ci runs against every PR's tarball, so a release
-      # tarball can't ship a regression a PR would have been failed for.
-      - name: Package shape (publint)
-        run: pnpm exec publint run ./nuxt-convex-module-*.tgz
-
-      # internal-resolution-error is ignored because `#convex/auth-client` in the
-      # Better Auth runtime types is a Nuxt alias for the app's own auth client,
-      # resolved at app build time — unresolvable outside a Nuxt app by design.
-      - name: Type resolution (arethetypeswrong)
-        run: pnpm exec attw ./nuxt-convex-module-*.tgz --profile esm-only --ignore-rules internal-resolution-error
+      # The same script ci runs against every PR's tarball, so a release tarball
+      # cannot ship a regression a pull request would have been failed for.
+      - name: Check the tarball
+        run: pnpm run check:tarball
 
       # `publish` downloads only this, so the privileged job never has the
       # repository's files on disk.

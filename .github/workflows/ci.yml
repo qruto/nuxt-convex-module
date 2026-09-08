@@ -56,7 +56,7 @@ jobs:
       # them.
       - name: Type check
         if: ${{ !cancelled() }}
-        run: pnpm exec vue-tsc --noEmit
+        run: pnpm run typecheck
 
       # Enforce Conventional Commits on PRs. The local commit-msg hook gives fast
       # feedback but can be bypassed with --no-verify, so this is the gate that
@@ -92,15 +92,13 @@ jobs:
       # default run and the audit gate, so neither would ever report one.
       - name: Security candidates (fallow)
         if: ${{ !cancelled() }}
-        run: pnpm exec fallow security --fail-on-issues
+        run: pnpm run test:security
 
       # Regenerating the committed TypeDoc reference must produce no diff,
       # otherwise source doc-comments and the published reference have diverged.
       - name: API reference drift
         if: ${{ !cancelled() }}
-        run: |
-          pnpm run docs:api
-          git diff --exit-code -- website/content/4.api-reference
+        run: pnpm run docs:api:check
 
       # Static analysis of the workflows themselves (template injection,
       # credential persistence, unpinned uses). Accepted findings live in
@@ -220,16 +218,11 @@ jobs:
       - name: Pack
         run: pnpm pack
 
-      - name: Package shape (publint)
+      # publint, attw and the contents assertions, defined once in
+      # scripts/check-tarball.mjs and run identically by release.yml's build job.
+      - name: Check the tarball
         if: ${{ !cancelled() }}
-        run: pnpm exec publint run ./nuxt-convex-module-*.tgz
-
-      # internal-resolution-error is ignored because `#convex/auth-client` in the
-      # Better Auth runtime types is a Nuxt alias for the app's own auth client,
-      # resolved at app build time — unresolvable outside a Nuxt app by design.
-      - name: Type resolution (arethetypeswrong)
-        if: ${{ !cancelled() }}
-        run: pnpm exec attw ./nuxt-convex-module-*.tgz --profile esm-only --ignore-rules internal-resolution-error
+        run: pnpm run check:tarball
 
       - name: Consumer smoke test (npm install + build)
         if: ${{ !cancelled() }}

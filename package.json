@@ -140,17 +140,21 @@
     "start": "pnpm run dev",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "vue-tsc --noEmit",
     "test": "vitest --run --project \"!e2e\"",
     "test:coverage": "vitest --run --coverage --project \"!e2e\"",
     "test:watch": "vitest --watch --project \"!e2e\"",
     "test:types": "pnpm run test:types:lib && nuxt typecheck website",
-    "test:types:lib": "pnpm run dev:prepare:lib && vue-tsc --noEmit",
+    "test:types:lib": "pnpm run dev:prepare:lib && pnpm run typecheck",
     "test:unit": "vitest --project unit --run",
     "test:nuxt": "vitest --project nuxt --run",
     "test:e2e": "vitest --run --project e2e",
     "test:quality": "fallow",
+    "test:security": "fallow security --fail-on-issues",
     "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
-    "bump": "pnpm exec taze major -w"
+    "docs:api:check": "pnpm run docs:api && git diff --exit-code -- website/content/4.api-reference",
+    "bump": "pnpm exec taze major -w",
+    "check:tarball": "node scripts/check-tarball.mjs"
   },
   "dependencies": {
     "@nuxt/devtools-kit": "^3.4.2",
