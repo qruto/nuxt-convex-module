@@ -140,6 +140,7 @@
     "start": "pnpm run dev",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:commits": "commitlint --verbose",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest --run --project \"!e2e\"",
     "test:coverage": "vitest --run --coverage --project \"!e2e\"",
