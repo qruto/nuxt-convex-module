@@ -1,0 +1,138 @@
+name: Release prepare
+
+# Step one of two. Bumps the version, writes the changelog, and opens a pull
+# request — it does not tag and it does not publish. `Release` (release.yml)
+# tags the commit once this PR is merged.
+#
+# Why it is split. The release commit used to be pushed straight to main by the
+# release run itself, which meant the one commit that decides what the world
+# installs was the only commit in the repository that never passed through a
+# pull request or its checks. As a PR it gets the same `All checks passed` gate
+# as everything else, the changelog is reviewable before it is published, and
+# the branch ruleset needs no bot exemption to write to main.
+#
+# The bump is computed here and nowhere else. release.yml reads the version out
+# of the merged package.json — if it also ran `changelogen --release`, a
+# dispatch would bump a second time and tag v0.1.1 for a 0.1.0 release.
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Version bump
+        type: choice
+        default: auto
+        options:
+          - auto # derive from conventional commits
+          - patch
+          - minor
+          - major
+
+# Shared with `Release`: a prepare must not start while a release is mid-flight.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # push the release branch
+      pull-requests: write # open the release PR
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      # persist-credentials: false — the push below carries the token in that one
+      # step's environment, so it never sits in .git/config while dependencies
+      # install.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history + tags: changelogen derives the bump from them
+          persist-credentials: false
+
+      # No cache, for release.yml's reason: a restored cache is an input nobody
+      # reviewed. `require-lockfile` refuses the one install pnpm's own CI frozen
+      # mode still allows — no lockfile at all.
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@lts
+          cache: false
+          require-lockfile: true
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # `--release`, not `--bump`: `--bump` moves the version in package.json and
+      # writes no CHANGELOG.md, which is half a release commit. `--no-commit
+      # --no-tag` leave both edits in the working tree so they can be committed
+      # here with a message commitlint accepts, and `--no-github` because the
+      # Release belongs to the tag, which does not exist yet.
+      - name: Bump version & changelog
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type }}
+        run: |
+          set -- --release --no-commit --no-tag --no-github
+          [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
+          pnpm exec changelogen "$@"
+
+      - name: Read the new version
+        id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      # The subject is load-bearing: release.yml refuses to tag a HEAD that did
+      # not change the version, and squash-merging this PR carries the title
+      # through as the commit subject.
+      - name: Commit the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git switch -c "release/v$VERSION"
+          git add package.json CHANGELOG.md
+          git commit -m "chore(release): v$VERSION"
+
+      - name: Push the release branch
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:refs/heads/release/v$VERSION"
+
+      # The body is the changelog section changelogen just wrote, so the PR shows
+      # exactly what the GitHub Release will say.
+      - name: Open the release pull request
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "Prepared by \`Release prepare\`. Merging this does **not** publish anything —"
+            echo "run **Release** afterwards to tag the merged commit and stage it on npm."
+            echo
+            awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md
+          } > /tmp/release-pr-body.md
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$GITHUB_REF_NAME" \
+            --head "release/v$VERSION" \
+            --title "chore(release): v$VERSION" \
+            --body-file /tmp/release-pr-body.md
+
+      - name: Report
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "## v${VERSION} prepared"
+            echo
+            echo "Review and merge the pull request, then run **Release**."
+          } >> "$GITHUB_STEP_SUMMARY"

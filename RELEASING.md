@@ -1,17 +1,22 @@
 # Releasing
 
 Releases run **entirely in CI** — there is no local release tooling and no long-lived secrets.
-You trigger a release from the GitHub **Actions** tab, approve it once there, and approve the
-finished package once on npm.
+Two dispatches: one prepares a release pull request, one tags what you merged.
 
 ## How it works
 
 ```
+Actions tab → "Release prepare" → Run workflow   (.github/workflows/release-prepare.yml)
+└─ prepare  changelogen → bump version, write CHANGELOG.md
+            push release/vX.Y.Z → open the pull request
+                                             ↓
+                       review, let ci pass, merge   ← you
+
 Actions tab → "Release" → Run workflow   (.github/workflows/release.yml)
 │           ↓ approve the `release` environment                       ← you
 ├─ tag      wait for this commit's ci run to be green
-│           changelogen → bump version, write CHANGELOG.md, commit, tag
-│           push commit + tag → changelogen gh release (immutable GitHub Release)
+│           verify HEAD is the merged release commit → tag → push
+│           changelogen gh release (immutable GitHub Release)
 ├─ build    check out the tag → pnpm pack → publint + attw
 │           ↓ approve the `release` environment again                 ← you
 └─ publish  pnpm stage publish → Trusted Publishing (OIDC) + provenance
@@ -19,20 +24,27 @@ Actions tab → "Release" → Run workflow   (.github/workflows/release.yml)
                         pnpm stage approve   ← you, with 2FA
 ```
 
-- **One button, three approvals.** Pick the bump (`auto` / `patch` / `minor` / `major`) and run.
-  `auto` derives the version from your Conventional Commits since the last tag. Approve the
-  `release` environment before `tag` writes anything, approve it again before `publish` reaches
-  npm, and approve the staged package itself on npm — the only one of the three where you can see
-  what was actually built.
-- **Rehearsable.** Check **dry-run** to run everything except the writes: `tag` reports the
-  version and changelog a release would produce, `build` packs and validates `main` as it is,
-  `publish` performs the real OIDC exchange with npm and stops. Do it after every change to
-  `release.yml`.
-- **No secrets.** npm uses OIDC (no `NPM_TOKEN`); the commit, the tag and the GitHub Release use
+- **The release commit is a pull request like any other.** Pick the bump (`auto` / `patch` /
+  `minor` / `major`) in **Release prepare** and run it; `auto` derives the version from your
+  Conventional Commits since the last tag. It opens a PR whose body is the changelog section it
+  just wrote, so you read what the GitHub Release will say before it exists. It gets the same
+  `All checks passed` gate as every other change — which the one commit deciding what the world
+  installs previously skipped, because the release run pushed it straight to `main`.
+- **Then tag what you merged.** **Release** never bumps. It reads the version out of the merged
+  `package.json` and refuses to run if `HEAD` did not change it — otherwise an ordinary PR
+  merging in between would take the tag, and every later check would still pass.
+- **Three approvals.** The `release` environment before `tag` writes anything, again before
+  `publish` reaches npm, and the staged package itself on npm — the only one of the three where
+  you can see what was actually built.
+- **Rehearsable.** Check **dry-run** on **Release** to run everything except the writes: `build`
+  packs and validates `main` as it is, and `publish` performs the real OIDC exchange with npm and
+  stops. The release-commit assertion downgrades to a warning there, so a rehearsal works on an
+  ordinary `main`. Do it after every change to `release.yml`.
+- **No secrets.** npm uses OIDC (no `NPM_TOKEN`); the branch, the tag and the GitHub Release use
   the ephemeral Actions `GITHUB_TOKEN`, scoped to the one job that needs it.
-- **Native steps only.** changelogen bumps, writes the changelog, commits, tags and creates the
-  GitHub Release. pnpm packs and stages. GitHub environments and rulesets do the gating. Nothing
-  is reimplemented in shell.
+- **Native steps only.** changelogen bumps, writes the changelog and creates the GitHub Release.
+  pnpm packs and stages. GitHub environments and rulesets do the gating. Nothing is reimplemented
+  in shell.
 
 ### Why three jobs
 
@@ -40,12 +52,12 @@ The credentials never meet the code:
 
 | Job | Holds | Runs |
 | --- | --- | --- |
-| `tag` | `contents: write` — no OIDC | changelogen, which needs the dependencies installed |
+| `tag` | `contents: write` — no OIDC | one `git tag`, then changelogen's GitHub Release step |
 | `build` | nothing | the build, from a pristine checkout of the tag |
 | `publish` | `id-token: write` — no checkout, no install | one pinned pnpm on one tarball, behind an egress allowlist |
 
-`tag` is the only job that can write to the repository, and it cannot start until you have
-approved the run. It holds no npm credential. `build` executes dependency code with nothing worth
+`tag` is the only job that can write to the repository — one tag, on a commit already merged and
+already green — and it cannot start until you have approved the run. It holds no npm credential. `build` executes dependency code with nothing worth
 stealing in reach. `publish` holds the only credential that can reach npm and executes nothing but
 pnpm on a tarball, with every network destination other than npm, GitHub and Sigstore blocked.
 
