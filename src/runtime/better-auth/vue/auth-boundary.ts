@@ -1,10 +1,16 @@
 import { defineComponent, h, onErrorCaptured, type PropType, ref, type VNode, watch } from 'vue'
 import type { FunctionReference } from 'convex/server'
-import type { EmptyObject } from 'convex-helpers'
 import { useConvexAuth } from '../../vue/auth/index'
 import { Authenticated } from '../../vue/auth/helpers'
 import { useQuery } from '../../vue/composables/use-query'
 import type { AuthClient } from '#convex/auth-client'
+
+// `convex-helpers` defines this as `Record<string, never>` and nothing else
+// here needs that package — importing it would put a dependency a consumer has
+// to install into this file's emitted `.d.ts`, for one alias. The two casts
+// below are this port's own: upstream calls `useQuery(getAuthUserFn)` bare, and
+// the narrowing exists so our `useQuery` overload resolves to the no-args form.
+type EmptyObject = Record<string, never>
 
 // Subscribe to the session validated user to keep this check reactive to
 // actual user auth state at the provider level (rather than just jwt validity state).

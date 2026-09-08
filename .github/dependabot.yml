@@ -22,7 +22,6 @@ updates:
         - '@nuxt/*'
         - '@nuxtjs/*'
         - convex
-        - convex-helpers
         - '@convex-dev/*'
     # `@convex-dev/better-auth` peers `better-auth: ">=1.6.11 <1.7.0"`, and this
     # package mirrors that range. A 1.7.x bump is a *minor* update, so the
