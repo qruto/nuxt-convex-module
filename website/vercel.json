@@ -1,26 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "$comment": [
-    "The docs site's Vercel project has Root Directory `website`, so this file",
-    "is where its build is configured.",
-    "",
-    "`buildCommand` exists because the site lists `nuxt-convex-module` as a",
-    "workspace dependency and loads it as a Nuxt module. pnpm links the",
-    "repository root into node_modules, but the link points at a package whose",
-    "`dist/` is gitignored — so on a fresh clone `nuxt build` fails at module",
-    "resolution before it renders a single page:",
-    "",
-    "    [warn]  The module `nuxt-convex-module` could not be loaded.",
-    "    [error] Cannot resolve module \"nuxt-convex-module\"",
-    "",
-    "Building the module first is the whole fix. The root `build` script is used",
-    "rather than `dev:prepare:lib` deliberately: the stub symlinks dist/runtime",
-    "at src/, which is a development shape, and this is a production deploy.",
-    "",
-    "Preview deployments get NO Convex environment variables — not a convention",
-    "but the mechanism: with no `CONVEX_DEPLOY_KEY` in the environment, `convex",
-    "deploy` cannot run on a preview even if something later tries to call it.",
-    "Previews are a bring-your-own-deployment playground."
-  ],
   "buildCommand": "pnpm --dir .. run build && pnpm exec nuxt build"
 }
