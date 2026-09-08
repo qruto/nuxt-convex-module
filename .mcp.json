@@ -33,6 +33,14 @@
     "vercel": {
       "type": "http",
       "url": "https://mcp.vercel.com"
+    },
+    "fallow": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "fallow-mcp"
+      ]
     }
   }
 }

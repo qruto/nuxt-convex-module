@@ -236,6 +236,7 @@ function getConvexUrl(
     ?? (process.env.NUXT_PUBLIC_CONVEX_URL || undefined)
   const isFromEnv = deploymentUrl === undefined
   if (typeof url !== 'string') {
+    // PARITY: D-10
     // TypeError (upstream throws Error) — a benign subclass upgrade; the
     // message text is the contract.
     throw new TypeError(

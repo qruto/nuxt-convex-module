@@ -1,3 +1,4 @@
+// PARITY: A-11
 /**
  * Pure helpers behind the Convex-aware Content Security Policy the module
  * applies when `nuxt-security` is present — shared by the Nitro plugin

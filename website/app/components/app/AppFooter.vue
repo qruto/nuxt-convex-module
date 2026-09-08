@@ -34,7 +34,6 @@ const columns = computed(() => [
       { label: 'Clerk', to: '/components/clerk' },
       { label: 'Auth0', to: '/components/auth0' },
       { label: 'Polar', to: '/components/polar' },
-      { label: 'Resend', to: '/components/resend' },
     ],
   },
   {

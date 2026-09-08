@@ -32,11 +32,9 @@ export type {
   PaginatedQueryReference,
   PaginatedQueryArgs,
   PaginatedQueryItem,
-  // fallow-ignore-next-line unused-type
   UsePaginatedQueryResult,
   UsePaginatedQueryOptions,
   UsePaginatedQueryObjectReturnType,
-  // fallow-ignore-next-line unused-type
   PaginationStatus,
 } from 'convex/react'
 
@@ -66,6 +64,8 @@ type UsePaginatedQueryState = {
 // translation of upstream's `setState(updater)`. The `!` assertions cover
 // `noUncheckedIndexedAccess` (upstream indexes directly); the call site only
 // splits pages whose results exist.
+// PARITY: D-07 — spreading the split page's own `paginationOpts` carries its
+// start cursor and `numItems` into both halves.
 const splitQuery
   = (key: QueryPageKey, splitCursor: string, continueCursor: string) =>
     (prevState: UsePaginatedQueryState) => {
@@ -616,6 +616,7 @@ export function insertAtTop<Query extends PaginatedQueryReference>(options: {
  *
  * @public
  */
+// fallow-ignore-next-line code-duplication -- upstream shape: convex/react ships insertAtTop and insertAtBottomIfLoaded as sibling copies and the port stays diffable against it (PARITY.md)
 export function insertAtBottomIfLoaded<Query extends PaginatedQueryReference>(
   options: {
     paginatedQuery: Query

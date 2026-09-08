@@ -14,6 +14,7 @@ import type {
 
 const MAX_LOG_ENTRIES = 300
 
+// PARITY: A-15
 // Vue-only addition (documented in PARITY.md): dev-only instrumentation of the
 // ported client, kept OUT of `vue/client.ts` so that file stays byte-diffable
 // against upstream. TS `private` is erased at runtime, so the fields below are

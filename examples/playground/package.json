@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "nuxt-convex-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --dotenv .env.local",
+    "build": "nuxt build",
+    "postinstall": "nuxt prepare",
+    "convex": "convex dev"
+  },
+  "dependencies": {
+    "convex": "^1.45.0",
+    "nuxt": "^4.5.2",
+    "nuxt-convex-module": "latest"
+  }
+}

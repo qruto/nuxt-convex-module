@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // One project reference per Nuxt type context, the setup Nuxt documents for an
+  // app: https://nuxt.com/docs/4.x/guide/directory-structure/tsconfig
+  //
+  // `postinstall` runs `nuxt prepare`, so these exist right after `npm install`
+  // and the editor resolves `#convex/api` — the point being that the types for
+  // `api.messages.list` come from `convex/`, with nothing hand-written.
+  //
+  // `convex/` needs no exclude: none of the four contexts include it, and Convex
+  // type-checks those files itself when `convex dev` pushes them.
+  "files": [],
+  "references": [
+    { "path": "./.nuxt/tsconfig.app.json" },
+    { "path": "./.nuxt/tsconfig.server.json" },
+    { "path": "./.nuxt/tsconfig.shared.json" },
+    { "path": "./.nuxt/tsconfig.node.json" }
+  ]
+}

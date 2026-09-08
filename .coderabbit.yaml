@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+
+# CodeRabbit reviews pull requests through its GitHub App — no workflow, no
+# secret, no job. This file is the repository half of the configuration and
+# wins over the dashboard wherever both set a key. It is read from the pull
+# request's head branch, which makes it review surface in fork pull requests
+# the way `.github/workflows/` already is.
+#
+# Only settings that differ from stock appear here.
+
+reviews:
+  # Exclusions only: one positive pattern would turn this into an allowlist.
+  # These also drive sparse-checkout, so an excluded path is never cloned and
+  # cannot be read for context either.
+  path_filters:
+    # TypeDoc output. `pnpm docs:api` writes it and CI fails on drift, so a
+    # comment on this tree is really a comment on the generator.
+    - '!website/content/4.api-reference/9.reference/**'
+    # Convex codegen, committed so the examples build before `convex dev` has
+    # ever run — see CONTRIBUTING.md.
+    - '!examples/*/convex/_generated/**'
+    # Machine-written, and Dependabot is what opens them.
+    - '!pnpm-lock.yaml'
+    - '!skills-lock.json'
+
+  path_instructions:
+    - path: 'src/**'
+      instructions: >-
+        A port, not original code. Every file mirrors an upstream React/Next
+        source in `convex`, `@convex-dev/better-auth` or `@convex-dev/polar`
+        and is kept diffable against it.
+
+        So "this would be more idiomatic Vue" is the wrong comment here.
+        Upstream names, parameter order and defaults are kept verbatim even
+        where a Vue-native spelling reads better, and Vue conveniences are only
+        ever added alongside the upstream surface, never as replacements for
+        it. When a change looks like a divergence, the question is whether
+        PARITY.md records it — not whether the divergence is an improvement.
+
+        Worth flagging: behaviour that differs from the upstream file being
+        mirrored with no PARITY.md entry; mistakes in the React-to-Vue
+        translation of reactivity (missed cleanup, a ref read outside an
+        effect, a subscription outliving its scope, a stale closure over
+        props); and SSR or hydration hazards, since this module renders on the
+        server.
+
+    - path: 'test/**'
+      instructions: >-
+        Prefer tests that would fail on main. A test that passes both before
+        and after the change under review is noise here — say so rather than
+        asking for coverage as a matter of course.
+
+    - path: 'examples/**'
+      instructions: >-
+        Standalone consumer apps, outside the pnpm workspace, ESLint and the
+        root tsconfig; they install the published package rather than `src/`,
+        so workspace conventions do not apply.
+
+        `examples/playground` also ships to StackBlitz as the pkg.pr.new
+        template, uploaded as a bare directory. Flag anything that breaks a
+        cold `npm install` there: a `catalog:` or `workspace:` dependency
+        range, a committed lockfile, or an import that only resolves from the
+        repository root.
+
+  tools:
+    # `pnpm lint` already runs ESLint tree-wide on every pull request, with
+    # this repository's flat config and its Nuxt/Vue plugins resolved through
+    # pnpm's isolated store. A second copy can only repeat that job or
+    # disagree with it over a config it could not fully resolve.
+    eslint:
+      enabled: false
+
+knowledge_base:
+  code_guidelines:
+    # Added on top of the built-in patterns, which already pick up AGENTS.md
+    # and CLAUDE.md. Scoped, because a guideline file otherwise governs its own
+    # directory and everything under it — and PARITY.md sits at the root, where
+    # it would be read as guidance for the whole tree rather than for the port.
+    filePatterns:
+      - files: 'PARITY.md'
+        applyTo: 'src/**'

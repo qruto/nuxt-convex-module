@@ -242,6 +242,18 @@ export interface ModuleOptionDiagnostics {
 }
 
 /**
+ * Drop every trailing `/`. Scanned character by character rather than with
+ * `/\/+$/`: that pattern is unanchored at the start, so the engine retries from
+ * every position and the cost is quadratic in the length of the slash run —
+ * 6.5s on a 60,000-slash input against 0.04ms here (CodeQL js/polynomial-redos).
+ */
+function stripTrailingSlashes(value: string): string {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') end--
+  return value.slice(0, end)
+}
+
+/**
  * Validate the resolved module configuration, turning silent misconfiguration
  * (swapped `.convex.cloud`/`.convex.site` URLs, malformed URLs, an `authRoute`
  * that would produce a broken server-handler route, a `betterAuth.authClient`
@@ -288,7 +300,7 @@ export function validateModuleOptions(input: {
     )
   }
   if (authRoute.length > 1 && authRoute.endsWith('/')) {
-    authRoute = authRoute.replace(/\/+$/, '')
+    authRoute = stripTrailingSlashes(authRoute)
   }
 
   if (input.authClient && !authClientModuleExists(input.authClient, input.rootDir)) {
@@ -780,6 +792,7 @@ function registerServerImports(resolver: Resolver): void {
 // when it is installed, and this module must still compile when it is not.
 type SecurityRouteRules = NonNullable<Parameters<typeof extendRouteRules>[1]['security']>
 
+// PARITY: A-14
 const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
   xssValidator: false,
   allowedMethodsRestricter: { methods: ['GET', 'HEAD', 'POST', 'OPTIONS'] },

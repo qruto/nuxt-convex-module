@@ -1,7 +1,11 @@
 export default defineNuxtConfig({
   modules: ['nuxt-convex-module'],
-  // The Convex deployment URL comes from NUXT_PUBLIC_CONVEX_URL —
-  // `npx convex dev` writes it to .env.local; copy it into .env (Nuxt
-  // doesn't load .env.local) or export it in your shell.
+  convex: {
+    // `npx convex dev` writes the *unprefixed* CONVEX_URL to `.env.local`, and
+    // Nuxt does not load that file on its own — the `dev` script passes
+    // `--dotenv .env.local` so it does. NUXT_PUBLIC_CONVEX_URL still wins when
+    // it is set explicitly.
+    url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,
+  },
   compatibilityDate: 'latest',
 })

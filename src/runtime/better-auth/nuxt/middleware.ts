@@ -1,3 +1,4 @@
+// PARITY: A-12
 import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent, useRuntimeConfig } from '#app'
 import { watch } from 'vue'
 import { useAuth } from '../vue/use-auth'

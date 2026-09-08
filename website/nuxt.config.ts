@@ -92,6 +92,18 @@ export default defineNuxtConfig({
     },
   },
   compatibilityDate: 'latest',
+  typescript: {
+    // `@nuxt/content` is docus's dependency, not this app's, so under pnpm's
+    // isolated layout nothing beneath website/node_modules resolves it. Nuxt
+    // Content's generated `.nuxt/content/types.d.ts` imports `@nuxt/content`
+    // to augment `Collections` with the site's collections — and with
+    // `skipLibCheck` an unresolved import in a .d.ts fails silently, so the
+    // augmentation attached to nothing and every docus component reading
+    // `Collections['docs']` / `DocsCollectionItem` failed to type-check.
+    // Hoisting writes a `paths` alias resolved through the layer's own
+    // node_modules, the same copy docus's sources import.
+    hoist: ['@nuxt/content'],
+  },
   hooks: {
     // Client HMR needs NO override: Nuxt CLI pins the HMR WebSocket to the
     // main dev server (verified: no standalone HMR port is ever bound), so

@@ -1,12 +1,36 @@
 name: Release
 
-# Manually triggered from the Actions tab (Release → Run workflow).
-# Performs the whole release in CI — no local tooling, no stored secrets:
-#   assert ci green → gate → changelogen (bump + CHANGELOG.md + commit + tag)
-#        → pnpm publish (Trusted Publishing / OIDC; rewrites `catalog:` deps)
-#        → push commit + tag → changelogithub (GitHub Release)
-# With `dry-run: true` everything runs except the publish and the push —
-# a full rehearsal that leaves npm and the repository untouched.
+# Manually triggered from the Actions tab (Release → Run workflow). Performs the
+# whole release in CI — no local tooling, no stored secrets — and ends in npm's
+# stage queue, where a maintainer approves it with 2FA:
+#
+#   tag      wait for ci · changelogen: bump → CHANGELOG.md → commit → tag     contents: write
+#            → push → changelogen gh release (immutable)                       environment: release
+#   build    check out the tag · pack · publint · attw                         contents: read
+#   publish  pnpm stage publish (Trusted Publishing/OIDC + provenance)         id-token: write
+#                                                                              environment: release
+#   laptop   pnpm stage approve <id>     2FA — the moment the version goes live
+#
+# The `release` environment (required reviewer, main only) gates both jobs that
+# can do damage — GitHub evaluates protection rules per job, so it prompts once
+# before anything is written to the repository and again before anything reaches
+# npm. It is also what the npm Trusted Publisher is bound to: an OIDC token is
+# accepted only from a job that ran in `release`, and a job can run in it only
+# from main, so a release.yml edited on a scratch branch can neither mutate the
+# repository nor reach npm's queue.
+#
+# The credentials never meet the code. `tag` holds the write token and no OIDC.
+# `build` runs the dependency code and holds nothing. `publish` holds the OIDC
+# token and runs nothing but one pinned pnpm on one tarball, behind an egress
+# allowlist.
+#
+# With `dry-run: true` nothing is written and nothing uploaded: `tag` reports the
+# version a release would produce, `build` packs and validates main as it is,
+# `publish` performs the real OIDC exchange and stops. Rehearse after every
+# change to this file.
+#
+# `re-stage` is the recovery path for a release whose publish failed after the
+# tag was already pushed: it skips the bump and stages that tag again.
 on:
   workflow_dispatch:
     inputs:
@@ -20,29 +44,195 @@ on:
           - minor
           - major
       dry-run:
-        description: Rehearse only (no publish, no push)
+        description: Rehearse only — build, validate, exchange the OIDC token, write and upload nothing
         type: boolean
         default: false
+      re-stage:
+        description: Existing tag (vX.Y.Z) to stage again after a failed publish — skips the bump
+        type: string
+        default: ''
 
-# Only one release at a time; never cancel a publish midway.
+# One release at a time; never cancel a publish midway.
 concurrency:
   group: release
   cancel-in-progress: false
 
-permissions:
-  contents: write # push the release commit + tag, create the GitHub Release
-  id-token: write # npm Trusted Publishing (OIDC)
+# Nothing by default — every job declares the minimum it needs.
+permissions: {}
+
+env:
+  DRY_RUN: ${{ inputs.dry-run }}
+  RE_STAGE: ${{ inputs.re-stage }}
 
 jobs:
-  release:
+  # The only job that writes to the repository. It runs dependency code
+  # (`pnpm install` for changelogen) with the write token in reach — which is
+  # why it holds no OIDC token, why the `release` environment's reviewer must
+  # approve before it starts, and why the rulesets keep it from rewriting
+  # history. Its job is exactly changelogen's: bump, changelog, commit, tag,
+  # push, GitHub Release.
+  tag:
     runs-on: ubuntu-latest
-    # Binds the npm Trusted Publisher's OIDC claims (and any required-reviewer
-    # rule) to this environment — only runs approved through it can publish.
+    timeout-minutes: 60
     environment: release
+    permissions:
+      contents: write # push the release commit + tag, create the GitHub Release
+      actions: read # `gh run list` / `gh run watch` read this repository's workflow runs
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      ref: ${{ steps.version.outputs.ref }}
+      pnpm-version: ${{ steps.version.outputs.pnpm-version }}
     steps:
-      # Audit-mode egress monitoring for the job that holds id-token + contents
-      # write. Tighten to `egress-policy: block` with an allowlist once the
-      # first releases have produced a baseline audit report.
+      # Audit-mode egress monitoring for the job that holds the write token and
+      # runs dependency code. StepSecurity's global blocklist is enforced even in
+      # audit mode.
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      # Never release a commit whose ci run isn't a completed success — and wait
+      # for it rather than re-running its jobs here. `--event push` accepts only
+      # a run on main; a pull_request run on the same commit does not count.
+      # Skipped when re-staging: that tag was gated when it was created.
+      - name: Wait for ci on this commit
+        if: env.RE_STAGE == ''
+        timeout-minutes: 45
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for _ in $(seq 1 30); do
+            run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci --event push \
+              --commit "$GITHUB_SHA" --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+            [ -n "$run_id" ] && break
+            sleep 10
+          done
+          if [ -z "$run_id" ]; then
+            echo "::error::No ci push run for $GITHUB_SHA after 5 minutes — is this commit on main?"
+            exit 1
+          fi
+          gh run watch --repo "$GITHUB_REPOSITORY" "$run_id" --exit-status
+          conclusion=$(gh run view --repo "$GITHUB_REPOSITORY" "$run_id" --json conclusion --jq .conclusion)
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::ci run $run_id for $GITHUB_SHA concluded '$conclusion' — nothing was released."
+            exit 1
+          fi
+
+      # persist-credentials: false — the push below carries the token in that one
+      # step's environment, so it never lands in .git/config during the install.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history + tags: changelogen derives the bump from them
+          persist-credentials: false
+
+      # One action for pnpm (version from `packageManager`), the Node LTS
+      # runtime and `pnpm install`. No cache: a restored cache is an input
+      # nobody reviewed, and a release pipeline takes no unreviewed inputs
+      # (TanStack, May 2026). `require-lockfile` refuses the one install pnpm's
+      # own CI frozen mode does not — no lockfile at all.
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@lts
+          cache: false
+          require-lockfile: true
+
+      - name: Configure git
+        if: env.RE_STAGE == ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # changelogen, natively: bump package.json, write CHANGELOG.md, commit, tag
+      # — all local. `--no-github` because the GitHub Release must wait until the
+      # tag exists on the remote (the API would otherwise create a tag of its own
+      # on the default branch). A dry run adds `--no-commit --no-tag`: the bump
+      # lands in the working tree, is reported, and is never pushed.
+      # The commit-msg hook (commitlint) runs and passes `chore(release): vX`;
+      # the pre-commit hook skips itself under CI by design.
+      - name: Bump version & changelog
+        if: env.RE_STAGE == ''
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type }}
+        run: |
+          set -- --release --no-github
+          [ "$DRY_RUN" = "true" ] && set -- "$@" --no-commit --no-tag
+          [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
+          pnpm exec changelogen "$@"
+
+      # What the rest of the run builds from. A real release: the tag just
+      # created. A dry run: main as dispatched. A re-stage: the tag given.
+      - name: Resolve the release ref
+        id: version
+        run: |
+          if [ -n "$RE_STAGE" ]; then
+            git rev-parse --verify --quiet "refs/tags/$RE_STAGE^{commit}" >/dev/null \
+              || { echo "::error::Tag $RE_STAGE does not exist."; exit 1; }
+            version="${RE_STAGE#v}"
+            ref="refs/tags/$RE_STAGE"
+          else
+            version=$(jq -r .version package.json)
+            if [ "$DRY_RUN" = "true" ]; then
+              ref="$GITHUB_SHA"
+            else
+              ref="refs/tags/v$version"
+            fi
+          fi
+          {
+            echo "version=$version"
+            echo "ref=$ref"
+            # The exact pnpm `publish` will run — the one `packageManager` pins.
+            jq -r '"pnpm-version=" + (.packageManager | ltrimstr("pnpm@") | split("+")[0])' package.json
+          } >> "$GITHUB_OUTPUT"
+
+      # Commit and tag are pushed together; the tag ruleset then freezes the tag.
+      # The token lives in this step's environment only.
+      - name: Push the release commit & tag
+        if: env.DRY_RUN != 'true' && env.RE_STAGE == ''
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:refs/heads/$GITHUB_REF_NAME" "refs/tags/v$VERSION"
+
+      # changelogen's own GitHub Release sync: reads the section it just wrote to
+      # CHANGELOG.md and creates the Release for that tag (updates it if it
+      # exists). Immutable releases are on, so the Release locks the tag and
+      # carries a release attestation — `gh release verify vX.Y.Z`.
+      - name: Create the GitHub Release
+        if: env.DRY_RUN != 'true' && env.RE_STAGE == ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: pnpm exec changelogen gh release
+
+      - name: Report the planned release
+        if: env.RE_STAGE == ''
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            suffix=" (dry run — nothing written, nothing staged)"
+          else
+            suffix=""
+          fi
+          {
+            echo "## v${VERSION}${suffix}"
+            echo
+            awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Produces the artifact a release consists of, from a pristine checkout of the
+  # tag — not from the working tree that made it. No id-token, no write
+  # credentials: this is the job that runs the build, with nothing worth
+  # stealing in its environment.
+  build:
+    needs: tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
@@ -50,112 +240,158 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # full history + tags for changelogen, and to push back
+          ref: ${{ needs.tag.outputs.ref }}
+          persist-credentials: false
 
-      # The gate below re-runs lint/test/typecheck, but not the full ci matrix
-      # (windows, e2e, quality, pack). Never release a commit whose ci run
-      # isn't a completed success.
-      - name: Assert ci is green for this commit
+      # The tag is the version. package.json has to agree, or npm and git would
+      # describe two different releases. Read with jq: nothing from node_modules
+      # runs before the version is trusted.
+      - name: Verify the tag matches the manifest
+        if: env.DRY_RUN != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.tag.outputs.version }}
         run: |
-          conclusion=$(gh run list --repo "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" \
-            --workflow ci --limit 1 --json conclusion --jq '.[0].conclusion // "missing"')
-          if [ "$conclusion" != "success" ]; then
-            echo "::error::ci for $GITHUB_SHA is '$conclusion' — wait for a green ci run before releasing."
+          actual=$(jq -r .version package.json)
+          if [ "$actual" != "$VERSION" ]; then
+            echo "::error::Checked out v$VERSION but package.json says $actual."
             exit 1
           fi
 
-      # One action for pnpm (version from `packageManager`), the Node LTS runtime
-      # and `pnpm install` (frozen automatically in CI). The pnpm that publishes
-      # below is therefore the exact version the lockfile was authored with.
       - name: Install pnpm, node & dependencies
         uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
           runtime: node@lts
-          cache: true
+          cache: false
+          require-lockfile: true
 
-      # Generates `.nuxt/tsconfig.json`, which the root tsconfig extends —
-      # required by the test run and by the build that `pnpm publish`
-      # triggers via `prepack`.
+      # Generates `.nuxt/tsconfig.json`. Without it `nuxt-module-build` can't
+      # resolve compiler options and the prepack below fails.
       - name: Prepare
         run: pnpm run dev:prepare
 
-      # Gate: never tag or publish a broken state.
-      - name: Lint
-        run: pnpm run lint
-      - name: Test
-        run: pnpm run test
-      - name: Type check
-        run: pnpm run test:types:lib
+      # Runs `prepack` (the full build) and rewrites `catalog:` ranges exactly
+      # like `pnpm publish` would. This tarball is the thing that gets staged —
+      # npm never repacks it.
+      - name: Pack
+        run: pnpm pack
 
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      # The same shape gates ci runs against every PR's tarball, so a release
+      # tarball can't ship a regression a PR would have been failed for.
+      - name: Package shape (publint)
+        run: pnpm exec publint run ./nuxt-convex-module-*.tgz
 
-      # Bump version, write CHANGELOG.md (with contributors), commit and tag — locally.
-      - name: Bump version & changelog
-        env:
-          RELEASE_TYPE: ${{ inputs.release-type }}
-        run: |
-          if [ "$RELEASE_TYPE" = "auto" ]; then
-            pnpm exec changelogen --release
-          else
-            pnpm exec changelogen --release --"$RELEASE_TYPE"
-          fi
+      # internal-resolution-error is ignored because `#convex/auth-client` in the
+      # Better Auth runtime types is a Nuxt alias for the app's own auth client,
+      # resolved at app build time — unresolvable outside a Nuxt app by design.
+      - name: Type resolution (arethetypeswrong)
+        run: pnpm exec attw ./nuxt-convex-module-*.tgz --profile esm-only --ignore-rules internal-resolution-error
 
-      - name: Report the planned release
-        env:
-          DRY_RUN: ${{ inputs.dry-run }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if [ "$DRY_RUN" = "true" ]; then
-            SUFFIX=" (dry run — nothing published)"
-          else
-            SUFFIX=""
-          fi
-          {
-            echo "## Release v${VERSION}${SUFFIX}"
-            echo
-            awk '/^## /{n++} n==1' CHANGELOG.md
-          } >> "$GITHUB_STEP_SUMMARY"
+      # `publish` downloads only this, so the privileged job never has the
+      # repository's files on disk.
+      - name: Upload the tarball
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tarball
+          path: nuxt-convex-module-*.tgz
+          retention-days: 1
+          if-no-files-found: error
 
-      # Guard against the publish/push race: the gate steps above take minutes,
-      # and if a commit lands on the release branch meanwhile, the push below
-      # would be rejected — after npm had already irrevocably consumed the
-      # version number. Fail here instead, before anything is published;
-      # re-running the release is then a clean recovery.
-      - name: Ensure the release branch has not moved
+  # The only job that can publish. Its entire attack surface is one pinned pnpm
+  # and one tarball: no checkout, no `pnpm install`, no build, no Node.
+  publish:
+    needs:
+      - tag
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The npm Trusted Publisher is bound to this environment, whose deployment
+    # policy admits only main — see the header. The reviewer prompt fires a
+    # second time here: after the build, before anything reaches npm.
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing (OIDC)
+    steps:
+      # Block mode: DNS and connections to anything unlisted fail. The agent
+      # implicitly allows GitHub's own runner infrastructure — the artifact
+      # download and the OIDC token endpoint (*.actions.githubusercontent.com,
+      # productionresultssa*.blob.core.windows.net) — and github.com /
+      # api.github.com via GitHub's meta API; those two are repeated here so the
+      # job does not depend on that fetch. registry.npmjs.org serves pnpm/setup's
+      # download of pnpm, the OIDC exchange and the stage upload. *.sigstore.dev
+      # (suffix match) covers Fulcio, Rekor v1 and the v2 shards, the TUF CDN
+      # and the TSA. No sudo, no containers: nothing here needs either.
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: block
+          disable-sudo-and-containers: true
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+            registry.npmjs.org:443
+            *.sigstore.dev:443
+
+      # pnpm's native executable, the exact version `packageManager` pins,
+      # fetched from the registry and verified against npm's signature. No
+      # runtime: pnpm needs no Node to publish. No install: there is no project
+      # here, only a tarball.
+      - name: Install pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: ${{ needs.tag.outputs.pnpm-version }}
+          install: false
+
+      - name: Download the tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: tarball
+
+      # Staged publishing: npm takes the tarball into a queue, and it becomes
+      # installable only once a maintainer approves it with 2FA —
+      #   pnpm stage list → pnpm stage view <id> → pnpm stage approve <id>
+      # Given a tarball path, pnpm reads the manifest from inside it and runs no
+      # scripts; there is no git repository here, so its git checks do not
+      # apply. Auth is the OIDC exchange with the Trusted Publisher; the
+      # provenance's subject is the tarball's own digest and its build metadata
+      # comes from the GITHUB_* environment, so no checkout is needed.
+      # `--provenance` is explicit on purpose: without it pnpm treats a failed
+      # attestation as a warning and stages anyway; with it, no attestation
+      # means no release.
+      - name: Stage the release on npm
+        if: env.DRY_RUN != 'true'
+        run: pnpm stage publish ./nuxt-convex-module-*.tgz --provenance
+
+      # `--dry-run` returns before any upload, but after the OIDC token is
+      # minted and exchanged — so a rehearsal proves the Trusted Publisher
+      # binding (repository, workflow filename, environment) end to end. pnpm
+      # only *warns* when that exchange fails; the rehearsal fails on it, or a
+      # green dry run would prove nothing. Sigstore is not reached in a dry run.
+      - name: Rehearse the publish (dry run)
+        if: env.DRY_RUN == 'true'
         run: |
-          git fetch origin "$GITHUB_REF_NAME"
-          if ! git merge-base --is-ancestor "origin/$GITHUB_REF_NAME" HEAD; then
-            echo "::error::origin/$GITHUB_REF_NAME gained commits while the release was building — nothing was published; re-run the release."
+          if ! output=$(pnpm stage publish ./nuxt-convex-module-*.tgz --provenance --dry-run 2>&1); then
+            printf '%s\n' "$output"
             exit 1
           fi
+          printf '%s\n' "$output"
+          case "$output" in
+            *"Skipped OIDC"*)
+              echo "::error::The OIDC exchange with npm failed — the Trusted Publisher binding is broken; a real release would fail the same way."
+              exit 1 ;;
+          esac
 
-      # Publish first; only mutate the remote once npm has accepted the release.
-      # pnpm (not npm): rewrites `catalog:` ranges at pack time and supports
-      # npm Trusted Publishing natively. `--no-git-checks` because the release
-      # commit is intentionally not pushed yet. `prepack` runs the build; on
-      # failure nothing has been pushed.
-      - name: Publish to npm (dry run)
-        if: ${{ inputs.dry-run }}
-        run: pnpm publish --dry-run --no-git-checks
-
-      - name: Publish to npm
-        if: ${{ !inputs.dry-run }}
-        run: pnpm publish --no-git-checks
-
-      - name: Push release commit & tag
-        if: ${{ !inputs.dry-run }}
-        run: |
-          git push origin HEAD
-          git push origin --tags
-
-      # GitHub Release: conventional grouping + "Thanks to contributors" section.
-      - name: Create GitHub Release
-        if: ${{ !inputs.dry-run }}
-        run: pnpm exec changelogithub
+      - name: Report
+        if: env.DRY_RUN != 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          {
+            echo "Staged nuxt-convex-module@${VERSION}. Inspect and approve from a laptop:"
+            echo
+            echo '```sh'
+            echo "pnpm stage list nuxt-convex-module"
+            echo "pnpm stage view <stage-id>"
+            echo "pnpm stage approve <stage-id>"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

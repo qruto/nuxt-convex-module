@@ -1,0 +1,53 @@
+name: Setup
+description: >-
+  Install pnpm, the Node runtime and the project's dependencies — the one place
+  those versions and their action pin are defined. Every job in every workflow
+  calls this instead of repeating the block.
+
+inputs:
+  runtime:
+    description: >-
+      The runtime pnpm downloads and runs everything under. `node@lts` tracks the
+      current LTS line without a manual bump; the test matrix overrides it.
+    default: node@lts
+  cache:
+    description: >-
+      Restore the pnpm store cache. Release jobs pass `false` on purpose — a
+      restored cache is an input nobody reviewed, and a release pipeline takes no
+      unreviewed inputs.
+    default: 'true'
+  require-lockfile:
+    description: >-
+      Refuse the one install pnpm's own CI frozen mode still allows: no lockfile
+      at all. Release jobs pass `true`.
+    default: 'false'
+  prepare:
+    description: >-
+      How much of `dev:prepare` to run. `lib` builds the module stub and its
+      types — everything except the website. `full` adds `nuxt prepare website`,
+      which pulls in the entire Docus module graph and is only needed to
+      type-check the docs site. `none` skips it.
+    default: 'none'
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm, node & dependencies
+      uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      with:
+        runtime: ${{ inputs.runtime }}
+        cache: ${{ inputs.cache }}
+        require-lockfile: ${{ inputs.require-lockfile }}
+
+    # Generates `.nuxt/tsconfig.json` (which the root tsconfig extends) and the
+    # `dist/` stub. Without it `nuxt-module-build` cannot resolve compiler
+    # options and anything that packs or type-checks fails.
+    - name: Prepare (module only)
+      if: inputs.prepare == 'lib'
+      shell: bash
+      run: pnpm run dev:prepare:lib
+
+    - name: Prepare (module + website)
+      if: inputs.prepare == 'full'
+      shell: bash
+      run: pnpm run dev:prepare

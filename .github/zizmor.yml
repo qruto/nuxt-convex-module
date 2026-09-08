@@ -1,11 +1,11 @@
 # zizmor (workflow static analysis) — accepted findings.
 # https://docs.zizmor.sh/configuration/
+#
+# `artipacked` used to be waived for release.yml: the release ran as one job that
+# had to persist checkout credentials in order to push. It is split now — the
+# `tag` job carries the token in a single step's environment instead — so no
+# workflow in this repo persists credentials, and the waiver is gone.
 rules:
-  artipacked:
-    ignore:
-      # The release checkout must persist credentials: the workflow pushes the
-      # release commit + tag back to main with the ephemeral GITHUB_TOKEN.
-      - release.yml
   use-trusted-publishing:
     ignore:
       # pkg.pr.new authenticates via its GitHub App, not a registry token —

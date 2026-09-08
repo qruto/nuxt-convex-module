@@ -72,7 +72,7 @@ const increment = useMutation(api.incrementCounter.default);
 
 ### ConvexVueClient
 
-Defined in: [src/runtime/vue/client.ts:191](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L191)
+Defined in: [src/runtime/vue/client.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L190)
 
 A Convex client for use within Vue.
 
@@ -89,7 +89,7 @@ available via the [useConvex](#useconvex) composable or `useNuxtApp().$convex`.
 new ConvexVueClient(address, options?): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L212)
+Defined in: [src/runtime/vue/client.ts:211](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L211)
 
 ###### Parameters
 
@@ -112,7 +112,7 @@ Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex
 get url(): string;
 ```
 
-Defined in: [src/runtime/vue/client.ts:250](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L250)
+Defined in: [src/runtime/vue/client.ts:249](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L249)
 
 Return the address for this client, useful for creating a new client.
 
@@ -131,7 +131,7 @@ it may be canonicalized.
 get logger(): Logger;
 ```
 
-Defined in: [src/runtime/vue/client.ts:582](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L582)
+Defined in: [src/runtime/vue/client.ts:584](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L584)
 
 Get the logger for this client.
 
@@ -258,7 +258,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 mutation<Mutation>(mutation, ...argsAndOptions): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:485](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L485)
+Defined in: [src/runtime/vue/client.ts:487](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L487)
 
 Execute a mutation function.
 
@@ -287,7 +287,7 @@ A promise of the mutation's result.
 action<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:506](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L506)
+Defined in: [src/runtime/vue/client.ts:508](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L508)
 
 Execute an action function.
 
@@ -316,7 +316,7 @@ A promise of the action's result.
 query<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:526](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L526)
+Defined in: [src/runtime/vue/client.ts:528](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L528)
 
 Fetch a query result once.
 
@@ -348,7 +348,7 @@ A promise of the query's result.
 connectionState(): ConnectionState;
 ```
 
-Defined in: [src/runtime/vue/client.ts:555](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L555)
+Defined in: [src/runtime/vue/client.ts:557](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L557)
 
 Get the current [ConnectionState](#connectionstate) between the client and the Convex
 deployment.
@@ -365,7 +365,7 @@ The [ConnectionState](#connectionstate) with the Convex deployment.
 subscribeToConnectionState(cb): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:571](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L571)
+Defined in: [src/runtime/vue/client.ts:573](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L573)
 
 Subscribe to the [ConnectionState](#connectionstate) between the client and the Convex
 deployment, calling a callback each time it changes.
@@ -394,7 +394,7 @@ An unsubscribe function to stop listening.
 close(): Promise<void>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:594](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L594)
+Defined in: [src/runtime/vue/client.ts:596](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L596)
 
 Close any network handles associated with this client and stop all subscriptions.
 
@@ -411,7 +411,7 @@ A `Promise` fulfilled when the connection has been completely closed.
 
 ### ConvexAuthProviderOptions
 
-Defined in: [src/runtime/vue/auth/index.ts:74](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L74)
+Defined in: [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L75)
 
 Options for [provideConvexAuth](#provideconvexauth) — the Vue translation of the props of
 upstream's `ConvexProviderWithAuth` component.
@@ -420,8 +420,8 @@ upstream's `ConvexProviderWithAuth` component.
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L75) |
-| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L76) |
+| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L76) |
+| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L77) |
 
 ***
 
@@ -641,7 +641,7 @@ Options for [ConvexVueClient.mutation](#mutation).
 
 ### ConvexVueClientOptions
 
-Defined in: [src/runtime/vue/client.ts:140](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L140)
+Defined in: [src/runtime/vue/client.ts:139](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L139)
 
 Options for [ConvexVueClient](#convexvueclient).
 
@@ -1453,7 +1453,7 @@ type IConvexVueClient = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:8](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L8)
+Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L9)
 
 #### Methods
 
@@ -1467,7 +1467,7 @@ setAuth(
 ): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L9)
+Defined in: [src/runtime/vue/auth/index.ts:10](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L10)
 
 ###### Parameters
 
@@ -1487,7 +1487,7 @@ Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-conv
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:14](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L14)
+Defined in: [src/runtime/vue/auth/index.ts:15](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L15)
 
 ###### Returns
 
@@ -1505,7 +1505,7 @@ type ConvexAuthState = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:34](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L34)
+Defined in: [src/runtime/vue/auth/index.ts:35](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L35)
 
 Type representing the state of an auth integration with Convex.
 
@@ -1525,9 +1525,9 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:35](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L35) |
-| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L36) |
-| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L37) |
+| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L36) |
+| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L37) |
+| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L38) |
 
 ***
 
@@ -1537,7 +1537,7 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 type VueMutationOptions<Args> = MutationOptions<Args>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L129)
+Defined in: [src/runtime/vue/client.ts:128](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L128)
 
 #### Type Parameters
 
@@ -1553,7 +1553,7 @@ Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex
 type ConvexLogger = Exclude<BaseConvexClientOptions["logger"], boolean | undefined>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L148)
+Defined in: [src/runtime/vue/client.ts:147](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L147)
 
 The logger type accepted by [ConvexVueClientOptions.logger](#logger) — the
 public shape of convex's non-exported `Logger`.
@@ -1898,7 +1898,7 @@ rendered if the user is authenticated.
 const ConvexAuthStateKey: InjectionKey<ConvexAuthState>;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:41](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L41)
+Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L42)
 
 ***
 
@@ -1908,7 +1908,7 @@ Defined in: [src/runtime/vue/auth/index.ts:41](https://github.com/qruto/nuxt-con
 const ConvexClientKey: InjectionKey<ConvexVueClient>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:625](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L625)
+Defined in: [src/runtime/vue/client.ts:627](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L627)
 
 Vue injection key for the [ConvexVueClient](#convexvueclient).
 
@@ -2093,7 +2093,7 @@ const { results, status, loadMore } = usePaginatedQuery(
 const useConvexQueries: (queries) => ShallowRef<Record<string, any>> = useQueries;
 ```
 
-Defined in: [src/runtime/vue/composables/use-queries.ts:140](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-queries.ts#L140)
+Defined in: [src/runtime/vue/composables/use-queries.ts:141](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-queries.ts#L141)
 
 Load a variable number of reactive Convex queries.
 
@@ -2158,7 +2158,7 @@ loading, or an `Error` if it threw an exception.
 const useConvexQuery: <Query>(query, ...args) => ComputedRef<Query["_returnType"] | undefined> = useQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:207](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L207)
+Defined in: [src/runtime/vue/composables/use-query.ts:208](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L208)
 
 Load a reactive query within a Vue component.
 
@@ -2384,7 +2384,7 @@ async function onPick(event: Event) {
 const ConvexApiKey: InjectionKey<ConvexApi>;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:13](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L13)
+Defined in: [src/runtime/vue/provide.ts:12](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L12)
 
 ## Functions
 
@@ -2398,7 +2398,7 @@ function useConvexAuth(): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:53](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L53)
+Defined in: [src/runtime/vue/auth/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L54)
 
 Get the [ConvexAuthState](#convexauthstate) within a Vue component.
 
@@ -2419,9 +2419,9 @@ The current [ConvexAuthState](#convexauthstate).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L54) |
-| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L55) |
-| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L56) |
+| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L55) |
+| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L56) |
+| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:57](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L57) |
 
 ***
 
@@ -2431,7 +2431,7 @@ The current [ConvexAuthState](#convexauthstate).
 function provideConvexAuth(options): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:131](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L131)
+Defined in: [src/runtime/vue/auth/index.ts:132](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L132)
 
 A replacement for the plain Convex client provide (upstream's
 `ConvexProvider`) which additionally provides [ConvexAuthState](#convexauthstate) to
@@ -2478,7 +2478,7 @@ const authState = provideConvexAuth({ client, useAuth })
 function createConvexAuthState(options, scope?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L148)
+Defined in: [src/runtime/vue/auth/index.ts:149](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L149)
 
 Build reactive [ConvexAuthState](#convexauthstate) and wire watchers between the
 external auth provider and the Convex client, without calling `provide()` —
@@ -2512,7 +2512,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:298](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L298)
+Defined in: [src/runtime/vue/auth/index.ts:301](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L301)
 
 Create a fresh EffectScope and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2534,8 +2534,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:300](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L300) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:303](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L303) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:303](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L303) |
 
 ***
 
@@ -2545,7 +2545,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 function useConvex(): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:637](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L637)
+Defined in: [src/runtime/vue/client.ts:639](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L639)
 
 Get the [ConvexVueClient](#convexvueclient) within a Vue component.
 
@@ -2853,7 +2853,7 @@ would flash in/out once the real first page arrives.
 function insertAtBottomIfLoaded<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:619](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L619)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:620](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L620)
 
 Insert an item at the bottom of a paginated list, but only if the final
 page has loaded (otherwise it would pop out when the server responds).
@@ -2886,7 +2886,7 @@ page has loaded (otherwise it would pop out when the server responds).
 function insertAtPosition<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:658](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L658)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:659](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L659)
 
 Insert an item at its sorted position across loaded pages of a paginated
 query, given a sort order and a function deriving the sort key.
@@ -2927,7 +2927,7 @@ function usePaginatedQuery_experimental<Query>(
 ): UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:860](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L860)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:861](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L861)
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -2971,7 +2971,7 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 function usePaginatedQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UsePaginatedQueryObjectReturnType<Query, ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:866](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L866)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:867](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L867)
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -3139,7 +3139,7 @@ const profile = useQuery(
 function useQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UseQueryResult<Query["_returnType"], ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:143](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L143)
+Defined in: [src/runtime/vue/composables/use-query.ts:144](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L144)
 
 Load a reactive query within a Vue component using an options object.
 
@@ -3440,7 +3440,7 @@ const tasks = usePreloadedQuery(props.preloaded)
 function provideConvexApi(api, app?): void;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:30](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L30)
+Defined in: [src/runtime/vue/provide.ts:29](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L29)
 
 Make the generated Convex `api` available to every `nuxt-convex-module` composable
 and component, so `useBilling()`, `<CheckoutLink>`, `useEmailStatus()`, … work
@@ -3475,7 +3475,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 function useConvexApi(): ConvexApi | undefined;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:40](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L40)
+Defined in: [src/runtime/vue/provide.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L39)
 
 The injected generated `api`, or `undefined` when it hasn't been provided
 (e.g. outside a setup context, or before Convex codegen has run). Prefer
@@ -3493,7 +3493,7 @@ The injected generated `api`, or `undefined` when it hasn't been provided
 function useConvexNamespace<T>(name): T | undefined;
 ```
 
-Defined in: [src/runtime/vue/provide.ts:52](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L52)
+Defined in: [src/runtime/vue/provide.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L51)
 
 The named function group from the generated `api` (e.g. `'billing'`,
 `'email'`), or `undefined` when billing/email isn't scaffolded — letting the

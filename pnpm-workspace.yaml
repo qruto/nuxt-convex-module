@@ -51,6 +51,13 @@ minimumReleaseAgeExclude:
   - convex-helpers
   - '@convex-dev/*'
 
+# Not a default: pnpm falls back to an older version that clears the cooldown
+# unless this is set. Failing the install is the safer read of the cooldown —
+# but it means a range-pinned dependency breaks CI for up to minimumReleaseAge
+# after every release, so pin CI tooling to an exact version (see `fallow` in
+# devDependencies). https://pnpm.io/settings#minimumreleaseagestrict
+minimumReleaseAgeStrict: true
+
 # Refuse transitive dependencies pulled from exotic sources (git repos, raw
 # tarball URLs) — those bypass registry auditing entirely.
 blockExoticSubdeps: true
@@ -82,12 +89,6 @@ overrides:
   # 5.x line pins ^7). Remove when the docus/ai chain reaches
   # @ai-sdk/provider-utils@5, which drops undici 5.
   '@ai-sdk/provider-utils>undici': ^6.28.0
-  # giget@1 (changelogithub -> changelogen@0.5 -> c12@1) pins tar ^6 — EOL, in
-  # range for the 7.5.x path-traversal series (GHSA-8qq5-rm4j-mr97 et al.,
-  # fixed in 7.5.18+). giget only calls `extract({ file, cwd, onentry })`; tar 7
-  # keeps that API (onentry survives as a deprecated alias of onReadEntry).
-  # Remove when changelogithub ships a changelogen with c12@3+/giget@2+.
-  'giget>tar': ^7.5.18
   # fontless@0.2.1 (latest; via @nuxt/fonts and nuxt-og-image) pins esbuild
   # ^0.27.0, in range for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows,
   # fixed in 0.28.1). fontless only imports `transform`, stable across 0.x.
@@ -98,3 +99,17 @@ overrides:
 # Fail a script outright when node_modules is out of sync with the lockfile, so
 # a stale install can never silently produce a passing build or test run.
 verifyDepsBeforeRun: error
+
+# --- Patches -----------------------------------------------------------------
+# docus 5.13.0 fails `nuxt typecheck website` with errors inside its own sources
+# (two upstream bugs; nothing in this repo can reach them because Nuxt type-checks
+# the layer's files): the package has `main: ./nuxt.config.ts` and no `types`, so
+# Nuxt's `/// <reference types="docus" />` type-checks the config file itself;
+# and `useSeo` reads `appConfig.seo.schema`, which its own Studio schema never
+# declares, while its `link`/`script` arrays predate unhead 3.4's stricter types.
+# Keyed by name so the patch follows Dependabot bumps; pnpm fails the install the
+# moment it no longer applies, which is the cue to re-check upstream and drop or
+# regenerate it. Remove when docus ships a `types` field, a typed `seo.schema`,
+# and an unhead-3.4-compatible `useSeo`.
+patchedDependencies:
+  docus: patches/docus.patch

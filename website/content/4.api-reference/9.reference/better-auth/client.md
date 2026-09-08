@@ -22,7 +22,7 @@ Options for [consumeCrossDomainOneTimeToken](#consumecrossdomainonetimetoken).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="callbackroute"></a> `callbackRoute?` | `string` | Only exchange the one-time token when the page URL matches this route (e.g. `'/auth/callback'`; trailing slashes ignored). On every other route the `ott` parameter is scrubbed from the URL but **not** exchanged. The cross-domain protocol cannot bind the token to the browser that started the sign-in flow (magic-link flows legitimately finish in another browsing context), so without this restriction a token completes sign-in on whatever page receives it. Restricting consumption to the one route your sign-in `callbackURL`s point at keeps that to a single predictable URL. In Nuxt, set `convex.betterAuth.crossDomainCallbackRoute` instead — the client plugin forwards it here. | [src/runtime/better-auth/vue/cross-domain.ts:43](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L43) |
+| <a id="callbackroute"></a> `callbackRoute?` | `string` | Only exchange the one-time token when the page URL matches this route (e.g. `'/auth/callback'`; trailing slashes ignored). On every other route the `ott` parameter is scrubbed from the URL but **not** exchanged. The cross-domain protocol cannot bind the token to the browser that started the sign-in flow (magic-link flows legitimately finish in another browsing context), so without this restriction a token completes sign-in on whatever page receives it. Restricting consumption to the one route your sign-in `callbackURL`s point at keeps that to a single predictable URL. In Nuxt, set `convex.betterAuth.crossDomainCallbackRoute` instead — the client plugin forwards it here. | [src/runtime/better-auth/vue/cross-domain.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L42) |
 
 ***
 
@@ -459,7 +459,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/n
 function consumeCrossDomainOneTimeToken(options?): Promise<void>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/cross-domain.ts:67](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L67)
+Defined in: [src/runtime/better-auth/vue/cross-domain.ts:71](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L71)
 
 Exchange a `?ott=...` one-time token (set by the Better Auth cross-domain
 plugin when redirecting from an auth origin) for a full session — the Vue
@@ -492,7 +492,7 @@ mitigation.
 function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"] | null | undefined>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/hydration.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L64)
+Defined in: [src/runtime/better-auth/vue/hydration.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L65)
 
 Auth-aware version of usePreloadedQuery for payloads returned by
 `convexAuth(event).preloadAuthQuery(...)`.
@@ -531,7 +531,7 @@ compiling.
 function resolveAuthRedirect(value, fallback?): string;
 ```
 
-Defined in: [src/runtime/better-auth/vue/redirect.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L55)
+Defined in: [src/runtime/better-auth/vue/redirect.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L56)
 
 Validate a post-sign-in redirect destination, returning `fallback` unless it
 is a same-origin path.

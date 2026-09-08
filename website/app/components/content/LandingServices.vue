@@ -1,11 +1,11 @@
 <script setup lang="ts">
 // The compatibility plate — a slim rail under the hero listing the services
 // the module works with, grouped by what each one does for the app (three
-// interchangeable auth providers, then billing, then email). Informational
+// interchangeable auth providers, then billing). Informational
 // only: the ADD-ONS spec card below carries the navigation, so the plate
 // stays a plate. Marks follow the SpecAddons rule — the vendors' published
-// brand colors, and only on hover; ink-only brands (Better Auth, Resend)
-// take full page ink instead. The hover is per-entry where the spec card
+// brand colors, and only on hover; the ink-only brand (Better Auth)
+// takes full page ink instead. The hover is per-entry where the spec card
 // lights its whole shelf: here each service is its own listing, not one
 // card's cargo. Better Auth's mark is inlined from its brand SVG (no
 // iconify set carries the official one).
@@ -19,15 +19,13 @@ interface ServiceEntry {
 }
 
 // A `null` is a group seam — rendered as a hairline divider between the
-// auth block, billing, and email.
+// auth block and billing.
 const RAIL: Array<ServiceEntry | null> = [
   { id: 'better-auth', label: 'BETTER AUTH', role: 'AUTH', pkg: '@convex-dev/better-auth' },
   { id: 'clerk', label: 'CLERK', role: 'AUTH', pkg: '@clerk/vue', icon: 'i-simple-icons-clerk', color: '#6c47ff' },
   { id: 'auth0', label: 'AUTH0', role: 'AUTH', pkg: '@auth0/auth0-vue', icon: 'i-simple-icons-auth0', color: '#eb5424' },
   null,
   { id: 'polar', label: 'POLAR', role: 'BILLING', pkg: '@convex-dev/polar', icon: 'i-iconoir-polar-sh', color: '#0062ff' },
-  null,
-  { id: 'resend', label: 'RESEND', role: 'EMAIL', pkg: '@convex-dev/resend', icon: 'i-simple-icons-resend' },
 ]
 </script>
 

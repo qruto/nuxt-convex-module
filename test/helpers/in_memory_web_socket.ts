@@ -70,7 +70,7 @@ export function encodeU64LE(value: number): string {
  * via its `toBytesLE()` method and encoded with `Buffer` (matching
  * {@link encodeU64LE}) rather than importing Convex internals.
  */
-export function encodeServerMessage(message: WireServerMessage): string {
+function encodeServerMessage(message: WireServerMessage): string {
   return JSON.stringify(message, (_key, value) => {
     if (
       value
