@@ -221,18 +221,28 @@ CVE security updates. No third-party app holds write access to the repo.
   introduces a known CVE (moderate or higher) or a package GitHub has flagged as malicious.
   pnpm's cooldown only *delays* a new version — it never looks at what's inside it.
 - **Rescanned on a schedule.** `dependency-review` only sees what a PR changes, so
-  [osv.yml](./.github/workflows/osv.yml) scans the whole committed lockfile weekly — that is what
-  catches a CVE disclosed against a dependency that stopped changing.
+  [weekly.yml](./.github/workflows/weekly.yml)'s `osv` job scans the whole committed lockfile
+  weekly — that, and Dependabot's own continuous re-evaluation, is what catches a CVE disclosed
+  against a dependency that stopped changing.
 
-## Security workflows
+## Checks outside ci
 
-Beyond ci's own gates:
+Everything that runs on a clock rather than on a commit lives in one file,
+[weekly.yml](./.github/workflows/weekly.yml). None of it can block a merge — a scheduled check
+that fails a pull request fails the wrong person at the wrong time. They exist to notice the world
+moving underneath a repository that did not change:
 
-| Workflow | What it watches |
+| Job | What it watches |
 | --- | --- |
-| [osv.yml](./.github/workflows/osv.yml) | the committed lockfile, against the OSV database, weekly |
-| [codeql.yml](./.github/workflows/codeql.yml) | taint-tracking classes eslint and fallow don't model |
-| [scorecard.yml](./.github/workflows/scorecard.yml) | drift in the repo's own posture — pinned actions, permissions, rulesets |
+| `scorecard` | drift in the repo's own posture — pinned actions, permissions, rulesets |
+| `osv` | the committed lockfile, against the OSV database |
+| `links` | dead links in the docs, README and policy files — the one kind of rot no other gate sees |
+| `nuxt-nightly` | the next Nuxt, so a breaking change is known before its release, not after |
 
-`ci`'s `quality` job runs [zizmor](https://docs.zizmor.sh) over the workflows themselves; accepted
-findings and their reasons live in [.github/zizmor.yml](./.github/zizmor.yml).
+CodeQL runs from GitHub's **default setup** (Settings → Code security), not from a workflow file
+in this repository — on the `extended` query suite, over `javascript-typescript` and `actions`.
+
+`ci`'s `static` job runs [zizmor](https://docs.zizmor.sh) over the workflows themselves; accepted
+findings and their reasons live in [.github/zizmor.yml](./.github/zizmor.yml). Its correctness
+counterpart is [actionlint](https://github.com/rhysd/actionlint), configured in
+[.github/actionlint.yaml](./.github/actionlint.yaml).

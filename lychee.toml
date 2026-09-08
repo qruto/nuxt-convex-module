@@ -1,0 +1,48 @@
+# lychee (https://lychee.cli.rs) — dead-link detection for the docs, the README
+# and the policy files. Runs weekly, never on a pull request: a link rots
+# because the internet changed, not because someone's branch did.
+
+# OUTBOUND links only. Internal links in the docs are Nuxt Content ROUTES, not
+# paths on disk — `/guide/queries` is `website/content/2.guide/1.queries.md`
+# once Docus strips the ordering prefixes — so lychee cannot judge them and the
+# docs build already fails on a broken one. Scheme-filtering alone is not
+# enough: without a `--root-dir` those links fail to RESOLVE before any filter
+# applies, which is why the workflow passes one (see weekly.yml).
+scheme = ["https", "http"]
+
+# Retry once; a single 5xx from a rate-limited host is not a dead link.
+max_retries = 2
+timeout = 20
+# Some hosts refuse HEAD outright.
+method = "get"
+# Identify ourselves rather than looking like a scraper.
+user_agent = "Mozilla/5.0 (compatible; lychee; +https://github.com/qruto/nuxt-convex-module)"
+
+exclude_path = [
+  "node_modules",
+  "dist",
+  ".nuxt",
+  ".output",
+  "CHANGELOG.md",        # generated; its links point at commits and old releases
+  ".deepsec",
+  ".agents",
+  ".claude",
+  "pnpm-lock.yaml",
+]
+
+exclude = [
+  # Loopback and placeholders that appear in documentation examples.
+  "^https?://localhost",
+  "^https?://127\\.0\\.0\\.1",
+  "^https?://0\\.0\\.0\\.0",
+  "^https?://example\\.(com|convex\\.cloud)",
+  "^https?://.*\\.example\\.com",
+  # Anchors into the repository's own not-yet-published pages.
+  "^https?://(www\\.)?npmjs\\.com/package/nuxt-convex-module",
+  # Consistently 403s automated clients while working in a browser.
+  "^https?://(www\\.)?linkedin\\.com",
+  "^https?://(twitter|x)\\.com",
+]
+
+# A link that needs a login is not a broken link.
+accept = ["200", "204", "206", "403", "429"]

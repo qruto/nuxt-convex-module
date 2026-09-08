@@ -1,0 +1,146 @@
+name: weekly
+
+# Everything that runs on a clock rather than on a commit, in one file.
+#
+# None of it gates a merge — a scheduled check that can block a pull request
+# fails the wrong person at the wrong time. These exist to notice DRIFT: the
+# world moving underneath a repository that did not change.
+
+on:
+  # Immediate for ruleset changes — the drift Scorecard is most likely to catch.
+  branch_protection_rule:
+  schedule:
+    - cron: '3 7 * * 1' # Mondays
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # Audits the repository's own posture — pinned actions, token permissions,
+  # branch protection, signed releases, dangerous workflow patterns. Most of it
+  # this repository already does deliberately; the value is being told when that
+  # stops being true: a ruleset relaxed, a `permissions:` block widened, an
+  # action unpinned.
+  scorecard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # sign the results for the public Scorecard API
+      security-events: write # publish results to the Security tab
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publishes to the public OpenSSF API, which is what backs the badge
+          # and lets consumers check the score without running it themselves.
+          publish_results: true
+
+      - name: Upload results
+        uses: github/codeql-action/upload-sarif@486fec2a3ea2626afcd8c7e9208b4f515078dd7e # codeql-bundle-v2.26.4
+        with:
+          sarif_file: results.sarif
+
+  # Re-examines the whole committed lockfile against OSV, which ci's
+  # `dependency-review` structurally cannot: that job inspects the dependency
+  # DELTA a pull request introduces, so an advisory published against a package
+  # that stopped changing is invisible to it.
+  #
+  # Kept rather than deleted in favour of Dependabot alerts, which cover much of
+  # the same ground. The overlap is real but not total — OSV aggregates sources
+  # beyond GHSA and reaches transitives the dependency graph can fail to parse —
+  # and the cost of a second opinion here is one scheduled job a week that can
+  # never redden a pull request.
+  osv:
+    # The reusable workflow declares the same three permissions on its own job;
+    # they have to be granted here as well for it to inherit them.
+    permissions:
+      contents: read
+      actions: read # required to upload SARIF, see github/codeql-action#2117
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
+    with:
+      # `-r ./` walks the workspace and picks up pnpm-lock.yaml natively, plus
+      # the website and devtools-client-app manifests.
+      scan-args: |-
+        -r
+        ./
+
+  # Dead links in the docs, the README and the policy files. Prose is the one
+  # part of this repository nothing else checks for rot — SECURITY.md linked a
+  # repository that had moved for months, and no gate could have known.
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          # Config and exclusions live in lychee.toml. `--root-dir` has to be an
+          # absolute path, so it cannot: it lets the docs' root-relative route
+          # links resolve, after which `scheme` filters them out. Without it they
+          # fail to resolve first and no filter is ever reached.
+          args: >-
+            --no-progress
+            --config lychee.toml
+            --root-dir ${{ github.workspace }}/website/content
+            .
+          fail: true
+
+  # Builds and tests against Nuxt's nightly channel, so a breaking change
+  # upstream is a known quantity before the stable release lands rather than an
+  # emergency after it.
+  #
+  # `continue-on-error` and outside every gate: nightly is expected to break
+  # sometimes, and this must never be able to fail a release or a merge. Read
+  # the run when a Nuxt major approaches.
+  nuxt-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup
+
+      # `nuxt@npm:nuxt-nightly@latest` is the channel Nuxt publishes its own
+      # ecosystem CI against. `--no-frozen-lockfile` because this deliberately
+      # resolves outside the lockfile, and no cooldown applies to a channel whose
+      # whole point is being brand new.
+      #
+      # zizmor flags the un-lockfiled install, correctly and unavoidably: a job
+      # that exists to test against an unreleased Nuxt cannot pin the Nuxt it
+      # tests. It is contained — nothing here is privileged, nothing is
+      # published, and the job cannot fail anything.
+      - name: Install the Nuxt nightly channel
+        run: pnpm add -D "nuxt@npm:nuxt-nightly@latest" --no-frozen-lockfile # zizmor: ignore[adhoc-packages]
+
+      - name: Prepare
+        run: pnpm run dev:prepare:lib
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Test
+        if: ${{ !cancelled() }}
+        run: pnpm run test
