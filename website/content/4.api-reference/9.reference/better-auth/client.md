@@ -459,7 +459,7 @@ Defined in: [src/runtime/better-auth/vue/client.ts:9](https://github.com/qruto/n
 function consumeCrossDomainOneTimeToken(options?): Promise<void>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/cross-domain.ts:66](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L66)
+Defined in: [src/runtime/better-auth/vue/cross-domain.ts:71](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/cross-domain.ts#L71)
 
 Exchange a `?ott=...` one-time token (set by the Better Auth cross-domain
 plugin when redirecting from an auth origin) for a full session — the Vue
