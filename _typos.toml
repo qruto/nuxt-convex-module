@@ -1,0 +1,31 @@
+# typos (https://github.com/crate-ci/typos) — misspellings in prose, comments,
+# identifiers and workflow files. It is a spell checker for source, not a style
+# linter: it only reports words with an unambiguous correction.
+
+[files]
+# typos honours .gitignore, which is not enough here. CI checks out with
+# `fetch-depth: 0`, and the walker would otherwise descend into `.git/` and
+# report on packed objects and old commit subjects — a finding nobody can fix,
+# appearing non-deterministically as history grows.
+extend-exclude = [
+  ".git/",
+  # Generated or vendored, and not ours to correct.
+  "pnpm-lock.yaml",
+  "CHANGELOG.md",
+  "website/content/4.api-reference/**",
+  "skills-lock.json",
+  # Scanner and AI-tooling workspaces (gitignored, but listed so a local run
+  # matches CI whether or not they exist).
+  ".deepsec/",
+  ".agents/",
+  ".claude/",
+  ".fallow/",
+]
+
+[default.extend-words]
+# `mis-subscribe`, `mis-subscribing` — a hyphenated prefix, not a truncated
+# "miss". Used deliberately in the parity notes and the client's guard comments.
+mis = "mis"
+# Both spellings are standard; "unparseable" is the one this codebase uses, and
+# the one TypeScript's own diagnostics use.
+unparseable = "unparseable"

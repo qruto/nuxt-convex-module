@@ -173,6 +173,29 @@ jobs:
           version: 1.30.0
           advanced-security: false
 
+      # Correctness of the workflow files, which zizmor does not look at:
+      # expression typing, `needs`/matrix references that do not exist, invalid
+      # runner labels, malformed cron — plus shellcheck over every inline `run:`
+      # block (ubuntu-latest ships shellcheck; actionlint picks it up from PATH).
+      #
+      # Pinned for the same reason as zizmor: a new actionlint can add a check
+      # and redden CI with no change here. Accepted findings live in
+      # .github/actionlint.yaml.
+      - name: Workflow correctness (actionlint)
+        if: ${{ !cancelled() }}
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+        with:
+          version: 1.7.12
+          fail-on-error: true
+
+      # Misspellings in prose, comments, identifiers and workflow files. Config
+      # and the accepted-word list live in _typos.toml — including the
+      # `.git/` exclusion, without which `fetch-depth: 0` above would have it
+      # reporting on old commit subjects.
+      - name: Spelling (typos)
+        if: ${{ !cancelled() }}
+        uses: crate-ci/typos@d43b6c087ac471e2ea7b8af622ff15f05c0c365b # v1.50.1
+
   test:
     needs: changes
     if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
