@@ -427,6 +427,11 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # Codecov over OIDC instead of a stored token. This is the only job in the
+      # repository that may hold `id-token: write`, and the reason it exists as
+      # its own job: it downloads an artifact and installs nothing, so no
+      # PR-authored code ever runs beside the credential.
+      id-token: write
     steps:
       # Codecov maps coverage paths against the repository, so the tree has to be
       # present — but nothing here is installed or executed.
@@ -441,7 +446,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           slug: qruto/nuxt-convex-module
           disable_search: true
           files: coverage/lcov.info
@@ -452,7 +457,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           disable_search: true
           files: test-report.junit.xml
 

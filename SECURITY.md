@@ -144,8 +144,11 @@ third-party app holds write access to this repository.
   that builds holds nothing; the job that publishes holds only the OIDC token, checks out nothing,
   installs nothing, and runs behind `step-security/harden-runner` in `block` mode with an
   allowlist of npm, GitHub and Sigstore.
-- Publishing uses npm **Trusted Publishing** over OIDC bound to a `main`-only environment, so no
-  long-lived registry token exists anywhere and a workflow edited on a branch cannot reach npm.
+- **No stored credentials at all.** Publishing uses npm **Trusted Publishing** over OIDC bound to
+  a `main`-only environment, and coverage uploads use Codecov's OIDC — so no long-lived token
+  exists anywhere in this repository, and a workflow edited on a branch cannot reach either
+  service. `id-token: write` is granted to exactly two jobs, neither of which runs
+  pull-request-authored code.
   Releases are **staged**: nothing becomes installable until a maintainer approves it with 2FA,
   after npm's malware scan — provenance says where a package came from, not what is in it.
 - The release refuses a commit whose `ci` run is not a completed success, and waits for one that
