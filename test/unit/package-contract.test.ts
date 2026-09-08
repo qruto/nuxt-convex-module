@@ -81,7 +81,7 @@ function satisfiesComparator(version: string, comparator: string): boolean {
   }
 }
 
-/** Space-separated comparators are ANDed; `||` is not used here and throws. */
+/** Space-separated comparators all have to hold; `||` is not used here and throws. */
 function satisfies(version: string, range: string): boolean {
   if (range.includes('||')) throw new Error(`unsupported range union: "${range}"`)
   return range.trim().split(/\s+/).every(part => satisfiesComparator(version, part))
