@@ -107,6 +107,20 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm run lint:commits --from "$BASE_SHA" --to "$HEAD_SHA"
 
+      # fallow's action shells out to a bare `fallow`, and its own fallback —
+      # `npm install -g` — cannot work here: pnpm's Node runtime deliberately
+      # ships without a bundled npm (pnpm 11+), so the global install lands
+      # nowhere on PATH and analyze.sh dies with "command not found". Putting
+      # node_modules/.bin on PATH points it at the lockfile-pinned 3.22.0
+      # instead, which is the build .githooks already run.
+      #
+      # Scoped to this job rather than the shared setup action: a PATH entry lets
+      # anything in node_modules/.bin shadow a system command, and `pack` runs
+      # the consumer's npm on a lockfile-less tree. Nothing here is privileged —
+      # no credentials, no publish, no artifact a consumer receives.
+      - name: Put project binaries on PATH
+        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
+
       # Dead code, unused exports/deps, duplication, complexity — through the
       # official action, which the bare CLI cannot replace: it derives the PR
       # base itself, posts the findings as a sticky comment and inline review
