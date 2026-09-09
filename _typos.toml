@@ -20,10 +20,6 @@ extend-exclude = [
   ".agents/",
   ".claude/",
   ".fallow/",
-  # The fallow action writes its PR diff into the workspace before this step
-  # runs, so the walker would otherwise spell-check the branch's own diff —
-  # every finding reported twice, once in the source and once in the patch.
-  "fallow-pr.diff",
 ]
 
 [default.extend-words]
