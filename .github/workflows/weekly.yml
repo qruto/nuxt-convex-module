@@ -76,6 +76,31 @@ jobs:
         -r
         ./
 
+  # The rules that gate `main` are committed under .github/rulesets/, which only
+  # means anything if something checks that they still describe reality. They
+  # are edited in a settings page, and GitHub fills in defaults the committed
+  # file never mentioned — both have already happened here.
+  #
+  # Scorecard (above) notices that branch protection exists. This notices that
+  # it stopped matching what was reviewed: a rule removed, a parameter changed,
+  # a bypass actor added, or a whole ruleset that exists only as clicks.
+  #
+  # Read-only. A drift is a conversation, not an automatic revert.
+  rulesets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # rulesets on a public repository are readable without more
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compare live rules against the committed ones
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-rulesets.mjs
+
   # Dead links in the docs, the README and the policy files. Prose is the one
   # part of this repository nothing else checks for rot — SECURITY.md linked a
   # repository that had moved for months, and no gate could have known.

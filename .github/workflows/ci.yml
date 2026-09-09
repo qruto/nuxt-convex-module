@@ -49,9 +49,11 @@ jobs:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
+          # `&shared` / `*shared` is a YAML anchor, which this action resolves —
+          # so what both filters need is written once and a new shared path is
+          # added in one place.
           filters: |
-            website:
-              - 'website/**'
+            shared: &shared
               - 'src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -59,20 +61,17 @@ jobs:
               - 'patches/**'
               - '.github/workflows/ci.yml'
               - '.github/actions/**'
+            website:
+              - *shared
+              - 'website/**'
             src:
-              - 'src/**'
+              - *shared
               - 'test/**'
               - 'scripts/**'
               - 'examples/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'patches/**'
               - 'tsconfig*.json'
               - 'vitest.config.ts'
               - 'build.config.ts'
-              - '.github/workflows/ci.yml'
-              - '.github/actions/**'
 
   # Everything that needs a checkout, an install and nothing else. One job rather
   # than four: the setup is identical, and `if: !cancelled()` still gives a
@@ -131,20 +130,23 @@ jobs:
       - name: Put project binaries on PATH
         run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
 
-      # Dead code, unused exports/deps, duplication, complexity — through the
-      # official action, which the bare CLI cannot replace: it derives the PR
-      # base itself, posts the findings as a sticky comment and inline review
-      # comments, and can upload SARIF. `version` is omitted on purpose, so it
-      # installs the release matching the `fallow` spec in package.json — pinned
-      # there exactly, so CI and .githooks run the same build.
+      # Dead code, unused exports/deps, duplication, complexity. Through the
+      # action rather than the CLI for two things the CLI cannot do: it derives
+      # the PR base itself, and it verifies the binary's signature. `version` is
+      # omitted so it installs the spec pinned in package.json — CI and
+      # .githooks then run the same build.
+      #
+      # Its `comment`, `review-comments` and `sarif` outputs stay off. Each
+      # wants `pull-requests: write`, `checks: write` or `security-events: write`
+      # on a job that installs and runs pull-request-authored code, and a failing
+      # gate with the findings in its log is already the whole signal.
       #
       # A PR is scoped to the files it changed and fails only on findings it
-      # introduces. A push to main runs the whole project instead, because the
-      # scoped audit passes on a config edit that strands a file elsewhere.
+      # introduces. A push to main runs the whole project, because the scoped
+      # audit passes on a config edit that strands a file elsewhere.
       #
-      # This runs after the setup step's `dev:prepare`, unlike the arrangement it
-      # replaces: without `dist/` the tsconfig chain does not resolve and fallow
-      # reports against a different module graph than the one developers see.
+      # Runs after the setup step's `dev:prepare`: without `dist/` the tsconfig
+      # chain does not resolve and fallow sees a different module graph.
       - name: Quality (fallow)
         if: ${{ !cancelled() }}
         uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)

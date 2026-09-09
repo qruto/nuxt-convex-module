@@ -156,6 +156,7 @@
     "docs:api:check": "pnpm run docs:api && git diff --exit-code -- website/content/4.api-reference",
     "bump": "pnpm exec taze major -w",
     "check:tarball": "node scripts/check-tarball.mjs",
+    "check:rulesets": "node scripts/check-rulesets.mjs",
     "check:consumer-types": "node scripts/check-consumer-types.mjs"
   },
   "dependencies": {

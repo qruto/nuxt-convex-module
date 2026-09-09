@@ -559,16 +559,19 @@ so none can be "restored" by syncing.
   `convex.betterAuth.crossDomainCallbackRoute`
 - **Pinned by** · `test/nuxt/auth/vue/cross-domain.test.ts` — "consumes the token on the
   configured callback route…", "scrubs but does not exchange the token outside the configured
-  callback route"; `test/unit/auth/vue/plugin-client.test.ts` pins that it is
-  off by default
+  callback route", "warns instead of throwing when updating the session fails";
+  `test/unit/auth/vue/plugin-client.test.ts` pins that it is off by default
 - **On sync** · keep. Off by default, so upstream behaviour is the default
 - **Why** · the token is exchanged on **any** URL, with no state or origin binding, so sign-in
   completes on whatever page receives it. The protocol deliberately is not bound to the initiating
   browser — magic-link flows finish in another browsing context, hence `skipStateCookieCheck`
   in the server plugin — so a client-side nonce would break legitimate flows. Restricting the
-  exchange to one route is the additive mitigation. Two smaller guards sit alongside: an early
-  return when the aliased client has no cross-domain plugin (upstream assumes it is installed),
-  and a catch so an exchange failure warns instead of breaking app bootstrap.
+  exchange to one route is the additive mitigation. Three smaller guards sit alongside: an early
+  return when the aliased client has no cross-domain plugin (upstream assumes it is installed);
+  a catch so an exchange failure warns instead of breaking app bootstrap; and `updateSession()`
+  is **awaited**, where upstream fires it and forgets. The catch is the reason — an un-awaited
+  rejection escapes it entirely and surfaces as an unhandled rejection during app bootstrap,
+  which is the one failure the catch exists to prevent.
 
 ##### A-14 — the auth proxy route and its security rules
 

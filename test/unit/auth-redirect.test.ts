@@ -61,7 +61,6 @@ describe('resolveAuthRedirect', () => {
 
   it('rejects non-http schemes', () => {
     expect(resolveAuthRedirect('javascript:alert(1)')).toBe('/')
-    // eslint-disable-next-line no-script-url
     expect(resolveAuthRedirect('data:text/html,<script>alert(1)</script>')).toBe('/')
   })
 

@@ -39,6 +39,13 @@ export default createConfigForNuxt({
       files: ['website/**/*.vue', 'devtools-client-app/**/*.vue'],
       rules: {
         'vue/multi-word-component-names': 'off',
+        // The default of one attribute per line exists to keep long prop lists
+        // readable. These apps are mostly inline SVG, where the attributes are
+        // short positional values — `<linearGradient x1 y1 x2 y2>`, `<stop
+        // offset stop-color>` — that read worse one per line, and the rule was
+        // producing 70 warnings nobody was ever going to act on. Six is the
+        // widest such element here; a seventh is a prop list and should wrap.
+        'vue/max-attributes-per-line': ['warn', { singleline: { max: 6 } }],
       },
     },
     // Type-aware rules. `@nuxt/eslint-config` only wires the TypeScript program

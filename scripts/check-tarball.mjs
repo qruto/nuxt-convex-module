@@ -133,6 +133,12 @@ try {
   // `from '…'`, `import '…'`, `import('…')`, `export … from '…'`.
   const SPECIFIER = /(?:\bexport\s*\*\s*from|\bfrom|\bimport\s*\(|\bimport)\s*['"]([^'"]+)['"]/g
 
+  // Block comments are stripped first. mkdist keeps JSDoc in the emitted `.js`,
+  // and several barrels carry usage examples — `import … from
+  // 'nuxt-convex-module/clerk/client'` among them. Matched raw, a doc comment
+  // naming an optional peer would be reported as a leak that no code performs.
+  const CODE_ONLY = /\/\*[\s\S]*?\*\//g
+
   /**
    * The package a specifier names, or null when it names none — a relative
    * path, a Node builtin, or a `#` subpath alias resolved by the consumer.
@@ -153,7 +159,26 @@ try {
    */
   const candidates = (file, specifier) => {
     const target = resolve(dirname(file), specifier)
-    return [target, `${target}.js`, `${target}.mjs`, join(target, 'index.js')]
+    return [
+      target,
+      `${target}.js`,
+      `${target}.mjs`,
+      join(target, 'index.js'),
+      join(target, 'index.mjs'),
+    ]
+  }
+
+  /**
+   * The file a self-referencing specifier points at — `nuxt-convex-module/vue`
+   * to `./dist/runtime/vue/index.js` — or null when the specifier names some
+   * other package.
+   */
+  const ownSubpath = (specifier) => {
+    if (specifier !== manifest.name && !specifier.startsWith(`${manifest.name}/`)) return null
+    const key = specifier === manifest.name ? '.' : `.${specifier.slice(manifest.name.length)}`
+    const entry = (manifest.exports ?? {})[key]
+    if (!entry) return null
+    return typeof entry === 'string' ? entry : entry.import ?? null
   }
 
   /** A subpath whose entry is missing is publint's finding, not this one. */
@@ -180,7 +205,16 @@ try {
       const code = readOrNull(file)
       if (code === null) continue
 
-      for (const [, specifier] of code.matchAll(SPECIFIER)) {
+      for (const [, specifier] of code.replace(CODE_ONLY, '').matchAll(SPECIFIER)) {
+        // A subpath of this package itself is not a peer — it is more of this
+        // package. Resolve it back through the manifest and keep walking, or a
+        // barrel that re-exports through the published name would end the walk
+        // and report a pass it never earned.
+        const own = ownSubpath(specifier)
+        if (own) {
+          queue.push(join(pkgRoot, own))
+          continue
+        }
         const name = packageName(specifier)
         if (name) bare.add(name)
         else if (specifier.startsWith('.')) queue.push(...candidates(file, specifier))

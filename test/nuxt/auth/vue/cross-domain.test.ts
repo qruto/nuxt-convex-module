@@ -145,4 +145,27 @@ describe('auth/vue/cross-domain', () => {
     expect(mockUpdateSession).not.toHaveBeenCalled()
     warnSpy.mockRestore()
   })
+
+  // PARITY: A-13 — `updateSession()` is awaited here, where upstream fires it
+  // and forgets. The whole exchange sits inside a try/catch so a failure cannot
+  // break app bootstrap, and an un-awaited rejection escapes that catch: it
+  // surfaces as an unhandled rejection instead, which is the exact failure the
+  // catch exists to prevent. This test fails if the `await` is ever dropped.
+  it('warns instead of throwing when updating the session fails', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const failure = new Error('updateSession failed')
+    mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
+    mockUpdateSession.mockRejectedValue(failure)
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+
+    await expect(consumeCrossDomainOneTimeToken()).resolves.toBeUndefined()
+
+    expect(mockUpdateSession).toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[nuxt-convex-module] failed to consume cross-domain one-time token',
+      failure,
+    )
+    warnSpy.mockRestore()
+  })
 })

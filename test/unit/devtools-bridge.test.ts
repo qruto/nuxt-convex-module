@@ -209,7 +209,7 @@ describe('devtools bridge', () => {
       expect(query!.errorMessage).toBeUndefined()
     })
 
-    it('falls back to String() for local results convexToJson cannot serialize', () => {
+    it('falls back to String() for unserializable local results that are not objects', () => {
       installFakeSync(client, () => () => {})
       const bridge = createConvexDevtoolsBridge(client)
       addListenerToken(client, JSON.stringify({ udfPath: 'myQuery:default', args: {} }))
@@ -217,6 +217,20 @@ describe('devtools bridge', () => {
       const [query] = bridge.getSnapshot().queries
       expect(typeof query!.result).toBe('string')
       expect(query!.result).toContain('=>')
+    })
+
+    // `String()` on an object renders "[object Object]", which reads in the
+    // panel as data rather than as a failure to serialize. Name the shape.
+    it.each([
+      ['object', () => ({ nested: () => {} }), '[unserializable object]'],
+      ['array', () => [() => {}], '[unserializable array]'],
+    ])('names an unserializable %s instead of stringifying it', (_shape, result, expected) => {
+      installFakeSync(client, result as () => unknown)
+      const bridge = createConvexDevtoolsBridge(client)
+      addListenerToken(client, JSON.stringify({ udfPath: 'myQuery:default', args: {} }))
+
+      const [query] = bridge.getSnapshot().queries
+      expect(query!.result).toBe(expected)
     })
 
     it('records an errorMessage when reading the local result throws', () => {
