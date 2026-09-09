@@ -42,14 +42,22 @@ unknown properties outright — including `$comment`. Hence this file.
 | `ENABLE_EXPERIMENTAL_COREPACK` | `1` | Honours the `packageManager` pin instead of Vercel's own pnpm |
 | Production env | `CONVEX_DEPLOY_KEY`, `NUXT_PUBLIC_CONVEX_SITE_URL` | The live deployment's Convex project |
 | Preview env | **nothing Convex-related** | See below |
+| Deployment Protection → Vercel Authentication | **off** | A preview nobody can open is not a preview. Vercel's scopes are *all*, *previews only*, or *production URLs + previews* — there is no "production only" — so leaving previews open means turning it off. Only the `*.vercel.app` URLs become public; the production domain was already exempt, and this is a public docs site |
 
-### Previews are bring-your-own-Convex
+## What each preview is for
 
-Preview deployments get no Convex environment variables at all. That is the
-mechanism, not a convention: with no `CONVEX_DEPLOY_KEY` in the environment,
-`convex deploy` *cannot* run on a preview even if something later tries to call
-it. A preview is a playground where the visitor supplies their own deployment
-URL — no preview branch ever creates a Convex deployment.
+A pull request produces two, and they answer different questions.
+
+| Preview | What it shows | Convex |
+| --- | --- | --- |
+| **Vercel** — `nuxt-convex-module-git-<branch>-razum.vercel.app` | The website as that branch would ship it: docs, landing, API reference | none — the embedded playground renders its offline state |
+| **StackBlitz** — from the pkg.pr.new comment | `examples/playground`, a real Nuxt app running the PR's *package build* | **yours** — the visitor supplies a deployment URL |
+
+Testing a pull request's package therefore means bringing your own Convex
+credentials. That is enforced by absence, not by convention: no
+`CONVEX_DEPLOY_KEY` exists in any preview environment, and nothing in CI or in
+this build ever calls `convex deploy` — so no preview branch can create a Convex
+deployment even if something later tried to.
 
 ## Locally
 
