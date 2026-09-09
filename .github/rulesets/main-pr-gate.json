@@ -1,7 +1,7 @@
 {
   "name": "main-pr-gate",
   "target": "branch",
-  "enforcement": "evaluate",
+  "enforcement": "active",
   "conditions": {
     "ref_name": {
       "include": [
