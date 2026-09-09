@@ -22,15 +22,20 @@ if (!appDir) {
   process.exit(1)
 }
 
-// The checkers are pinned to the versions this repository develops against, read
-// from its own manifest, so the gate cannot drift from the `static` job's
-// `vue-tsc` and start disagreeing with it about the same declarations.
-const { devDependencies } = JSON.parse(
-  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
-)
+// The checkers are the exact versions this repository RESOLVED, read out of its
+// own node_modules rather than off the manifest's ranges. `vue-tsc: ^3.3.11`
+// handed to npm resolves to whatever is newest — so the gate could check the
+// published declarations with a different compiler than the `static` job used
+// on the sources, and disagree with it about the same types. Reading the
+// installed version pins them together.
+const installed = (name) => {
+  const path = new URL(`../node_modules/${name}/package.json`, import.meta.url)
+  return JSON.parse(readFileSync(path, 'utf8')).version
+}
 const checkers = ['vue-tsc', 'typescript', '@types/node'].map(
-  name => `${name}@${devDependencies[name]}`,
+  name => `${name}@${installed(name)}`,
 )
+console.log(`check:consumer-types: ${checkers.join(' ')}`)
 
 // Nuxt's documented per-context project setup, copied rather than `extends`ed:
 // an app's tsconfig references the four generated contexts and holds no files

@@ -236,8 +236,8 @@ moving underneath a repository that did not change:
 | --- | --- |
 | `scorecard` | drift in the repo's own posture — pinned actions, permissions, rulesets |
 | `osv` | the committed lockfile, against the OSV database |
+| `rulesets` | the live branch and tag rules, against the ones committed in `.github/rulesets/` |
 | `links` | dead links in the docs, README and policy files — the one kind of rot no other gate sees |
-| `nuxt-nightly` | the next Nuxt, so a breaking change is known before its release, not after |
 
 CodeQL runs from GitHub's **default setup** (Settings → Code security), not from a workflow file
 in this repository — on the `extended` query suite, over `javascript-typescript` and `actions`.

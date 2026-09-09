@@ -45,10 +45,29 @@ for (const file of files) {
 
   const got = gh([`repos/${repo}/rulesets/${match.id}`])
 
-  // Enforcement is expected to move ahead of the file (evaluate -> active) and
-  // is reported rather than failed; every other difference is drift.
-  if (got.enforcement !== want.enforcement) {
-    console.log(`  · ${want.name}: enforcement is "${got.enforcement}", file says "${want.enforcement}"`)
+  // Enforcement is ranked, not compared. Promotion is expected — the file can
+  // sit at `evaluate` while the live rule is `active` — but a live rule WEAKER
+  // than the file is the whole failure this check exists to catch: a gate
+  // turned off is indistinguishable from one that was never on.
+  const rank = { disabled: 0, evaluate: 1, active: 2 }
+  if (rank[got.enforcement] < rank[want.enforcement]) {
+    problems.push(`${want.name}: enforcement is "${got.enforcement}", weaker than the "${want.enforcement}" this file requires`)
+  }
+  else if (got.enforcement !== want.enforcement) {
+    console.log(`  · ${want.name}: enforcement is "${got.enforcement}", file says "${want.enforcement}" — promote the file`)
+  }
+
+  // A ruleset can keep its name and its rules while pointing somewhere else.
+  // Then every rule below still matches and `main` is no longer protected.
+  if (got.target !== want.target) {
+    problems.push(`${want.name}: target is "${got.target}", file says "${want.target}"`)
+  }
+  const refs = r => JSON.stringify({
+    include: [...(r.conditions?.ref_name?.include ?? [])].sort(),
+    exclude: [...(r.conditions?.ref_name?.exclude ?? [])].sort(),
+  })
+  if (refs(got) !== refs(want)) {
+    problems.push(`${want.name}: applies to ${refs(got)}, file says ${refs(want)}`)
   }
 
   const rulesOf = r => Object.fromEntries(r.rules.map(rule => [rule.type, rule.parameters ?? {}]))
@@ -71,9 +90,20 @@ for (const file of files) {
     }
   }
 
-  const actors = r => (r.bypass_actors ?? []).map(a => `${a.actor_type}:${a.bypass_mode}`).sort().join(', ')
-  if (actors(got) !== actors(want)) {
-    problems.push(`${want.name}: bypass actors are [${actors(got)}], file says [${actors(want)}]`)
+  // GitHub omits `bypass_actors` entirely unless the caller can write the
+  // ruleset, and the weekly job's token cannot. Treating an absent field as an
+  // empty list would report a bypass difference on every run and train everyone
+  // to ignore this check — so it is skipped, loudly, rather than guessed at.
+  // Run it locally as an admin (`gh auth`) before promoting a ruleset, which is
+  // when a stray bypass actor actually matters.
+  if (!('bypass_actors' in got)) {
+    console.log(`  · ${want.name}: bypass actors not visible to this token — run locally as an admin to compare them`)
+  }
+  else {
+    const actors = r => (r.bypass_actors ?? []).map(a => `${a.actor_type}:${a.bypass_mode}`).sort().join(', ')
+    if (actors(got) !== actors(want)) {
+      problems.push(`${want.name}: bypass actors are [${actors(got)}], file says [${actors(want)}]`)
+    }
   }
 }
 

@@ -7,8 +7,10 @@ name: weekly
 # world moving underneath a repository that did not change.
 
 on:
-  # Immediate for ruleset changes — the drift Scorecard is most likely to catch.
-  branch_protection_rule:
+  # No `branch_protection_rule` trigger: it fires for CLASSIC branch protection,
+  # which this repository does not use — every rule here is a ruleset, and a
+  # ruleset change fires nothing. The `rulesets` job below covers that drift on
+  # the schedule instead, and dispatch is there for when you want it now.
   schedule:
     - cron: '3 7 * * 1' # Mondays
   workflow_dispatch:
@@ -127,45 +129,3 @@ jobs:
             --root-dir ${{ github.workspace }}/website/content
             .
           fail: true
-
-  # Builds and tests against Nuxt's nightly channel, so a breaking change
-  # upstream is a known quantity before the stable release lands rather than an
-  # emergency after it.
-  #
-  # `continue-on-error` and outside every gate: nightly is expected to break
-  # sometimes, and this must never be able to fail a release or a merge. Read
-  # the run when a Nuxt major approaches.
-  nuxt-nightly:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    continue-on-error: true
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: $/.github/actions/setup
-
-      # `nuxt@npm:nuxt-nightly@latest` is the channel Nuxt publishes its own
-      # ecosystem CI against. `--no-frozen-lockfile` because this deliberately
-      # resolves outside the lockfile, and no cooldown applies to a channel whose
-      # whole point is being brand new.
-      #
-      # zizmor flags the un-lockfiled install, correctly and unavoidably: a job
-      # that exists to test against an unreleased Nuxt cannot pin the Nuxt it
-      # tests. It is contained — nothing here is privileged, nothing is
-      # published, and the job cannot fail anything.
-      - name: Install the Nuxt nightly channel
-        run: pnpm add -D "nuxt@npm:nuxt-nightly@latest" --no-frozen-lockfile # zizmor: ignore[adhoc-packages]
-
-      - name: Prepare
-        run: pnpm run dev:prepare:lib
-
-      - name: Type check
-        run: pnpm run typecheck
-
-      - name: Test
-        if: ${{ !cancelled() }}
-        run: pnpm run test
