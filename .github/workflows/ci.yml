@@ -116,41 +116,6 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm run lint:commits --from "$BASE_SHA" --to "$HEAD_SHA"
 
-      # Dead code, unused exports/deps, duplication, complexity. Through the
-      # action rather than the CLI for two things the CLI cannot do: it derives
-      # the PR base itself, and it verifies the binary's signature. `version` is
-      # omitted so it installs the spec pinned in package.json — CI and
-      # .githooks then run the same build.
-      #
-      # Its `comment`, `review-comments` and `sarif` outputs stay off. Each
-      # wants `pull-requests: write`, `checks: write` or `security-events: write`
-      # on a job that installs and runs pull-request-authored code, and a failing
-      # gate with the findings in its log is already the whole signal.
-      #
-      # A PR is scoped to the files it changed and fails only on findings it
-      # introduces. A push to main runs the whole project, because the scoped
-      # audit passes on a config edit that strands a file elsewhere.
-      #
-      # Runs after the setup step's `dev:prepare`: without `dist/` the tsconfig
-      # chain does not resolve and fallow sees a different module graph.
-      - name: Quality (fallow)
-        if: ${{ !cancelled() }}
-        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
-        with:
-          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
-
-      # A separate surface: fallow keeps security candidates out of both the
-      # default run and the audit gate, so neither would ever report one.
-      # `auto-changed-since: false` because a candidate on an untouched file
-      # should still block — the scan costs ~0.14s and the repo is at zero, so
-      # there is no backlog worth grandfathering.
-      - name: Security candidates (fallow)
-        if: ${{ !cancelled() }}
-        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
-        with:
-          command: security
-          auto-changed-since: false
-
       # Regenerating the committed TypeDoc reference must produce no diff,
       # otherwise source doc-comments and the published reference have diverged.
       - name: API reference drift
@@ -193,6 +158,63 @@ jobs:
       - name: Spelling (typos)
         if: ${{ !cancelled() }}
         uses: crate-ci/typos@d43b6c087ac471e2ea7b8af622ff15f05c0c365b # v1.50.1
+
+      # ── fallow runs last, and only fallow runs after this ────────────────
+      #
+      # The action's analyze.sh calls a bare `fallow`, resolved off PATH, and
+      # exposes no input to point at a binary. Its own installer does
+      # `npm install -g`, which does not produce a usable executable here — so
+      # without the step below the log reads "Installed fallow unknown version"
+      # and then "analyze.sh: line 665: fallow: command not found". Measured, by
+      # deleting this step and pushing: the job fails, loudly, which is the one
+      # good thing about that failure mode.
+      #
+      # `$GITHUB_PATH` PREPENDS, for every later step in the job — which is what
+      # zizmor's `github-env` audit is pointing at, and it is right to. So the
+      # blast radius is made empty instead of waived away: the two steps that
+      # need it are the last two in the job, and nothing runs after them. Keep it
+      # that way; a step added below here inherits a PATH where 40-odd project
+      # binaries shadow the system's.
+      #
+      # Nothing privileged runs here either — no credentials, no publish, no
+      # artifact a consumer receives.
+      - name: Put project binaries on PATH
+        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
+
+      # Dead code, unused exports/deps, duplication, complexity. Through the
+      # action rather than the CLI for two things the CLI cannot do: it derives
+      # the PR base itself, and it verifies the binary's signature. `version` is
+      # omitted so it installs the spec pinned in package.json — CI and
+      # .githooks then run the same build.
+      #
+      # Its `comment`, `review-comments` and `sarif` outputs stay off. Each
+      # wants `pull-requests: write`, `checks: write` or `security-events: write`
+      # on a job that installs and runs pull-request-authored code, and a failing
+      # gate with the findings in its log is already the whole signal.
+      #
+      # A PR is scoped to the files it changed and fails only on findings it
+      # introduces. A push to main runs the whole project, because the scoped
+      # audit passes on a config edit that strands a file elsewhere.
+      #
+      # Runs after the setup step's `dev:prepare`: without `dist/` the tsconfig
+      # chain does not resolve and fallow sees a different module graph.
+      - name: Quality (fallow)
+        if: ${{ !cancelled() }}
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
+
+      # A separate surface: fallow keeps security candidates out of both the
+      # default run and the audit gate, so neither would ever report one.
+      # `auto-changed-since: false` because a candidate on an untouched file
+      # should still block — the scan costs ~0.14s and the repo is at zero, so
+      # there is no backlog worth grandfathering.
+      - name: Security candidates (fallow)
+        if: ${{ !cancelled() }}
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          command: security
+          auto-changed-since: false
 
   test:
     needs: changes
