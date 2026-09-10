@@ -105,10 +105,17 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload.
+  repository root's — is what filters the upload. That app also turns the
+  module's auto-detected integrations off by name in `nuxt.config.ts`: run it
+  from a clone and Node's upward `node_modules` lookup finds Better Auth and
+  friends in this repository's root, which would mount an auth proxy the app has
+  no configuration for.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
-visitor's own account.
+visitor's own account. `examples/playground/.env.local` is the one env file this
+repository commits — it ships with the sandbox holding a single commented
+`CONVEX_URL`, so the only setup left is uncommenting it. Whatever you or the
+Convex CLI put there is yours; check `git diff` before committing it back.
 
 ## Submitting Changes
 

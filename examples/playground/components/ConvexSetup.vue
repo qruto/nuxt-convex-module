@@ -9,8 +9,11 @@
 
     <ol>
       <li>
-        <p>Create <code>.env.local</code> here with your deployment URL:</p>
-        <pre><code>NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud</code></pre>
+        <p>
+          Open <code>.env.local</code> — already in the file tree, waiting on one value —
+          and uncomment its one line, with your deployment URL in place of the example:
+        </p>
+        <pre><code>CONVEX_URL=https://your-deployment.convex.cloud</code></pre>
         <p class="note">
           The dev server watches that file, so this page becomes the live demo as soon as you
           save it — nothing to restart.

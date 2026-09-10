@@ -5,6 +5,11 @@
 // URL is configured. So the guard has to sit on a child component that is never
 // instantiated before there is a URL, rather than on a branch inside one setup.
 const configured = computed(() => Boolean(useRuntimeConfig().public.convex.url))
+
+useHead({
+  title: 'Nuxt ✕ Convex playground',
+  htmlAttrs: { lang: 'en' },
+})
 </script>
 
 <template>
