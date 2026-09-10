@@ -1,13 +1,14 @@
 # Rulesets
 
-What protects `main` and the release tags, as files rather than as clicks in a
-settings page.
+These files are the rules that protect `main` and the release tags, kept in git instead of only in
+a settings page.
 
-GitHub does not read this directory. `weekly.yml`'s `rulesets` job does —
-`scripts/check-rulesets.mjs` compares every file here against the live rules and
-fails on any difference, including a ruleset that exists only in GitHub. Without
-it, "source of truth" would be a claim rather than a fact: it drifted the day it
-was created, when GitHub filled in a parameter the file never mentioned.
+GitHub does not read this directory — it's a copy. `weekly.yml`'s `rulesets` job is what keeps the
+copy honest: `scripts/check-rulesets.mjs` compares every file here against the live rules and fails
+on any difference, including a ruleset that exists in GitHub but not here.
+
+Without that job these files would just be a claim. They went out of date the day they were
+written, when GitHub filled in a parameter the file never mentioned.
 
 ```sh
 pnpm run check:rulesets     # needs `gh auth` or GH_TOKEN
@@ -15,33 +16,31 @@ pnpm run check:rulesets     # needs `gh auth` or GH_TOKEN
 
 | File | State | What it does |
 | --- | --- | --- |
-| `main-guard.json` | active | Refuses deletion and force-pushes on `main` |
+| `main-guard.json` | active | Blocks deletion and force-pushes on `main` |
 | `main-pr-gate.json` | active | Makes CI actually gate a merge — see below |
 | `tag-guard.json` | active | Freezes `v*` tags: no update, delete or force-push |
 
 ## `main-pr-gate`
 
-`main-guard` alone means a plain `git push` to `main` sails past every check in
-the repository. This is what closes that.
+With only `main-guard` in place, a plain `git push` to `main` skips every check in the repository.
+This is the ruleset that stops that.
 
 | Rule | Why |
 | --- | --- |
-| `pull_request`, **0 reviewers** | The gate is CI, not review — there is one human here. What matters is that the commit exists as a PR at all, so the checks run and the diff is readable. Zero reviewers keeps that free. |
-| `required_status_checks: ["All checks passed"]` | The one aggregate context. Adding, renaming or splitting a job never touches this file again. |
-| `required_signatures` | Every commit on `main` is already signed. Safe under PR-only merging, because the commits GitHub creates when it squashes are signed by GitHub — but `rebase` is allowed too, and rebase carries the PR's own commits onto `main` unchanged. That is why `Release prepare` builds its commit through the API rather than `git commit`: a commit made on a runner is unverified and would be refused under a rebase merge. |
-| `require_extra_approval_for_unattributed_changes` | GitHub's default, kept and recorded rather than left implicit: a commit whose author is not a GitHub account is worth a second look. The bypass below covers the solo-maintainer lockout it would otherwise create. |
-| `bypass_actors: OrganizationAdmin`, `pull_request` mode | Break-glass. `current_user_can_bypass` is `"never"` without it, so one flaky Windows leg locks the maintainer out of their own repository. `pull_request` mode, not `always`: it permits merging a PR past a stuck check, never a direct push. |
+| `pull_request`, **0 reviewers** | There is one maintainer here, so the gate is CI, not review. What matters is that the change exists as a PR at all, so the checks run and the diff is readable. Zero reviewers makes that free. |
+| `required_status_checks: ["All checks passed"]` | One aggregate check. Adding, renaming or splitting a CI job never means touching this file. |
+| `required_signatures` | Every commit on `main` is already signed. Squash merges are signed by GitHub, but rebase merges are allowed too, and a rebase carries the PR's own commits onto `main` unchanged. That's why `Release prepare` creates its commit through the API instead of `git commit` — a commit made on a runner is unverified and would be rejected. |
+| `require_extra_approval_for_unattributed_changes` | GitHub's default. Written down rather than left implicit: a commit whose author isn't a GitHub account is worth a second look. |
+| `bypass_actors: OrganizationAdmin`, `pull_request` mode | Break-glass. Without it `current_user_can_bypass` is `"never"`, so one flaky Windows job locks the maintainer out of their own repository. `pull_request` mode, not `always`: it allows merging a PR past a stuck check, never a direct push. |
 
-**Why it is separate from `main-guard`.** `evaluate` is a property of a whole
-ruleset, and this one spent a week in it. Folding these rules into `main-guard`
-would have put its live deletion and force-push protection into evaluate mode
-with them — trading real protection for a dry run.
+**Why this is separate from `main-guard`.** Evaluate mode applies to a whole ruleset, and this one
+spent a week in it. Folding these rules into `main-guard` would have put its live deletion and
+force-push protection into evaluate mode too.
 
-**Why no bot needs a bypass.** `Release prepare` pushes to `release/vX.Y.Z` and
-`Release` pushes only a tag; neither writes to `main`. That is why the release
-split had to land first.
+**Why no bot needs a bypass.** `Release prepare` pushes to `release/vX.Y.Z` and `Release` pushes
+only a tag. Neither writes to `main`. That's why the release had to be split first.
 
-## Applying a new one
+## Adding a ruleset
 
 ```sh
 # Create it in evaluate mode: blocks nothing, records what it would have blocked
@@ -51,19 +50,18 @@ gh api -X POST repos/qruto/nuxt-convex-module/rulesets \
 # After a week, read what it would have blocked
 gh api repos/qruto/nuxt-convex-module/rulesets/rule-suites --jq '.[]'
 
-# Then enforce, and set `enforcement` in the file to match
+# Then enforce it, and set `enforcement` in the file to match
 gh api -X PUT repos/qruto/nuxt-convex-module/rulesets/<id> -f enforcement=active
 ```
 
-`check:rulesets` ranks enforcement rather than merely comparing it: a live rule
-WEAKER than the file fails, a stronger one only reports. So the file may lag a
-promotion, never a relaxation.
+`check:rulesets` ranks enforcement instead of comparing it. A live rule weaker than the file fails;
+a stronger one is only reported. So the file may lag behind a promotion, but never behind a
+relaxation.
 
-## Still to come
+## Still to do
 
-- **Fold `main-guard` into `main-pr-gate`.** Both are active now, so the reason
-  they were separate is gone — two rulesets on one branch was only worth it while
-  one of them was a dry run.
-- **A `code_scanning` rule**, last of all. GitHub documents "analysis in
-  progress" and "tool not configured" as *blocking*, so it can wedge a pull
-  request that never touched code — prove it on a docs-only PR first.
+- **Fold `main-guard` into `main-pr-gate`.** Both are active now, so the reason they were separate
+  is gone.
+- **Add a `code_scanning` rule**, last of all. GitHub treats "analysis in progress" and "tool not
+  configured" as blocking, so it can stall a pull request that never touched code. Try it on a
+  docs-only PR first.

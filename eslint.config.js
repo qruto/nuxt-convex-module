@@ -39,27 +39,25 @@ export default createConfigForNuxt({
       files: ['website/**/*.vue', 'devtools-client-app/**/*.vue'],
       rules: {
         'vue/multi-word-component-names': 'off',
-        // The default of one attribute per line exists to keep long prop lists
-        // readable. These apps are mostly inline SVG, where the attributes are
-        // short positional values — `<linearGradient x1 y1 x2 y2>`, `<stop
-        // offset stop-color>` — that read worse one per line, and the rule was
-        // producing 70 warnings nobody was ever going to act on. Six is the
-        // widest such element here; a seventh is a prop list and should wrap.
+        // One attribute per line keeps long prop lists readable. These apps are
+        // mostly inline SVG, where attributes are short positional values —
+        // `<linearGradient x1 y1 x2 y2>`, `<stop offset stop-color>` — which
+        // read worse split up, and the rule produced 70 warnings nobody was
+        // going to act on. Six is the widest such element here; a seventh
+        // attribute means it is a prop list, and that should wrap.
         'vue/max-attributes-per-line': ['warn', { singleline: { max: 6 } }],
       },
     },
-    // Type-aware rules. `@nuxt/eslint-config` only wires the TypeScript program
-    // in when `features.typescript.tsconfigPath` is set — and setting it turns
-    // on the whole typed ruleset, including the `no-unsafe-*` family, which
-    // fights the port (upstream's `any` in type constraints is deliberate, see
-    // the block below). So the program is wired up here instead, for exactly
-    // the six rules that catch a defect class nothing else in this repository
-    // can see. Each of these needs the checker; none of them has a syntactic
-    // approximation.
+    // Rules that need type information. `@nuxt/eslint-config` only sets up the
+    // TypeScript program when `features.typescript.tsconfigPath` is set, and
+    // setting it turns on the whole typed ruleset — including the `no-unsafe-*`
+    // family, which fights the port, since upstream's `any` in type constraints
+    // is deliberate (see the block below). So the program is set up here
+    // instead, for six rules that each catch a bug nothing else here can see.
     //
-    // Scoped to `src/` — the published surface, and the only tree the root
-    // tsconfig includes. `src/` has no `.vue` files, so the glob is complete.
-    // Cost: `pnpm lint` goes from ~4.6s to ~8.2s.
+    // Scoped to `src/`: the published code, and the only tree the root tsconfig
+    // includes. There are no `.vue` files in `src/`, so the glob is complete.
+    // It costs about 3.6s — `pnpm lint` goes from ~4.6s to ~8.2s.
     {
       files: ['src/**/*.ts'],
       languageOptions: {
@@ -69,9 +67,9 @@ export default createConfigForNuxt({
         },
       },
       rules: {
-        // A promise nobody awaits: the failure is an unhandled rejection at
-        // runtime, and in a Nuxt plugin that means a silently half-initialised
-        // app rather than an error anyone sees.
+        // A promise nobody awaits. It fails as an unhandled rejection at
+        // runtime, and in a Nuxt plugin that means a half-initialised app
+        // instead of an error anyone sees.
         '@typescript-eslint/no-floating-promises': 'error',
         // An async function passed where a void-returning one is expected —
         // event handlers, `watch` callbacks. The rejection has nowhere to go.
@@ -86,8 +84,8 @@ export default createConfigForNuxt({
         // Throwing a non-Error loses the stack, and `instanceof Error` guards
         // downstream stop matching.
         '@typescript-eslint/only-throw-error': 'error',
-        // Calling something upstream has marked `@deprecated` — the earliest
-        // possible warning that a ported file has drifted behind its source.
+        // Calling something upstream has marked `@deprecated`. It is the
+        // earliest warning that a ported file has fallen behind its source.
         '@typescript-eslint/no-deprecated': 'error',
       },
     },

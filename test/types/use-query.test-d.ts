@@ -5,10 +5,10 @@ import { useQuery } from '../../src/runtime/vue/composables/use-query'
 import { countTasks, listTasks } from './fixtures'
 import type { Task } from './fixtures'
 
-// `useQuery` returns a lazy `ComputedRef`, which is this port's central
-// divergence from convex/react: upstream's hook throws inside the hook call,
-// this one throws when `.value` is read. The `| undefined` in the result type
-// is what makes that safe to consume, so it is pinned here.
+// `useQuery` returns a lazy `ComputedRef`. That is this port's main difference
+// from convex/react: upstream's hook throws inside the hook call, this one
+// throws when `.value` is read. The `| undefined` in the result type is what
+// makes that safe to consume, so it is pinned here.
 
 expectTypeOf(useQuery(listTasks, { onlyDone: true }))
   .toEqualTypeOf<ComputedRef<Task[] | undefined>>()

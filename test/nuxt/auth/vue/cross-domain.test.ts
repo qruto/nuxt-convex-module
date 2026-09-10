@@ -146,11 +146,10 @@ describe('auth/vue/cross-domain', () => {
     warnSpy.mockRestore()
   })
 
-  // PARITY: A-13 — `updateSession()` is awaited here, where upstream fires it
-  // and forgets. The whole exchange sits inside a try/catch so a failure cannot
-  // break app bootstrap, and an un-awaited rejection escapes that catch: it
-  // surfaces as an unhandled rejection instead, which is the exact failure the
-  // catch exists to prevent. This test fails if the `await` is ever dropped.
+  // PARITY: A-13 — `updateSession()` is awaited here, where upstream fires and
+  // forgets. The exchange sits inside a try/catch so a failure cannot break app
+  // startup, and a promise nobody awaits escapes that catch: it turns up as an
+  // unhandled rejection instead. This test fails if the `await` is dropped.
   it('warns instead of throwing when updating the session fails', async () => {
     const { consumeCrossDomainOneTimeToken } = await loadModule()
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})

@@ -5,11 +5,13 @@ import { Authenticated } from '../../vue/auth/helpers'
 import { useQuery } from '../../vue/composables/use-query'
 import type { AuthClient } from '#convex/auth-client'
 
-// `convex-helpers` defines this as `Record<string, never>` and nothing else
-// here needs that package — importing it would put a dependency a consumer has
-// to install into this file's emitted `.d.ts`, for one alias. The two casts
-// below are this port's own: upstream calls `useQuery(getAuthUserFn)` bare, and
-// the narrowing exists so our `useQuery` overload resolves to the no-args form.
+// `convex-helpers` defines this as `Record<string, never>`, and nothing else
+// here uses that package. Importing it for one alias would put a dependency the
+// consumer has to install into this file's emitted `.d.ts`.
+//
+// The two casts below are this port's own. Upstream calls
+// `useQuery(getAuthUserFn)` with no arguments, and the narrowing is what makes
+// our `useQuery` overload resolve to that no-args form.
 type EmptyObject = Record<string, never>
 
 // Subscribe to the session validated user to keep this check reactive to

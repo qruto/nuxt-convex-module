@@ -3,13 +3,15 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { upstreamBaselines } from '../../website/app/utils/upstream-baselines'
 
-// What package.json PROMISES a consumer, checked against what is actually
-// installed here. Nothing else in the suite compares the two: the peer ranges
-// are hand-written prose that no build step reads, and PARITY.md's baselines
-// are documentation. Both go stale silently — a `convex` minor that changes a
-// signature leaves "verified against 1.45.0" false with every other gate green,
-// and a peer floor drifts below the version the port was actually written
-// against with nothing to notice.
+// What package.json promises a consumer, checked against what is installed
+// here. Nothing else in the suite compares the two: the peer ranges are written
+// by hand and no build step reads them, and PARITY.md's baselines are just
+// documentation.
+//
+// Both go stale quietly. A `convex` minor that changes a signature leaves
+// "verified against 1.45.0" false with every other check still green, and a peer
+// floor can drift below the version the port was actually written against with
+// nothing to notice.
 
 const root = new URL('../../', import.meta.url)
 const manifest = JSON.parse(readFileSync(fileURLToPath(new URL('package.json', root)), 'utf8')) as {
@@ -42,11 +44,10 @@ function compare(a: Parts, b: Parts): number {
   return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2])
 }
 
-// A deliberately small range evaluator rather than a `semver` devDependency:
-// these are the only three operators this package's peer ranges use, and an
-// unsupported one throws instead of quietly passing. That is the failure mode a
-// general library would hide — a range shape nobody checked, reported as
-// satisfied.
+// A deliberately small range evaluator, rather than a `semver` devDependency.
+// These are the only three operators this package's peer ranges use, and an
+// unsupported one throws instead of quietly passing. A general library would
+// hide exactly that: a range shape nobody checked, reported as satisfied.
 const COMPARATOR = /^(>=|<=|[<>^~=])?\s*v?(\d+\.\d+\.\d\S*)$/
 
 function satisfiesComparator(version: string, comparator: string): boolean {
@@ -88,8 +89,8 @@ function satisfies(version: string, range: string): boolean {
 }
 
 describe('range evaluator', () => {
-  // The evaluator is the thing every assertion below trusts, so it is checked
-  // first — a broken one would report the whole contract as satisfied.
+  // Every assertion below trusts this evaluator, so it is checked first. A
+  // broken one would report the whole contract as satisfied.
   it.each([
     ['1.45.0', '>=1.40.0', true],
     ['1.39.0', '>=1.40.0', false],

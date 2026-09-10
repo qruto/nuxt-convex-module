@@ -1,18 +1,17 @@
-# actionlint (https://github.com/rhysd/actionlint) — correctness of the workflow
-# files themselves: expression typing, `needs`/matrix references, runner labels,
-# cron syntax, and shellcheck over every inline `run:` block.
+# actionlint (https://github.com/rhysd/actionlint) checks the workflow files for
+# correctness: expressions, `needs`/matrix references, runner labels, cron
+# syntax, and shellcheck over every inline `run:` block.
 #
-# zizmor audits the workflows for *security*; nothing audited them for
-# correctness until this. The two overlap nowhere.
+# zizmor checks the same files for security problems. The two do not overlap.
 
 paths:
   .github/workflows/*.yml:
     ignore:
-      # `$/` is GitHub's self-repository reference for local composite actions
-      # (July 2026), which lets `.github/actions/setup` be called without the
-      # `./` form that zizmor's `self-repository` audit rejects. actionlint's
-      # parser predates it and reads `$` as a malformed `{owner}` segment.
+      # `$/` is GitHub's way of referring to an action in this same repository
+      # (July 2026). It lets `.github/actions/setup` be used without the `./`
+      # form that zizmor's `self-repository` audit rejects. actionlint's parser
+      # predates it and reads `$` as a malformed owner name.
       #
-      # Tracked upstream; drop this the moment actionlint learns the syntax.
-      # Scoped to the exact message so any *other* malformed `uses:` still fails.
+      # Tracked upstream — drop this as soon as actionlint learns the syntax.
+      # Scoped to the exact message, so any other malformed `uses:` still fails.
       - 'specifying action "\$/\.github/actions/[^"]+" in invalid format'

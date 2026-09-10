@@ -63,9 +63,10 @@ function toPlainJson(value: Value | undefined): unknown {
     return convexToJson(value)
   }
   catch {
-    // `convexToJson` refused it, so it is not a Convex `Value`. `String()` on
-    // an object here renders "[object Object]" into the DevTools panel, which
-    // reads as data rather than as a failure — name the shape instead.
+    // `convexToJson` refused it, so it is not a Convex `Value`. Calling
+    // `String()` on an object would put "[object Object]" in the DevTools
+    // panel, which looks like data rather than a failure. Say what it was
+    // instead.
     return typeof value === 'object' && value !== null
       ? `[unserializable ${Array.isArray(value) ? 'array' : 'object'}]`
       : String(value)

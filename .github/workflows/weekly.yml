@@ -1,16 +1,16 @@
 name: weekly
 
-# Everything that runs on a clock rather than on a commit, in one file.
+# Everything that runs on a schedule rather than on a commit, in one file.
 #
-# None of it gates a merge — a scheduled check that can block a pull request
-# fails the wrong person at the wrong time. These exist to notice DRIFT: the
-# world moving underneath a repository that did not change.
+# None of it can block a merge. A scheduled check that fails a pull request
+# blames whoever happened to open it. These jobs are here to catch things
+# changing outside the repository, while the repository itself stays still.
 
 on:
-  # No `branch_protection_rule` trigger: it fires for CLASSIC branch protection,
-  # which this repository does not use — every rule here is a ruleset, and a
-  # ruleset change fires nothing. The `rulesets` job below covers that drift on
-  # the schedule instead, and dispatch is there for when you want it now.
+  # There is no `branch_protection_rule` trigger, because it only fires for
+  # classic branch protection. Everything here is a ruleset, and changing one
+  # fires nothing. The `rulesets` job below catches that on the schedule
+  # instead; dispatch is there for when you want to check right now.
   schedule:
     - cron: '3 7 * * 1' # Mondays
   workflow_dispatch:
@@ -22,11 +22,11 @@ concurrency:
 permissions: {}
 
 jobs:
-  # Audits the repository's own posture — pinned actions, token permissions,
-  # branch protection, signed releases, dangerous workflow patterns. Most of it
-  # this repository already does deliberately; the value is being told when that
-  # stops being true: a ruleset relaxed, a `permissions:` block widened, an
-  # action unpinned.
+  # Checks the repository's own settings: pinned actions, token permissions,
+  # branch protection, signed releases, risky workflow patterns. This repository
+  # already does most of it on purpose. The value is being told when that stops
+  # being true — a ruleset relaxed, a `permissions:` block widened, an action
+  # unpinned.
   scorecard:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -44,8 +44,8 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # Publishes to the public OpenSSF API, which is what backs the badge
-          # and lets consumers check the score without running it themselves.
+          # Publishes to the public OpenSSF API. That is what backs the badge,
+          # and it lets anyone check the score without running this.
           publish_results: true
 
       - name: Upload results
@@ -53,46 +53,44 @@ jobs:
         with:
           sarif_file: results.sarif
 
-  # Re-examines the whole committed lockfile against OSV, which ci's
-  # `dependency-review` structurally cannot: that job inspects the dependency
-  # DELTA a pull request introduces, so an advisory published against a package
-  # that stopped changing is invisible to it.
+  # Scans the whole committed lockfile against OSV. ci's `dependency-review`
+  # cannot do this: it only looks at the dependencies a pull request changes, so
+  # an advisory filed against a package that stopped changing is invisible to it.
   #
-  # Kept rather than deleted in favour of Dependabot alerts, which cover much of
-  # the same ground. The overlap is real but not total — OSV aggregates sources
-  # beyond GHSA and reaches transitives the dependency graph can fail to parse —
-  # and the cost of a second opinion here is one scheduled job a week that can
-  # never redden a pull request.
+  # Dependabot alerts cover much of the same ground, but not all of it: OSV
+  # aggregates sources beyond GHSA and reaches transitive dependencies the
+  # dependency graph sometimes fails to parse. A second opinion costs one
+  # scheduled job a week that can never fail a pull request.
   osv:
-    # The reusable workflow declares the same three permissions on its own job;
-    # they have to be granted here as well for it to inherit them.
+    # The reusable workflow declares these same three on its own job. They have
+    # to be granted here too for it to inherit them.
     permissions:
       contents: read
       actions: read # required to upload SARIF, see github/codeql-action#2117
       security-events: write
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
     with:
-      # `-r ./` walks the workspace and picks up pnpm-lock.yaml natively, plus
-      # the website and devtools-client-app manifests.
+      # `-r ./` walks the workspace: pnpm-lock.yaml, plus the website and
+      # devtools-client-app manifests.
       scan-args: |-
         -r
         ./
 
-  # The rules that gate `main` are committed under .github/rulesets/, which only
-  # means anything if something checks that they still describe reality. They
-  # are edited in a settings page, and GitHub fills in defaults the committed
-  # file never mentioned — both have already happened here.
+  # The rules that protect `main` are committed under .github/rulesets/. That is
+  # only worth anything if something checks the files still match reality — the
+  # rules are edited in a settings page, and GitHub fills in defaults the files
+  # never mentioned. Both have already happened here.
   #
-  # Scorecard (above) notices that branch protection exists. This notices that
-  # it stopped matching what was reviewed: a rule removed, a parameter changed,
-  # a bypass actor added, or a whole ruleset that exists only as clicks.
+  # Scorecard above notices that branch protection exists. This notices that it
+  # stopped matching what was reviewed: a rule removed, a parameter changed, a
+  # bypass actor added, or a whole ruleset that exists only in the settings page.
   #
-  # Read-only. A drift is a conversation, not an automatic revert.
+  # It only reads. Fixing a difference is a decision for a person.
   rulesets:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read # rulesets on a public repository are readable without more
+      contents: read # enough to read rulesets on a public repository
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -103,9 +101,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/check-rulesets.mjs
 
-  # Dead links in the docs, the README and the policy files. Prose is the one
-  # part of this repository nothing else checks for rot — SECURITY.md linked a
-  # repository that had moved for months, and no gate could have known.
+  # Dead links in the docs, the README and the policy files. Nothing else here
+  # checks prose for rot: SECURITY.md linked to a repository that had moved
+  # months earlier, and no other check could have known.
   links:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -119,10 +117,10 @@ jobs:
       - name: Check links
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
-          # Config and exclusions live in lychee.toml. `--root-dir` has to be an
-          # absolute path, so it cannot: it lets the docs' root-relative route
-          # links resolve, after which `scheme` filters them out. Without it they
-          # fail to resolve first and no filter is ever reached.
+          # Settings and exclusions live in lychee.toml. `--root-dir` cannot,
+          # because it has to be an absolute path. It lets the docs' root-
+          # relative route links resolve, after which `scheme` filters them out.
+          # Without it they fail to resolve and no filter is ever reached.
           args: >-
             --no-progress
             --config lychee.toml
@@ -130,17 +128,17 @@ jobs:
             .
           fail: true
 
-  # The whole point of the four jobs above is to be noticed. Without this they
-  # are not: a scheduled run's only failure signal is an email to whoever last
-  # edited the cron, which is the wrong person on a long enough timeline and
-  # nobody at all once it lands in a filter.
+  # The four jobs above are only useful if someone sees them fail. On their own
+  # they are not: a failed scheduled run just emails whoever last edited the
+  # cron, which is the wrong person soon enough and nobody at all once the mail
+  # gets filtered.
   #
-  # An issue is the right shape — it survives, it can be assigned, and it is
-  # where a drift conversation belongs. One issue reused rather than a new one
-  # each Monday, or a fortnight of neglect buries the first report.
+  # An issue sticks around, can be assigned, and is where the discussion belongs.
+  # It reuses one issue rather than opening a new one every Monday, so a couple
+  # of ignored weeks do not bury the first report.
   #
-  # `issues: write` on a job that checks nothing out and installs nothing; the
-  # same reasoning that keeps ci's Codecov credential in its own job.
+  # `issues: write` on a job that checks nothing out and installs nothing — the
+  # same reason ci keeps its Codecov credential in a job of its own.
   report:
     needs:
       - scorecard
@@ -164,12 +162,12 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           body=$(printf '%s\n\n%s\n' "$RESULTS" "$RUN_URL")
-          # Listed and matched exactly, not searched: `--search` depends on
+          # Listed and matched exactly, not searched. `--search` depends on
           # GitHub's search index, and `in:title` is full-text, so it would also
-          # match an unrelated issue that happens to say "weekly drift". Not
-          # `--label` either — the filter matches nothing until the label exists,
-          # which fails by opening a second issue every Monday rather than
-          # loudly.
+          # match an unrelated issue that happens to mention "weekly drift".
+          # `--label` is no good either: it matches nothing until the label
+          # exists, and the way that fails is by opening a second issue every
+          # Monday.
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
             --json number,title \
             --jq '[.[] | select(.title == "ci: weekly drift")][0].number // empty')

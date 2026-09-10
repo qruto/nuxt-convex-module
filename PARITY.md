@@ -568,10 +568,10 @@ so none can be "restored" by syncing.
   in the server plugin — so a client-side nonce would break legitimate flows. Restricting the
   exchange to one route is the additive mitigation. Three smaller guards sit alongside: an early
   return when the aliased client has no cross-domain plugin (upstream assumes it is installed);
-  a catch so an exchange failure warns instead of breaking app bootstrap; and `updateSession()`
-  is **awaited**, where upstream fires it and forgets. The catch is the reason — an un-awaited
-  rejection escapes it entirely and surfaces as an unhandled rejection during app bootstrap,
-  which is the one failure the catch exists to prevent.
+  a catch so an exchange failure warns instead of breaking app startup; and `updateSession()`
+  is **awaited**, where upstream fires and forgets. The catch is the reason: a promise nobody
+  awaits escapes it and turns up as an unhandled rejection during startup, which is the exact
+  failure the catch exists to prevent.
 
 ##### A-14 — the auth proxy route and its security rules
 

@@ -1,19 +1,19 @@
 name: Release prepare
 
 # Step one of two. Bumps the version, writes the changelog, and opens a pull
-# request — it does not tag and it does not publish. `Release` (release.yml)
-# tags the commit once this PR is merged.
+# request. It does not tag and it does not publish — `Release` (release.yml)
+# tags the commit once this pull request is merged.
 #
-# Why it is split. The release commit used to be pushed straight to main by the
-# release run itself, which meant the one commit that decides what the world
-# installs was the only commit in the repository that never passed through a
-# pull request or its checks. As a PR it gets the same `All checks passed` gate
-# as everything else, the changelog is reviewable before it is published, and
-# the branch ruleset needs no bot exemption to write to main.
+# Why a pull request: the release commit decides what everyone installs, and it
+# used to be the only commit here that never went through a PR or its checks.
+# Now it passes the same `All checks passed` gate as everything else, the
+# changelog is reviewable before it is published, and nothing in the release
+# writes to main — so the branch ruleset needs no exception for a bot. RELEASE.md
+# has the rest.
 #
-# The bump is computed here and nowhere else. release.yml reads the version out
-# of the merged package.json — if it also ran `changelogen --release`, a
-# dispatch would bump a second time and tag v0.1.1 for a 0.1.0 release.
+# The version is worked out here and nowhere else. release.yml reads it out of
+# the merged package.json. If it bumped too, a 0.1.0 release would be tagged
+# v0.1.1.
 on:
   workflow_dispatch:
     inputs:
@@ -27,7 +27,7 @@ on:
           - minor
           - major
 
-# Shared with `Release`: a prepare must not start while a release is mid-flight.
+# Shared with `Release`, so a prepare cannot start while a release is running.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -47,19 +47,18 @@ jobs:
         with:
           egress-policy: audit
 
-      # Nothing is pushed from this checkout — the release branch and its commit
-      # are made through the API below — so no credential needs to persist, and
-      # none does.
+      # Nothing is pushed from this checkout: the release branch and its commit
+      # are made through the API below. So no credential needs to persist here,
+      # and none does.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history + tags: changelogen derives the bump from them
           persist-credentials: false
 
-      # workflow_dispatch lets the caller pick any branch. Releasing from one
-      # would bump the version off a tree main has never seen, and — because the
-      # pull request below is opened against the branch it ran on — would target
-      # that branch too, so nothing would ever reach main. Refuse it ahead of the
-      # install rather than after it: a wrong branch should cost nothing.
+      # workflow_dispatch lets you pick any branch. Releasing from one would
+      # bump the version off a tree main has never seen, and the pull request
+      # below would target that branch too, so nothing would ever reach main.
+      # Checked before the install, so picking the wrong branch costs nothing.
       - name: Refuse a non-default branch
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -70,8 +69,8 @@ jobs:
           fi
 
       # No cache, for release.yml's reason: a restored cache is an input nobody
-      # reviewed. `require-lockfile` refuses the one install pnpm's own CI frozen
-      # mode still allows — no lockfile at all.
+      # reviewed. `require-lockfile` refuses the one install pnpm's frozen CI
+      # mode still allows — one with no lockfile at all.
       - name: Install pnpm, node & dependencies
         uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
@@ -79,11 +78,11 @@ jobs:
           cache: false
           require-lockfile: true
 
-      # `--release`, not `--bump`: `--bump` moves the version in package.json and
-      # writes no CHANGELOG.md, which is half a release commit. `--no-commit
-      # --no-tag` leave both edits in the working tree, which is where the step
-      # below reads them from, and `--no-github` because the Release belongs to
-      # the tag, which does not exist yet.
+      # `--release`, not `--bump`: `--bump` moves the version in package.json
+      # but writes no CHANGELOG.md, which is half a release commit. `--no-commit
+      # --no-tag` leave both edits in the working tree, where the step below
+      # reads them. `--no-github` because the GitHub Release belongs to the tag,
+      # which does not exist yet.
       - name: Bump version & changelog
         env:
           RELEASE_TYPE: ${{ inputs.release-type }}
@@ -96,22 +95,22 @@ jobs:
         id: version
         run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
-      # Written through GitHub's API rather than `git commit` + `git push`, for
-      # one reason: `main-pr-gate` requires SIGNED commits. A commit made on the
-      # runner is unverified — squash-merge would re-create and sign it, but
-      # `rebase` is an allowed merge method too and carries the original commit
-      # onto main, where the ruleset refuses it. A commit created through the API
-      # is signed by GitHub's key, so it is verified under either method.
+      # Made through GitHub's API rather than `git commit` + `git push`, because
+      # `main-pr-gate` requires signed commits. A commit made on the runner is
+      # unverified. A squash merge would re-create and sign it, but rebase merges
+      # are allowed too, and a rebase carries the original commit onto main where
+      # the ruleset rejects it. A commit created through the API is signed by
+      # GitHub, so it passes either way.
       #
-      # Two things fall out: the token never appears inside a git remote URL, and
-      # no git identity has to be configured for a commit nobody authored.
+      # Two bonuses: the token never appears inside a git remote URL, and there
+      # is no git identity to configure for a commit nobody authored.
       #
       # `expectedHeadOid` is the sha the branch was just created at, so the
-      # mutation fails rather than clobbers if anything else touched it.
+      # mutation fails instead of overwriting if anything else touched it.
       #
-      # The subject is load-bearing: release.yml refuses to tag a HEAD that did
-      # not change the version, and squash-merging this PR carries the title
-      # through as the commit subject.
+      # The commit subject matters: release.yml refuses to tag a HEAD that did
+      # not change the version, and squash-merging carries this pull request's
+      # title through as the commit subject.
       - name: Commit the release
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -123,8 +122,8 @@ jobs:
             exit 1
           fi
 
-          # --rawfile keeps both files byte-exact and @base64 is what the
-          # mutation wants; doing it in jq avoids base64(1), whose flags differ
+          # `--rawfile` keeps both files byte-exact, and `@base64` is what the
+          # mutation wants. Doing it in jq avoids base64(1), whose flags differ
           # between GNU and BSD.
           jq -n \
             --arg repo "$GITHUB_REPOSITORY" \
@@ -148,8 +147,8 @@ jobs:
 
           gh api graphql --input "$RUNNER_TEMP/commit.json"
 
-      # The body is the changelog section changelogen just wrote, so the PR shows
-      # exactly what the GitHub Release will say.
+      # The body is the changelog section changelogen just wrote, so the pull
+      # request shows exactly what the GitHub Release will say.
       - name: Open the release pull request
         env:
           VERSION: ${{ steps.version.outputs.version }}

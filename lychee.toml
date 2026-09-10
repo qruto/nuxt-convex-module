@@ -1,13 +1,15 @@
-# lychee (https://lychee.cli.rs) — dead-link detection for the docs, the README
-# and the policy files. Runs weekly, never on a pull request: a link rots
-# because the internet changed, not because someone's branch did.
+# lychee (https://lychee.cli.rs) finds dead links in the docs, the README and
+# the policy files. It runs weekly, never on a pull request — a link breaks
+# because a website changed, not because someone's branch did.
 
-# OUTBOUND links only. Internal links in the docs are Nuxt Content ROUTES, not
-# paths on disk — `/guide/queries` is `website/content/2.guide/1.queries.md`
-# once Docus strips the ordering prefixes — so lychee cannot judge them and the
-# docs build already fails on a broken one. Scheme-filtering alone is not
-# enough: without a `--root-dir` those links fail to RESOLVE before any filter
-# applies, which is why the workflow passes one (see weekly.yml).
+# External links only. Links inside the docs are Nuxt Content routes, not paths
+# on disk — `/guide/queries` is `website/content/2.guide/1.queries.md` once Docus
+# strips the ordering prefixes — so lychee cannot judge them, and the docs build
+# already fails on a broken one.
+#
+# Filtering by scheme is not enough on its own: without a `--root-dir` those
+# links fail to resolve before any filter applies, which is why the workflow
+# passes one (see weekly.yml).
 scheme = ["https", "http"]
 
 # Retry once; a single 5xx from a rate-limited host is not a dead link.

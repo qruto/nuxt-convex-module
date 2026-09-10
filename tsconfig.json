@@ -3,16 +3,16 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     // Nuxt's generated config already sets `strict`, `noUncheckedIndexedAccess`,
-    // `noImplicitOverride` and `verbatimModuleSyntax`. These two it does not.
+    // `noImplicitOverride` and `verbatimModuleSyntax`. It does not set these two.
     //
-    // Refuse TypeScript-only syntax that a runtime stripping types cannot erase
-    // — parameter properties, `enum`, namespaces with values. The module's
-    // runtime ships as `.js` a consumer's bundler processes, so anything that
-    // needs a real emit is a bug waiting for someone's `--experimental-strip-types`.
+    // Reject TypeScript-only syntax that a runtime cannot simply strip:
+    // parameter properties, `enum`, namespaces with values. The module ships
+    // `.js` that a consumer's bundler processes, so anything needing a real
+    // emit breaks the first time someone runs `--experimental-strip-types`.
     "erasableSyntaxOnly": true,
-    // A bare `import './thing'` that resolves to nothing is currently silent.
-    // The runtime is full of side-effect imports (plugins, polyfills); a typo in
-    // one is a missing behaviour at runtime and nothing else catches it.
+    // A bare `import './thing'` that resolves to nothing is silent by default.
+    // The runtime is full of side-effect imports — plugins, polyfills — where a
+    // typo means missing behaviour at runtime and nothing else catches it.
     "noUncheckedSideEffectImports": true
   },
   "exclude": [

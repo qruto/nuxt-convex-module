@@ -10,10 +10,10 @@ const authClientTestAlias = fileURLToPath(new URL('./src/runtime/better-auth/vue
 
 export default defineConfig({
   test: {
-    // In CI, also emit a JUnit report for Codecov Test Analytics (flaky/failure
-    // tracking), and annotate the diff through the `github-actions` reporter so
-    // a failure shows up on the failing line in the Files-changed view instead
-    // of only inside a folded log. Local runs keep the console reporter only.
+    // In CI, also write a JUnit report for Codecov (failure and flaky tracking)
+    // and use the `github-actions` reporter, so a failure is annotated on the
+    // failing line in the Files-changed view instead of only in a folded log.
+    // Local runs keep the console reporter.
     reporters: process.env.CI
       ? ['default', 'github-actions', ['junit', { outputFile: 'test-report.junit.xml' }]]
       : ['default'],

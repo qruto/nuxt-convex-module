@@ -4,13 +4,13 @@ import { useAsyncQuery } from '../../src/runtime/nuxt/composables/use-async-quer
 import { listTasks } from './fixtures'
 import type { Task } from './fixtures'
 
-// `useAsyncQuery` is Vue-only — it has no upstream counterpart to inherit tests
-// from, which makes it the widest divergence risk in the port and the surface
-// most worth pinning at the type level.
+// `useAsyncQuery` is Vue-only. There is no upstream version to inherit tests
+// from, so it is the part of the port most likely to drift, and the one most
+// worth pinning at the type level.
 //
-// Its contract is unusual on purpose: the return value is BOTH a bag of refs
-// (used synchronously in `setup`) and a `PromiseLike` (awaited for SSR). Losing
-// either half is a silent break for one of the two usages.
+// Its return value is deliberately two things at once: a bag of refs, used
+// synchronously in `setup`, and a `PromiseLike`, awaited for SSR. Losing either
+// half silently breaks one of the two usages.
 
 const query = useAsyncQuery(listTasks, { onlyDone: true })
 

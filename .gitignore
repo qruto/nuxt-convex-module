@@ -68,9 +68,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# fallow's analysis cache, and the artifacts its GitHub Action writes into the
-# workspace root (results.json, results.sarif, stderr.log, analysis-args.sh, the
-# PR diff). None belong in the tree — and until they were ignored, `typos` in ci
-# scanned them and failed on a random hex id inside one.
+# fallow's analysis cache, plus the files its GitHub Action writes into the
+# workspace root: results.json, results.sarif, stderr.log, analysis-args.sh and
+# the PR diff. None of them belong in the tree. Until they were ignored, `typos`
+# scanned them in ci and failed on a random hex id inside one.
 .fallow/
 fallow-*

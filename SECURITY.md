@@ -156,7 +156,7 @@ third-party app holds write access to this repository.
 
 ### GitHub-native
 
-Credentials are deliberately left to GitHub rather than to fallow, so these carry that weight:
+fallow deliberately leaves credentials to GitHub, so these settings are what catch them:
 
 | Setting | State | Why |
 | --- | --- | --- |

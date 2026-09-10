@@ -30,8 +30,9 @@ pnpm exec fallow --fail-on-issues
 # there: security candidates never surface under the run above.
 pnpm run test:security
 
-# `static` job's manifest gate. Cheap, and the one check that fails on a change
-# nobody made — a dependency bump narrowing a peer range underneath us.
+# `static` job's manifest check. Cheap, and the only check here that can fail
+# without anyone changing anything — a dependency bump narrowing a peer range
+# under us.
 pnpm run check:manifest
 
 # `typecheck` job. Runs dev:prepare first, so it also proves the module still

@@ -1,12 +1,12 @@
-# typos (https://github.com/crate-ci/typos) — misspellings in prose, comments,
-# identifiers and workflow files. It is a spell checker for source, not a style
-# linter: it only reports words with an unambiguous correction.
+# typos (https://github.com/crate-ci/typos) finds misspellings in prose,
+# comments, identifiers and workflow files. It is a spell checker for source
+# code, not a style linter — it only reports words with one obvious correction.
 
 [files]
 # typos honours .gitignore, which is not enough here. CI checks out with
-# `fetch-depth: 0`, and the walker would otherwise descend into `.git/` and
-# report on packed objects and old commit subjects — a finding nobody can fix,
-# appearing non-deterministically as history grows.
+# `fetch-depth: 0`, so without this it walks into `.git/` and reports on packed
+# objects and old commit subjects — findings nobody can fix, turning up at
+# random as the history grows.
 extend-exclude = [
   ".git/",
   # Generated or vendored, and not ours to correct.

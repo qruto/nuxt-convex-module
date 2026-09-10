@@ -84,16 +84,17 @@ console.log(`  ✓ ${files.length} entries · no sources, no sourcemaps · devto
 
 // ── Optional peers must not leak across subpaths ───────────────────────────
 //
-// Every optional peer is optional because most consumers do not install it. An
-// import of one that ends up reachable from a subpath that does not need it is
-// `ERR_MODULE_NOT_FOUND` at runtime for every one of those consumers — and
-// nothing else here can see it: `publint` reads the manifest, `attw` resolves
-// types, and the smoke install has the whole tree present so every import
-// resolves. Only the shipped graph itself answers the question.
+// An optional peer is optional because most people do not install it. If a
+// subpath that does not need one can still reach it, every consumer without that
+// package gets ERR_MODULE_NOT_FOUND at runtime.
 //
-// Walked statically rather than probed with a real install: it needs no
-// network, it is deterministic, and it sees a specifier behind a dynamic import
-// that a probe would only hit on the code path that runs it.
+// Nothing else here would see that: publint reads the manifest, attw resolves
+// types, and the smoke install has the whole tree present so every import
+// resolves. Only the shipped code answers the question.
+//
+// It walks the code rather than probing a real install: no network, the same
+// answer every time, and it sees a specifier behind a dynamic import that a
+// probe would only reach by running that code path.
 console.log('── Optional peer isolation ────────────────────')
 
 const manifest = JSON.parse(
@@ -106,10 +107,10 @@ const optionalPeers = new Set(
     .map(([name]) => name),
 )
 
-// Which optional peers each subpath is ALLOWED to reach. A subpath named after
-// a provider may import that provider; nothing else may import anything.
-// Deliberately exhaustive rather than pattern-matched, so a new subpath fails
-// here until someone states its contract.
+// Which optional peers each subpath may reach. A subpath named after a provider
+// may import that provider; nothing else may import anything. Listed one by one
+// rather than pattern-matched, so a new subpath fails here until someone writes
+// down what it is allowed to use.
 const allowed = {
   '.': [],
   './client': [],
@@ -135,13 +136,13 @@ try {
 
   // Block comments are stripped first. mkdist keeps JSDoc in the emitted `.js`,
   // and several barrels carry usage examples — `import … from
-  // 'nuxt-convex-module/clerk/client'` among them. Matched raw, a doc comment
-  // naming an optional peer would be reported as a leak that no code performs.
+  // 'nuxt-convex-module/clerk/client'` among them. Without this, a doc comment
+  // naming an optional peer is reported as a leak that no code performs.
   const CODE_ONLY = /\/\*[\s\S]*?\*\//g
 
   /**
-   * The package a specifier names, or null when it names none — a relative
-   * path, a Node builtin, or a `#` subpath alias resolved by the consumer.
+   * The package a specifier names, or null when it names none: a relative path,
+   * a Node builtin, or a `#` alias the consumer resolves.
    */
   const packageName = (specifier) => {
     if (specifier.startsWith('.') || specifier.startsWith('node:') || specifier.startsWith('#')) {
@@ -153,9 +154,9 @@ try {
   }
 
   /**
-   * Where a relative specifier might land. Emitted ESM carries explicit
+   * Where a relative specifier might land. The emitted ESM carries explicit
    * extensions, but a hand-written import can take any of these shapes, and
-   * probing all four is cheaper than resolving properly.
+   * trying all of them is cheaper than resolving properly.
    */
   const candidates = (file, specifier) => {
     const target = resolve(dirname(file), specifier)
@@ -206,9 +207,9 @@ try {
       if (code === null) continue
 
       for (const [, specifier] of code.replace(CODE_ONLY, '').matchAll(SPECIFIER)) {
-        // A subpath of this package itself is not a peer — it is more of this
-        // package. Resolve it back through the manifest and keep walking, or a
-        // barrel that re-exports through the published name would end the walk
+        // A subpath of this package is not a peer, it is more of this package.
+        // Resolve it through the manifest and keep walking. Otherwise a barrel
+        // that re-exports through the published name would end the walk early
         // and report a pass it never earned.
         const own = ownSubpath(specifier)
         if (own) {

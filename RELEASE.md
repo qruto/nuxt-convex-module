@@ -1,13 +1,48 @@
 # Release
 
-Releases run **entirely in CI**. There is no local release tooling, no `NPM_TOKEN`, and no
-long-lived credential anywhere in this repository — publishing authenticates with OIDC against a
-binding that only a job running from `main` in the `release` environment can satisfy.
+Releasing takes two clicks in the Actions tab, a pull request in between, and one approval from
+your laptop.
 
-It takes **two dispatches with a pull request between them**, and ends at a queue on npm that a
-human has to approve with 2FA.
+Everything happens in CI. There is no release script to run locally and no npm token stored
+anywhere — publishing signs in with OIDC, which only a job running from `main` in the `release`
+environment can do.
 
-## The pipeline
+## Cut a release
+
+1. **Actions → Release prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
+   from the commit messages since the last tag.
+
+   It bumps `package.json`, writes `CHANGELOG.md` and opens a pull request.
+
+2. **Read that pull request, then squash-merge it.** Its body is the changelog the GitHub Release
+   will carry. Wait for `ci`, same as any other PR.
+
+3. **Actions → Release → Run workflow.** It tags the merged commit, builds the tarball and sends
+   it to npm.
+
+   It stops before writing anything if `ci` on that commit isn't green, or if `HEAD` isn't the
+   release commit.
+
+4. **Approve the `release` environment twice.** Once before the tag is written, once before
+   anything reaches npm.
+
+5. **Approve the package on npm.** Until you do, the version is *staged*: it exists, but nobody
+   can install it.
+
+   ```sh
+   pnpm stage list nuxt-convex-module   # find the stage id
+   pnpm stage view <stage-id>           # look at what CI actually built
+   pnpm stage approve <stage-id>        # 2FA — this is what makes it live
+   ```
+
+6. **Check that it shipped with provenance.**
+
+   ```sh
+   npm view nuxt-convex-module@<version> dist   # lists `attestations`, not just `signatures`
+   gh release verify v<version>
+   ```
+
+## What runs
 
 ```mermaid
 ---
@@ -16,19 +51,19 @@ config:
     wrappingWidth: 460
 ---
 flowchart TD
-    S(["<b>1 · you dispatch Release prepare</b><br/>auto / patch / minor / major"])
-    A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>refuses any branch but main<br/>changelogen bumps package.json + CHANGELOG.md<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
+    S(["<b>1 · you run Release prepare</b><br/>auto / patch / minor / major"])
+    A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>only runs on main<br/>bumps package.json + CHANGELOG.md<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
     B["<b>Pull request</b><br/>the same <i>All checks passed</i> gate as any other change"]
     M(["<b>you read the changelog and squash-merge</b>"])
 
-    D(["<b>2 · you dispatch Release</b> · approve the <b>release</b> environment"])
-    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>no install · egress: GitHub only<br/>refuses unless ci on this commit is green<br/>and HEAD bumped the version<br/>pushes a tag, never a commit · immutable Release"]
+    D(["<b>2 · you run Release</b> · approve the <b>release</b> environment"])
+    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>installs nothing · can only reach GitHub<br/>stops unless ci is green and HEAD bumped the version<br/>pushes a tag, never a commit"]
     E["<b>build</b> · <i>no credentials at all</i><br/>checks out the tag, not the tree that made it<br/>pnpm pack · check:tarball · uploads the artifact"]
     G2(["approve the <b>release</b> environment again"])
-    F["<b>publish</b> · <i>id-token: write</i><br/>no checkout, no install · egress: npm, GitHub, Sigstore<br/>pnpm stage publish --provenance"]
+    F["<b>publish</b> · <i>id-token: write</i><br/>no checkout, no install · can only reach npm, GitHub, Sigstore<br/>pnpm stage publish --provenance"]
 
-    Q["<b>3 · npm stage queue</b> — not installable yet<br/>npm's malware scan runs here"]
-    AP(["<b>pnpm stage approve</b> · 2FA<br/>the only gate where you see what was actually built"])
+    Q["<b>3 · staged on npm</b> — not installable yet<br/>npm's malware scan runs here"]
+    AP(["<b>pnpm stage approve</b> · 2FA<br/>your last chance to look at the build"])
     L(["<b>live on npm</b>"])
 
     S --> A --> B --> M --> D --> C --> E --> G2 --> F --> Q --> AP --> L
@@ -43,159 +78,198 @@ flowchart TD
     class B,L plain
 ```
 
-Amber is a human, blue is a job holding a write credential, red is the privileged end of the
-pipeline. **Five humans**, and the run stops at every one of them: the two dispatches, the merge,
-the second environment approval, and the 2FA approval on npm — the only gate where you can inspect
-what was actually built rather than trust that it was built correctly.
+Amber is you. Blue is a job that can write something. Red is the part that can reach npm. The run
+stops and waits for a person five times: two dispatches, the merge, the second approval, and the
+2FA approval on npm.
 
-## Two dispatches, and why
+## Rehearse first
 
-**The release commit is a pull request like any other.** It is the one commit that decides what
-the world installs, and until recently it was the only commit here that never passed through a
-pull request or its checks — the release run bumped, committed and pushed it straight to `main`.
-Now `Release prepare` opens a PR whose body is the changelog section it just wrote, so you read
-what the GitHub Release will say before it exists, and the commit meets the same gate as
-everything else.
+Tick **dry-run** on **Release**. Everything runs except the writes: `build` packs and checks
+`main` as it is, and `publish` does the real OIDC handshake with npm and then stops.
 
-That split is also what makes `main` protectable at all. A branch ruleset requiring a pull request
-would have refused the old release job's push. Because nothing in the release writes to `main` any
-more — `prepare` pushes to `release/vX.Y.Z`, `Release` pushes only a tag — the ruleset needs no bot
-exemption.
+That proves the npm Trusted Publisher still trusts us — repository, workflow filename and
+environment all have to match — and fails if it doesn't. Do a dry run after every change to
+`release.yml`.
 
-**`Release` never bumps.** It reads the version out of the merged `package.json`. Running
-`changelogen --release` in both halves would bump twice and tag `v0.1.1` for a `0.1.0` release.
+A rehearsal also works on an ordinary `main`: the "HEAD must be the release commit" check drops to
+a warning in a dry run.
 
-**And it refuses a `HEAD` that did not change the version.** Without that, an ordinary PR merging
-between the release PR and the dispatch takes the tag instead — and nothing downstream can tell,
-because `build`'s tag↔manifest check compares the tag to `package.json`, which is unchanged, so it
-still passes.
+## Version numbers
 
-## Why three jobs
+With `release-type: auto`, the bump comes from the
+[Conventional Commits](https://www.conventionalcommits.org/) since the last tag:
 
-The credentials never meet the code:
+| Commit type                          | Release |
+| ------------------------------------ | ------- |
+| `fix:`                               | patch   |
+| `feat:`                              | minor   |
+| `feat!:` / `BREAKING CHANGE:` footer | major   |
+
+`chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:` and `perf:` show up in the changelog but
+don't move the version.
+
+Below `1.0.0` changelogen steps everything down once: a `feat` gives a patch, a breaking change
+gives a minor. Pick `patch` / `minor` / `major` explicitly to override.
+
+## If something goes wrong
+
+**The tag was pushed but publishing failed.** The GitHub Release exists, npm has nothing. Check
+`pnpm stage list nuxt-convex-module` first — the first attempt may have staged after all. If not,
+either re-run the failed jobs (`gh run rerun <run-id> --failed`, the tarball artifact lives one
+day) or run **Release** again with `re-stage: vX.Y.Z`, which skips straight to staging that tag.
+
+**`ci` is red, or `HEAD` isn't the release commit.** The run refuses before writing anything.
+Nothing to undo.
+
+**You staged it and then rejected it.** That version number is spent, because the tag can't be
+moved. Release the next patch instead.
+
+**"tag already exists" when pushing.** That version is already out. You dispatched twice.
+
+**The release PR was merged but never tagged.** Run **Release** while that commit is still `HEAD`
+on `main`. If something else merged in the meantime it will refuse — prepare a fresh release
+rather than tagging the wrong commit.
+
+## Why it's built this way
+
+### The release commit is a normal pull request
+
+It's the one commit that decides what everyone installs. It used to be pushed straight to `main`
+by the release job, which made it the only commit here that never went through a PR or its checks.
+Now `Release prepare` opens a PR, so you read the changelog before it's published and the commit
+passes the same gate as everything else.
+
+This is also what makes `main` protectable. A rule requiring pull requests would have blocked the
+old release job's push. Nothing in the release writes to `main` any more — `prepare` pushes to
+`release/vX.Y.Z`, `Release` pushes only a tag — so the rule needs no exception for a bot.
+
+Two things follow from the split, and both are enforced in `release.yml`:
+
+- **`Release` never bumps the version.** It reads it from the merged `package.json`. Running
+  `changelogen --release` in both halves would bump twice and tag `v0.1.1` for a `0.1.0` release.
+- **`Release` refuses a `HEAD` that didn't change the version.** Otherwise an ordinary PR merging
+  between the release PR and the dispatch takes the tag instead, and nothing downstream notices:
+  `build` compares the tag to `package.json`, which is unchanged, so it still passes.
+
+### Credentials never sit next to dependency code
 
 | Job | Holds | Runs |
 | --- | --- | --- |
 | `tag` | `contents: write` — no OIDC, no install | one `git tag`, then `gh release create` |
-| `build` | nothing | the build, from a pristine checkout of the tag |
+| `build` | nothing | the build, from a clean checkout of the tag |
 | `publish` | `id-token: write` — no checkout, no install | one pinned pnpm on one tarball |
 
-**Neither credentialed job installs anything.** `tag` is the only one that can write to the
-repository, and it writes exactly one thing: a tag, on a commit already merged and already green.
-It runs `git`, `jq` and `gh` from the runner image — the release notes are read out of the
-`CHANGELOG.md` the commit already carries — so no dependency code ever executes beside the write
-token, and its egress is blocked to GitHub alone. `build` executes dependency code with nothing
-worth stealing in reach. `publish` holds the only credential that can reach npm and executes
-nothing but pnpm on a tarball, with every destination other than npm, GitHub and Sigstore blocked.
+Neither job holding a credential installs anything.
 
-## One environment, two gates
+`tag` is the only one that can write to the repository, and it writes exactly one thing: a tag, on
+a commit that's already merged and already green. It uses the `git`, `jq` and `gh` from the runner
+image, and reads the release notes out of the `CHANGELOG.md` the commit already carries. So no
+dependency code runs beside the write token, and the job can only reach GitHub.
 
-`release` — required reviewer, `main` only — guards both jobs that can do damage. GitHub evaluates
-environment protection per job, so it prompts twice in a run: once before `tag` writes anything to
-the repository, and again after the build, before `publish` reaches npm. The second prompt is the
-last cheap place to stop a release whose build looks wrong.
+`build` runs the dependency code, with nothing worth stealing nearby. `publish` holds the only
+credential that can reach npm, runs nothing but pnpm on a tarball, and can only reach npm, GitHub
+and Sigstore.
 
-It is also what the npm Trusted Publisher is bound to. An OIDC token is accepted only from a job
-that ran in `release`, and a job can run in `release` only from `main` — so a `release.yml` edited
-on a scratch branch can neither write to the repository nor reach npm's queue.
+### One environment, two approvals
 
-## Stage before live
+`release` — required reviewer, `main` only — guards both jobs that can do damage. GitHub checks
+environment rules per job, so it asks twice: before `tag` writes anything, and after the build,
+before `publish` reaches npm. The second prompt is the last cheap place to stop a bad build.
 
-npm takes the release into a **stage queue**; it becomes installable only after you approve it
-with 2FA, and npm's own malware scan has to finish before the approve button is enabled. This is
-the one control that can stop a *poisoned build*: provenance proves where a package came from,
-not what is in it. Rejecting a stage burns that version number — the tag is already immutable —
-so fix forward with the next patch.
+The npm Trusted Publisher is bound to that same environment. npm accepts a token only from a job
+that ran in `release`, and a job can only run in `release` from `main` — so a `release.yml` edited
+on a branch can neither write to the repository nor reach npm.
 
-## Rehearsing
+### Staging is the only check on what's *inside* the build
 
-Check **dry-run** on **Release** to run everything except the writes. `build` packs and validates
-`main` as it is, and `publish` performs the real OIDC exchange with npm and stops — so a rehearsal
-proves the Trusted Publisher binding (repository, workflow filename, environment) end to end, and
-fails if that exchange breaks.
+npm holds the release in a queue and runs its malware scan there. It becomes installable only
+after you approve it with 2FA.
 
-The release-commit assertion downgrades to a warning in a dry run, so a rehearsal works on an
-ordinary `main` rather than needing a prepared one. Do it after every change to `release.yml`.
+This is the one control that can stop a poisoned build. Provenance proves where a package came
+from, not what's in it.
 
-## Cutting a release
+## Repository rules
 
-1. **Actions** → **Release prepare** → **Run workflow** → choose the bump → **Run**.
-   `auto` derives it from your Conventional Commits since the last tag.
-2. Review the pull request it opens. The body is the changelog the GitHub Release will carry.
-   Let `ci` pass, then **squash-merge** it.
-3. **Actions** → **Release** → **Run workflow** → **Run**. It refuses if `ci` on that commit is
-   not a completed success, or if `HEAD` is not the release commit.
-4. Approve the `release` environment when asked — **twice**: once before `tag` writes the tag, and
-   again before `publish` stages the package.
-5. When the run is green, the tag, the GitHub Release and the staged package all exist. Approve
-   the package:
-
-   ```sh
-   pnpm stage list nuxt-convex-module   # find the stage id
-   pnpm stage view <stage-id>           # inspect what CI actually built
-   pnpm stage approve <stage-id>        # 2FA — this is the moment it goes live
-   ```
-
-   `pnpm stage download <stage-id>` gets you the tarball itself if you want to diff it against the
-   previous release. `pnpm stage reject <stage-id>` discards it — see *Stage before live* for what
-   that costs.
-
-6. Confirm the release carries provenance:
-
-   ```sh
-   npm view nuxt-convex-module@<version> dist   # lists an `attestations` key, not just `signatures`
-   gh release verify v<version>                 # the GitHub Release attestation
-   ```
-
-## Recovery
-
-- **Publish failed after the tag was pushed** (the GitHub Release exists, npm has nothing):
-  re-run the failed jobs on that run (`gh run rerun <run-id> --failed`; the tarball artifact lives
-  one day), or **Run workflow** again with `re-stage: vX.Y.Z` — it skips straight to staging that
-  tag. Check `pnpm stage list nuxt-convex-module` first in case the first attempt did stage.
-- **`ci` red, or `HEAD` is not the release commit** — the run refuses before writing anything.
-  Nothing to undo.
-- **Staged, then rejected** — the version is burned; fix forward.
-- **"tag already exists" on push** — that version was already released; you dispatched twice.
-- **The release PR was merged but never tagged** — dispatch `Release` on `main` while that commit
-  is still `HEAD`. If something else merged first, the version assertion will refuse it; prepare a
-  fresh release instead of tagging the wrong commit.
-
-## Repository controls
-
-Recorded so the guarantees are auditable. The rulesets themselves are committed under
-[`.github/rulesets/`](./.github/rulesets/), and `weekly.yml`'s `rulesets` job fails if the live
-rules stop matching them.
+The rules that protect `main` and the tags are committed under
+[`.github/rulesets/`](./.github/rulesets/), so they can be reviewed like anything else.
+`weekly.yml`'s `rulesets` job fails if the live rules stop matching the files.
 
 | Control | What it guarantees |
 | --- | --- |
-| `release` environment | Required reviewer; runs from `main` only. The Trusted Publisher's binding. |
-| `main-guard` ruleset | `main` cannot be deleted or force-pushed. History can be added to, never rewritten. |
-| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits — which is why `Release prepare` commits through GitHub's API rather than `git commit`: a commit made on a runner is unverified, and `rebase` would carry it onto `main` unchanged. |
-| `tag-guard` ruleset | `v*` tags can never be deleted, re-pointed or force-updated, so release history is permanently pinned to its commit. |
-| Immutable releases | The Release `tag` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
-| `sha_pinning_required` | A workflow referencing a floating action tag is refused by GitHub itself, not only by zizmor. |
+| `release` environment | Required reviewer, `main` only. This is what npm trusts. |
+| `main-guard` ruleset | `main` can't be deleted or force-pushed. History can be added to, never rewritten. |
+| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits. That last one is why `Release prepare` commits through GitHub's API instead of `git commit` — a commit made on a runner is unverified, and a rebase merge would carry it onto `main` as-is. |
+| `tag-guard` ruleset | `v*` tags can't be deleted, moved or force-updated. Release history stays pinned to its commit. |
+| Immutable releases | The Release that `tag` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
+| `sha_pinning_required` | GitHub itself refuses a workflow that references a floating action tag, not just zizmor. |
 | Secret scanning + push protection, Dependabot alerts and security updates | On. |
 
-**Why the release survives all of that.** `GITHUB_TOKEN` cannot bypass a ruleset — GitHub's bypass
-list accepts repository roles, teams, GitHub Apps, org admins and Dependabot, and Actions is on
-none of them. That used to be the binding constraint: requiring pull requests or signatures on
-`main` would have blocked the release job's own push, and the alternative — a GitHub App key or a
-PAT held as a secret — reintroduces exactly the long-lived credential this design exists to
-remove.
+**Why the release still works under all of that.** `GITHUB_TOKEN` can't bypass a ruleset — the
+bypass list only accepts repository roles, teams, GitHub Apps, org admins and Dependabot, and
+Actions is none of them. That used to be the problem: requiring pull requests or signatures on
+`main` would have blocked the release job's own push, and the way around it would have been a
+GitHub App key or a PAT stored as a secret. That's exactly the long-lived credential this design
+exists to avoid.
 
-Splitting the release dissolved the constraint rather than working around it. `prepare` pushes a
-branch, `Release` pushes a tag, and neither touches `main` — so `main` can now demand pull
-requests, checks and signatures, and the release is unaffected. The one rule still deliberately
-absent is tag `creation`, because that would block CI from tagging at all; `tag-guard` freezes
-tags once created instead.
+Splitting the release removed the problem instead of working around it. `prepare` pushes a branch,
+`Release` pushes a tag, neither touches `main`. There is one rule deliberately missing: tag
+`creation`, because it would stop CI tagging at all. `tag-guard` freezes tags once they exist
+instead.
 
-## One-time setup (before the first OIDC release)
+## Dependencies
 
-npm Trusted Publishing can only be configured **after** a package exists on the registry, so the
-first version was published manually (`v0.0.0`).
+Updates are handled by [Dependabot](./.github/dependabot.yml): npm versions, GitHub Actions digest
+bumps (keeping the `@<sha> # vX.Y.Z` convention), and CVE security updates. No third-party app has
+write access to the repo.
 
-1. **Configure the trusted publisher** at
+- **Mondays, grouped.** Non-major npm updates come as one PR, Actions bumps as another. Dependabot
+  doesn't group majors; run `pnpm bump` for those (`taze major -w`).
+- **The cooldown is one day wider than pnpm's.** Dependabot waits 2 days, pnpm's
+  `minimumReleaseAge` is 24 h (`pnpm-workspace.yaml`). That way Dependabot never proposes a
+  version pnpm will refuse to install. Security updates skip the wait on purpose.
+- **Keep the two exclude lists in sync.** `cooldown.exclude` in `.github/dependabot.yml` and
+  `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` list the same first-party Nuxt/Convex
+  packages. If they drift apart, Dependabot proposes versions pnpm won't install.
+- **Every PR's dependency changes are inspected.** ci's `dependency-review` job fails a PR that
+  pulls in a known CVE (moderate or higher) or a package GitHub has flagged as malicious. pnpm's
+  cooldown only delays a new version; it never looks inside it.
+- **The whole lockfile is rescanned weekly.** `dependency-review` only sees what a PR changes, so
+  [weekly.yml](./.github/workflows/weekly.yml)'s `osv` job scans the committed lockfile on a
+  schedule. That, plus Dependabot's own alerts, is what catches a CVE filed against a dependency
+  that stopped changing.
+
+## Checks that don't run on commits
+
+Everything on a schedule lives in [weekly.yml](./.github/workflows/weekly.yml). None of it can
+block a merge — a scheduled check that fails a pull request blames whoever happened to open it.
+These jobs are there to catch things changing outside the repository:
+
+| Job | What it watches |
+| --- | --- |
+| `scorecard` | the repo's own settings — pinned actions, permissions, rulesets |
+| `osv` | the committed lockfile, against the OSV database |
+| `rulesets` | the live branch and tag rules, against the files in `.github/rulesets/` |
+| `links` | dead links in the docs, README and policy files |
+| `report` | the other four — it opens or comments on a `ci: weekly drift` issue when one fails |
+
+`report` exists because a failed scheduled run only emails whoever last edited the cron. That's
+the wrong person soon enough, and nobody at all once the mail gets filtered.
+
+Two more checks live outside this repo's workflow files:
+
+- **CodeQL** runs from GitHub's default setup (Settings → Code security), on the `extended` query
+  suite over `javascript-typescript` and `actions`.
+- **`ci`'s `static` job** runs [zizmor](https://docs.zizmor.sh) over the workflows for security
+  problems and [actionlint](https://github.com/rhysd/actionlint) for correctness. Accepted
+  findings are listed in [.github/zizmor.yml](./.github/zizmor.yml) and
+  [.github/actionlint.yaml](./.github/actionlint.yaml).
+
+## One-time setup
+
+npm only lets you configure Trusted Publishing after a package exists, so `v0.0.0` was published
+by hand first.
+
+1. **Set up the trusted publisher** at
    <https://www.npmjs.com/package/nuxt-convex-module/access> → **Trusted Publisher** →
    *GitHub Actions*:
 
@@ -206,102 +280,31 @@ first version was published manually (`v0.0.0`).
    | Workflow filename   | `release.yml`         |
    | Environment         | `release`             |
 
-   Leave it **stage-only** (the default). Enable **Require two-factor authentication and disallow
-   tokens** — trusted publishers keep working (they authenticate with OIDC), and any leaked or
-   stolen npm token becomes useless against this package. Use a passkey or hardware key as the
-   second factor. Revoke any classic token you still hold locally once it is on.
+   Leave it **stage-only** (the default). Turn on **Require two-factor authentication and disallow
+   tokens**: trusted publishing keeps working because it uses OIDC, and any npm token that leaks
+   becomes useless against this package. Use a passkey or hardware key. Revoke any classic token
+   you still have locally.
 
-2. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** on the
-   repository so the `preview` workflow can publish continuous preview builds
-   (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`). The same step
-   ships `examples/playground` as a StackBlitz template via `--template`, which
-   is what the **Open in StackBlitz** link in each PR comment opens. Drop that
-   flag and pkg.pr.new silently substitutes a synthesised template that cannot
-   run — see the comment in `preview.yml`.
+2. **Install the [pkg.pr.new GitHub App](https://github.com/apps/pkg-pr-new)** so the `preview`
+   workflow can publish per-commit builds (`npm i https://pkg.pr.new/qruto/nuxt-convex-module@<sha>`).
+   That same step ships `examples/playground` as a StackBlitz template via `--template`, which is
+   what the **Open in StackBlitz** link in each PR comment opens. Without the flag pkg.pr.new
+   quietly substitutes a generated template that can't run — see the comment in `preview.yml`.
 
 ## After the first publish
 
-- **Submit to the [nuxt/modules](https://github.com/nuxt/modules) registry** (requires the
-  package on npm): in a clone of that repo run
-  `pnpm sync nuxt-convex-module qruto/nuxt-convex-module`, add an SVG icon under `icons/`, set
-  `category` (Database) and `type: 3rd-party` in the generated
-  `modules/nuxt-convex-module.yml`, point `website` at the docs site, and open a PR. npm
-  stats, description, and maintainers auto-sync afterwards.
-- **Add GitHub repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`,
-  `realtime`.
-- **Enrol in [nuxt/ecosystem-ci](https://github.com/nuxt/ecosystem-ci)**, which is where the
-  deleted nightly job's coverage belongs. Testing against `nuxt-nightly` here meant turning off
-  `minimumReleaseAge`, `trustPolicy` and the frozen lockfile for one job that could never fail
-  anything. ecosystem-ci runs this suite against Nuxt's own `main` on Nuxt's runners instead — no
-  supply-chain gate is relaxed here, and a regression reaches you *before* the Nuxt release rather
-  than after it.
-- The README's StackBlitz links (`examples/minimal`, `examples/playground`) start working as
-  soon as the package is installable from npm — they import from GitHub, so they resolve
-  `nuxt-convex-module` from the registry. The per-PR StackBlitz link is different and already
-  works: pkg.pr.new rewrites that dependency to the commit's preview tarball, so it needs no
-  npm release at all.
-
-## Conventional Commits
-
-With `release-type: auto`, the bump is derived from
-[Conventional Commits](https://www.conventionalcommits.org/) since the previous tag:
-
-| Commit type                          | Release |
-| ------------------------------------ | ------- |
-| `fix:`                               | patch   |
-| `feat:`                              | minor   |
-| `feat!:` / `BREAKING CHANGE:` footer | major   |
-
-Other types (`chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:`, `perf:`) appear grouped in
-the changelog/release notes but do not force a bump. Below `1.0.0`, changelogen demotes one step:
-a `feat` yields a patch and a breaking change yields a minor. To override the computed bump, pick
-an explicit `patch` / `minor` / `major` when running the workflow.
-
-## Dependencies
-
-Dependency updates are automated by [Dependabot](./.github/dependabot.yml) — npm version
-updates, GitHub Actions digest bumps (preserving the `@<sha> # vX.Y.Z` pinning convention), and
-CVE security updates. No third-party app holds write access to the repo.
-
-- **Monday schedule, grouped.** Non-major npm updates arrive as one grouped PR; Actions bumps
-  as another. For major bumps Dependabot groups out, `pnpm bump` runs `taze major -w`.
-- **Cooldown mirrors pnpm.** Dependabot's `cooldown` (2 days) is kept one day wider than pnpm's
-  `minimumReleaseAge` (24 h, `pnpm-workspace.yaml`), so Dependabot never proposes a version pnpm
-  refuses to resolve. Security updates skip the cooldown by design.
-- **Keep the exclude lists in sync.** `cooldown.exclude` in `.github/dependabot.yml` must match
-  `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` (first-party Nuxt/Convex packages are
-  waived), or Dependabot proposes versions pnpm won't install.
-- **Inspected at PR time.** ci's `dependency-review` job fails any PR whose dependency delta
-  introduces a known CVE (moderate or higher) or a package GitHub has flagged as malicious.
-  pnpm's cooldown only *delays* a new version — it never looks at what's inside it.
-- **Rescanned on a schedule.** `dependency-review` only sees what a PR changes, so
-  [weekly.yml](./.github/workflows/weekly.yml)'s `osv` job scans the whole committed lockfile
-  weekly — that, and Dependabot's own continuous re-evaluation, is what catches a CVE disclosed
-  against a dependency that stopped changing.
-
-## Checks outside ci
-
-Everything that runs on a clock rather than on a commit lives in one file,
-[weekly.yml](./.github/workflows/weekly.yml). None of it can block a merge — a scheduled check
-that fails a pull request fails the wrong person at the wrong time. They exist to notice the world
-moving underneath a repository that did not change:
-
-| Job | What it watches |
-| --- | --- |
-| `scorecard` | drift in the repo's own posture — pinned actions, permissions, rulesets |
-| `osv` | the committed lockfile, against the OSV database |
-| `rulesets` | the live branch and tag rules, against the ones committed in `.github/rulesets/` |
-| `links` | dead links in the docs, README and policy files — the one kind of rot no other gate sees |
-| `report` | the other four. It opens (or comments on) a `ci: weekly drift` issue when any of them fails |
-
-`report` exists because a scheduled run's only native failure signal is an email to whoever last
-edited the cron — the wrong person on a long enough timeline, and nobody at all once it lands in
-a filter. Drift that nobody reads is not detected.
-
-CodeQL runs from GitHub's **default setup** (Settings → Code security), not from a workflow file
-in this repository — on the `extended` query suite, over `javascript-typescript` and `actions`.
-
-`ci`'s `static` job runs [zizmor](https://docs.zizmor.sh) over the workflows themselves; accepted
-findings and their reasons live in [.github/zizmor.yml](./.github/zizmor.yml). Its correctness
-counterpart is [actionlint](https://github.com/rhysd/actionlint), configured in
-[.github/actionlint.yaml](./.github/actionlint.yaml).
+- **Submit to the [nuxt/modules](https://github.com/nuxt/modules) registry** (needs the package on
+  npm). In a clone of that repo run `pnpm sync nuxt-convex-module qruto/nuxt-convex-module`, add
+  an SVG icon under `icons/`, set `category` (Database) and `type: 3rd-party` in the generated
+  `modules/nuxt-convex-module.yml`, point `website` at the docs site, and open a PR. npm stats,
+  description and maintainers sync themselves afterwards.
+- **Add repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`, `realtime`.
+- **Join [nuxt/ecosystem-ci](https://github.com/nuxt/ecosystem-ci).** This is where testing against
+  Nuxt nightlies belongs. Doing it here meant turning off `minimumReleaseAge`, `trustPolicy` and
+  the frozen lockfile for a job that could never fail anything, so that job was deleted.
+  ecosystem-ci runs this suite against Nuxt's `main` on Nuxt's runners instead: no supply-chain
+  check is relaxed here, and a regression reaches you before the Nuxt release rather than after.
+- **The README's StackBlitz links** (`examples/minimal`, `examples/playground`) start working as
+  soon as the package is installable — they import from GitHub and resolve `nuxt-convex-module`
+  from npm. The per-PR StackBlitz link is different and already works: pkg.pr.new rewrites that
+  dependency to the commit's preview tarball, so it needs no npm release.
