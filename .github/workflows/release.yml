@@ -5,7 +5,7 @@ name: Release
 # stage queue, where a maintainer approves it with 2FA:
 #
 #   tag      wait for ci · verify HEAD is the release commit · tag → push     contents: write
-#            → changelogen gh release (immutable)                              environment: release
+#            → gh release create (immutable) · no install, no node_modules      environment: release
 #   build    check out the tag · pack · check:tarball                          contents: read
 #   publish  pnpm stage publish (Trusted Publishing/OIDC + provenance)         id-token: write
 #                                                                              environment: release
@@ -27,10 +27,11 @@ name: Release
 # from main, so a release.yml edited on a scratch branch can neither mutate the
 # repository nor reach npm's queue.
 #
-# The credentials never meet the code. `tag` holds the write token and no OIDC.
-# `build` runs the dependency code and holds nothing. `publish` holds the OIDC
-# token and runs nothing but one pinned pnpm on one tarball, behind an egress
-# allowlist.
+# The credentials never meet the code, and neither of the two jobs that hold one
+# installs anything. `tag` holds the write token and runs git, jq and gh against
+# GitHub only. `build` runs the dependency code and holds nothing. `publish`
+# holds the OIDC token and runs one pinned pnpm on one tarball. Both credentialed
+# jobs sit behind an egress allowlist.
 #
 # With `dry-run: true` nothing is written and nothing uploaded: `tag` reports the
 # version a release would produce, `build` packs and validates main as it is,
@@ -64,12 +65,14 @@ env:
   RE_STAGE: ${{ inputs.re-stage }}
 
 jobs:
-  # The only job that writes to the repository — and now it writes exactly one
-  # thing: a tag on a commit that is already on main and already green. It runs
-  # dependency code (`pnpm install`, for changelogen's GitHub Release step) with
-  # the write token in reach, which is why it holds no OIDC token, why the
-  # `release` environment's reviewer must approve before it starts, and why the
-  # rulesets keep it from rewriting history.
+  # The only job that writes to the repository — and it writes exactly one thing:
+  # a tag on a commit that is already on main and already green.
+  #
+  # Nothing from node_modules runs here. There is no install: git, jq and gh are
+  # the runner image's, and the release notes are read out of the CHANGELOG.md
+  # this commit already carries. So the write token is never in reach of
+  # dependency code — which is what lets the egress policy below be `block`, and
+  # is the same discipline `publish` follows at the other end of the pipeline.
   tag:
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -82,13 +85,22 @@ jobs:
       ref: ${{ steps.version.outputs.ref }}
       pnpm-version: ${{ steps.version.outputs.pnpm-version }}
     steps:
-      # Audit-mode egress monitoring for the job that holds the write token and
-      # runs dependency code. StepSecurity's global blocklist is enforced even in
-      # audit mode.
+      # Block mode, like `publish`. With the install gone this job's whole traffic
+      # is GitHub: `gh run list`/`watch`/`view`, the checkout, the tag push and
+      # `gh release create`. The agent implicitly allows the runner's own
+      # infrastructure; these two are the rest of it.
+      #
+      # A dry run exercises everything except the two write calls, and those hit
+      # the same two hosts the ci-wait steps already prove — so a green rehearsal
+      # is sufficient evidence for this list.
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
-          egress-policy: audit
+          egress-policy: block
+          disable-sudo-and-containers: true
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
 
       # Never release a commit whose ci run isn't a completed success — and wait
       # for it rather than re-running its jobs here. `--event push` accepts only
@@ -118,29 +130,11 @@ jobs:
           fi
 
       # persist-credentials: false — the push below carries the token in that one
-      # step's environment, so it never lands in .git/config during the install.
+      # step's environment, so it never lands in .git/config at all.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # full history + tags: `HEAD~1` below, and changelogen's Release step
+          fetch-depth: 0 # full history + tags: `HEAD~1` below, and `re-stage` resolving a tag
           persist-credentials: false
-
-      # One action for pnpm (version from `packageManager`), the Node LTS
-      # runtime and `pnpm install`. No cache: a restored cache is an input
-      # nobody reviewed, and a release pipeline takes no unreviewed inputs
-      # (TanStack, May 2026). `require-lockfile` refuses the one install pnpm's
-      # own CI frozen mode does not — no lockfile at all.
-      - name: Install pnpm, node & dependencies
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
-        with:
-          runtime: node@lts
-          cache: false
-          require-lockfile: true
-
-      - name: Configure git
-        if: env.RE_STAGE == ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       # HEAD must BE the merged release commit — the one whose package.json
       # version differs from its parent's.
@@ -206,15 +200,31 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
             "refs/tags/v$VERSION"
 
-      # changelogen's own GitHub Release sync: reads the top section of
-      # CHANGELOG.md — written by `Release prepare` and merged with this commit —
-      # and creates the Release for that tag (updates it if it exists). Immutable releases are on, so the Release locks the tag and
-      # carries a release attestation — `gh release verify vX.Y.Z`.
+      # The notes are the top section of CHANGELOG.md — written by `Release
+      # prepare`, reviewed on its pull request, merged with this commit. The same
+      # awk the step below uses for the run summary.
+      #
+      # `gh`, not `changelogen gh release`: changelogen would have meant a full
+      # `pnpm install` in the one job holding a write token, to read a file that
+      # is already checked out. Its "update the Release if it exists" behaviour
+      # is not lost either — immutable releases are on, so no Release here can be
+      # edited after the fact.
+      #
+      # `--verify-tag` refuses to invent a tag if the push above somehow did not
+      # land. Immutable releases lock the tag and carry an attestation —
+      # `gh release verify vX.Y.Z`.
       - name: Create the GitHub Release
         if: env.DRY_RUN != 'true' && env.RE_STAGE == ''
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: pnpm exec changelogen gh release
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "v$VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md"
 
       - name: Report the planned release
         if: env.RE_STAGE == ''
@@ -276,8 +286,15 @@ jobs:
 
       # Generates `.nuxt/tsconfig.json`. Without it `nuxt-module-build` can't
       # resolve compiler options and the prepack below fails.
+      #
+      # `dev:prepare:lib`, not `dev:prepare`: the latter adds `nuxt prepare
+      # website`, which pulls in the whole Docus module graph for a job that
+      # packs the module and nothing else. ci's `pack` job runs this same
+      # `pnpm pack` + `check:tarball` on `prepare: lib`, which is the proof
+      # that it is enough — and it keeps the release build from depending on
+      # the docs stack resolving.
       - name: Prepare
-        run: pnpm run dev:prepare
+        run: pnpm run dev:prepare:lib
 
       # Runs `prepack` (the full build) and rewrites `catalog:` ranges exactly
       # like `pnpm publish` would. This tarball is the thing that gets staged —
