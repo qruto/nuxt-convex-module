@@ -8,9 +8,12 @@
  *
  * ## Usage
  *
- * All exported functions assume that a Convex deployment URL is set in the
- * `NUXT_PUBLIC_CONVEX_URL` environment variable. `npx convex dev` will
- * automatically set it during local development.
+ * All exported functions assume that a Convex deployment URL is configured —
+ * `convex.url` in `nuxt.config`, `NUXT_PUBLIC_CONVEX_URL`, or the `CONVEX_URL`
+ * that `npx convex dev` writes to `.env.local`. Unlike its Next counterpart,
+ * `npx convex dev` does *not* set the framework-prefixed name for Nuxt: the
+ * Convex CLI has no Nuxt case in its framework detection, so it writes the
+ * unprefixed `CONVEX_URL`, which the module reads too.
  *
  * ### Preloading data
  *

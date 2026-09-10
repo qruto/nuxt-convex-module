@@ -37,7 +37,8 @@ name is *unprefixed*, because `NUXT_PUBLIC_CONVEX_URL` is Nuxt's runtime-overrid
 channel: an empty one would still be a defined variable, and Nitro would apply
 it at request time and blank the URL back out on an app that is configured
 correctly. Given a real URL it wins, which is how you would point a deployed
-build at a deployment; `nuxt.config.ts` reads both names.
+build at a deployment. The module reads both names, so `nuxt.config.ts` carries
+no URL line at all.
 
 **2. Give that deployment this app's functions.** They are `convex/schema.ts` and
 `convex/messages.ts` — a `messages` table, a `list` query and a `send` mutation,

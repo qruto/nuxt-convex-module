@@ -512,6 +512,12 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 - **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
   generated-types fallback. Next apps wire Convex by hand.
+- **Also** · the module resolves the deployment URL itself (`resolveDeploymentUrls`):
+  `convex.url`, then `NUXT_PUBLIC_CONVEX_URL`, then the unprefixed `CONVEX_URL`. Upstream has
+  no such step — a Next app reads `process.env.NEXT_PUBLIC_CONVEX_URL` at the call site, and the
+  Convex CLI writes that name because its framework detection has a Next case. It has no Nuxt
+  case, so for Nuxt the CLI writes `CONVEX_URL`; reading both is what lets a Convex user reach a
+  working app without a `convex.url` line.
 
 ##### A-10 — types upstream keeps private
 

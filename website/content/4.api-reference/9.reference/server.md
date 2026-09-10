@@ -16,9 +16,12 @@ This module contains:
 
 ## Usage
 
-All exported functions assume that a Convex deployment URL is set in the
-`NUXT_PUBLIC_CONVEX_URL` environment variable. `npx convex dev` will
-automatically set it during local development.
+All exported functions assume that a Convex deployment URL is configured —
+`convex.url` in `nuxt.config`, `NUXT_PUBLIC_CONVEX_URL`, or the `CONVEX_URL`
+that `npx convex dev` writes to `.env.local`. Unlike its Next counterpart,
+`npx convex dev` does *not* set the framework-prefixed name for Nuxt: the
+Convex CLI has no Nuxt case in its framework detection, so it writes the
+unprefixed `CONVEX_URL`, which the module reads too.
 
 ### Preloading data
 
@@ -55,7 +58,7 @@ type NuxtOptions = {
 };
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:57](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L57)
+Defined in: [src/runtime/nuxt/index.ts:60](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L60)
 
 Options to [preloadQuery](#preloadquery), [fetchQuery](#fetchquery), [fetchMutation](#fetchmutation) and [fetchAction](#fetchaction).
 
@@ -63,9 +66,9 @@ Options to [preloadQuery](#preloadquery), [fetchQuery](#fetchquery), [fetchMutat
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="token"></a> `token?` | `string` | The JWT-encoded OpenID Connect authentication token to use for the function call. | [src/runtime/nuxt/index.ts:61](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L61) |
-| <a id="url"></a> `url?` | `string` | The URL of the Convex deployment to use for the function call. Defaults to `process.env.NUXT_PUBLIC_CONVEX_URL` if not provided. Explicitly passing undefined here (such as from missing ENV variables) will throw an error in the future. | [src/runtime/nuxt/index.ts:68](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L68) |
-| <a id="skipconvexdeploymenturlcheck"></a> `skipConvexDeploymentUrlCheck?` | `boolean` | Skip validating that the Convex deployment URL looks like `https://happy-animal-123.convex.cloud` or localhost. This can be useful if running a self-hosted Convex deployment that uses a different URL. The default value is `false` | [src/runtime/nuxt/index.ts:83](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L83) |
+| <a id="token"></a> `token?` | `string` | The JWT-encoded OpenID Connect authentication token to use for the function call. | [src/runtime/nuxt/index.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L64) |
+| <a id="url"></a> `url?` | `string` | The URL of the Convex deployment to use for the function call. Defaults to `process.env.NUXT_PUBLIC_CONVEX_URL` if not provided. Explicitly passing undefined here (such as from missing ENV variables) will throw an error in the future. | [src/runtime/nuxt/index.ts:71](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L71) |
+| <a id="skipconvexdeploymenturlcheck"></a> `skipConvexDeploymentUrlCheck?` | `boolean` | Skip validating that the Convex deployment URL looks like `https://happy-animal-123.convex.cloud` or localhost. This can be useful if running a self-hosted Convex deployment that uses a different URL. The default value is `false` | [src/runtime/nuxt/index.ts:86](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L86) |
 
 ## Functions
 
@@ -75,7 +78,7 @@ Options to [preloadQuery](#preloadquery), [fetchQuery](#fetchquery), [fetchMutat
 function preloadQuery<Query>(query, ...args): Promise<Preloaded<Query>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:100](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L100)
+Defined in: [src/runtime/nuxt/index.ts:103](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L103)
 
 Execute a Convex query function and return a `Preloaded`
 payload which can be passed to `usePreloadedQuery` in a client
@@ -108,7 +111,7 @@ A promise of the `Preloaded` payload.
 function preloadedQueryResult<Query>(preloaded): FunctionReturnType<Query>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:121](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L121)
+Defined in: [src/runtime/nuxt/index.ts:124](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L124)
 
 Returns the result of executing a query via [preloadQuery](#preloadquery).
 
@@ -138,7 +141,7 @@ The query result.
 function fetchQuery<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:139](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L139)
+Defined in: [src/runtime/nuxt/index.ts:142](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L142)
 
 Execute a Convex query function.
 
@@ -169,7 +172,7 @@ A promise of the query's result.
 function fetchMutation<Mutation>(mutation, ...args): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:160](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L160)
+Defined in: [src/runtime/nuxt/index.ts:163](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L163)
 
 Execute a Convex mutation function.
 
@@ -200,7 +203,7 @@ A promise of the mutation's result.
 function fetchAction<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:183](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L183)
+Defined in: [src/runtime/nuxt/index.ts:186](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L186)
 
 Execute a Convex action function.
 

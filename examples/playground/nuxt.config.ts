@@ -14,22 +14,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
+  // No `url` here on purpose: the module reads `NUXT_PUBLIC_CONVEX_URL` and the
+  // `CONVEX_URL` that `npx convex dev` writes, so pointing this app at a
+  // deployment is one line in `.env.local` and nothing else. The `dev` script
+  // passes `--dotenv .env.local`, which both loads that file and watches it, so
+  // the app flips from its setup panel to the live demo on save.
   convex: {
-    // Bring your own deployment, and that is the whole configuration.
-    // `.env.local` ships with an empty `CONVEX_URL=` to paste into, and
-    // `npm run convex` fills that same line in — one line, whichever way you
-    // get there. The `dev` script passes `--dotenv .env.local`, which both
-    // loads that file and watches it, so this app flips from its setup panel to
-    // the live demo on save, with nothing to restart by hand.
-    //
-    // The *unprefixed* name is the one that ships, on purpose. `NUXT_PUBLIC_*`
-    // is Nuxt's runtime-override channel, and an unfilled `NUXT_PUBLIC_CONVEX_URL=`
-    // is still a defined variable: Nitro would apply it at request time and
-    // blank this value back out, leaving the page on its setup panel with a
-    // perfectly good deployment configured. Set to an actual URL it still wins,
-    // which is how you would point a deployed build at a deployment.
-    url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,
-
     // Data layer only. The module lights up its auth and billing integrations
     // when it finds their packages installed, and Node's lookup walks *up* the
     // directory tree — so run this app from a clone of the module repository

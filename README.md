@@ -201,10 +201,14 @@ export default defineNuxtConfig({
 ### 3. Configure environment
 
 ```bash
-# .env.local (Nuxt app)
+# .env (the file Nuxt loads automatically)
 NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 NUXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
 ```
+
+`npx convex dev` also writes the URL itself, as the unprefixed `CONVEX_URL` in
+`.env.local` — the module reads that too, so `nuxt dev --dotenv .env.local` is
+the other way to get there.
 
 ### 4. Start the app, then Convex
 
