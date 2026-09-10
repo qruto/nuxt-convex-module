@@ -188,8 +188,11 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
             "refs/tags/v$VERSION"
 
-      # The notes are the top section of CHANGELOG.md: written by `Release
-      # prepare`, reviewed on its pull request, merged with this commit.
+      # The notes are the top section of the CHANGELOG.md that `Release prepare`
+      # wrote, reviewed on its pull request and merged with this commit. Read out
+      # of the ref being released, not the working tree: the same file on a
+      # normal release, because the tag points at HEAD — but a re-stage checks
+      # out main as it is now, which may have moved on to a later version.
       #
       # `gh`, not `changelogen gh release`. changelogen would mean a full `pnpm
       # install` in the one job holding a write token, just to read a file that
@@ -197,16 +200,28 @@ jobs:
       # releases are on, so its "update the Release if it exists" behaviour could
       # never apply here.
       #
+      # Runs on a re-stage as well, and returns early if the Release is there.
+      # Together those close the one failure `re-stage` could not repair: if the
+      # tag push lands and this step then fails, the tag exists with no Release.
+      # A plain re-run dies on `git tag` — correctly, that guard is what catches
+      # a double dispatch — and a re-stage used to skip this step, so the version
+      # would have shipped without a Release for good.
+      #
       # `--verify-tag` stops gh inventing a tag if the push above did not land.
       # The Release it creates is immutable and carries an attestation —
       # `gh release verify vX.Y.Z`.
       - name: Create the GitHub Release
-        if: env.DRY_RUN != 'true' && env.RE_STAGE == ''
+        if: env.DRY_RUN != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          REF: ${{ steps.version.outputs.ref }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists — nothing to create."
+            exit 0
+          fi
+          git show "$REF:CHANGELOG.md" | awk '/^## /{n++} n==1 && !/^## /' > "$RUNNER_TEMP/notes.md"
           gh release create "v$VERSION" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \

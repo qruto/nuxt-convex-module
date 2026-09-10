@@ -113,10 +113,14 @@ gives a minor. Pick `patch` / `minor` / `major` explicitly to override.
 
 ## If something goes wrong
 
-**The tag was pushed but publishing failed.** The GitHub Release exists, npm has nothing. Check
+**The tag was pushed but publishing failed.** npm has nothing. Check
 `pnpm stage list nuxt-convex-module` first — the first attempt may have staged after all. If not,
 either re-run the failed jobs (`gh run rerun <run-id> --failed`, the tarball artifact lives one
 day) or run **Release** again with `re-stage: vX.Y.Z`, which skips straight to staging that tag.
+
+`re-stage` also creates the GitHub Release if it is missing, and leaves it alone if it is not — so
+the narrower case where the tag landed and the Release step then failed repairs itself too. Its
+notes come from the tag, not from whatever `main` says by then.
 
 **`ci` is red, or `HEAD` isn't the release commit.** The run refuses before writing anything.
 Nothing to undo.
@@ -124,7 +128,8 @@ Nothing to undo.
 **You staged it and then rejected it.** That version number is spent, because the tag can't be
 moved. Release the next patch instead.
 
-**"tag already exists" when pushing.** That version is already out. You dispatched twice.
+**"tag already exists" when pushing.** That version is already out. You dispatched twice. The
+guard is deliberate — don't re-run past it. `re-stage: vX.Y.Z` is the way back in.
 
 **The release PR was merged but never tagged.** Run **Release** while that commit is still `HEAD`
 on `main`. If something else merged in the meantime it will refuse — prepare a fresh release

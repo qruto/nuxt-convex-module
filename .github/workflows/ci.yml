@@ -204,7 +204,15 @@ jobs:
       # because the two steps that need it are the last two. Keep it that way: a
       # step added below would inherit a PATH where 40-odd project binaries
       # shadow the system's.
+      #
+      # `!cancelled()` for the same reason every gate above carries it, and this
+      # step is not a gate. Without it the implicit `success()` skips it as soon
+      # as anything earlier fails — and the two fallow steps below, which DO run
+      # after a failure, then call a bare `fallow` that is not on PATH. Both
+      # would report `command not found`, burying the real failure under two
+      # invented ones.
       - name: Put project binaries on PATH
+        if: ${{ !cancelled() }}
         run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
 
       # Dead code, unused exports and dependencies, duplication, complexity.
