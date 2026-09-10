@@ -16,9 +16,12 @@ on:
     branches:
       - main
 
+# Superseded PR runs are cancelled; pushes to main are not. See ci.yml — the same
+# reason, minus the release consequence: a cancelled preview is only a missing
+# comment, but there is nothing to gain by killing it either.
 concurrency:
   group: preview-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

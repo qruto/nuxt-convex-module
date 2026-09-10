@@ -20,10 +20,14 @@ on:
     branches:
       - main
 
-# Cancel superseded runs on the same branch / PR.
+# Cancel superseded runs on the same PR — never on main. `head_ref` is empty on a
+# push, so cancelling there would collapse every merge into one group: two merges
+# in quick succession and the first run is killed. `Release` refuses to tag a
+# commit whose ci run is not a COMPLETED success, so a cancelled run makes that
+# commit unreleasable.
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Nothing by default — every job declares the minimum it needs.
 permissions: {}
@@ -59,6 +63,7 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'patches/**'
+              - '.nuxtrc'
               - '.github/workflows/ci.yml'
               - '.github/actions/**'
             website:
@@ -66,6 +71,12 @@ jobs:
               - 'website/**'
             src:
               - *shared
+              # The DevTools panel is published: `build` generates it into
+              # dist/devtools-client, which `files: ["dist"]` ships and sirv
+              # serves to consumers. Without it here, a change to the panel
+              # skips `pack` — and with it check:tarball's assertion that the
+              # panel carries built assets at all.
+              - 'devtools-client-app/**'
               - 'test/**'
               - 'scripts/**'
               - 'examples/**'
@@ -115,6 +126,21 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm run lint:commits --from "$BASE_SHA" --to "$HEAD_SHA"
+
+      # What the manifest PROMISES, against what is installed: that `engines`
+      # is not stricter than a dependency's own, and that no peer range is wider
+      # than what the package it peers on accepts.
+      #
+      # Nothing else covers this. publint reads the manifest's shape, attw
+      # resolves its types, fallow reads the module graph — none compares a
+      # declared range to reality. It caught `convex: ">=1.40.0"` promising a
+      # convex 2.x that both optional add-ons cap out of.
+      #
+      # `--no-workspaces`: the website and DevTools apps are private and promise
+      # nobody anything. `-d` skips devDependencies, whose ranges are ours alone.
+      - name: Manifest ranges (installed-check)
+        if: ${{ !cancelled() }}
+        run: pnpm run check:manifest
 
       # Regenerating the committed TypeDoc reference must produce no diff,
       # otherwise source doc-comments and the published reference have diverged.

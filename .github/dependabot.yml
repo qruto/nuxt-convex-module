@@ -24,7 +24,8 @@ updates:
         - convex
         - '@convex-dev/*'
     # `@convex-dev/better-auth` peers `better-auth: ">=1.6.11 <1.7.0"`, and this
-    # package mirrors that range. A 1.7.x bump is a *minor* update, so the
+    # package mirrors it as `~1.6.11` — the same set, written the way
+    # installed-check normalises to. A 1.7.x bump is a *minor* update, so the
     # all-non-major group below would otherwise propose one that the add-on
     # rejects at install time. Drop this entry when @convex-dev/better-auth
     # ships better-auth 1.7 support (and widen the peer range with it).
@@ -41,8 +42,17 @@ updates:
 
   # Actions digest bumps — keeps the `@<sha> # vX.Y.Z` pinning convention
   # intact. Native workflow-file writes: no PAT, no GitHub App.
+  #
+  # `/` alone reads .github/workflows/ and a ROOT-level action.yml — it does not
+  # descend into .github/actions/*/action.yml. That directory holds the
+  # `pnpm/setup` pin every ci and preview job runs on, so without the second
+  # entry it freezes while release.yml's inline copies of the same action keep
+  # moving, and the two paths silently diverge. Nothing else notices: zizmor
+  # checks that a pin exists, not that it is current.
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/setup
     schedule:
       interval: weekly
       day: monday
