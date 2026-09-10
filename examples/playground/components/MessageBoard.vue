@@ -86,12 +86,18 @@ function formatTime(ms: number) {
 
     <div v-else-if="status === 'error'" class="state error">
       <p>Could not read <code>messages:list</code> from this deployment.</p>
-      <p v-if="error" class="cause"><code>{{ error.message }}</code></p>
+      <!--
+        Guarded on the message rather than on `error`, because an SSR failure reaches the
+        client as a NuxtError with its message stripped — Nuxt does not serialize server
+        error detail into the payload. So this line shows up for a failure that happens
+        after hydration, and the hint below has to stand on its own either way.
+      -->
+      <p v-if="error?.message" class="cause"><code>{{ error.message }}</code></p>
       <p class="hint">
-        Two usual causes, and the line above tells them apart. A deployment that hasn't been
-        given this app's functions yet: push <code>convex/</code> to it with
-        <code>npx convex deploy</code>, or point this component at functions it does have. Or a
-        URL nothing is answering on — check it against your dashboard.
+        Two usual causes. The deployment hasn't been given this app's functions yet: push
+        <code>convex/</code> to it with <code>npx convex deploy</code>, or point this component
+        at functions it does have. Or nothing is answering on that URL at all — check it
+        against your dashboard.
       </p>
     </div>
 
