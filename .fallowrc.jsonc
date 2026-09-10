@@ -64,7 +64,6 @@
     "nuxt-security", // optional peer, detected by name via hasNuxtModule()
     "@convex-dev/polar", // optional peer detected by name; the website ships it for its Convex functions
     "@polar-sh/checkout", // optional peer the website provides for the module's import
-    "@codecov/nuxt-plugin", // nuxt.config.ts registers it in the [name, options] tuple form, which the nuxt plugin does not read
     // Invoked as subprocesses by scripts/check-tarball.mjs (`pnpm exec publint`,
     // `pnpm exec attw`) rather than imported, so no static reference exists.
     // They moved there from .github/workflows/*.yml, which fallow does parse —
