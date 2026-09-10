@@ -17,12 +17,12 @@ config:
 ---
 flowchart TD
     S(["<b>1 · you dispatch Release prepare</b><br/>auto / patch / minor / major"])
-    A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>refuses any branch but main<br/>changelogen bumps package.json + CHANGELOG.md<br/>pushes release/vX.Y.Z and opens the PR"]
+    A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>refuses any branch but main<br/>changelogen bumps package.json + CHANGELOG.md<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
     B["<b>Pull request</b><br/>the same <i>All checks passed</i> gate as any other change"]
     M(["<b>you read the changelog and squash-merge</b>"])
 
     D(["<b>2 · you dispatch Release</b> · approve the <b>release</b> environment"])
-    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>refuses unless ci on this commit is green<br/>and HEAD bumped the version<br/>pushes a tag, never a commit · immutable Release"]
+    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>no install · egress: GitHub only<br/>refuses unless ci on this commit is green<br/>and HEAD bumped the version<br/>pushes a tag, never a commit · immutable Release"]
     E["<b>build</b> · <i>no credentials at all</i><br/>checks out the tag, not the tree that made it<br/>pnpm pack · check:tarball · uploads the artifact"]
     G2(["approve the <b>release</b> environment again"])
     F["<b>publish</b> · <i>id-token: write</i><br/>no checkout, no install · egress: npm, GitHub, Sigstore<br/>pnpm stage publish --provenance"]
@@ -76,15 +76,17 @@ The credentials never meet the code:
 
 | Job | Holds | Runs |
 | --- | --- | --- |
-| `tag` | `contents: write` — no OIDC | one `git tag`, then changelogen's GitHub Release step |
+| `tag` | `contents: write` — no OIDC, no install | one `git tag`, then `gh release create` |
 | `build` | nothing | the build, from a pristine checkout of the tag |
-| `publish` | `id-token: write` — no checkout, no install | one pinned pnpm on one tarball, behind an egress allowlist |
+| `publish` | `id-token: write` — no checkout, no install | one pinned pnpm on one tarball |
 
-`tag` is the only job that can write to the repository, and it writes exactly one thing: a tag, on
-a commit already merged and already green. It holds no npm credential and cannot start until you
-have approved the run. `build` executes dependency code with nothing worth stealing in reach.
-`publish` holds the only credential that can reach npm and executes nothing but pnpm on a tarball,
-with every network destination other than npm, GitHub and Sigstore blocked.
+**Neither credentialed job installs anything.** `tag` is the only one that can write to the
+repository, and it writes exactly one thing: a tag, on a commit already merged and already green.
+It runs `git`, `jq` and `gh` from the runner image — the release notes are read out of the
+`CHANGELOG.md` the commit already carries — so no dependency code ever executes beside the write
+token, and its egress is blocked to GitHub alone. `build` executes dependency code with nothing
+worth stealing in reach. `publish` holds the only credential that can reach npm and executes
+nothing but pnpm on a tarball, with every destination other than npm, GitHub and Sigstore blocked.
 
 ## One environment, two gates
 
@@ -169,9 +171,9 @@ rules stop matching them.
 | --- | --- |
 | `release` environment | Required reviewer; runs from `main` only. The Trusted Publisher's binding. |
 | `main-guard` ruleset | `main` cannot be deleted or force-pushed. History can be added to, never rewritten. |
-| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits. |
+| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits — which is why `Release prepare` commits through GitHub's API rather than `git commit`: a commit made on a runner is unverified, and `rebase` would carry it onto `main` unchanged. |
 | `tag-guard` ruleset | `v*` tags can never be deleted, re-pointed or force-updated, so release history is permanently pinned to its commit. |
-| Immutable releases | The Release changelogen creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
+| Immutable releases | The Release `tag` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
 | `sha_pinning_required` | A workflow referencing a floating action tag is refused by GitHub itself, not only by zizmor. |
 | Secret scanning + push protection, Dependabot alerts and security updates | On. |
 
@@ -227,6 +229,12 @@ first version was published manually (`v0.0.0`).
   stats, description, and maintainers auto-sync afterwards.
 - **Add GitHub repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`,
   `realtime`.
+- **Enrol in [nuxt/ecosystem-ci](https://github.com/nuxt/ecosystem-ci)**, which is where the
+  deleted nightly job's coverage belongs. Testing against `nuxt-nightly` here meant turning off
+  `minimumReleaseAge`, `trustPolicy` and the frozen lockfile for one job that could never fail
+  anything. ecosystem-ci runs this suite against Nuxt's own `main` on Nuxt's runners instead — no
+  supply-chain gate is relaxed here, and a regression reaches you *before* the Nuxt release rather
+  than after it.
 - The README's StackBlitz links (`examples/minimal`, `examples/playground`) start working as
   soon as the package is installable from npm — they import from GitHub, so they resolve
   `nuxt-convex-module` from the registry. The per-PR StackBlitz link is different and already
@@ -284,6 +292,11 @@ moving underneath a repository that did not change:
 | `osv` | the committed lockfile, against the OSV database |
 | `rulesets` | the live branch and tag rules, against the ones committed in `.github/rulesets/` |
 | `links` | dead links in the docs, README and policy files — the one kind of rot no other gate sees |
+| `report` | the other four. It opens (or comments on) a `ci: weekly drift` issue when any of them fails |
+
+`report` exists because a scheduled run's only native failure signal is an email to whoever last
+edited the cron — the wrong person on a long enough timeline, and nobody at all once it lands in
+a filter. Drift that nobody reads is not detected.
 
 CodeQL runs from GitHub's **default setup** (Settings → Code security), not from a workflow file
 in this repository — on the `extended` query suite, over `javascript-typescript` and `actions`.
