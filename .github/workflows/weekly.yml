@@ -129,3 +129,53 @@ jobs:
             --root-dir ${{ github.workspace }}/website/content
             .
           fail: true
+
+  # The whole point of the four jobs above is to be noticed. Without this they
+  # are not: a scheduled run's only failure signal is an email to whoever last
+  # edited the cron, which is the wrong person on a long enough timeline and
+  # nobody at all once it lands in a filter.
+  #
+  # An issue is the right shape — it survives, it can be assigned, and it is
+  # where a drift conversation belongs. One issue reused rather than a new one
+  # each Monday, or a fortnight of neglect buries the first report.
+  #
+  # `issues: write` on a job that checks nothing out and installs nothing; the
+  # same reasoning that keeps ci's Codecov credential in its own job.
+  report:
+    needs:
+      - scorecard
+      - osv
+      - rulesets
+      - links
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTS: >-
+            scorecard=${{ needs.scorecard.result }}
+            osv=${{ needs.osv.result }}
+            rulesets=${{ needs.rulesets.result }}
+            links=${{ needs.links.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body=$(printf '%s\n\n%s\n' "$RESULTS" "$RUN_URL")
+          # Listed and matched exactly, not searched: `--search` depends on
+          # GitHub's search index, and `in:title` is full-text, so it would also
+          # match an unrelated issue that happens to say "weekly drift". Not
+          # `--label` either — the filter matches nothing until the label exists,
+          # which fails by opening a second issue every Monday rather than
+          # loudly.
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
+            --json number,title \
+            --jq '[.[] | select(.title == "ci: weekly drift")][0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment --repo "$GITHUB_REPOSITORY" "$existing" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title 'ci: weekly drift' --body "$body"
+          fi
