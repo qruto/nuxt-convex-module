@@ -30,6 +30,10 @@ pnpm exec fallow --fail-on-issues
 # there: security candidates never surface under the run above.
 pnpm run test:security
 
+# `static` job's manifest gate. Cheap, and the one check that fails on a change
+# nobody made — a dependency bump narrowing a peer range underneath us.
+pnpm run check:manifest
+
 # `typecheck` job. Runs dev:prepare first, so it also proves the module still
 # builds its stubs and types.
 pnpm run test:types:lib
