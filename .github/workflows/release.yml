@@ -1,19 +1,19 @@
 name: Release
 
-# Step two of two. Tags the commit that `Release prepare`'s pull request put on
+# Step two of two. Tags the commit that `Release Prepare`'s pull request put on
 # main, builds the tarball, and sends it to npm — where it waits for a 2FA
 # approval before anyone can install it. Run it from the Actions tab.
 #
-#   tag      waits for ci · checks HEAD bumped the version · pushes the tag  contents: write
-#            and creates the GitHub Release · installs nothing               environment: release
+#   tag      waits for CI · checks HEAD bumped the version · pushes the tag  contents: write
+#            and creates the GitHub Release · installs nothing               environment: Release
 #   build    checks out the tag · pnpm pack · check:tarball                  no credentials
 #   publish  pnpm stage publish (OIDC + provenance)                          id-token: write
-#                                                                           environment: release
+#                                                                           environment: Release
 #   laptop   pnpm stage approve <id>   2FA — this is what makes it installable
 #
 # Three rules this file enforces. RELEASE.md explains each one:
 #
-#   1. It never bumps the version. `Release prepare` does that, and this reads
+#   1. It never bumps the version. `Release Prepare` does that, and this reads
 #      the result out of the merged package.json. Bumping in both places would
 #      tag v0.1.1 for a 0.1.0 release.
 #   2. It refuses a HEAD that did not change the version, so an unrelated merge
@@ -62,7 +62,7 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: release
+    environment: Release
     permissions:
       contents: write # push the release commit + tag, create the GitHub Release
       actions: read # `gh run list` / `gh run watch` read this repository's workflow runs
@@ -77,7 +77,7 @@ jobs:
       # infrastructure; these two hosts are the rest of it.
       #
       # A dry run does everything except the two write calls, and those go to the
-      # same two hosts the ci-wait steps already use. So a green rehearsal is
+      # same two hosts the CI-wait steps already use. So a green rehearsal is
       # enough to trust this list.
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -88,30 +88,30 @@ jobs:
             api.github.com:443
             github.com:443
 
-      # Never release a commit whose ci run is not a completed success. It waits
+      # Never release a commit whose CI run is not a completed success. It waits
       # for that run rather than repeating its jobs here. `--event push` accepts
       # only a run on main; a pull_request run on the same commit does not count.
       # Skipped when re-staging, because that tag was already checked.
-      - name: Wait for ci on this commit
+      - name: Wait for CI on this commit
         if: env.RE_STAGE == ''
         timeout-minutes: 45
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           for _ in $(seq 1 30); do
-            run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci --event push \
+            run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --event push \
               --commit "$GITHUB_SHA" --limit 1 --json databaseId --jq '.[0].databaseId // empty')
             [ -n "$run_id" ] && break
             sleep 10
           done
           if [ -z "$run_id" ]; then
-            echo "::error::No ci push run for $GITHUB_SHA after 5 minutes — is this commit on main?"
+            echo "::error::No CI push run for $GITHUB_SHA after 5 minutes — is this commit on main?"
             exit 1
           fi
           gh run watch --repo "$GITHUB_REPOSITORY" "$run_id" --exit-status
           conclusion=$(gh run view --repo "$GITHUB_REPOSITORY" "$run_id" --json conclusion --jq .conclusion)
           if [ "$conclusion" != "success" ]; then
-            echo "::error::ci run $run_id for $GITHUB_SHA concluded '$conclusion' — nothing was released."
+            echo "::error::CI run $run_id for $GITHUB_SHA concluded '$conclusion' — nothing was released."
             exit 1
           fi
 
@@ -141,7 +141,7 @@ jobs:
               echo "::warning::A real release would stop here. Continuing: a rehearsal must run on an ordinary main."
             else
               echo "::error::HEAD ($GITHUB_SHA) does not bump the version — package.json says $current on both this commit and its parent."
-              echo "::error::Run 'Release prepare' and merge its pull request, then dispatch this workflow on the merge commit."
+              echo "::error::Run 'Release Prepare' and merge its pull request, then dispatch this workflow on the merge commit."
               exit 1
             fi
           else
@@ -188,7 +188,7 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
             "refs/tags/v$VERSION"
 
-      # The notes are the top section of the CHANGELOG.md that `Release prepare`
+      # The notes are the top section of the CHANGELOG.md that `Release Prepare`
       # wrote, reviewed on its pull request and merged with this commit. Read out
       # of the ref being released, not the working tree: the same file on a
       # normal release, because the tag points at HEAD — but a re-stage checks
@@ -290,7 +290,7 @@ jobs:
       #
       # `dev:prepare:lib`, not `dev:prepare`: the full one also runs `nuxt
       # prepare website`, which pulls in the whole Docus module graph for a job
-      # that only packs the module. ci's `pack` job runs the same `pnpm pack` and
+      # that only packs the module. CI's `pack` job runs the same `pnpm pack` and
       # `check:tarball` on `prepare: lib`, which proves it is enough — and it
       # keeps the release build from depending on the docs stack resolving.
       - name: Prepare
@@ -302,7 +302,7 @@ jobs:
       - name: Pack
         run: pnpm pack
 
-      # The same script ci runs on every pull request's tarball, so a release
+      # The same script CI runs on every pull request's tarball, so a release
       # cannot ship something a pull request would have been failed for.
       - name: Check the tarball
         run: pnpm run check:tarball
@@ -328,7 +328,7 @@ jobs:
     # npm's Trusted Publisher is bound to this environment, and the environment
     # only runs from main. The reviewer is asked a second time here: after the
     # build, before anything reaches npm.
-    environment: release
+    environment: Release
     permissions:
       contents: read
       id-token: write # npm Trusted Publishing (OIDC)

@@ -1,4 +1,4 @@
-name: weekly
+name: Weekly
 
 # Everything that runs on a schedule rather than on a commit, in one file.
 #
@@ -53,7 +53,7 @@ jobs:
         with:
           sarif_file: results.sarif
 
-  # Scans the whole committed lockfile against OSV. ci's `dependency-review`
+  # Scans the whole committed lockfile against OSV. CI's `dependency-review`
   # cannot do this: it only looks at the dependencies a pull request changes, so
   # an advisory filed against a package that stopped changing is invisible to it.
   #
@@ -138,7 +138,7 @@ jobs:
   # of ignored weeks do not bury the first report.
   #
   # `issues: write` on a job that checks nothing out and installs nothing — the
-  # same reason ci keeps its Codecov credential in a job of its own.
+  # same reason CI keeps its Codecov credential in a job of its own.
   report:
     needs:
       - scorecard

@@ -4,26 +4,26 @@ Releasing takes two clicks in the Actions tab, a pull request in between, and on
 your laptop.
 
 Everything happens in CI. There is no release script to run locally and no npm token stored
-anywhere — publishing signs in with OIDC, which only a job running from `main` in the `release`
+anywhere — publishing signs in with OIDC, which only a job running from `main` in the `Release`
 environment can do.
 
 ## Cut a release
 
-1. **Actions → Release prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
+1. **Actions → Release Prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
    from the commit messages since the last tag.
 
    It bumps `package.json`, writes `CHANGELOG.md` and opens a pull request.
 
 2. **Read that pull request, then squash-merge it.** Its body is the changelog the GitHub Release
-   will carry. Wait for `ci`, same as any other PR.
+   will carry. Wait for `CI`, same as any other PR.
 
 3. **Actions → Release → Run workflow.** It tags the merged commit, builds the tarball and sends
    it to npm.
 
-   It stops before writing anything if `ci` on that commit isn't green, or if `HEAD` isn't the
+   It stops before writing anything if `CI` on that commit isn't green, or if `HEAD` isn't the
    release commit.
 
-4. **Approve the `release` environment twice.** Once before the tag is written, once before
+4. **Approve the `Release` environment twice.** Once before the tag is written, once before
    anything reaches npm.
 
 5. **Approve the package on npm.** Until you do, the version is *staged*: it exists, but nobody
@@ -51,15 +51,15 @@ config:
     wrappingWidth: 460
 ---
 flowchart TD
-    S(["<b>1 · you run Release prepare</b><br/>auto / patch / minor / major"])
+    S(["<b>1 · you run Release Prepare</b><br/>auto / patch / minor / major"])
     A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>only runs on main<br/>bumps package.json + CHANGELOG.md<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
     B["<b>Pull request</b><br/>the same <i>All checks passed</i> gate as any other change"]
     M(["<b>you read the changelog and squash-merge</b>"])
 
-    D(["<b>2 · you run Release</b> · approve the <b>release</b> environment"])
-    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>installs nothing · can only reach GitHub<br/>stops unless ci is green and HEAD bumped the version<br/>pushes a tag, never a commit"]
+    D(["<b>2 · you run Release</b> · approve the <b>Release</b> environment"])
+    C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>installs nothing · can only reach GitHub<br/>stops unless CI is green and HEAD bumped the version<br/>pushes a tag, never a commit"]
     E["<b>build</b> · <i>no credentials at all</i><br/>checks out the tag, not the tree that made it<br/>pnpm pack · check:tarball · uploads the artifact"]
-    G2(["approve the <b>release</b> environment again"])
+    G2(["approve the <b>Release</b> environment again"])
     F["<b>publish</b> · <i>id-token: write</i><br/>no checkout, no install · can only reach npm, GitHub, Sigstore<br/>pnpm stage publish --provenance"]
 
     Q["<b>3 · staged on npm</b> — not installable yet<br/>npm's malware scan runs here"]
@@ -122,7 +122,7 @@ day) or run **Release** again with `re-stage: vX.Y.Z`, which skips straight to s
 the narrower case where the tag landed and the Release step then failed repairs itself too. Its
 notes come from the tag, not from whatever `main` says by then.
 
-**`ci` is red, or `HEAD` isn't the release commit.** The run refuses before writing anything.
+**`CI` is red, or `HEAD` isn't the release commit.** The run refuses before writing anything.
 Nothing to undo.
 
 **You staged it and then rejected it.** That version number is spent, because the tag can't be
@@ -141,7 +141,7 @@ rather than tagging the wrong commit.
 
 It's the one commit that decides what everyone installs. It used to be pushed straight to `main`
 by the release job, which made it the only commit here that never went through a PR or its checks.
-Now `Release prepare` opens a PR, so you read the changelog before it's published and the commit
+Now `Release Prepare` opens a PR, so you read the changelog before it's published and the commit
 passes the same gate as everything else.
 
 This is also what makes `main` protectable. A rule requiring pull requests would have blocked the
@@ -177,12 +177,12 @@ and Sigstore.
 
 ### One environment, two approvals
 
-`release` — required reviewer, `main` only — guards both jobs that can do damage. GitHub checks
+`Release` — required reviewer, `main` only — guards both jobs that can do damage. GitHub checks
 environment rules per job, so it asks twice: before `tag` writes anything, and after the build,
 before `publish` reaches npm. The second prompt is the last cheap place to stop a bad build.
 
 The npm Trusted Publisher is bound to that same environment. npm accepts a token only from a job
-that ran in `release`, and a job can only run in `release` from `main` — so a `release.yml` edited
+that ran in `Release`, and a job can only run in `Release` from `main` — so a `release.yml` edited
 on a branch can neither write to the repository nor reach npm.
 
 ### Staging is the only check on what's *inside* the build
@@ -201,9 +201,9 @@ The rules that protect `main` and the tags are committed under
 
 | Control | What it guarantees |
 | --- | --- |
-| `release` environment | Required reviewer, `main` only. This is what npm trusts. |
+| `Release` environment | Required reviewer, `main` only. This is what npm trusts. |
 | `main-guard` ruleset | `main` can't be deleted or force-pushed. History can be added to, never rewritten. |
-| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits. That last one is why `Release prepare` commits through GitHub's API instead of `git commit` — a commit made on a runner is unverified, and a rebase merge would carry it onto `main` as-is. |
+| `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits. That last one is why `Release Prepare` commits through GitHub's API instead of `git commit` — a commit made on a runner is unverified, and a rebase merge would carry it onto `main` as-is. |
 | `tag-guard` ruleset | `v*` tags can't be deleted, moved or force-updated. Release history stays pinned to its commit. |
 | Immutable releases | The Release that `tag` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
 | `sha_pinning_required` | GitHub itself refuses a workflow that references a floating action tag, not just zizmor. |
@@ -235,7 +235,7 @@ write access to the repo.
 - **Keep the two exclude lists in sync.** `cooldown.exclude` in `.github/dependabot.yml` and
   `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` list the same first-party Nuxt/Convex
   packages. If they drift apart, Dependabot proposes versions pnpm won't install.
-- **Every PR's dependency changes are inspected.** ci's `dependency-review` job fails a PR that
+- **Every PR's dependency changes are inspected.** CI's `dependency-review` job fails a PR that
   pulls in a known CVE (moderate or higher) or a package GitHub has flagged as malicious. pnpm's
   cooldown only delays a new version; it never looks inside it.
 - **The whole lockfile is rescanned weekly.** `dependency-review` only sees what a PR changes, so
@@ -264,7 +264,7 @@ Two more checks live outside this repo's workflow files:
 
 - **CodeQL** runs from GitHub's default setup (Settings → Code security), on the `extended` query
   suite over `javascript-typescript` and `actions`.
-- **`ci`'s `static` job** runs [zizmor](https://docs.zizmor.sh) over the workflows for security
+- **`CI`'s `static` job** runs [zizmor](https://docs.zizmor.sh) over the workflows for security
   problems and [actionlint](https://github.com/rhysd/actionlint) for correctness. Accepted
   findings are listed in [.github/zizmor.yml](./.github/zizmor.yml) and
   [.github/actionlint.yaml](./.github/actionlint.yaml).
@@ -283,7 +283,7 @@ by hand first.
    | Organization / user | `qruto`               |
    | Repository          | `nuxt-convex-module`  |
    | Workflow filename   | `release.yml`         |
-   | Environment         | `release`             |
+   | Environment         | `Release`             |
 
    Leave it **stage-only** (the default). Turn on **Require two-factor authentication and disallow
    tokens**: trusted publishing keeps working because it uses OIDC, and any npm token that leaks

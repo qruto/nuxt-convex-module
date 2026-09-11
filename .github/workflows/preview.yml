@@ -1,4 +1,4 @@
-name: preview
+name: Preview
 
 # Continuous preview releases via pkg.pr.new (StackBlitz): every PR and every
 # push to main gets an installable build —
