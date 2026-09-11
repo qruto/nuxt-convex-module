@@ -37,10 +37,10 @@ afterEach(() => {
 // WebSocket auth coverage for the Vue client, ported from convex-js
 // `react/auth_websocket.test.tsx`. Upstream marks this block `.skip` because it
 // flaked in their CI (EADDRINUSE / reconnect retries when run in parallel on
-// Linux). Here it runs `.sequential` against an ephemeral `port: 0` server and
-// passes deterministically, so we keep the coverage enabled rather than
+// Linux). Here it runs one test at a time against an ephemeral `port: 0` server
+// and passes deterministically, so we keep the coverage enabled rather than
 // inheriting the skip.
-describe.sequential('auth websocket tests', () => {
+describe('auth websocket tests', () => {
   it('Authenticate via valid static token', async () => {
     await withInMemoryWebSocket(async ({ address, receive, send }) => {
       const client = testVueClient(address)
@@ -1062,7 +1062,7 @@ describe.sequential('auth websocket tests', () => {
   })
 })
 
-describe.sequential('authMode WebSocket', () => {
+describe('authMode WebSocket', () => {
   it.each([false, true])('expectAuth: %s', async (expectAuth) => {
     await withInMemoryWebSocket(async ({ address, receive, close }) => {
       const client = testVueClient(
