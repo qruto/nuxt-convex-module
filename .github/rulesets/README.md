@@ -29,7 +29,7 @@ This is the ruleset that stops that.
 | --- | --- |
 | `pull_request`, **0 reviewers** | There is one maintainer here, so the gate is CI, not review. What matters is that the change exists as a PR at all, so the checks run and the diff is readable. Zero reviewers makes that free. |
 | `required_status_checks: ["All checks passed"]` | One aggregate check. Adding, renaming or splitting a CI job never means touching this file. |
-| `required_signatures` | Every commit on `main` is already signed. Squash merges are signed by GitHub, but rebase merges are allowed too, and a rebase carries the PR's own commits onto `main` unchanged. That's why `Release prepare` creates its commit through the API instead of `git commit` — a commit made on a runner is unverified and would be rejected. |
+| `required_signatures` | Every commit on `main` is already signed. Squash merges are signed by GitHub, but rebase merges are allowed too, and a rebase carries the PR's own commits onto `main` unchanged. That's why `Release Prepare` creates its commit through the API instead of `git commit` — a commit made on a runner is unverified and would be rejected. |
 | `require_extra_approval_for_unattributed_changes` | GitHub's default. Written down rather than left implicit: a commit whose author isn't a GitHub account is worth a second look. |
 | `bypass_actors: OrganizationAdmin`, `pull_request` mode | Break-glass. Without it `current_user_can_bypass` is `"never"`, so one flaky Windows job locks the maintainer out of their own repository. `pull_request` mode, not `always`: it allows merging a PR past a stuck check, never a direct push. |
 
@@ -37,7 +37,7 @@ This is the ruleset that stops that.
 spent a week in it. Folding these rules into `main-guard` would have put its live deletion and
 force-push protection into evaluate mode too.
 
-**Why no bot needs a bypass.** `Release prepare` pushes to `release/vX.Y.Z` and `Release` pushes
+**Why no bot needs a bypass.** `Release Prepare` pushes to `release/vX.Y.Z` and `Release` pushes
 only a tag. Neither writes to `main`. That's why the release had to be split first.
 
 ## Adding a ruleset
