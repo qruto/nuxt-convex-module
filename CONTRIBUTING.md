@@ -105,10 +105,17 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload.
+  repository root's — is what filters the upload. That app also turns the
+  module's auto-detected integrations off by name in `nuxt.config.ts`: run it
+  from a clone and Node's upward `node_modules` lookup finds Better Auth and
+  friends in this repository's root, which would mount an auth proxy the app has
+  no configuration for.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
-visitor's own account.
+visitor's own account. `examples/playground/.env.local` is the one env file this
+repository commits — it ships with the sandbox holding a single commented
+`CONVEX_URL`, so the only setup left is uncommenting it. Whatever you or the
+Convex CLI put there is yours; check `git diff` before committing it back.
 
 ## Submitting Changes
 
@@ -193,7 +200,7 @@ They mirror CI, split by how often each check can afford to run:
 |---|---|---|---|
 | [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `quality`, `lint` | ~6s |
 | [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `commit-lint` | instant |
-| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `test:types:lib`, `test`, API-reference drift | `quality`, `typecheck`, `test` | ~20s |
+| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test`, API-reference drift | `quality`, `static`, `typecheck`, `test` | ~20s |
 
 `pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
 — only findings your change *introduces*, in the files it touched. `pre-push` runs once per
@@ -222,4 +229,4 @@ GitHub, the Windows leg of the test matrix, and the coverage thresholds.
 
 ## Releasing
 
-Releases are automated via CI. See [RELEASING.md](RELEASING.md) for details.
+Releases are automated via CI. See [RELEASE.md](RELEASE.md) for details.

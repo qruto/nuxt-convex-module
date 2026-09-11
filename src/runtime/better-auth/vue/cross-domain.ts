@@ -114,7 +114,11 @@ export async function consumeCrossDomainOneTimeToken(
             },
           },
         })
-        authClientWithCrossDomain.updateSession()
+        // Awaited, where upstream fires and forgets. The whole exchange runs
+        // inside the `try` above so a failure cannot break app startup, and a
+        // promise nobody awaits escapes that `catch` — it turns up as an
+        // unhandled rejection instead.
+        await authClientWithCrossDomain.updateSession()
       }
     }
     catch (error) {

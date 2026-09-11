@@ -5,7 +5,7 @@ import { api } from '#convex/api'
 // through the Nuxt payload, then upgraded to a realtime WebSocket subscription.
 // View source to see the messages in the HTML; open a second tab to watch both
 // update at once.
-const { data: messages, status } = useAsyncQuery(api.messages.list, {})
+const { data: messages, status, error } = useAsyncQuery(api.messages.list, {})
 
 const send = useMutation(api.messages.send)
 const clear = useMutation(api.messages.clear)
@@ -15,23 +15,38 @@ const connection = useConvexConnectionState()
 
 const author = ref('')
 const body = ref('')
+const busy = ref(false)
 const failure = ref<string | null>(null)
+
+// Every mutation on this page goes through here. A mutation is a promise like
+// any other: unawaited it fails silently, and while the deployment is
+// unreachable it does not fail at all — the client queues it and settles once
+// the socket is back. So `busy` is the honest signal, not a spinner on a timer.
+async function run(mutation: () => Promise<unknown>) {
+  busy.value = true
+  failure.value = null
+  try {
+    await mutation()
+    return true
+  }
+  catch (cause) {
+    failure.value = cause instanceof Error ? cause.message : String(cause)
+    return false
+  }
+  finally {
+    busy.value = false
+  }
+}
 
 async function submit() {
   const text = body.value.trim()
-  if (!text) return
+  if (!text || busy.value) return
 
   // Optimistic in feel: clear the input first, so the round trip is invisible
-  // when the deployment is healthy.
+  // when the deployment is healthy. Put it back if the mutation is rejected.
   body.value = ''
-  failure.value = null
-
-  try {
-    await send({ author: author.value, body: text })
-  }
-  catch (error) {
+  if (!await run(() => send({ author: author.value, body: text }))) {
     body.value = text
-    failure.value = error instanceof Error ? error.message : String(error)
   }
 }
 
@@ -43,19 +58,23 @@ function formatTime(ms: number) {
 <template>
   <section>
     <div class="bar">
-      <span class="pill" :class="{ live: connection.isWebSocketConnected }">
+      <span class="pill" :class="{ live: connection.isWebSocketConnected }" role="status">
         {{ connection.isWebSocketConnected ? 'live' : 'connecting' }}
       </span>
-      <button type="button" class="ghost" @click="clear({})">Clear</button>
+      <button type="button" class="ghost" :disabled="busy" @click="run(() => clear({}))">
+        Clear
+      </button>
     </div>
 
     <form class="composer" @submit.prevent="submit">
-      <input v-model="author" class="who" placeholder="you" aria-label="Your name">
-      <input v-model="body" class="what" placeholder="Say something…" aria-label="Message">
-      <button type="submit">Send</button>
+      <input v-model="author" class="who" placeholder="you" aria-label="Your name" autocomplete="nickname">
+      <input v-model="body" class="what" placeholder="Say something…" aria-label="Message" autocomplete="off">
+      <button type="submit" :disabled="busy || !body.trim()">
+        {{ busy ? 'Sending…' : 'Send' }}
+      </button>
     </form>
 
-    <p v-if="failure" class="failure">{{ failure }}</p>
+    <p v-if="failure" class="failure" role="alert">{{ failure }}</p>
 
     <!--
       Branch on `status`, never on `error`: `useAsyncQuery` keeps the SSR error
@@ -67,10 +86,18 @@ function formatTime(ms: number) {
 
     <div v-else-if="status === 'error'" class="state error">
       <p>Could not read <code>messages:list</code> from this deployment.</p>
+      <!--
+        Guarded on the message rather than on `error`, because an SSR failure reaches the
+        client as a NuxtError with its message stripped — Nuxt does not serialize server
+        error detail into the payload. So this line shows up for a failure that happens
+        after hydration, and the hint below has to stand on its own either way.
+      -->
+      <p v-if="error?.message" class="cause"><code>{{ error.message }}</code></p>
       <p class="hint">
-        The URL is configured, so the deployment answered — it just doesn't have this app's
-        functions yet. Push <code>convex/</code> to it with <code>npx convex deploy</code>,
-        or point this component at functions it does have.
+        Two usual causes. The deployment hasn't been given this app's functions yet: push
+        <code>convex/</code> to it with <code>npx convex deploy</code>, or point this component
+        at functions it does have. Or nothing is answering on that URL at all — check it
+        against your dashboard.
       </p>
     </div>
 
@@ -82,8 +109,16 @@ function formatTime(ms: number) {
       <li v-for="message in messages" :key="message._id">
         <span class="author">{{ message.author }}</span>
         <span class="body">{{ message.body }}</span>
+        <!--
+          The instant is server-rendered; the *reading* of it is not.
+          `toLocaleTimeString` resolves against the machine's own time zone, so
+          a server in UTC and a visitor in Paris disagree and Vue reports a
+          hydration mismatch. `datetime` keeps the exact instant in the HTML —
+          machine-readable, and still there when you view source — while the
+          human-facing label is rendered once, on the client that has to read it.
+        -->
         <time :datetime="new Date(message._creationTime).toISOString()">
-          {{ formatTime(message._creationTime) }}
+          <ClientOnly>{{ formatTime(message._creationTime) }}</ClientOnly>
         </time>
       </li>
     </ul>
@@ -154,6 +189,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 button.ghost {
   padding: 0.2rem 0.6rem;
   border-color: var(--line);
@@ -195,6 +235,9 @@ button.ghost {
 }
 
 time {
+  /* Reserve the width the client-rendered label will take, so the row does not
+     reflow when it arrives after hydration. */
+  min-width: 7ch;
   color: var(--muted);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
@@ -216,6 +259,11 @@ time {
 
 .state p {
   margin: 0.25rem 0;
+}
+
+.cause {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
 }
 
 .hint {

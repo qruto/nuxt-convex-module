@@ -1,0 +1,180 @@
+name: Release prepare
+
+# Step one of two. Bumps the version, writes the changelog, and opens a pull
+# request. It does not tag and it does not publish — `Release` (release.yml)
+# tags the commit once this pull request is merged.
+#
+# Why a pull request: the release commit decides what everyone installs, and it
+# used to be the only commit here that never went through a PR or its checks.
+# Now it passes the same `All checks passed` gate as everything else, the
+# changelog is reviewable before it is published, and nothing in the release
+# writes to main — so the branch ruleset needs no exception for a bot. RELEASE.md
+# has the rest.
+#
+# The version is worked out here and nowhere else. release.yml reads it out of
+# the merged package.json. If it bumped too, a 0.1.0 release would be tagged
+# v0.1.1.
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Version bump
+        type: choice
+        default: auto
+        options:
+          - auto # derive from conventional commits
+          - patch
+          - minor
+          - major
+
+# Shared with `Release`, so a prepare cannot start while a release is running.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # push the release branch
+      pull-requests: write # open the release PR
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      # Nothing is pushed from this checkout: the release branch and its commit
+      # are made through the API below. So no credential needs to persist here,
+      # and none does.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history + tags: changelogen derives the bump from them
+          persist-credentials: false
+
+      # workflow_dispatch lets you pick any branch. Releasing from one would
+      # bump the version off a tree main has never seen, and the pull request
+      # below would target that branch too, so nothing would ever reach main.
+      # Checked before the install, so picking the wrong branch costs nothing.
+      - name: Refuse a non-default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "::error::Release prepare ran on \"$GITHUB_REF_NAME\"; releases are cut from \"$DEFAULT_BRANCH\" only."
+            exit 1
+          fi
+
+      # No cache, for release.yml's reason: a restored cache is an input nobody
+      # reviewed. `require-lockfile` refuses the one install pnpm's frozen CI
+      # mode still allows — one with no lockfile at all.
+      - name: Install pnpm, node & dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@lts
+          cache: false
+          require-lockfile: true
+
+      # `--release`, not `--bump`: `--bump` moves the version in package.json
+      # but writes no CHANGELOG.md, which is half a release commit. `--no-commit
+      # --no-tag` leave both edits in the working tree, where the step below
+      # reads them. `--no-github` because the GitHub Release belongs to the tag,
+      # which does not exist yet.
+      - name: Bump version & changelog
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type }}
+        run: |
+          set -- --release --no-commit --no-tag --no-github
+          [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
+          pnpm exec changelogen "$@"
+
+      - name: Read the new version
+        id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      # Made through GitHub's API rather than `git commit` + `git push`, because
+      # `main-pr-gate` requires signed commits. A commit made on the runner is
+      # unverified. A squash merge would re-create and sign it, but rebase merges
+      # are allowed too, and a rebase carries the original commit onto main where
+      # the ruleset rejects it. A commit created through the API is signed by
+      # GitHub, so it passes either way.
+      #
+      # Two bonuses: the token never appears inside a git remote URL, and there
+      # is no git identity to configure for a commit nobody authored.
+      #
+      # `expectedHeadOid` is the sha the branch was just created at, so the
+      # mutation fails instead of overwriting if anything else touched it.
+      #
+      # The commit subject matters: release.yml refuses to tag a HEAD that did
+      # not change the version, and squash-merging carries this pull request's
+      # title through as the commit subject.
+      - name: Commit the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh api "/repos/$GITHUB_REPOSITORY/git/refs" --method POST \
+              -f "ref=refs/heads/release/v$VERSION" -f "sha=$GITHUB_SHA"; then
+            echo "::error::Could not create release/v$VERSION — it most likely exists from an earlier attempt. Delete the branch and re-run."
+            exit 1
+          fi
+
+          # `--rawfile` keeps both files byte-exact, and `@base64` is what the
+          # mutation wants. Doing it in jq avoids base64(1), whose flags differ
+          # between GNU and BSD.
+          jq -n \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg branch "release/v$VERSION" \
+            --arg headline "chore(release): v$VERSION" \
+            --arg oid "$GITHUB_SHA" \
+            --rawfile pkg package.json \
+            --rawfile log CHANGELOG.md \
+            '{
+               query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid url } } }",
+               variables: { input: {
+                 branch: { repositoryNameWithOwner: $repo, branchName: $branch },
+                 message: { headline: $headline },
+                 expectedHeadOid: $oid,
+                 fileChanges: { additions: [
+                   { path: "package.json", contents: ($pkg | @base64) },
+                   { path: "CHANGELOG.md", contents: ($log | @base64) }
+                 ] }
+               } }
+             }' > "$RUNNER_TEMP/commit.json"
+
+          gh api graphql --input "$RUNNER_TEMP/commit.json"
+
+      # The body is the changelog section changelogen just wrote, so the pull
+      # request shows exactly what the GitHub Release will say.
+      - name: Open the release pull request
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "Prepared by \`Release prepare\`. Merging this does **not** publish anything —"
+            echo "run **Release** afterwards to tag the merged commit and stage it on npm."
+            echo
+            awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md
+          } > /tmp/release-pr-body.md
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$DEFAULT_BRANCH" \
+            --head "release/v$VERSION" \
+            --title "chore(release): v$VERSION" \
+            --body-file /tmp/release-pr-body.md
+
+      - name: Report
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "## v${VERSION} prepared"
+            echo
+            echo "Review and merge the pull request, then run **Release**."
+          } >> "$GITHUB_STEP_SUMMARY"

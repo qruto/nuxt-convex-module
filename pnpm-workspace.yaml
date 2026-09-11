@@ -48,7 +48,6 @@ minimumReleaseAgeExclude:
   - '@nuxt/*'
   - '@nuxtjs/*'
   - convex
-  - convex-helpers
   - '@convex-dev/*'
 
 # Not a default: pnpm falls back to an older version that clears the cooldown
@@ -94,6 +93,26 @@ overrides:
   # fixed in 0.28.1). fontless only imports `transform`, stable across 0.x.
   # Remove when fontless allows ^0.28.
   'fontless>esbuild': ^0.28.1
+  # ajv@8.20.0 asks for fast-uri ^3.0.1, which resolves to 3.1.5 — in range for
+  # four advisories fixed in 3.1.6: two SSRF (malformed and repeated scheme
+  # separators) and two host confusion (skipped IDN canonicalisation,
+  # percent-encoded scheme). ajv only reaches this repository through commitlint
+  # and the docs site, but the fix is a patch release its own range already
+  # accepts. Not scoped to one parent, because they all ask for the same ^3
+  # range. Remove when ajv's floor moves past 3.1.6.
+  fast-uri: ^3.1.6
+  # postcss@8.5.26 asks for nanoid ^3.3.11. 3.3.18 fixes an infinite loop when a
+  # custom generator is called with a size of zero or less. postcss only arrives
+  # through Nuxt's Vite builder, so this is dev-only — but again, the fix is a
+  # patch release inside the existing range.
+  nanoid: ^3.3.18
+  # @nuxt/ui@4.11.0 (through docus) pins @tiptap/core 3.29.2, below the
+  # prototype-pollution fix in 3.30.4: `mergeAttributes()` turned an own
+  # `__proto__` key into an inherited one. It is only the docs site's editor and
+  # nothing here calls it, but it is reachable from rendered content, which is
+  # worth closing. Its sibling packages accept `^3`, so core can move on its own.
+  # Remove when @nuxt/ui's floor passes 3.30.4.
+  '@tiptap/core': ^3.30.4
 
 # --- Integrity ---------------------------------------------------------------
 # Fail a script outright when node_modules is out of sync with the lockfile, so

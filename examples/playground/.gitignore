@@ -6,11 +6,17 @@ node_modules
 .nuxt
 .output
 .data
+.convex
 
-# Where the visitor puts their own NUXT_PUBLIC_CONVEX_URL (and what the Convex
-# CLI writes to, for anyone running this app locally). Never ours to ship.
+# Every env file except the `.env.local` this app ships with. That one is
+# committed on purpose: it has to reach the StackBlitz sandbox and a fresh clone
+# already holding an empty `CONVEX_URL=`, so the only setup step left is pasting
+# a URL into a file that is already there. The Convex CLI fills that same line
+# in, and adds a CONVEX_DEPLOYMENT of its own — both stay local, so check
+# `git diff` before committing this file back.
 .env
 .env.*
+!.env.local
 
 # A lockfile would ship to StackBlitz and pin the *registry* version of
 # nuxt-convex-module, defeating the preview build the template exists to

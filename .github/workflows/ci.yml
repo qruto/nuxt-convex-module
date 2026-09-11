@@ -1,14 +1,16 @@
 name: ci
 
-# Every per-commit gate lives here, in one file, so `ci-ok` can aggregate them
-# and there is one place to read the gate set.
+# Every check that runs on a commit lives here, so there is one file to read and
+# one job (`All checks passed`) that reports them all.
 #
-# Never add a workflow-level `paths:`/`paths-ignore:` filter: a required workflow
-# that is skipped never reports, and the merge sits on "Expected — waiting for
-# status" forever.
+# Work is skipped per JOB, never per workflow. A workflow-level `paths:` filter
+# stops the whole run, so the required check never reports at all: GitHub shows
+# "Expected — waiting for status" forever, with nothing to re-run. A job-level
+# `if:` saves the same minutes safely — the run happens, expensive jobs report
+# `skipped`, and the aggregate counts `skipped` as a pass.
 #
-# Setup is defined once, in .github/actions/setup — that is where the pnpm
-# version, the Node runtime and their action pin live.
+# The pnpm version, the Node runtime and their action pins are defined once, in
+# .github/actions/setup.
 on:
   push:
     branches:
@@ -17,19 +19,71 @@ on:
     branches:
       - main
 
-# Cancel superseded runs on the same branch / PR.
+# Cancel superseded runs on a pull request, never on main. `head_ref` is empty on
+# a push, so cancelling there would put every merge in one group, and two merges
+# in quick succession would kill the first run. `Release` will not tag a commit
+# whose ci run was cancelled, so that commit could never be released.
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Nothing by default — every job declares the minimum it needs.
+# No permissions by default. Each job asks for what it needs.
 permissions: {}
 
 jobs:
-  # Everything that needs a checkout, an install and nothing else. One job rather
-  # than four: the setup is identical, and `if: !cancelled()` still gives a
-  # per-gate verdict, so one push surfaces every problem at once instead of
-  # stopping at the first.
+  # Works out which of the expensive jobs this change needs. On a push to main
+  # they all run anyway: that costs one full run per merge, and a green main is
+  # worth the minutes.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      website: ${{ steps.filter.outputs.website }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          # `&shared` / `*shared` is a YAML anchor, and this action resolves
+          # it. Paths that both filters need are written once, in one place.
+          filters: |
+            shared: &shared
+              - 'src/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'patches/**'
+              - '.nuxtrc'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/**'
+            website:
+              - *shared
+              - 'website/**'
+            src:
+              - *shared
+              # The DevTools panel ships with the package: `build` generates
+              # it into dist/devtools-client, which `files: ["dist"]`
+              # publishes. Leave it out here and a change to the panel skips
+              # `pack`, which is the job that checks the panel has any built
+              # assets at all.
+              - 'devtools-client-app/**'
+              - 'test/**'
+              - 'scripts/**'
+              - 'examples/**'
+              - 'tsconfig*.json'
+              - 'vitest.config.ts'
+              - 'build.config.ts'
+
+  # Everything that needs a checkout and an install and nothing more. One job
+  # rather than four, because the setup is identical. `if: !cancelled()` on each
+  # step means one push reports every problem instead of stopping at the first.
   static:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -38,8 +92,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Full history: commitlint reads the PR range and `fallow audit` diffs
-          # against the PR base commit.
+          # Full history, because commitlint reads the PR's commit range and
+          # `fallow audit` diffs against the PR base.
           fetch-depth: 0
           persist-credentials: false
 
@@ -51,62 +105,52 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run lint
 
-      # Type-checks the published surface (module + Convex code). The website and
-      # DevTools apps are checked by their own gates; the root tsconfig excludes
-      # them.
+      # Type-checks what gets published: the module and its Convex code. The
+      # website and DevTools apps have their own jobs, and the root tsconfig
+      # excludes them.
       - name: Type check
         if: ${{ !cancelled() }}
         run: pnpm run typecheck
 
-      # Enforce Conventional Commits on PRs. The local commit-msg hook gives fast
-      # feedback but can be bypassed with --no-verify, so this is the gate that
-      # actually keeps the history clean. Pushes to main are skipped — those
-      # commits were already linted on their PR.
+      # Conventional Commits, on pull requests only. The local commit-msg hook
+      # is faster, but `--no-verify` skips it, so this is the check that holds.
+      # Pushes to main are skipped: those commits were checked on their PR.
       - name: Commit messages
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+        run: pnpm run lint:commits --from "$BASE_SHA" --to "$HEAD_SHA"
 
-      # Dead code, unused exports/deps, duplication, complexity. The CLI rather
-      # than the fallow action: the version is the one in the lockfile (pinned
-      # exactly), failures print the real error, and this is byte-identical to
-      # what .githooks/pre-push runs.
+      # Compares what package.json promises against what is installed: that our
+      # `engines` is not stricter than a dependency's own, and that no peer range
+      # is wider than what that peer actually accepts.
       #
-      # A PR is scoped to the files it changed and fails only on findings it
-      # introduces. A push to main runs the whole project, because the scoped
-      # audit passes on a config edit that strands a file elsewhere.
-      - name: Quality (fallow)
+      # Nothing else checks this. publint reads the manifest's shape, attw
+      # resolves its types, fallow reads the module graph. None of them compares
+      # a declared range to reality. This caught `convex: ">=1.40.0"`, which
+      # promised support for a convex 2.x that both optional add-ons rule out.
+      #
+      # `--no-workspaces` skips the website and DevTools apps, which are private
+      # and promise nobody anything. `-d` skips devDependencies, which are ours
+      # alone.
+      - name: Manifest ranges (installed-check)
         if: ${{ !cancelled() }}
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            pnpm exec fallow audit --changed-since "$BASE_SHA"
-          else
-            pnpm exec fallow --fail-on-issues
-          fi
+        run: pnpm run check:manifest
 
-      # A separate surface: fallow keeps security candidates out of both the
-      # default run and the audit gate, so neither would ever report one.
-      - name: Security candidates (fallow)
-        if: ${{ !cancelled() }}
-        run: pnpm run test:security
-
-      # Regenerating the committed TypeDoc reference must produce no diff,
-      # otherwise source doc-comments and the published reference have diverged.
+      # Regenerating the TypeDoc reference must produce no diff. A diff means
+      # the doc comments in the source and the published reference disagree.
       - name: API reference drift
         if: ${{ !cancelled() }}
         run: pnpm run docs:api:check
 
-      # Static analysis of the workflows themselves (template injection,
-      # credential persistence, unpinned uses). Accepted findings live in
+      # Security analysis of the workflow files: template injection, credentials
+      # left on disk, unpinned actions. Accepted findings live in
       # .github/zizmor.yml.
-      # The action's `version` input defaults to `latest`, which makes zizmor an
-      # unpinned input in a repository that pins every action to a digest: a new
-      # release can add an audit and redden CI with no change here. Pin it, and
-      # bump deliberately — that is when you read the new findings.
+      #
+      # `version` is pinned because it defaults to `latest`, and a new zizmor
+      # release can add a rule that fails CI with nothing changed here. Bump it
+      # deliberately, and read the new findings then.
       - name: Workflow lint (zizmor)
         if: ${{ !cancelled() }}
         uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
@@ -114,7 +158,101 @@ jobs:
           version: 1.30.0
           advanced-security: false
 
+      # Correctness of the workflow files, which zizmor does not look at: bad
+      # expressions, `needs`/matrix references that do not exist, invalid runner
+      # labels, malformed cron. It also runs shellcheck over every inline `run:`
+      # block (ubuntu-latest ships shellcheck, and actionlint finds it on PATH).
+      #
+      # Pinned for the same reason as zizmor. Accepted findings live in
+      # .github/actionlint.yaml.
+      - name: Workflow correctness (actionlint)
+        if: ${{ !cancelled() }}
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+        with:
+          version: 1.7.12
+          fail-on-error: true
+
+      # Misspellings in prose, comments, identifiers and workflow files.
+      # Settings and the accepted-word list are in _typos.toml, including the
+      # `.git/` exclusion — without it, the `fetch-depth: 0` above makes typos
+      # report on old commit subjects.
+      - name: Spelling (typos)
+        if: ${{ !cancelled() }}
+        uses: crate-ci/typos@d43b6c087ac471e2ea7b8af622ff15f05c0c365b # v1.50.1
+
+      # ── fallow runs last, and nothing runs after it ──────────────────────
+      #
+      # The fallow action expects to be used without a node setup step. It does
+      # its own `npm install -g` and then calls a bare `fallow`, trusting the
+      # runner's npm to have put it on PATH. There is no input to point it at a
+      # binary, so this step is the only way in.
+      #
+      # That does not work here, because `pnpm/setup` owns the runtime and
+      # creates no global shims. Deleting this step and pushing produced exactly
+      # that: "Installed fallow unknown version", then "fallow: command not
+      # found", and a failed job.
+      #
+      # Pointing it at the lockfile's copy is better anyway. `fallow` is pinned
+      # to an exact version (3.22.0), so CI runs the same build as .githooks,
+      # under Dependabot, the cooldown and pnpm's trust policy. The action's own
+      # global install fetches the MUSL build, which could not have run on this
+      # glibc runner even if PATH had found it. Its signature check still runs,
+      # against the binary that actually executes.
+      #
+      # `$GITHUB_PATH` prepends, for every later step in the job — which is what
+      # zizmor's `github-env` audit flags. It is ignored rather than fixed
+      # because the two steps that need it are the last two. Keep it that way: a
+      # step added below would inherit a PATH where 40-odd project binaries
+      # shadow the system's.
+      #
+      # `!cancelled()` for the same reason every gate above carries it, and this
+      # step is not a gate. Without it the implicit `success()` skips it as soon
+      # as anything earlier fails — and the two fallow steps below, which DO run
+      # after a failure, then call a bare `fallow` that is not on PATH. Both
+      # would report `command not found`, burying the real failure under two
+      # invented ones.
+      - name: Put project binaries on PATH
+        if: ${{ !cancelled() }}
+        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
+
+      # Dead code, unused exports and dependencies, duplication, complexity.
+      # Through the action rather than the CLI for two things the CLI cannot do:
+      # it works out the PR base itself, and it verifies the binary's signature.
+      #
+      # Its `comment`, `review-comments` and `sarif` outputs stay off. Each one
+      # wants `pull-requests: write`, `checks: write` or `security-events: write`
+      # on a job that runs code from the pull request, and a failing job with the
+      # findings in its log already says the same thing.
+      #
+      # On a pull request it looks only at the changed files, and fails only on
+      # findings the change introduces. On a push to main it runs over
+      # everything, because a scoped audit passes on a config edit that strands
+      # a file elsewhere.
+      #
+      # Must run after the setup step's `dev:prepare`: without `dist/` the
+      # tsconfig chain does not resolve and fallow sees a different module
+      # graph.
+      - name: Quality (fallow)
+        if: ${{ !cancelled() }}
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
+
+      # A separate command, because fallow keeps security candidates out of
+      # both the default run and the audit gate — neither would ever report one.
+      # `auto-changed-since: false` so a candidate in an untouched file still
+      # fails the job. The scan takes ~0.14s and the repo is at zero findings,
+      # so there is no backlog to grandfather in.
+      - name: Security candidates (fallow)
+        if: ${{ !cancelled() }}
+        uses: fallow-rs/fallow@79a0e8d8dbcaa408dce348b3df14fc1e824f988b # v3 (3.22.0)
+        with:
+          command: security
+          auto-changed-since: false
+
   test:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
@@ -122,23 +260,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows is in the matrix because the module does real path work
-        # (alias maps, watcher path normalization) — the class of bug that only
-        # ships to Windows users.
+        # Windows is here because the module does real path work — alias maps,
+        # watcher path normalization — and those bugs only reach Windows users.
         os: [ubuntu-latest, windows-latest]
-        # The project tracks the current LTS via the `lts` tag, so it follows new
-        # LTS lines without a manual bump. `lts/-1` is not an option: engines.node
-        # is >=24.11.0, which is above it.
+        # `lts` tracks the current LTS line, so a new one needs no bump here.
+        # `lts/-1` is not an option: engines.node is >=24.11.0, above it.
         node: [lts]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # `full`, not `lib`: test/unit/upstream-baselines.test.ts imports
-      # website/app/utils/upstream-baselines.ts, and oxc resolves that file
-      # through website/.nuxt/tsconfig.app.json — which only `nuxt prepare
-      # website` generates.
+      # `full`, not `lib`: test/unit/upstream-baselines.test.ts imports a file
+      # from website/, which oxc resolves through
+      # website/.nuxt/tsconfig.app.json — and only `nuxt prepare website`
+      # generates that.
       - uses: $/.github/actions/setup
         with:
           runtime: node@${{ matrix.node }}
@@ -147,8 +283,8 @@ jobs:
       - name: Test
         run: pnpm run test:coverage
 
-      # Handed to the `coverage` job, which holds the upload credential. This job
-      # runs PR-authored code, so it must never hold one itself.
+      # Handed to the `coverage` job, which holds the upload credential. This
+      # job runs code from the pull request, so it must never hold one itself.
       - name: Upload coverage artifact
         if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -160,19 +296,21 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Full-app end-to-end: builds the fixture apps with @nuxt/test-utils/e2e and
-  # exercises the module against a real Nitro server (SSR data, auto-imports,
-  # CSP headers, the Better Auth proxy).
+  # End-to-end: builds the fixture apps with @nuxt/test-utils/e2e and runs the
+  # module against a real Nitro server — SSR data, auto-imports, CSP headers,
+  # the Better Auth proxy.
   e2e:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
     steps:
-      # Audit-mode egress monitoring. Applied to the jobs that build and run
-      # PR-authored code against the network, not to every job — harden-runner is
-      # itself a third-party action, so it is worth its surface where there is
-      # untrusted code and outbound traffic to observe, and not elsewhere.
+      # Records what the job talks to over the network, without blocking it.
+      # Only on the jobs that build and run code from the pull request:
+      # harden-runner is itself a third-party action, so it is worth adding
+      # where there is untrusted code to watch, and nowhere else.
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
@@ -189,12 +327,14 @@ jobs:
       - name: End-to-end tests
         run: pnpm run test:e2e
 
-  # Publishable-package gate: build the real tarball (`pnpm pack` rewrites
-  # `catalog:` ranges exactly like `pnpm publish`), lint its shape, then install
-  # it into the minimal example with plain npm — the consumer path
-  # (registry-shaped install, lifecycle scripts, engines) that repo-internal jobs
-  # never exercise.
+  # Checks the package a consumer would actually get. Builds the real tarball
+  # (`pnpm pack` rewrites `catalog:` ranges exactly like `pnpm publish` does),
+  # checks its shape, then installs it into the minimal example with plain npm.
+  # That last part — a registry-style install, lifecycle scripts, engines — is
+  # what no other job here exercises.
   pack:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -218,8 +358,9 @@ jobs:
       - name: Pack
         run: pnpm pack
 
-      # publint, attw and the contents assertions, defined once in
-      # scripts/check-tarball.mjs and run identically by release.yml's build job.
+      # publint, attw and the content checks. Defined once in
+      # scripts/check-tarball.mjs, and release.yml's build job runs the same
+      # script.
       - name: Check the tarball
         if: ${{ !cancelled() }}
         run: pnpm run check:tarball
@@ -228,17 +369,16 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           NUXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
-        # Lockfile-less install on purpose: simulates a fresh consumer. `npm`
-        # comes from the runner image — pnpm's Node runtime deliberately ships
-        # without the bundled npm/npx (pnpm 11+), and a stock runner npm is
-        # exactly the consumer path this job is meant to exercise.
+        # No lockfile, on purpose: this is what a new user gets. `npm` comes
+        # from the runner image, because pnpm's Node runtime ships without npm
+        # and npx from pnpm 11 on — and a stock npm is exactly the path being
+        # tested.
         #
-        # The npm the image bundles (10.9.x, from its own Node 22) crashes in
-        # Arborist's peer-set resolution on any Nuxt 4 tree — `Cannot read
-        # properties of null (reading 'edgesOut')`, npm/cli#9787, fixed in npm
-        # 11.6.0. Nothing to do with this package: a bare `npm install` of the
-        # example hits it too. So the consumer npm is pinned, which also keeps
-        # the gate reproducible when the runner image moves.
+        # The version pin is a workaround. The image's own npm (10.9.x) crashes
+        # while resolving peers on any Nuxt 4 tree: `Cannot read properties of
+        # null (reading 'edgesOut')`, npm/cli#9787, fixed in 11.6.0. It is not
+        # about this package — a bare `npm install` of the example hits it too.
+        # Pinning also keeps this job reproducible when the runner image moves.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
           SMOKE="$RUNNER_TEMP/smoke"
@@ -247,20 +387,60 @@ jobs:
           npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL"
           npx --yes npm@11.17.0 run build
 
-      # Verifies the registry signature and provenance attestation of every
-      # dependency the smoke install pulled. pnpm's `trustPolicy: no-downgrade`
-      # refuses a package whose trust evidence weakens between versions; this
-      # checks that the evidence actually validates, on the consumer's npm path.
+      # The step above proves the tarball installs and builds. This one proves
+      # its type declarations compile inside an app. `vue-tsc` checks the
+      # sources and `attw` checks that the types resolve; neither answers this,
+      # and this package's product is its types.
+      - name: Consumer type check (built package)
+        if: ${{ !cancelled() }}
+        run: pnpm run check:consumer-types "$RUNNER_TEMP/smoke"
+
+      # Checks the registry signature and provenance of every dependency the
+      # install above pulled in. pnpm's `trustPolicy: no-downgrade` refuses a
+      # package whose evidence gets weaker between versions; this checks that
+      # the evidence is valid at all, on the npm path a consumer uses.
       - name: Verify dependency signatures
         if: ${{ !cancelled() }}
         working-directory: ${{ runner.temp }}/smoke
         run: npx --yes npm@11.17.0 audit signatures # zizmor: ignore[adhoc-packages]
 
-  # Inspects the dependency delta a PR introduces and fails on a known CVE or a
-  # package GitHub has flagged as malicious. Complements pnpm's cooldown, which
-  # only delays a new version — it never looks at what's inside it. PR-only: the
-  # action diffs two commits, so there is nothing to review on a push. No install
-  # here, so no PR-authored code runs in this job.
+  # The docs site is the only place in this repository that calls the public
+  # composables from real Vue components — `useAsyncQuery`, `useMutation`, the
+  # Better Auth components. So it is the only check of their types against real
+  # usage rather than against tests written next to them.
+  #
+  # Type-check only, no `nuxt build`. That command prints "Build complete!" and
+  # then never exits (measured: still alive minutes after finishing), so a step
+  # running it would hang until the timeout and fail for no useful reason.
+  # Vercel does the production build and reports its own check, outside this
+  # aggregate like every other third-party service.
+  website:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.website == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup
+        with:
+          prepare: lib
+
+      # `nuxt typecheck` prepares the site itself, so `lib` above is enough:
+      # the module needs its stub and types built, nothing more.
+      - name: Type check the docs site
+        run: pnpm exec nuxt typecheck website
+
+  # Looks at the dependencies a pull request adds or changes, and fails on a
+  # known CVE or a package GitHub has flagged as malicious. pnpm's cooldown only
+  # delays a new version; it never looks at what is inside it.
+  #
+  # Pull requests only: the action compares two commits, so there is nothing to
+  # compare on a push. It installs nothing, so no code from the PR runs here.
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -278,17 +458,27 @@ jobs:
           fail-on-severity: moderate
 
   # The only job that holds the coverage upload credential. It downloads an
-  # artifact and installs nothing, so PR-authored code never runs next to it.
+  # artifact and installs nothing, so no code from the pull request ever runs
+  # beside it.
   coverage:
     needs: test
-    if: ${{ !cancelled() }}
+    # Skipped whenever `test` is, since there would be no artifact to upload.
+    # `!cancelled()` on its own is not enough: a skipped `test` would leave this
+    # job downloading an artifact that was never produced, and failing for a
+    # confusing reason.
+    if: ${{ !cancelled() && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
+      # Codecov over OIDC, so there is no stored token. It is the only job in
+      # this file that holds `id-token: write`, and that is why coverage is its
+      # own job: it downloads an artifact and installs nothing, so no code from
+      # the pull request ever runs beside the credential.
+      id-token: write
     steps:
-      # Codecov maps coverage paths against the repository, so the tree has to be
-      # present — but nothing here is installed or executed.
+      # Codecov maps coverage paths onto the repository, so the files have to
+      # be here. Nothing is installed and nothing is run.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -300,35 +490,47 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           slug: qruto/nuxt-convex-module
           disable_search: true
           files: coverage/lcov.info
 
-      # Run times, failure and flaky detection. Runs even when tests fail so
-      # failures are captured.
+      # Run times, failures and flaky-test detection. Runs even when tests
+      # fail, which is when it matters.
+      #
+      # The same action as above with `report_type: test_results`, not
+      # `codecov/test-results-action`. That one now prints a deprecation notice
+      # telling you to do exactly this, and it still targets Node 20, which the
+      # runners are already force-upgrading.
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
+          report_type: test_results
+          slug: qruto/nuxt-convex-module
           disable_search: true
           files: test-report.junit.xml
 
-  # The single required status check. Every job above is aggregated here, so
-  # adding, renaming or splitting a job never means touching the ruleset again.
-  # `skipped` counts as a pass — `dependency-review` is skipped on pushes by
-  # design.
-  ci-ok:
+  # The one required status check, and the only name the branch ruleset knows.
+  # Every job above reports into it, so adding, renaming or splitting a job never
+  # means editing the ruleset. `skipped` counts as a pass: `dependency-review` is
+  # skipped on pushes, and `test`/`e2e`/`pack` are skipped when no source
+  # changed.
+  all-checks:
+    name: All checks passed
     if: ${{ always() }}
-    # `coverage` is deliberately absent: Codecov is a reporting service, and a
-    # third party's outage must not block a merge. The coverage *thresholds* are
-    # enforced by vitest inside `test`, which is aggregated here.
+    # `coverage` is deliberately not listed. Codecov is a reporting service,
+    # and a third party being down must not block a merge. The coverage
+    # thresholds themselves are enforced by vitest inside `test`, which is
+    # listed.
     needs:
+      - changes
       - static
       - test
       - e2e
       - pack
+      - website
       - dependency-review
     runs-on: ubuntu-latest
     timeout-minutes: 5

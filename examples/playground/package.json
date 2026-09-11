@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "nuxt-convex-playground",
+  "name": "nuxt-convex-module-playground",
   "private": true,
   "type": "module",
   "scripts": {

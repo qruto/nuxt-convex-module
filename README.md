@@ -201,10 +201,14 @@ export default defineNuxtConfig({
 ### 3. Configure environment
 
 ```bash
-# .env.local (Nuxt app)
+# .env (the file Nuxt loads automatically)
 NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 NUXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
 ```
+
+`npx convex dev` also writes the URL itself, as the unprefixed `CONVEX_URL` in
+`.env.local` — the module reads that too, so `nuxt dev --dotenv .env.local` is
+the other way to get there.
 
 ### 4. Start the app, then Convex
 
@@ -258,7 +262,7 @@ This package is intentionally kept **diffable against the upstream React/Next so
 
 `pnpm dev` runs the docs site through [portless](https://portless.sh), so it is served at a stable, named HTTPS URL — **https://nuxt-convex-module.localhost** — instead of a shifting `localhost:<port>`. portless generates and trusts a local CA on first run (auto-elevating to bind port 443); pass `--no-tls` for plain HTTP, or run `nuxt dev website` directly to bypass portless entirely.
 
-We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASING.md](./RELEASING.md).
+We follow conventional commits. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [RELEASE.md](./RELEASE.md).
 
 ## Security
 

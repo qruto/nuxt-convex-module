@@ -39,6 +39,54 @@ export default createConfigForNuxt({
       files: ['website/**/*.vue', 'devtools-client-app/**/*.vue'],
       rules: {
         'vue/multi-word-component-names': 'off',
+        // One attribute per line keeps long prop lists readable. These apps are
+        // mostly inline SVG, where attributes are short positional values —
+        // `<linearGradient x1 y1 x2 y2>`, `<stop offset stop-color>` — which
+        // read worse split up, and the rule produced 70 warnings nobody was
+        // going to act on. Six is the widest such element here; a seventh
+        // attribute means it is a prop list, and that should wrap.
+        'vue/max-attributes-per-line': ['warn', { singleline: { max: 6 } }],
+      },
+    },
+    // Rules that need type information. `@nuxt/eslint-config` only sets up the
+    // TypeScript program when `features.typescript.tsconfigPath` is set, and
+    // setting it turns on the whole typed ruleset — including the `no-unsafe-*`
+    // family, which fights the port, since upstream's `any` in type constraints
+    // is deliberate (see the block below). So the program is set up here
+    // instead, for six rules that each catch a bug nothing else here can see.
+    //
+    // Scoped to `src/`: the published code, and the only tree the root tsconfig
+    // includes. There are no `.vue` files in `src/`, so the glob is complete.
+    // It costs about 3.6s — `pnpm lint` goes from ~4.6s to ~8.2s.
+    {
+      files: ['src/**/*.ts'],
+      languageOptions: {
+        parserOptions: {
+          projectService: true,
+          tsconfigRootDir: import.meta.dirname,
+        },
+      },
+      rules: {
+        // A promise nobody awaits. It fails as an unhandled rejection at
+        // runtime, and in a Nuxt plugin that means a half-initialised app
+        // instead of an error anyone sees.
+        '@typescript-eslint/no-floating-promises': 'error',
+        // An async function passed where a void-returning one is expected —
+        // event handlers, `watch` callbacks. The rejection has nowhere to go.
+        '@typescript-eslint/no-misused-promises': 'error',
+        // `await` on a non-thenable: always a mistake, and usually a missing
+        // call parenthesis.
+        '@typescript-eslint/await-thenable': 'error',
+        // `String(value)` / template interpolation on something whose
+        // `toString` is `Object.prototype`'s — ships "[object Object]" into a
+        // log line, a header or a URL.
+        '@typescript-eslint/no-base-to-string': 'error',
+        // Throwing a non-Error loses the stack, and `instanceof Error` guards
+        // downstream stop matching.
+        '@typescript-eslint/only-throw-error': 'error',
+        // Calling something upstream has marked `@deprecated`. It is the
+        // earliest warning that a ported file has fallen behind its source.
+        '@typescript-eslint/no-deprecated': 'error',
       },
     },
     // The runtime mirrors upstream convex/react code shape verbatim (see

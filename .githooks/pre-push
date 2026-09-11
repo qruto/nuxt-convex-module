@@ -28,7 +28,12 @@ pnpm exec fallow --fail-on-issues
 
 # `quality` job's security step, for the same reason it is a separate command
 # there: security candidates never surface under the run above.
-pnpm exec fallow security --fail-on-issues
+pnpm run test:security
+
+# `static` job's manifest check. Cheap, and the only check here that can fail
+# without anyone changing anything — a dependency bump narrowing a peer range
+# under us.
+pnpm run check:manifest
 
 # `typecheck` job. Runs dev:prepare first, so it also proves the module still
 # builds its stubs and types.

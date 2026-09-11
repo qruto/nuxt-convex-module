@@ -70,7 +70,7 @@ reach a release.
 
 ### Static analysis in CI
 
-[`fallow security`](https://docs.fallow.tools) runs as its own step in the `quality` job and in
+[`fallow security`](https://docs.fallow.tools) runs as its own step in the `static` job and in
 the `pre-push` hook. It *has* to be its own step: fallow keeps security findings out of both its
 default run and its `audit` gate — "this command is the only surface for security findings" —
 so neither of the checks already in that job would ever report one. Wiring the rules into
@@ -98,7 +98,7 @@ Credentials are GitHub secret scanning's job instead (see below).
 
 ### Deeper review with deepsec
 
-`fallow security` is the fast deterministic pass. [deepsec](https://github.com/vercel/deepsec) is
+`fallow security` is the fast deterministic pass. [deepsec](https://github.com/vercel-labs/deepsec) is
 the thorough one: a free regex scan, then an AI stage that reads each candidate in its actual
 context, then a revalidation stage that cuts the false-positive rate. Run it before a release,
 after touching the Better Auth proxy or any server handler, and whenever a fallow candidate needs
@@ -144,8 +144,11 @@ third-party app holds write access to this repository.
   that builds holds nothing; the job that publishes holds only the OIDC token, checks out nothing,
   installs nothing, and runs behind `step-security/harden-runner` in `block` mode with an
   allowlist of npm, GitHub and Sigstore.
-- Publishing uses npm **Trusted Publishing** over OIDC bound to a `main`-only environment, so no
-  long-lived registry token exists anywhere and a workflow edited on a branch cannot reach npm.
+- **No stored credentials at all.** Publishing uses npm **Trusted Publishing** over OIDC bound to
+  a `main`-only environment, and coverage uploads use Codecov's OIDC — so no long-lived token
+  exists anywhere in this repository, and a workflow edited on a branch cannot reach either
+  service. `id-token: write` is granted to exactly two jobs, neither of which runs
+  pull-request-authored code.
   Releases are **staged**: nothing becomes installable until a maintainer approves it with 2FA,
   after npm's malware scan — provenance says where a package came from, not what is in it.
 - The release refuses a commit whose `ci` run is not a completed success, and waits for one that
@@ -153,15 +156,18 @@ third-party app holds write access to this repository.
 
 ### GitHub-native
 
-Private vulnerability reporting (above), Dependabot security updates, and secret scanning are
-enabled. Three related toggles in **Settings → Code security** are currently **off** and are free
-on a public repository — worth turning on, since fallow deliberately leaves credentials to them:
+fallow deliberately leaves credentials to GitHub, so these settings are what catch them:
 
-- **Push protection** — blocks a commit containing a recognised credential instead of reporting
-  it after the fact.
-- **Validity checks** — asks the provider whether a detected key is live, which is the difference
-  between "rotate now" and "already revoked".
-- **Non-provider patterns** — generic keys and connection strings that carry no vendor prefix.
+| Setting | State | Why |
+| --- | --- | --- |
+| Private vulnerability reporting | on | The reporting path at the top of this file |
+| Dependabot security updates | on | Advisories against the resolved lockfile |
+| Dependabot malware alerts | on | The one thing the dependency graph does not cover: a malicious publish of an already-pinned transitive |
+| Secret scanning | on | Detects a committed credential |
+| Push protection | on | Blocks the commit outright instead of reporting it after the fact |
+| Code scanning (CodeQL) | on, `extended` | The default suite plus 16 JS/TS and 5 `actions/*` queries |
+| Non-provider patterns | **off**, deliberately | Generic keys and connection strings with no vendor prefix — a documented false-positive class |
+| Validity checks | **off** | Would tell us whether a detected key is still live, but needs Team or Enterprise; this org is on the free plan |
 
 ### What the module ships to apps
 

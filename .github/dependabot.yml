@@ -22,13 +22,13 @@ updates:
         - '@nuxt/*'
         - '@nuxtjs/*'
         - convex
-        - convex-helpers
         - '@convex-dev/*'
-    # `@convex-dev/better-auth` peers `better-auth: ">=1.6.11 <1.7.0"`, and this
-    # package mirrors that range. A 1.7.x bump is a *minor* update, so the
-    # all-non-major group below would otherwise propose one that the add-on
-    # rejects at install time. Drop this entry when @convex-dev/better-auth
-    # ships better-auth 1.7 support (and widen the peer range with it).
+    # `@convex-dev/better-auth` accepts `better-auth: ">=1.6.11 <1.7.0"`, and
+    # this package mirrors it as `~1.6.11` — the same set of versions, written
+    # the way installed-check normalises to. A 1.7.x bump counts as a minor
+    # update, so without this the group below would propose one that the add-on
+    # then rejects at install time. Drop this entry when @convex-dev/better-auth
+    # supports better-auth 1.7 (and widen the peer range with it).
     ignore:
       - dependency-name: better-auth
         versions: ['>=1.7.0']
@@ -42,8 +42,17 @@ updates:
 
   # Actions digest bumps — keeps the `@<sha> # vX.Y.Z` pinning convention
   # intact. Native workflow-file writes: no PAT, no GitHub App.
+  #
+  # `/` on its own covers .github/workflows/ and an action.yml at the root. It
+  # does not look inside .github/actions/*/action.yml, which is where the
+  # `pnpm/setup` pin that every ci and preview job uses lives. Without the second
+  # entry that pin would freeze while release.yml's own copies of the same action
+  # keep moving, and the two would quietly drift apart. Nothing else would catch
+  # it: zizmor checks that a pin exists, not that it is up to date.
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/setup
     schedule:
       interval: weekly
       day: monday

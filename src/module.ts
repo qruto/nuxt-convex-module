@@ -48,9 +48,15 @@ export interface BetterAuthModuleOptions {
 }
 
 export interface ModuleOptions {
-  /** Convex deployment URL (defaults to `NUXT_PUBLIC_CONVEX_URL`). */
+  /**
+   * Convex deployment URL. Defaults to `NUXT_PUBLIC_CONVEX_URL`, then to the
+   * unprefixed `CONVEX_URL` that `npx convex dev` writes.
+   */
   url?: string
-  /** Convex `.site` URL (defaults to `NUXT_PUBLIC_CONVEX_SITE_URL`). */
+  /**
+   * Convex `.site` URL. Defaults to `NUXT_PUBLIC_CONVEX_SITE_URL`, then to the
+   * unprefixed `CONVEX_SITE_URL` that `npx convex dev` writes.
+   */
   siteUrl?: string
   /**
    * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is
@@ -460,22 +466,44 @@ function isPackageInstalled(id: string, rootDir: string): boolean {
 }
 
 /**
+ * Resolve the deployment and site URLs from module options, then environment.
+ *
+ * The `NUXT_PUBLIC_*` names come first: they are the Nuxt-shaped ones, and the
+ * only ones Nitro will also apply as a runtime override on a built app. The
+ * unprefixed names are read after them because that is what `npx convex dev`
+ * writes — the Convex CLI picks its variable name per framework and has no Nuxt
+ * case, so it falls back to `CONVEX_URL`. Reading both means someone who has
+ * only ever run the CLI needs no `convex.url` in `nuxt.config` at all.
+ *
+ * Exported for tests.
+ */
+export function resolveDeploymentUrls(
+  options: Pick<ModuleOptions, 'url' | 'siteUrl'>,
+  env: Record<string, string | undefined>,
+): { url: string, siteUrl: string } {
+  return {
+    url: options.url || env.NUXT_PUBLIC_CONVEX_URL || env.CONVEX_URL || '',
+    siteUrl: options.siteUrl || env.NUXT_PUBLIC_CONVEX_SITE_URL || env.CONVEX_SITE_URL || '',
+  }
+}
+
+/**
  * Resolve the Convex deployment URL from module options or environment, and
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
 function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string } {
-  const url = nuxt.options._prepare
-    ? undefined
-    : options.url || process.env.NUXT_PUBLIC_CONVEX_URL
+  const resolved = resolveDeploymentUrls(options, process.env)
+  const url = nuxt.options._prepare ? '' : resolved.url
 
   if (!url && !nuxt.options._prepare) {
     logger.warn(
       'No Convex deployment URL configured. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config. '
-      + 'Note: `npx convex dev` writes CONVEX_URL to .env.local, which Nuxt does not load.',
+      + 'Note: `npx convex dev` writes CONVEX_URL to .env.local, which Nuxt does not read without '
+      + '`nuxt dev --dotenv .env.local`.',
     )
   }
 
-  const siteUrl = options.siteUrl || process.env.NUXT_PUBLIC_CONVEX_SITE_URL || ''
+  const siteUrl = resolved.siteUrl
 
   // Published even when empty so NUXT_PUBLIC_CONVEX_CROSS_DOMAIN_CALLBACK_ROUTE
   // can override it; path normalization happens at the consumption site
@@ -499,14 +527,14 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
   const runtimeConfig = nuxt.options.runtimeConfig
   runtimeConfig.public.convex = {
     ...runtimeConfig.public.convex,
-    url: url || '',
+    url,
     siteUrl,
     crossDomainCallbackRoute,
     loginPath,
   }
   runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
-  return { url: url || '', siteUrl }
+  return { url, siteUrl }
 }
 
 /**

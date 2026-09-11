@@ -264,7 +264,7 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:74](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-boundary.ts#L74)
+Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:82](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-boundary.ts#L82)
 
 _Experimental_
 

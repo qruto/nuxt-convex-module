@@ -1,0 +1,17 @@
+# actionlint (https://github.com/rhysd/actionlint) checks the workflow files for
+# correctness: expressions, `needs`/matrix references, runner labels, cron
+# syntax, and shellcheck over every inline `run:` block.
+#
+# zizmor checks the same files for security problems. The two do not overlap.
+
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      # `$/` is GitHub's way of referring to an action in this same repository
+      # (July 2026). It lets `.github/actions/setup` be used without the `./`
+      # form that zizmor's `self-repository` audit rejects. actionlint's parser
+      # predates it and reads `$` as a malformed owner name.
+      #
+      # Tracked upstream — drop this as soon as actionlint learns the syntax.
+      # Scoped to the exact message, so any other malformed `uses:` still fails.
+      - 'specifying action "\$/\.github/actions/[^"]+" in invalid format'

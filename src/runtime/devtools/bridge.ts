@@ -63,7 +63,13 @@ function toPlainJson(value: Value | undefined): unknown {
     return convexToJson(value)
   }
   catch {
-    return String(value)
+    // `convexToJson` refused it, so it is not a Convex `Value`. Calling
+    // `String()` on an object would put "[object Object]" in the DevTools
+    // panel, which looks like data rather than a failure. Say what it was
+    // instead.
+    return typeof value === 'object' && value !== null
+      ? `[unserializable ${Array.isArray(value) ? 'array' : 'object'}]`
+      : String(value)
   }
 }
 
