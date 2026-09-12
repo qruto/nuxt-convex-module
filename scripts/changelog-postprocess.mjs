@@ -13,11 +13,15 @@ import { readFile, writeFile } from 'node:fs/promises'
 
 const FILE = new URL('../CHANGELOG.md', import.meta.url)
 
+// Display names for scopes (`ci` → `CI`); anything unmapped is capitalised.
+const { changelog } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+const scopeMap = changelog?.scopeMap ?? {}
+
 // changelogen's line: `- **scope:** Description ([sha](url))`
 const SCOPED = /^- \*\*(.+?):\*\* (.*)$/
 
-function upperFirst(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+function scopeName(scope) {
+  return scopeMap[scope] ?? scope.charAt(0).toUpperCase() + scope.slice(1)
 }
 
 function groupSection(lines) {
@@ -46,7 +50,7 @@ function groupSection(lines) {
   const out = [lines[0], '']
   if (plain.length > 0) out.push(...plain, '')
   for (const scope of [...scoped.keys()].sort()) {
-    out.push(`#### ${upperFirst(scope)}`, '', ...scoped.get(scope), '')
+    out.push(`#### ${scopeName(scope)}`, '', ...scoped.get(scope), '')
   }
   // Drop the trailing blank; the section separator is restored on join.
   out.pop()
