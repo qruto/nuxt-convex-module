@@ -21,14 +21,16 @@ environment can do.
    `github-actions[bot]`, which the *Require approval for all external contributors* policy treats
    like any outside contributor. After that, wait for it like any other PR.
 
-3. **Actions → Release → Run workflow.** It tags the merged commit, builds the tarball and sends
-   it to npm.
+3. **Actions → Release → Run workflow.** It tags the merged commit, builds the tarball, attests
+   it, creates the GitHub Release (tarball, attestation bundle and SBOM as assets) and sends the
+   tarball to npm.
 
    It stops before writing anything if `CI` on that commit isn't green, or if `HEAD` isn't the
    release commit.
 
-4. **Approve the `Release` environment twice.** Once before the tag is written, once before
-   anything reaches npm.
+4. **Approve the `Release` environment twice.** Once before the tag is written, once after the
+   build — that second approval releases both `release` and `publish`, so nothing reaches GitHub
+   Releases or npm before it.
 
 5. **Approve the package on npm.** Until you do, the version is *staged*: it exists, but nobody
    can install it.
@@ -42,8 +44,9 @@ environment can do.
 6. **Check that it shipped with provenance.**
 
    ```sh
-   npm view nuxt-convex-module@<version> dist   # lists `attestations`, not just `signatures`
-   gh release verify v<version>
+   npm view nuxt-convex-module@<version> dist                        # lists `attestations`, not just `signatures`
+   gh release verify v<version>                                      # the Release itself is immutable and attested
+   gh attestation verify nuxt-convex-module-<version>.tgz --owner qruto   # the tarball, from the Release assets
    ```
 
 ## What runs
@@ -56,40 +59,44 @@ config:
 ---
 flowchart TD
     S(["<b>1 · you run Release Prepare</b><br/>auto / patch / minor / major"])
-    A["<b>prepare</b> · <i>contents + pull-requests: write</i><br/>only runs on main<br/>bumps package.json + CHANGELOG.md<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
+    A0["<b>bump</b> · <i>no write credential</i><br/>only runs on main<br/>bumps package.json + CHANGELOG.md · uploads the two files"]
+    A["<b>pull-request</b> · <i>contents + pull-requests: write</i><br/>no checkout, no install · can only reach GitHub<br/>commits through the API, so GitHub signs it<br/>pushes release/vX.Y.Z and opens the PR"]
     B["<b>Pull request</b><br/>the same <i>All checks passed</i> gate as any other change"]
     M(["<b>you read the changelog and squash-merge</b>"])
 
     D(["<b>2 · you run Release</b> · approve the <b>Release</b> environment"])
     C["<b>tag</b> · <i>contents: write · no OIDC</i><br/>installs nothing · can only reach GitHub<br/>stops unless CI is green and HEAD bumped the version<br/>pushes a tag, never a commit"]
-    E["<b>build</b> · <i>no credentials at all</i><br/>checks out the tag, not the tree that made it<br/>pnpm pack · check:tarball · uploads the artifact"]
+    E["<b>build</b> · <i>no credentials at all</i><br/>checks out the tag, not the tree that made it<br/>pnpm pack · check:tarball · pnpm sbom · uploads the artifacts"]
     G2(["approve the <b>Release</b> environment again"])
+    R["<b>release</b> · <i>contents + id-token + attestations: write</i><br/>no checkout, no install · can only reach GitHub, Sigstore<br/>attests the tarball · GitHub Release with tarball, bundle, SBOM"]
     F["<b>publish</b> · <i>id-token: write</i><br/>no checkout, no install · can only reach npm, GitHub, Sigstore<br/>pnpm stage publish --provenance"]
 
     Q["<b>3 · staged on npm</b> — not installable yet<br/>npm's malware scan runs here"]
     AP(["<b>pnpm stage approve</b> · 2FA<br/>your last chance to look at the build"])
     L(["<b>live on npm</b>"])
 
-    S --> A --> B --> M --> D --> C --> E --> G2 --> F --> Q --> AP --> L
+    S --> A0 --> A --> B --> M --> D --> C --> E --> G2 --> F --> Q --> AP --> L
+    G2 --> R
 
     classDef human fill:#f8efdc,stroke:#8a5c12,color:#2b1d05
     classDef job fill:#e3edf9,stroke:#17457f,color:#0b1c33
     classDef danger fill:#fdecec,stroke:#a62b2b,color:#3a0f0f
     classDef plain fill:#eef1f4,stroke:#5b6b7b,color:#12181f
     class S,M,D,G2,AP human
-    class A,C,E job
+    class A0,A,C,E,R job
     class F,Q danger
     class B,L plain
 ```
 
-Amber is you. Blue is a job that can write something. Red is the part that can reach npm. The run
+Amber is you. Blue is a job. Red is the part that can reach npm. The run
 stops and waits for a person five times: two dispatches, the merge, the second approval, and the
 2FA approval on npm.
 
 ## Rehearse first
 
 Tick **dry-run** on **Release**. Everything runs except the writes: `build` packs and checks
-`main` as it is, and `publish` does the real OIDC handshake with npm and then stops.
+`main` as it is, `release` is skipped (there is no tag to attest against), and `publish` does the
+real OIDC handshake with npm and then stops.
 
 That proves the npm Trusted Publisher still trusts us — repository, workflow filename and
 environment all have to match — and fails if it doesn't. Do a dry run after every change to
@@ -164,26 +171,34 @@ Two things follow from the split, and both are enforced in `release.yml`:
 
 | Job | Holds | Runs |
 | --- | --- | --- |
-| `tag` | `contents: write` — no OIDC, no install | one `git tag`, then `gh release create` |
+| `tag` | `contents: write` — no OIDC, no install | one `git tag` |
 | `build` | nothing | the build, from a clean checkout of the tag |
+| `release` | `contents` + `id-token` + `attestations: write` — no checkout, no install | one attestation, one `gh release create` |
 | `publish` | `id-token: write` — no checkout, no install | one pinned pnpm on one tarball |
 
-Neither job holding a credential installs anything.
+No job holding a credential installs anything.
 
-`tag` is the only one that can write to the repository, and it writes exactly one thing: a tag, on
-a commit that's already merged and already green. It uses the `git`, `jq` and `gh` from the runner
-image, and reads the release notes out of the `CHANGELOG.md` the commit already carries. So no
-dependency code runs beside the write token, and the job can only reach GitHub.
+`tag` writes exactly one thing to git: a tag, on a commit that's already merged and already green.
+It uses the `git`, `jq` and `gh` from the runner image, so no dependency code runs beside the
+write token, and the job can only reach GitHub.
 
-`build` runs the dependency code, with nothing worth stealing nearby. `publish` holds the only
-credential that can reach npm, runs nothing but pnpm on a tarball, and can only reach npm, GitHub
-and Sigstore.
+`build` runs the dependency code, with nothing worth stealing nearby. Everything the two jobs
+after it need — the tarball, the SBOM, the release notes read out of the tag's `CHANGELOG.md` —
+leaves it as artifacts. `release` signs the tarball and the SBOM and creates the GitHub Release
+with them as assets, in one call, because immutable releases accept nothing after publication.
+`publish` holds the only credential that can reach npm, runs nothing but pnpm on a tarball, and
+can only reach npm, GitHub and Sigstore.
+
+`Release Prepare` follows the same split: `bump` runs changelogen with a read-only token and hands
+over `package.json` and `CHANGELOG.md` as an artifact; `pull-request` holds the write token,
+installs nothing, and creates the branch, the commit and the pull request through the API.
 
 ### One environment, two approvals
 
-`Release` — required reviewer, `main` only — guards both jobs that can do damage. GitHub checks
+`Release` — required reviewer, `main` only — guards every job that can do damage. GitHub checks
 environment rules per job, so it asks twice: before `tag` writes anything, and after the build,
-before `publish` reaches npm. The second prompt is the last cheap place to stop a bad build.
+before `release` and `publish` — they wait at the same point, and one approval covers both. The
+second prompt is the last cheap place to stop a bad build.
 
 The npm Trusted Publisher is bound to that same environment. npm accepts a token only from a job
 that ran in `Release`, and a job can only run in `Release` from `main` — so a `release.yml` edited

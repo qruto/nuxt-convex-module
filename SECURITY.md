@@ -139,16 +139,22 @@ third-party app holds write access to this repository.
 - [zizmor](https://docs.zizmor.sh) statically analyses the workflows themselves — template
   injection, unpinned actions, impostor commits, credential persistence. Accepted findings carry
   their reasoning.
-- The release is three jobs so the credentials never meet the code: the job that writes to the
-  repository holds no npm credential and cannot start until a maintainer approves the run; the job
-  that builds holds nothing; the job that publishes holds only the OIDC token, checks out nothing,
-  installs nothing, and runs behind `step-security/harden-runner` in `block` mode with an
-  allowlist of npm, GitHub and Sigstore.
+- The release is four jobs so the credentials never meet the code: the job that tags holds no npm
+  credential and cannot start until a maintainer approves the run; the job that builds holds
+  nothing; the job that attests the tarball and creates the GitHub Release, and the job that
+  publishes, hold only OIDC tokens, check out nothing, install nothing, and run behind
+  `step-security/harden-runner` in `block` mode with an allowlist of npm, GitHub and Sigstore.
+  `Release Prepare` is split the same way: the job that runs changelogen has a read-only token, and
+  the job that commits and opens the pull request installs nothing.
+- Every release carries its own proof: the tarball and its SBOM are attested with
+  `actions/attest-build-provenance` (`gh attestation verify nuxt-convex-module-<version>.tgz --owner qruto`),
+  the attestation bundle and the CycloneDX SBOM of the package's production dependencies are
+  assets of the immutable GitHub Release, and npm's provenance covers the same tarball.
 - **No stored credentials at all.** Publishing uses npm **Trusted Publishing** over OIDC bound to
   a `main`-only environment, and coverage uploads use Codecov's OIDC — so no long-lived token
   exists anywhere in this repository, and a workflow edited on a branch cannot reach either
-  service. `id-token: write` is granted to exactly two jobs, neither of which runs
-  pull-request-authored code.
+  service. `id-token: write` is granted only to jobs that run no pull-request-authored code and
+  install nothing.
   Releases are **staged**: nothing becomes installable until a maintainer approves it with 2FA,
   after npm's malware scan — provenance says where a package came from, not what is in it.
 - The release refuses a commit whose `ci` run is not a completed success, and waits for one that
