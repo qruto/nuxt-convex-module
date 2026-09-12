@@ -2,14 +2,22 @@
 import type { DemoTools } from '~/composables/useDemoScript'
 import type { CodeReveal } from '~/utils/code-reveal'
 import { api } from '#convex/api'
+import FlapText from '../landing/FlapText.vue'
 
-// The hero's signature, now in two acts. Act one is a recording: the general
+// The hero's signature, in two acts. Act one is a recording: the general
 // composables type themselves out scene by scene — live query, mutation,
-// pagination, upload — each rendering a simulated readout in the well below
-// (zero network; the bench and playground carry the deeper versions). Act two
-// is the handoff: the final scene types the code that actually runs this
-// panel, and the readout swaps to the real Convex deployment over a real
-// WebSocket — rows off the shared table, and the composer writes to it.
+// pagination, upload — each rendering a simulated readout on the BOARD
+// below. Act two is the handoff: the final scene types the code that
+// actually runs this panel, and the board swaps to the real Convex
+// deployment over a real WebSocket — rows off the shared table, and the
+// composer writes to it.
+//
+// THE BOARD IS A SPLIT-FLAP DISPLAY (2026-09-08). The readout used to be a
+// chat log, which is the most-shown Convex demo there is. The same table,
+// the same code, but the rows land the way a departure board's do: every
+// character flips through the drum to its letter, so a mutation landing
+// from anywhere clatters in across the row. One visitor alone gets the
+// full effect — post a line and watch the board turn to it.
 //
 // SSR, no-JS, and reduced-motion all get act two directly: the server renders
 // the live panel (rows in the HTML on first paint via `useAsyncQuery`), and
@@ -21,21 +29,20 @@ const { data, error } = client
   : { data: shallowRef([]), error: shallowRef(null) }
 
 const send = client ? useMutation(api.messages.send) : undefined
-const connection = client ? useConvexConnectionState() : shallowRef()
 
-// Only the tail fits the well; the panel is a readout, not the archive.
+// Only the tail fits the board; the panel is a readout, not the archive.
+// Rows are keyed by SLOT, not by document: a new line then flips the slot
+// it lands in from the line that was there, which is the whole board.
 const VISIBLE = 4
 const liveShown = computed(() => (data.value ?? []).slice(-VISIBLE))
+// Flaps per line — the board's width in characters, sized to the plate.
+const cells = 22
 
-const online = computed(() => !!client && !error.value && connection.value?.isWebSocketConnected !== false)
+const online = useDemoOnline(error)
 
-// A per-visitor handle so your own rows are distinguishable from everyone
-// else's. Generated after mount — a random value at SSR time would mismatch
-// on hydration.
-const handle = ref('you')
-onMounted(() => {
-  handle.value = `you-${Math.random().toString(36).slice(2, 5)}`
-})
+// The per-visitor handle every demo on the page shares (useVisitor): your
+// own rows read as yours here and on the switchboard alike.
+const { handle } = useVisitor()
 
 const draft = ref('')
 const sending = ref(false)
@@ -72,12 +79,18 @@ async function submit() {
 // one grid cell so the well never changes height between scenes. Typing is
 // a reveal over the pre-highlighted DOM (code-reveal.ts) — every character
 // lands already wearing its token color.
+// SIX SCENES, ONE PER LEGEND ROW (2026-09-08). The recording used to run
+// five and the capability legend beside it had six entries, so one row
+// (Actions) never lit and the last scene lit two at once. The order here
+// IS the order of the legend, and the order of the fenced blocks in
+// content/index.md — the lamp walks the list top to bottom.
 const SCENES = [
-  { id: 'QUERY', label: 'LIVE QUERY' },
-  { id: 'MUTATION', label: 'MUTATION' },
-  { id: 'PAGINATION', label: 'PAGINATION' },
-  { id: 'FILES', label: 'FILE UPLOAD' },
-  { id: 'LIVE', label: 'GOING LIVE' },
+  { id: 'QUERY', label: 'live query' },
+  { id: 'MUTATION', label: 'mutation' },
+  { id: 'PAGINATION', label: 'pagination' },
+  { id: 'FILES', label: 'file upload' },
+  { id: 'ACTION', label: 'action' },
+  { id: 'LIVE', label: 'going live' },
 ] as const
 
 const parts = codeSlotParts(useSlots(), SCENES.length)
@@ -121,12 +134,12 @@ function revealFor(index: number): CodeReveal | null {
 function prepareScene(index: number) {
   sim.chip = null
   sim.progress = null
-  if (index === 0 || index === 3) sim.rows = []
+  if (index === 0 || index === 3 || index === 4) sim.rows = []
   if (index === 2) {
     sim.rows = []
     const authors = ['ada', 'lin', 'kai']
     for (let n = 1; n <= 3; n++) simRow(authors[(n - 1) % 3]!, `message ${n}`)
-    sim.chip = '3 OF 9'
+    sim.chip = '3 of 9'
   }
   // index 1 keeps scene 0's rows — the mutation lands under them.
 }
@@ -140,7 +153,7 @@ async function playScene(index: number, t: DemoTools) {
     simRow('lin', 'every client sees this row')
     await wait(430)
     simRow('kai', 'in real time')
-    sim.chip = 'SUBSCRIBED'
+    sim.chip = 'subscribed'
     await wait(1500)
   }
   else if (index === 1) {
@@ -149,7 +162,7 @@ async function playScene(index: number, t: DemoTools) {
     const row = sim.rows[sim.rows.length - 1]!
     await wait(300)
     row.pending = false
-    sim.chip = 'COMMIT 42 MS'
+    sim.chip = 'commit 42 ms'
     await wait(1700)
   }
   else if (index === 2) {
@@ -160,7 +173,7 @@ async function playScene(index: number, t: DemoTools) {
       await wait(380)
       const from = page * 3
       for (let n = from + 1; n <= from + 3; n++) simRow(authors[(n - 1) % 3]!, `message ${n}`)
-      sim.chip = `${from + 3} OF 9${from + 3 === 9 ? ' · EXHAUSTED' : ''}`
+      sim.chip = `${from + 3} of 9${from + 3 === 9 ? ' · exhausted' : ''}`
     }
     await wait(1600)
   }
@@ -173,9 +186,23 @@ async function playScene(index: number, t: DemoTools) {
     }
     await wait(260)
     sim.progress = null
-    simRow('you', 'schematic.png · 84 KB')
-    sim.chip = 'ID kg24d8mn7apf…9d1'
+    simRow('you', 'schematic.png · 84 kb')
+    sim.chip = 'id kg24d8mn7apf…9d1'
     await wait(1700)
+  }
+  else if (index === 4) {
+    // An action runs on the server and RETURNS: the row is posted
+    // pending, then the same slot flips to the value that came back —
+    // which is exactly what the board is good at showing.
+    await wait(420)
+    simRow('action', 'analyze(\'the socket is open\')', true)
+    sim.chip = 'running on node'
+    const row = sim.rows[sim.rows.length - 1]!
+    await wait(900)
+    row.pending = false
+    row.body = 'sha256 3f9ac17 · 5 words'
+    sim.chip = 'returned 612 ms'
+    await wait(1600)
   }
   else {
     // The handoff beat: the panel's own code is on the plate — go live.
@@ -223,65 +250,33 @@ watch(state, (value) => {
 </script>
 
 <template>
-  <!-- The instrument panel — the deepest convex step on the page, at a
-       radius no other surface uses. Its own size container: the narrow
-       tweaks query the panel, not the viewport.
+  <!-- The instrument panel — a `part-plate`, the ONE step every plate on
+       the page stands off the ground (2026-09-07: it used to be `convex-3`,
+       the deepest cast on the site, and read as a slab floating over the
+       hero rather than a part bolted to it). Its own size container: the
+       narrow tweaks query the panel, not the viewport.
 
-       Capped at 32rem rather than filling the hero's right column: the
-       plate is an instrument, and an instrument that stretches to
-       whatever room it is given reads as a panel of the page instead of
-       a part on it. 32rem is about as narrow as it goes — below it the
-       longest scene line drives the code type under its 12px floor. The
-       cap is spent on the RIGHT: `me-0` past lg parks the plate against
-       the page margin the header rail and the footer already hold, and
-       the slack falls into the gap beside the copy.
-
-       `end-4` then walks it 16px back off that margin, toward the copy
-       — a RELATIVE offset, not a margin, and deliberately so. The plate
-       fills its grid track exactly (`w-full` capped at the track's own
-       32rem past xl), so there is no free space for a margin to absorb:
-       `me-4` would either be swallowed whole by the alignment step or
-       come straight out of the plate's width, and the code well is
-       already sitting on its 12px type floor. A relative nudge moves
-       what is painted and leaves the track alone — the plate keeps its
-       512px and only the standoff changes.
-
-       `w-full` IS LOAD-BEARING, and not because anything needs to be
-       full width. An auto inline margin takes a grid item out of
-       `justify-self: stretch` — that is how the margin gets free space
-       to absorb — so the plate's width falls back to fit-content. On
-       any other element that is harmless; on this one `@container`
-       (container-type: inline-size) contains the inline axis, so
-       fit-content is measured with the CONTENTS TAKEN OUT and comes to
-       zero. The plate collapsed to its own 48px of padding, pinned to
-       the right, with five scenes and a rail hanging off it into the
-       margin. A definite `width: 100%` — capped by max-width, so still
-       32rem — is what containment needs to leave alone. -->
+       Capped at 32rem rather than filling the hero's right column: an
+       instrument that stretches to whatever room it is given reads as a
+       panel of the page instead of a part on it. `w-full` is load-bearing
+       under `@container` — see the git history of this file for why a
+       fit-content width collapses to the padding. -->
   <figure
     ref="plate"
-    class="convex-3 bevel sheen noise rounded-plate @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
+    class="part-plate sheen noise @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
     aria-label="A recorded tour of the client's composables that ends on a live Convex query rendering real rows"
   >
-    <!-- The header is the file tab and nothing else. It used to carry a
-         REC / LIVE-OFFLINE badge as well — and LIVE was the same boolean
-         the foot of the panel was already reporting as WS OPEN, one fact
-         wearing two lamps in two different colours. State now has exactly
-         one home, the rail at the foot, and this line is left doing the one
-         job a file tab does. -->
-    <header class="mb-3.5 flex items-center gap-4 font-mono text-[0.65rem] font-semibold tracking-[0.13em] @max-[30rem]:gap-3">
-      <span class="concave-text text-toned tracking-[0.08em]">app.vue</span>
+    <!-- The header is the file tab and nothing else; state has exactly one
+         home, the rail at the foot. -->
+    <header class="mb-3.5 flex items-center gap-4 stamp @max-[30rem]:gap-3">
+      <span class="concave-text text-toned">app.vue</span>
     </header>
 
     <!-- Source well. Five scene fences stacked in one grid cell — the tallest
          sets the height, so scene changes never pump the plate. Type is sized
-         off the panel with a floor that keeps phones readable; past the floor
-         the pre scrolls. The divisor IS the longest scene line measured in
-         ems — 55ch of 0.6em-advance mono, so 33, plus a half-em of slack —
-         which is what makes the line land inside the pre at every width
-         instead of just at the clamp's ceiling. It was 32, and the 1em it
-         was short by never showed only because the panel used to be wide
-         enough to sit pinned at the 14px maximum. -->
-    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:rounded-well [&_pre]:border-(--recess-edge) [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.75rem,calc((100cqi-2rem)/33.5),0.875rem)] [&_pre]:leading-[1.75] [&_pre]:whitespace-pre">
+         off the panel with a floor that keeps phones readable. The pre is a
+         `part-tray`: the deep cut a whole stage sits in. -->
+    <div class="@container grid [&>div]:[grid-area:1/1] [&>div>div]:my-0 [&_button]:hidden [&_pre]:part-code [&_pre]:my-0 [&_pre]:overflow-x-auto [&_pre]:px-4 [&_pre]:py-4 [&_pre]:text-[clamp(0.72rem,calc((100cqi-2rem)/37),0.875rem)] [&_pre]:leading-[1.75] ">
       <div
         v-for="(part, index) in parts"
         :key="SCENES[index]!.id"
@@ -295,77 +290,65 @@ watch(state, (value) => {
 
     <!-- The connector — source feeds the output. -->
     <div
-      class="my-2.5 flex items-center gap-2.5 font-mono text-[0.56rem] font-semibold tracking-[0.16em]"
+      class="my-2.5 flex items-center gap-2.5 stamp text-[0.58rem]"
       aria-hidden="true"
     >
       <span class="h-px flex-1 bg-linear-to-r from-transparent to-primary/30" />
-      <span class="concave-text flex-none text-toned">RENDERS</span>
+      <span class="concave-text flex-none text-toned">renders</span>
       <span class="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
     </div>
 
     <!-- Rendered readout — the active scene's result as UI while recording,
-         the real query result once live. Bottom-anchored like a log, and a
-         FIXED height: it was bounded (3.3rem to 6.6rem) so a near-empty list
-         had no dead void, but the well is the only part of the plate whose
-         content varies, so every row the recording landed grew the panel and
-         shoved the whole hero down under it. One height, cut for the four
-         rows VISIBLE allows plus their gaps, and the empty state sits at the
-         bottom of it — a readout with nothing on it is what an idle
-         instrument looks like, and it does not move.
-
-         THE SHALLOW WELL, not the deep tray (2026-09-06). `concave-2` is
-         the rung for a stage cut straight into a plate — the spec sheet's
-         figure wells — and this readout is not that: it is the second of
-         two wells inside a plate that is ALREADY a raised part on the
-         hero ground, so the deep rung spent its whole depth budget
-         drawing a hard box in the middle of the instrument. At its
-         largest of any well on the page, and with an empty state that
-         shows the box and nothing else, that box was the loudest thing
-         on the panel. `concave` cuts it the same distance the composer
-         under it is cut, which is what makes the two read as one
-         instrument face rather than as a tray with a field beside it. -->
-    <div class="concave rounded-well overflow-hidden border border-(--recess-edge) px-4.5 py-3.5">
+         the real query result once live. Bottom-anchored like a log, at a
+         FIXED height so the panel never grows under the hero. The shallow
+         `part-well`: the second of two cuts in a plate that is already a
+         raised part, cut the same distance as the composer under it. -->
+    <div class="part-well overflow-hidden px-4.5 py-3.5">
       <ul
-        class="m-0 flex h-26 list-none flex-col justify-end gap-1.5 p-0 font-mono text-xs"
+        class="m-0 flex h-28 list-none flex-col justify-end gap-2 p-0 font-mono text-xs"
         aria-live="polite"
       >
         <template v-if="mode === 'live'">
           <li
-            v-for="m in liveShown"
-            :key="m._id"
-            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-strip px-1.5 text-default motion-safe:animate-row-land"
+            v-for="(m, i) in liveShown"
+            :key="i"
+            class="flex min-w-0 items-center gap-2"
           >
             <span
-              class="max-w-[14ch] flex-none truncate rounded-chip border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
-              :class="m.author === handle
-                ? 'border-primary/40 text-primary-700 dark:text-primary-300'
-                : 'border-accented text-muted'"
+              class="chip"
+              :class="m.author === handle ? 'chip-lit' : undefined"
             >{{ m.author }}</span>
-            <span class="min-w-0 truncate">{{ m.body }}</span>
+            <FlapText
+              :text="m.body"
+              :cells="cells"
+              class="min-w-0"
+            />
           </li>
           <li
             v-if="!liveShown.length"
             class="text-muted"
           >
-            {{ error ? 'deployment unreachable' : 'the table is empty — write the first row ↓' }}
+            {{ error ? 'deployment unreachable' : 'the board is blank — post the first line ↓' }}
           </li>
         </template>
         <template v-else>
           <!-- Keyed on the pending flag too: the pending→committed flip
                remounts the row, so the commit re-lands with its own flash. -->
           <li
-            v-for="row in simShown"
-            :key="`${row.id}${row.pending ? ':pending' : ''}`"
-            class="-mx-1.5 flex min-w-0 items-baseline gap-2 rounded-strip px-1.5 text-default motion-safe:animate-row-land"
-            :class="row.pending ? 'opacity-60' : undefined"
+            v-for="(row, i) in simShown"
+            :key="i"
+            class="flex min-w-0 items-center gap-2"
+            :class="row.pending ? 'opacity-70' : undefined"
           >
             <span
-              class="max-w-[14ch] flex-none truncate rounded-chip border px-1 py-px text-[0.6rem] font-bold tracking-[0.08em] uppercase"
-              :class="row.author === 'you'
-                ? `text-primary-700 dark:text-primary-300 ${row.pending ? 'border-dashed border-primary/60' : 'border-primary/40'}`
-                : 'border-accented text-muted'"
+              class="chip"
+              :class="row.author === 'you' ? (row.pending ? 'chip-pending' : 'chip-lit') : undefined"
             >{{ row.author }}</span>
-            <span class="min-w-0 truncate">{{ row.body }}</span>
+            <FlapText
+              :text="row.body"
+              :cells="cells"
+              class="min-w-0"
+            />
           </li>
           <li
             v-if="sim.progress !== null"
@@ -376,7 +359,7 @@ watch(state, (value) => {
                 class="block h-full rounded-full bg-primary transition-[width] duration-100 ease-out"
                 :style="{ width: `${sim.progress}%` }"
               /></span>
-            <span class="flex-none text-[0.6rem] font-bold tracking-[0.08em] text-primary-700 tabular-nums dark:text-primary-300">{{ sim.progress }}%</span>
+            <span class="stamp flex-none text-lit tabular-nums">{{ sim.progress }}%</span>
           </li>
           <li
             v-if="!simShown.length && sim.progress === null"
@@ -395,19 +378,19 @@ watch(state, (value) => {
       @submit.prevent="submit"
     >
       <label
-        class="concave rounded-well flex min-w-0 flex-1 items-center gap-2 border border-(--recess-edge) px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
+        class="part-well flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 transition-shadow duration-180 ease-out focus-within:ring-2 focus-within:ring-primary"
         :class="sending ? 'opacity-65' : undefined"
       >
-        <span class="sr-only">Write a message to the live Convex table</span>
+        <span class="sr-only">Post a line to the live board</span>
         <span
-          class="max-w-[14ch] flex-none truncate font-mono text-[0.6rem] font-bold tracking-[0.08em] uppercase text-primary-700 dark:text-primary-300"
+          class="chip chip-lit border-0 px-0"
           aria-hidden="true"
         >{{ handle }}</span>
         <input
           v-model="draft"
           :disabled="!client || !!error"
           maxlength="140"
-          placeholder="write a row…"
+          placeholder="post a line…"
           class="min-w-0 flex-1 border-0 bg-transparent py-1 font-mono text-xs text-highlighted outline-none placeholder:text-dimmed"
         >
       </label>
@@ -427,32 +410,25 @@ watch(state, (value) => {
     </form>
 
     <!-- THE STATUS RAIL — the panel's one readout, and the only place it
-         reports state. A recessed strip machined into the plate: the cells
-         are scribed apart rather than spaced apart, so it reads as one
-         instrument with divisions instead of a row of loose chips.
+         reports state (the cells and their scribes are chrome.css's .rail).
 
-         The zones are the same in both acts, which is what lets one strip
-         serve a recording and a live socket without either borrowing the
-         other's idiom:
-
-           state    the lamp. REC while the script runs (signal orange —
-                    authored, ours), LIVE once the socket is up (green —
-                    a machine fact, and the conventional colour for one).
-                    OFFLINE kills the light rather than recolouring it.
+           state    the lamp. rec while the script runs (signal orange —
+                    authored, ours), live once the socket is up (green — a
+                    machine fact). offline kills the light.
            subject  what is being reported on: the scene, or the table.
            event    the last thing that happened: the sim chip, or the
                     hydration / commit latency / a rejected write.
-           action   REPLAY, in its own bay past the last scribe. -->
-    <figcaption class="panel-rail concave rounded-well mt-3.5 flex min-h-[2.15rem] items-stretch border border-(--recess-edge) font-mono text-[0.62rem] font-semibold tracking-[0.13em]">
+           action   replay, in its own bay past the last scribe. -->
+    <figcaption class="part-well mt-3.5 flex min-h-[2.15rem] items-stretch stamp">
       <template v-if="mode === 'recording'">
         <span class="rail-cell">
           <i
             aria-hidden="true"
             class="lamp lamp-rec"
           />
-          <span class="concave-text text-primary-700 dark:text-primary-300">REC</span>
+          <span class="concave-text text-lit">rec</span>
         </span>
-        <span class="rail-cell concave-text text-toned">SCENE 0{{ scene + 1 }} · {{ SCENES[scene]!.label }}</span>
+        <span class="rail-cell concave-text text-toned">scene 0{{ scene + 1 }} · {{ SCENES[scene]!.label }}</span>
         <span
           class="rail-cell rail-optional gap-1.5"
           aria-hidden="true"
@@ -466,7 +442,7 @@ watch(state, (value) => {
         </span>
         <span
           v-if="sim.chip"
-          class="rail-cell rail-optional concave-text ml-auto text-primary-700 dark:text-primary-300"
+          class="rail-cell rail-optional concave-text ml-auto text-lit"
         >{{ sim.chip }}</span>
       </template>
       <template v-else>
@@ -479,139 +455,33 @@ watch(state, (value) => {
           <span
             class="concave-text"
             :class="online ? 'text-toned' : 'text-dimmed'"
-          >{{ online ? 'LIVE' : 'OFFLINE' }}</span>
+          >{{ online ? 'live' : 'offline' }}</span>
         </span>
-        <span class="rail-cell concave-text text-dimmed">{{ (data ?? []).length }} DOCUMENTS</span>
+        <span class="rail-cell concave-text text-dimmed">{{ (data ?? []).length }} documents</span>
         <span
           v-if="rejection"
-          class="rail-cell concave-text min-w-0 flex-1 tracking-[0.02em] text-error"
+          class="rail-cell concave-text min-w-0 flex-1 text-error"
         ><span class="truncate">{{ rejection }}</span></span>
         <span
           v-else-if="rtt !== null"
-          class="rail-cell rail-optional concave-text text-primary-700 dark:text-primary-300"
-        >COMMIT {{ rtt }} MS</span>
+          class="rail-cell rail-optional concave-text text-lit"
+        >commit {{ rtt }} ms</span>
         <span
           v-else
           class="rail-cell rail-optional concave-text text-dimmed"
-        >SSR HYDRATED</span>
+        >ssr hydrated</span>
         <!-- One more pass of the recording — simulated, so no cost to ask. -->
         <UButton
           size="xs"
           color="neutral"
           variant="ghost"
-          class="rail-cell ml-auto font-mono text-[0.56rem] font-bold tracking-[0.14em] text-dimmed hover:text-toned"
+          class="rail-cell ml-auto stamp text-dimmed hover:text-toned"
           :disabled="state === 'playing'"
           @click="replay()"
         >
-          REPLAY
+          replay
         </UButton>
       </template>
     </figcaption>
   </figure>
 </template>
-
-<style scoped>
-/* The rail is a groove cut across the foot of the plate — the shallow
-   `concave` to the source tray's `concave-2` above it, so the two
-   recesses read as one machining pass rather than as a well and a card.
-   The shape and the paint are on the element (depth.css); what is left
-   here is only the layout.
-
-   Deliberately NOT overflow:hidden. Nothing in here needs clipping — the
-   scribes are inset well clear of the rounding — and REPLAY's focus ring
-   is an outline drawn OUTSIDE its box, so a clip would swallow the only
-   indicator a keyboard user gets on the one control in the rail. */
-.rail-cell {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  padding-inline: 0.72rem;
-  white-space: nowrap;
-}
-/* A status bar that wraps is not a status bar, and the full set needs
-   about 26rem of rail. Below that the EVENT cell goes: SSR HYDRATED and
-   COMMIT n MS are transient notes, while the lamp, the document count and
-   REPLAY are the standing readout and the one control. The recording act
-   sheds the same way — the scene pips and the sim chip go, and "SCENE 03"
-   already says how far along the tour is. A REJECTION is
-   never optional — an error the panel is hiding is worse than a rail that
-   scrolls — so that branch has no `rail-optional`.
-
-   Written as a container query HERE rather than as a `@max-[26rem]:hidden`
-   utility on the markup, because `.rail-cell` above is unlayered scoped CSS
-   and beats the layered `hidden` outright: the class sat on the element
-   looking correct and never took effect. (The query resolves against
-   `figure.convex-3`'s @container — and note the panel's own
-   `@max-[30rem]:px-4.5` cannot work at all, since an element is never its
-   own query container.) */
-@container (max-width: 26rem) {
-  .rail-optional {
-    display: none;
-  }
-}
-/* Cells are SCRIBED apart, not spaced apart: a shade line with its light
-   catch one pixel to its right — the same two-line rule the mill finishes
-   cut into the section grounds (landing.css), turned on its side. Inset
-   vertically so the scribe stops short of the groove's own lip instead of
-   colliding with it. Drawn on a pseudo rather than as a border so the
-   rail's rounding clips it and the first cell can opt out. */
-.rail-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  inset-block: 0.4rem;
-  inset-inline-start: 0;
-  inline-size: 2px;
-  background-image: linear-gradient(90deg,
-    light-dark(oklch(0% 0 0 / 0.11), oklch(0% 0 0 / 0.5)) 0 1px,
-    light-dark(oklch(100% 0 0 / 0.8), oklch(100% 0 0 / 0.05)) 1px 2px);
-}
-/* The lamp sits in a counterbore — a ring of shade around the light, which
-   is what stops a coloured dot on a metal panel reading as a sticker. The
-   glow is the lamp's own spill and only the LIT states get one. */
-.lamp {
-  --lamp-bore: 0 0 0 2px light-dark(oklch(0% 0 0 / 0.07), oklch(0% 0 0 / 0.55));
-  flex: none;
-  inline-size: 0.4rem;
-  block-size: 0.4rem;
-  border-radius: 999px;
-  background: var(--ui-text-dimmed);
-  box-shadow: var(--lamp-bore);
-}
-/* Green for the socket, signal orange for the recording. The split is the
-   point of having one lamp: a machine fact and an authored one are not the
-   same kind of state, and the colour is what says which you are looking
-   at. */
-.lamp-live {
-  background: var(--ui-color-success-500);
-  box-shadow: var(--lamp-bore), var(--glow-success);
-}
-.lamp-rec {
-  background: var(--ui-primary);
-  box-shadow: var(--lamp-bore), var(--glow-primary-soft);
-}
-/* Offline is a DEAD lamp, not a differently coloured one: it keeps the
-   counterbore and loses the light. */
-.lamp-dead {
-  background: var(--ui-text-dimmed);
-}
-/* The theme's pulse-ring keyframes set box-shadow outright, which would
-   drop the counterbore for the length of the pulse and leave the lamp
-   floating on the rail. This one carries the bore through both frames. */
-@media (prefers-reduced-motion: no-preference) {
-  .lamp-rec {
-    animation: lamp-pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes lamp-pulse {
-    0%, 100% {
-      box-shadow: var(--lamp-bore),
-        0 0 0 0 color-mix(in srgb, var(--ui-primary) 35%, transparent);
-      opacity: 1;
-    }
-    50% {
-      box-shadow: var(--lamp-bore), 0 0 0 6px transparent;
-      opacity: 0.6;
-    }
-  }
-}
-</style>

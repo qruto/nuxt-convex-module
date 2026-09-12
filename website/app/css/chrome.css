@@ -233,7 +233,10 @@ body {
    catch any <header> a content page renders. Hung on the root slot in
    app.config. */
 .app-header {
-  --ui-bg-muted: light-dark(oklch(91.5% 0 0), oklch(20.5% 0 0));
+  /* Lighter at both ends (2026-09-08: "too gray in light, too dark in
+     dark"): the dish keeps its ramp and its lip, and the floor sits closer
+     to the rail so the field reads as a shallow pocket, not a slot. */
+  --ui-bg-muted: light-dark(oklch(95.2% 0 0), oklch(26% 0 0));
   /* The line above, on its own, did NOTHING for years. `concave` fills
      with --gradient-recessed, which is declared on :root — and a custom
      property's var()s are substituted at computed-value time ON THE
@@ -251,9 +254,9 @@ body {
      against the line above. */
   --dish-body: light-dark(
       var(--ui-bg-muted),
-      color-mix(in srgb, var(--ui-bg-muted), #000 20%));
+      color-mix(in srgb, var(--ui-bg-muted), #000 6%));
   --gradient-recessed: linear-gradient(180deg,
-    color-mix(in srgb, var(--dish-body), #000 2%),
+    color-mix(in srgb, var(--dish-body), #000 3%),
     var(--dish-body) 34%, var(--dish-body) 76%,
     color-mix(in srgb, var(--dish-body), var(--dish-floor-lift) 2%));
 
@@ -324,4 +327,119 @@ body {
 .docs-page-links :is(a, button).border-l {
   border-inline-start-width: 0;
   box-shadow: var(--seam-y), var(--elevation-1);
+}
+
+/* -- THE LAMPS AND THE SCRIBE ---------------------------------------
+   The two instrument marks every demo on the site shares, written
+   once here rather than in each component's scoped block (they used
+   to be copied into three).
+
+   A LAMP sits in a counterbore — a ring of shade around the light,
+   which is what stops a coloured dot on a metal panel reading as a
+   sticker. Only the LIT states get a glow: green for a machine fact
+   (a socket is open), signal orange for something authored (a
+   recording is running, this is the current step). A dead lamp keeps
+   the bore and loses the light; a pending one is the bore with
+   nothing in it.
+
+   A SCRIBE is the seam stood on its own: a shade line with its catch
+   one pixel below, run across a plate as a rule — the same two-pixel
+   cut the mill finishes and --seam-x draw, as a standalone element. */
+.lamp {
+  --lamp-bore: 0 0 0 2px light-dark(oklch(0% 0 0 / 0.07), oklch(0% 0 0 / 0.55));
+  flex: none;
+  display: inline-block;
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 999px;
+  background: var(--ui-text-dimmed);
+  box-shadow: var(--lamp-bore);
+}
+.lamp-live {
+  background: var(--ui-color-success-500);
+  box-shadow: var(--lamp-bore), var(--glow-success);
+}
+.lamp-rec {
+  background: var(--ui-primary);
+  box-shadow: var(--lamp-bore), var(--glow-primary-soft);
+}
+.lamp-pending {
+  background: transparent;
+}
+.lamp-dead {
+  background: var(--ui-text-dimmed);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lamp-rec {
+    animation: lamp-pulse 2.4s ease-in-out infinite;
+  }
+  /* The theme's pulse-ring keyframes set box-shadow outright, which
+     would drop the counterbore for the length of the pulse and leave
+     the lamp floating on the rail. This one carries the bore through. */
+  @keyframes lamp-pulse {
+    0%, 100% {
+      box-shadow: var(--lamp-bore),
+        0 0 0 0 color-mix(in srgb, var(--ui-primary) 35%, transparent);
+      opacity: 1;
+    }
+    50% {
+      box-shadow: var(--lamp-bore), 0 0 0 6px transparent;
+      opacity: 0.6;
+    }
+  }
+}
+.scribe {
+  display: block;
+  block-size: 2px;
+  background-image: linear-gradient(180deg,
+    var(--seam-shade) 0 1px,
+    var(--seam-catch) 1px 2px);
+}
+/* The same cut stood on end — a divider between two cells of a rail. */
+.scribe-y {
+  display: block;
+  inline-size: 2px;
+  background-image: linear-gradient(90deg,
+    var(--seam-shade) 0 1px,
+    var(--seam-catch) 1px 2px);
+}
+@media (forced-colors: active) {
+  .scribe, .scribe-y { background-image: none; border: 1px solid; }
+  .lamp { border: 1px solid; box-shadow: none; }
+}
+
+/* -- THE RAIL ---------------------------------------------------------
+   The status strip at the foot of every demo plate: a `part-well` whose
+   cells are SCRIBED apart rather than spaced apart — a shade line with
+   its light catch one pixel to its right, inset so the scribe stops
+   short of the groove's own lip. One instrument with divisions instead
+   of a row of loose chips. Written once here; the plates only lay
+   their cells out.
+
+   `rail-optional` cells are the transient notes (a commit latency, the
+   hydration stamp) that go when the plate is narrow — a status bar that
+   wraps is not a status bar. A REJECTION never carries the class: an
+   error the panel is hiding is worse than a rail that scrolls. The
+   query resolves against the plate's own @container. */
+.rail-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding-inline: 0.72rem;
+  padding-block: 0.55rem;
+  white-space: nowrap;
+}
+.rail-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.4rem;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  background-image: linear-gradient(90deg,
+    var(--seam-shade) 0 1px,
+    var(--seam-catch) 1px 2px);
+}
+@container (max-width: 30rem) {
+  .rail-optional { display: none; }
 }

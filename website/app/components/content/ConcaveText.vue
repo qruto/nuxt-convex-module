@@ -55,7 +55,7 @@
 .face {
   --floor: light-dark(
       color-mix(in srgb, var(--ui-bg), black 22%),
-      color-mix(in srgb, var(--ui-bg), black 45%));
+      color-mix(in srgb, var(--ui-bg), black 48%));
   /* The paint has to reach BELOW the last line box or the descenders
      get no fill at all. Technor hangs them past the tile (to 105.5%),
      so their feet are painted by the NEXT tile down — which is how a
@@ -133,7 +133,7 @@
      on its own, and a full-strength tile shade on top of it took the
      cap tops to nothing. The tile keeps the per-line tilt; the shadow
      draws the edge. */
-  --shade: light-dark(oklch(0% 0 0 / 0.13), oklch(0% 0 0 / 0.35));
+  --shade: light-dark(oklch(0% 0 0 / 0.13), oklch(0% 0 0 / 0.5));
   /* Dark still runs the far wall harder than light — on the black
      anodize the lift toward the baseline is most of what separates a
      letter from the ground — but it is a lift, not a glint.
@@ -169,7 +169,7 @@
      the tile's straight band only has to meet it at the baseline. At
      0.18 the two stacked into a bright pad under every descender at
      the tile seam. */
-  --catch: light-dark(oklch(100% 0 0 / 0.05), oklch(100% 0 0 / 0.14));
+  --catch: light-dark(oklch(100% 0 0 / 0.05), oklch(100% 0 0 / 0.06));
   background-image:
     linear-gradient(180deg,
       --alpha(var(--catch) / 30%) 0%,
@@ -221,9 +221,15 @@
      cut into a black part is. The two spills land on the plate, where
      a recess casts nothing, so they stay small. Light passes
      transparent here — its floor and tile were already right. */
-  text-shadow:
-    0 0.07em 0 light-dark(transparent, oklch(100% 0 0 / 0.055)),
-    0 -0.05em 0 light-dark(transparent, oklch(0% 0 0 / 0.45));
+  /* No shifted copies in either scheme any more (2026-09-07). Dark used
+     to paint a white copy pushed down and a black copy pushed up over
+     the clipped fill, to draw walls that followed each glyph; measured
+     against seven alternatives on the section grounds, the pair was the
+     mush — three titles read as smeared type. THE DARK CUT IS NOW A HOLE:
+     a floor near black (72% down from the plate), the lip's shade
+     rolling down from the cap tops, and the letterform drawn by the .ink
+     copy's crisp lit edge below and the black line above. Simpler than
+     the light recipe, and it is the one that read. */
 }
 
 /* Em-scaled, so one recipe holds from a 30px h2 to a hero-size line —
@@ -255,13 +261,17 @@
   --soft: 0.05em;
   text-shadow:
     0 calc(var(--depth) * -0.4) calc(var(--soft) * 0.3)
-      light-dark(oklch(15% 0 0 / 0.46), oklch(0% 0 0 / 0.75)),
+      light-dark(oklch(15% 0 0 / 0.46), oklch(0% 0 0 / 0.9)),
     0 calc(var(--depth) * -0.85) calc(var(--soft) * 1.1)
-      light-dark(oklch(15% 0 0 / 0.2), oklch(0% 0 0 / 0.4)),
+      light-dark(oklch(15% 0 0 / 0.2), transparent),
     0 calc(var(--depth) * 0.5) 0
-      light-dark(oklch(100% 0 0 / 0.85), oklch(100% 0 0 / 0.2)),
+      light-dark(oklch(100% 0 0 / 0.85), oklch(100% 0 0 / 0.42)),
     0 calc(var(--depth) * 0.9) 0
-      light-dark(oklch(100% 0 0 / 0.4), oklch(100% 0 0 / 0.08));
+      light-dark(oklch(100% 0 0 / 0.4), oklch(100% 0 0 / 0.09)),
+    /* Dark only: the hole's own soft cast pooling under the letters —
+       what separates a black cut from black type on a dark plate. */
+    0 calc(var(--depth) * 1.6) calc(var(--soft) * 2.6)
+      light-dark(transparent, oklch(0% 0 0 / 0.5));
 }
 
 /* Forced colors would strip the backgrounds and leave transparent

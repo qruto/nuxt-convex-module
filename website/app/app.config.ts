@@ -28,7 +28,9 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code'],
+            // `part-code-shell` only re-points the gutter's marking, so it is
+            // NOT on the depth axis — it composes with part-code.
           },
         },
       },
@@ -179,7 +181,7 @@ export default defineAppConfig({
       slots: {
         root: 'relative py-8 border-b-0 shadow-(--seam-x)',
         headline:
-          'mb-2.5 font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
+          'mb-2.5 font-mono text-xs font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
         title: 'font-display concave-text',
         // Hook for the field-group seam patch in chrome.css — the
         // divider class lives in Docus's own template.

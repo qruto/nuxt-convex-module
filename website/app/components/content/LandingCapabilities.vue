@@ -1,83 +1,104 @@
 <script setup lang="ts">
-// The capability legend — the hero's six headline features set as a part
-// legend rather than as a comma list in a sentence: a mark, the name, and
-// under it the composable that IS that feature, stamped in the same mono
-// caps the spec cards stamp their composables in. A legend is information,
-// not action, so nothing here is raised or filled: the marks and names sit
-// on the plate in body ink, a full step under the billet and the primary
-// key in weight, size and colour, and the stamps are cut in the way every
-// small marking on this page is.
+// The capability legend — the hero's six headline features as a part
+// legend: a mark, the name, and EVERY composable that is that feature,
+// stamped in the same lowercase mono every marking on the page wears
+// (2026-09-08: it used to show one composable per feature; SSR alone has
+// four). Set as one column of rows so the list reads top to bottom beside
+// the panel instead of as three columns fighting the headline for width.
 //
-// The one thing that moves is the lamp. The instrument panel beside the copy
-// records the same features scene by scene, and the entry it is currently
-// demonstrating lights — the legend reads as the panel's own key rather than
-// as a second, unrelated list of the same six words. Actions and SSR have no
-// scene and never light; that is honest, the plate does not demo them.
+// The one thing that moves is the light. The instrument panel beside the
+// copy records the same features scene by scene, and the row it is
+// demonstrating lights — mark, name, and its stamps one after another, the
+// way a readout comes on. Actions have no scene and never light; that is
+// honest, the plate does not demo them.
 interface Capability {
   label: string
-  stamp: string
+  stamps: string[]
   icon: string
-  /** The panel scene ids (LandingHeroPanel SCENES) that demonstrate it. */
-  scenes: readonly string[]
+  /** The one panel scene (LandingHeroPanel SCENES) that demonstrates it. */
+  scene: string
 }
 
+// ONE ROW IS LIT AT A TIME, AND EVERY ROW GETS ITS TURN (2026-09-08:
+// "why do we have an orange icon for live queries and for server and SSR
+// but other icons are gray? make it logical"). Two rows used to light
+// together because the panel's final act carried both ids, and one row —
+// Actions — never lit at all, because the recording had no scene for it.
+// The panel now runs SIX scenes, one per row, in this order, so the lamp
+// walks the legend from top to bottom and nothing is ever lit for a
+// reason the reader cannot see on the plate beside it.
 const CAPABILITIES: Capability[] = [
-  { label: 'Live queries', stamp: 'useQuery', icon: 'i-lucide-radio', scenes: ['QUERY', 'LIVE'] },
-  { label: 'Mutations', stamp: 'useMutation', icon: 'i-lucide-pen-line', scenes: ['MUTATION'] },
-  { label: 'Actions', stamp: 'useAction', icon: 'i-lucide-zap', scenes: [] },
-  { label: 'Cursor pagination', stamp: 'usePaginatedQuery', icon: 'i-lucide-gallery-vertical-end', scenes: ['PAGINATION'] },
-  { label: 'File storage', stamp: 'useUpload', icon: 'i-lucide-file-up', scenes: ['FILES'] },
-  { label: 'SSR', stamp: 'useAsyncQuery', icon: 'i-lucide-server', scenes: [] },
+  { label: 'Live queries', stamps: ['useQuery', 'useQueries'], icon: 'i-lucide-radio', scene: 'QUERY' },
+  { label: 'Mutations', stamps: ['useMutation', '.withOptimisticUpdate'], icon: 'i-lucide-pen-line', scene: 'MUTATION' },
+  { label: 'Cursor pagination', stamps: ['usePaginatedQuery', 'insertAtTop'], icon: 'i-lucide-gallery-vertical-end', scene: 'PAGINATION' },
+  { label: 'File storage', stamps: ['useUpload', 'useUploadQueue', 'useStorageUrl'], icon: 'i-lucide-file-up', scene: 'FILES' },
+  { label: 'Actions', stamps: ['useAction'], icon: 'i-lucide-zap', scene: 'ACTION' },
+  { label: 'Server & SSR', stamps: ['useAsyncQuery', 'preloadQuery', 'fetchQuery'], icon: 'i-lucide-server', scene: 'LIVE' },
 ]
 
 const scene = useHeroScene()
 </script>
 
 <template>
-  <!-- Three across, two rows, in the order the sentence used to run them —
-       and the columns are max-content, so the legend hugs its own words
-       instead of spreading six short entries across the whole copy column.
-       Two across on a phone, where the copy column is the screen: `auto`
-       tracks there, not 1fr — the longest name ("Cursor pagination") is
-       wider than half the column and broke onto two lines in an equal
-       split, which threw its stamp a line below its neighbour's. Content-
-       sized tracks hand the long name its width and the free space falls
-       between the two columns. -->
   <ul
     aria-label="What the module ships"
-    class="capabilities m-0 grid list-none grid-cols-[auto_auto] justify-between gap-x-4 gap-y-4 p-0 sm:grid-cols-[repeat(3,max-content)] sm:justify-start sm:gap-x-12"
+    class="capabilities m-0 flex list-none flex-col gap-y-2 p-0"
   >
     <li
       v-for="entry in CAPABILITIES"
-      :key="entry.stamp"
-      class="capability m-0 flex items-start gap-2.5 p-0"
-      :data-lit="(scene && entry.scenes.includes(scene)) || undefined"
+      :key="entry.label"
+      class="capability m-0 grid items-baseline gap-x-3 gap-y-1 p-0 sm:gap-x-4"
+      :data-lit="scene === entry.scene || undefined"
     >
       <UIcon
         :name="entry.icon"
-        class="mark mt-0.5 size-4 flex-none"
+        class="mark size-4 flex-none self-center"
         aria-hidden="true"
       />
-      <span class="flex flex-col gap-0.5">
-        <span class="name font-sans text-[0.95rem] leading-tight font-medium text-default">{{ entry.label }}</span>
-        <span class="concave-text font-mono text-[0.6rem] leading-none font-semibold tracking-[0.12em] text-dimmed">{{ entry.stamp }}</span>
+      <span class="name font-sans text-[0.95rem] leading-tight font-medium text-default">{{ entry.label }}</span>
+      <span class="fns flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <span
+          v-for="(stamp, i) in entry.stamps"
+          :key="stamp"
+          class="fn stamp text-[0.62rem] text-dimmed"
+          :style="{ '--i': i }"
+        >{{ stamp }}</span>
       </span>
     </li>
   </ul>
 </template>
 
 <style scoped>
+/* One row per capability: mark, name, and the stamps on the same line
+   while the column is wide enough to hold them; in a narrow column
+   (a phone, or the halved hero below xl) the stamps drop under the name
+   rather than wrapping beside it in a ragged third column. The list is
+   its own size container, so the fold reads the copy column's width. */
+.capabilities {
+  container-type: inline-size;
+}
+.capability {
+  grid-template-columns: 1.25rem minmax(8.5rem, max-content) minmax(0, 1fr);
+}
+@container (width < 36rem) {
+  .capability {
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+  }
+  .fns {
+    grid-column: 2;
+  }
+}
 /* Rest state is ink at the plate's secondary strength — the mark reads
    with the name, not ahead of it. Lit, the mark takes the signal colour
-   and the glow the spec cards' band ticks carry, and the name steps up
-   one rung to the headline ink. Colour only; nothing on the plate moves.
-   The transition is a fade, so reduced-motion needs no guard. */
+   and its glow, the name steps up to headline ink, and the stamps come
+   on one after another. Colour only; nothing on the plate moves. */
 .mark {
   color: var(--ui-text-toned);
   transition: color 0.35s var(--ease-out), filter 0.35s var(--ease-out);
 }
-.name {
+.name, .fn {
   transition: color 0.35s var(--ease-out);
+  transition-delay: 0s;
 }
 .capability[data-lit] .mark {
   color: var(--ui-primary);
@@ -85,6 +106,10 @@ const scene = useHeroScene()
 }
 .capability[data-lit] .name {
   color: var(--ui-text-highlighted);
+}
+.capability[data-lit] .fn {
+  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
+  transition-delay: calc(var(--i) * 120ms);
 }
 @media (forced-colors: active) {
   .capability[data-lit] .mark {

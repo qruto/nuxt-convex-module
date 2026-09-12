@@ -31,10 +31,10 @@ const version = computed(() => npm.value?.version ?? null)
 const convex = upstreamBaselines.convex
 
 const cells = computed(() => [
-  ...(version.value ? [{ label: 'VERSION', figure: version.value }] : []),
-  { label: 'NUXT', figure: props.nuxt },
-  { label: 'VUE', figure: props.vue },
-  { label: 'PORTS CONVEX', figure: convex.version },
+  ...(version.value ? [{ label: 'version', figure: version.value }] : []),
+  { label: 'nuxt', figure: props.nuxt },
+  { label: 'vue', figure: props.vue },
+  { label: 'ports convex', figure: convex.version },
 ])
 </script>
 
@@ -68,16 +68,16 @@ const cells = computed(() => [
          stepped again — figures at `text-default`, labels back up to
          `text-toned`, where `text-muted` at 8.8px went to a whisper once
          the dish stopped being the lightest thing in the hero. -->
-    <dl class="board concave-ground rounded-card m-0 border border-(--recess-edge)">
+    <dl class="board part-dish m-0">
       <div
         v-for="cell in cells"
         :key="cell.label"
-        class="cell grid justify-items-center gap-y-0.5 px-5 pt-2 pb-2.5 text-center"
+        class="cell grid justify-items-center gap-y-1 px-4 pt-2.5 pb-3 text-center"
       >
-        <dt class="concave-text font-mono text-[0.55rem] font-semibold tracking-[0.18em] whitespace-nowrap text-toned">
+        <dt class="stamp text-[0.58rem] whitespace-nowrap text-toned">
           {{ cell.label }}
         </dt>
-        <dd class="convex-text m-0 font-mono text-sm leading-tight font-semibold whitespace-nowrap text-default tabular-nums">
+        <dd class="convex-text m-0 font-mono text-base leading-tight font-semibold whitespace-nowrap text-default tabular-nums">
           {{ cell.figure }}
         </dd>
       </div>
@@ -89,33 +89,31 @@ const cells = computed(() => [
 .spec-board {
   container-type: inline-size;
 }
-/* One row of cells hugging their figures, the board as wide as its
-   readouts and no wider. Block-level on purpose: an inline-grid would
-   sit on the copy's baseline and carry a descender gap under it. */
+/* THE BOARD IS AS WIDE AS THE HEADLINE, and the headline is not as wide
+   as its column (2026-09-08). Told to run "one size with the main title",
+   it was given 100% of the copy column — 720px against a headline whose
+   longest line measures 623 at the same width, so the board overhung the
+   thing it was supposed to line up with.
+
+   The figure is the headline's own measure, in ems of the headline's own
+   type: the hard-broken second line ("in a [Nuxt] application") renders
+   10.8em wide in Technor 700, so the board is 10.8 x --hero-title-size
+   and the two edges track each other through every step of the title's
+   clamp. Re-measure both if the headline's wording or its break move;
+   nothing here can derive it. */
 .board {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  inline-size: max-content;
-  max-inline-size: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  inline-size: min(100%, calc(10.8 * var(--hero-title-size, 4.5rem)));
 }
 /* The cells are divided by scribed seams, not by drawn boxes: chrome.css's
-   two-pixel cut stood on end — shade in the column just outside a cell's
-   leading edge, catch on its first column inside — run the full height of
-   the well, the way a groove in a floor runs to the walls. The cell has no
-   fill of its own, so the outer half lands on the dish. */
+   two-pixel cut stood on end. */
 .cell + .cell {
   box-shadow: var(--seam-y);
 }
-/* Two columns once the row can't hold four readouts — the phone case. The
-   cells then square up to equal widths (a scoreboard's cells match), and
-   the seams follow: a vertical cut opens on the right-hand column, a
-   horizontal one across the top of the second row (the same cut, lying
-   down: shade on the row just above, catch on the cell's own first row). */
-@container (width < 22rem) {
+/* Two columns once the row can't hold four readouts — the phone case. */
+@container (width < 26rem) {
   .board {
-    grid-auto-flow: row;
-    grid-auto-columns: auto;
     grid-template-columns: repeat(2, 1fr);
   }
   .cell + .cell {
@@ -136,8 +134,6 @@ const cells = computed(() => [
       inset 0 1px 0 var(--seam-catch);
   }
 }
-/* Forced colors strip every shadow and fill — hand the board and its
-   seams back to the system ink as plain rules. */
 @media (forced-colors: active) {
   .board {
     border: 1px solid;
@@ -145,7 +141,7 @@ const cells = computed(() => [
   .cell + .cell {
     border-inline-start: 1px solid;
   }
-  @container (width < 22rem) {
+  @container (width < 26rem) {
     .cell + .cell {
       border-inline-start: 0;
     }
