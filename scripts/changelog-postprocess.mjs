@@ -20,10 +20,12 @@ const scopeMap = changelog?.scopeMap ?? {}
 // changelogen's line: `- **scope:** Description ([sha](url))`
 const SCOPED = /^- \*\*(.+?):\*\* (.*)$/
 
+/** Heading for a scope: its `changelog.scopeMap` name, else the key capitalised. */
 function scopeName(scope) {
   return scopeMap[scope] ?? scope.charAt(0).toUpperCase() + scope.slice(1)
 }
 
+/** One `### Type` block: unscoped items first, then a `#### Scope` list per scope. */
 function groupSection(lines) {
   // lines[0] is the `### Type` heading; the list follows after blank lines.
   let i = 1
