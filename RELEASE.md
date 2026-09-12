@@ -46,7 +46,8 @@ environment can do.
    ```sh
    npm view nuxt-convex-module@<version> dist                        # lists `attestations`, not just `signatures`
    gh release verify v<version>                                      # the Release itself is immutable and attested
-   gh attestation verify nuxt-convex-module-<version>.tgz --owner qruto   # the tarball, from the Release assets
+   gh release download v<version> --pattern '*.tgz'                  # the tarball, from the Release assets
+   gh attestation verify nuxt-convex-module-<version>.tgz --owner qruto   # verifies the local file against the attestation
    ```
 
 ## What runs

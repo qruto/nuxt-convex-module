@@ -319,8 +319,11 @@ jobs:
   # Assets go in with `gh release create`, in one call: immutable releases are
   # on, so nothing can be added to a Release once it is published — gh creates
   # it as a draft, uploads, then publishes. Runs on a re-stage too, and returns
-  # early if the Release is there: if the tag push lands and this job then
+  # early if the Release is published: if the tag push lands and this job then
   # fails, the tag exists with no Release, and a re-stage is what repairs it.
+  # A draft is what a failed upload or publication leaves behind, so a draft is
+  # deleted and made again rather than mistaken for the finished Release —
+  # immutability starts at publication, and `gh release delete` leaves the tag.
   #
   # `--verify-tag` stops gh inventing a tag if `tag`'s push did not land. The
   # Release it creates is immutable and carries GitHub's own attestation —
@@ -383,9 +386,14 @@ jobs:
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release v$VERSION already exists — nothing to create."
-            exit 0
+          if is_draft=$(gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" \
+              --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$is_draft" = "false" ]; then
+              echo "Release v$VERSION already exists — nothing to create."
+              exit 0
+            fi
+            echo "Release v$VERSION is an unfinished draft from an earlier attempt — recreating it."
+            gh release delete "v$VERSION" --repo "$GITHUB_REPOSITORY" --yes
           fi
           tarball=$(ls nuxt-convex-module-*.tgz)
           cp "$BUNDLE" "$tarball.sigstore.json"

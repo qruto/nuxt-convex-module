@@ -141,9 +141,10 @@ third-party app holds write access to this repository.
   their reasoning.
 - The release is four jobs so the credentials never meet the code: the job that tags holds no npm
   credential and cannot start until a maintainer approves the run; the job that builds holds
-  nothing; the job that attests the tarball and creates the GitHub Release, and the job that
-  publishes, hold only OIDC tokens, check out nothing, install nothing, and run behind
-  `step-security/harden-runner` in `block` mode with an allowlist of npm, GitHub and Sigstore.
+  nothing; the job that attests the tarball and creates the GitHub Release holds `contents`,
+  `id-token` and `attestations: write`, and the job that publishes holds only the OIDC token —
+  both check out nothing, install nothing, and run behind `step-security/harden-runner` in
+  `block` mode with an allowlist of GitHub, Sigstore and (for `publish`) npm.
   `Release Prepare` is split the same way: the job that runs changelogen has a read-only token, and
   the job that commits and opens the pull request installs nothing.
 - Every release carries its own proof: the tarball and its SBOM are attested with
