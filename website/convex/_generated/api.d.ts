@@ -10,10 +10,13 @@
 
 import type * as analyze from "../analyze.js";
 import type * as billing from "../billing.js";
+import type * as console from "../console.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as messages from "../messages.js";
 import type * as moderation from "../moderation.js";
+import type * as presence from "../presence.js";
+import type * as switches from "../switches.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -25,10 +28,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   analyze: typeof analyze;
   billing: typeof billing;
+  console: typeof console;
   crons: typeof crons;
   files: typeof files;
   messages: typeof messages;
   moderation: typeof moderation;
+  presence: typeof presence;
+  switches: typeof switches;
   tasks: typeof tasks;
 }>;
 

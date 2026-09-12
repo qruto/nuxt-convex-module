@@ -10,7 +10,7 @@
           class="vue-mark size-3.5 flex-none"
         />any Vue app
       </span>
-      <span class="nuxt-chip flex items-center rounded-md border border-dashed border-accented px-2 py-1 text-[0.55rem] font-bold tracking-widest text-dimmed">NUXT · OPTIONAL</span>
+      <span class="nuxt-chip flex items-center rounded-md border border-dashed border-accented px-2 py-1 text-[0.55rem] font-bold tracking-[0.08em] text-dimmed">nuxt · optional</span>
     </div>
     <code class="concave-text max-w-full truncate rounded-sm px-1.5 py-0.5 text-[0.58rem] text-toned">'nuxt-convex-module/vue'</code>
   </div>

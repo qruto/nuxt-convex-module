@@ -63,16 +63,17 @@ const columns = computed(() => [
       <UContainer>
         <UFooterColumns
           :columns="columns"
-          :ui="{ label: 'concave-text font-mono text-[0.62rem] font-bold tracking-[0.14em] uppercase text-dimmed' }"
+          :ui="{ label: 'stamp text-dimmed' }"
         >
           <template #left>
             <p class="m-0 font-display text-base font-bold text-highlighted">
               Nuxt Convex
             </p>
             <p class="m-0 mt-2 max-w-96 text-sm leading-relaxed text-toned">
-              The Nuxt module for Convex — live queries, mutations, actions,
-              pagination, file storage and SSR, with opt-in Better Auth and
-              Polar. The same client runs standalone in any Vue app.
+              The Convex client for Nuxt and Vue — live queries, mutations,
+              actions, pagination, file storage and SSR, with auth, billing
+              and security wired in when their packages are installed. The
+              same client runs standalone in any Vue app.
             </p>
           </template>
         </UFooterColumns>

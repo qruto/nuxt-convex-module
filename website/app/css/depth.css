@@ -279,7 +279,29 @@
      the boundary into the middle step of a ramp instead of a line
      across it. The light figure was never the wrong one and does not
      move. */
-  --recess-edge: light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.1));
+  /* THE LIP IS A DRAWN GREY EDGE (2026-09-08, on instruction: "add a
+     light gray border for all such boxes to make them contrast with the
+     background"). It was an alpha black at 0.05, then 0.11 — a shade,
+     which is the physically honest way to draw the wall of a cut and
+     the wrong way to make a box read against a ground that is nearly
+     the same tone as its floor. It is now an opaque grey in both
+     rooms: a step darker than the light plate, a step lighter than the
+     dark one, so every pocket on the site is outlined at the same
+     weight whatever it is cut into.
+
+     Opaque, not alpha, precisely so it lands the same on the page
+     ground, on a plate, and over the fill a code block paints for
+     itself — one border, one weight, everywhere. */
+  --recess-edge: light-dark(oklch(84.5% 0 0), oklch(37% 0 0));
+  /* THE LIP IS PART OF THE CUT (2026-09-07). Every concave recipe used
+     to be cut without its edge, and each component then decided for
+     itself whether to draw one with `border border-(--recess-edge)` —
+     which is how the page ended up with wells that had a lip and wells
+     that did not, side by side. The edge is now a ring in the recipe's
+     own shadow list, so a well is a well wherever it is cut and no
+     component has to remember the border. A shadow, not a border, so
+     the box does not grow by 2px when it becomes a well. */
+  --recess-lip: inset 0 0 0 1px var(--recess-edge);
 
   /* Glows — keyed to the semantic aliases. */
   --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
@@ -551,13 +573,13 @@
 @utility concave {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-1);
+  box-shadow: var(--inset-shadow-1), var(--recess-lip);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility concave-2 {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-2);
+  box-shadow: var(--inset-shadow-2), var(--recess-lip);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 /* `concave-ground` is the deep tray cut into the PAGE rather than into
@@ -589,7 +611,8 @@
   background: var(--gradient-recessed-ground);
   box-shadow:
     var(--inset-shadow-2),
-    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014));
+    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014)),
+    var(--recess-lip);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
@@ -791,9 +814,16 @@
    band, like a key light off bead-blasted metal. */
 @utility sheen {
   position: relative;
+  /* The finish lies UNDER the content (2026-09-08). A positioned pseudo
+     paints above in-flow children, so the sheen's white haze was lying
+     over everything on the plate — invisible on pale readouts, and the
+     reason the split-flap board's dark tiles washed out in light. The
+     plate isolates and the layer drops below its children. */
+  isolation: isolate;
   &::before {
     content: "";
     position: absolute;
+    z-index: -1;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
@@ -809,9 +839,11 @@
 /* A whisper of fractal noise to stop flat banding on big surfaces. */
 @utility noise {
   position: relative;
+  isolation: isolate;
   &::after {
     content: "";
     position: absolute;
+    z-index: -1;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
@@ -819,4 +851,219 @@
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
+}
+
+/* ================================================================
+   THE PARTS — the recipes above, assembled into the handful of
+   things the site is actually built from
+   ----------------------------------------------------------------
+   The material rungs and the shape ladder are the vocabulary; these
+   are the WORDS. A component reaches for a part, never for a rung
+   plus a radius plus a lip of its own — that is how the page came to
+   have wells with an edge next to wells without one, and plates at
+   three elevations doing the same job (2026-09-07).
+
+     part-plate   a raised instrument plate on the page ground: the
+                  hero panel, a demo stage, a deploy step. ONE step
+                  off the page, whatever it holds — a plate that
+                  stands higher than its neighbours is floating, not
+                  more important.
+     part-card    the smaller raised part, 16px inset (a card in a
+                  grid, a pane on a plate).
+     part-well    the shallow pocket cut into a plate: a readout, a
+                  field, a rail. This is the default cut.
+     part-tray    the deep pocket a whole stage sits in: a code well,
+                  a row log, the deploy foam. One step deeper than
+                  the well; never nest a tray in a tray.
+     part-dish    a pocket cut into the PAGE itself rather than into
+                  a plate: the hero spec board, a code well set on
+                  the section ground.
+
+   Each carries its material, its shape and (for the cuts) its lip.
+   Padding is the component's: the ladder says a plate is inset 24
+   and a card 16, and the radii below assume it.
+
+   `part-plate` is `convex`, not `convex-2` or `-3`. The higher rungs
+   stay in the vocabulary for hover states and for chrome that really
+   does float (the header rail, a popover); a part that sits on the
+   ground takes the one-step cast and reads as bolted to it. */
+@utility part-plate {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-plate);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility part-card {
+  --depth: convex;
+  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
+  box-shadow: var(--elevation-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility part-well {
+  --depth: concave;
+  background: var(--gradient-recessed);
+  box-shadow: var(--inset-shadow-1), var(--recess-lip);
+  border-radius: var(--radius-well);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility part-tray {
+  --depth: concave;
+  background: var(--gradient-recessed);
+  box-shadow: var(--inset-shadow-2), var(--recess-lip);
+  border-radius: var(--radius-well);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+@utility part-dish {
+  --depth: concave;
+  background: var(--gradient-recessed-ground);
+  box-shadow:
+    var(--inset-shadow-2),
+    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014)),
+    var(--recess-lip);
+  border-radius: var(--radius-card);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+
+/* A CODE WELL is a tray that is NUMBERED. Every pocket on the site now
+   carries the same grey edge (--recess-edge above), so the thing that
+   tells a well holding SOURCE from one holding a readout cannot be its
+   border, its radius or its material — those are the system. It is the
+   marking: a line gutter down the leading edge, the way any editor
+   rules its margin, and a `$` in that same gutter where the lines are
+   commands rather than code (`part-code-shell`).
+
+   An accent bar down the edge stood here for a few hours and was
+   retired on instruction (2026-09-08: "the one colored right line on
+   side, it's too banal"). It was also a lie about the system — a
+   coloured rule is the one thing on this page that means "this is the
+   accent part", and a code block is not a control.
+
+   The numbers are free: Shiki emits one `<span class="line" line="N">`
+   per line, so the gutter is `content: attr(line)` and no counter, no
+   markup and no build step is involved. They ride IN the line box
+   rather than in a sticky column — a well that scrolls sideways takes
+   its numbers with it, exactly like a number typed into the text —
+   and they are `user-select: none`, so the copy button and a hand
+   selection both take the code alone. */
+@utility part-code {
+  --depth: concave;
+  --gutter: 2.4em;
+  /* WHITE-SPACE BELONGS TO THE RECIPE. It used to be set per plate with
+     `[&_pre]:whitespace-pre`, and that utility sorts after `part-code`
+     inside @layer utilities — so the phone's wrap below, being part of
+     this same utility, could never win against it. Owning both ends
+     here is what makes the responsive half possible at all. */
+  white-space: pre;
+  background: var(--gradient-recessed);
+  box-shadow: var(--inset-shadow-2), var(--recess-lip);
+  border-radius: var(--radius-well);
+  border: 0;
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+
+  & :is(.line, .code-line)::before {
+    content: attr(line);
+    display: inline-block;
+    inline-size: var(--gutter);
+    padding-inline-end: 0.9em;
+    text-align: end;
+    color: var(--ui-text-dimmed);
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* CODE WRAPS ON A PHONE, and hangs its own indent (2026-09-08). A
+     390px screen cannot hold `const messages = useQuery(api.messages
+     .list)` at a legible size, and both alternatives are worse than
+     wrapping: a clipped line reads as a bug on a marketing plate, and a
+     well that only scrolls sideways hides half the argument list on the
+     device most likely to be reading it. The number stays in the gutter
+     and the wrapped remainder aligns under the code — a negative
+     text-indent against the gutter's own padding — so a wrapped line
+     still reads as one line with one number.
+
+     It lives INSIDE the recipe rather than as a rule of its own because
+     most of these wells take it through an arbitrary variant
+     (`[&_pre]:part-code`), where the class never lands on the element
+     and a `.part-code { }` selector matches nothing. */
+  @media (width < 40rem) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    & :is(.line, .code-line) {
+      padding-inline-start: var(--gutter);
+      text-indent: calc(-1 * var(--gutter));
+    }
+  }
+}
+/* The shell variant: a prompt where a line number would be. A command
+   has no line 1 — it has a `$`, and that is the marking a reader
+   already knows means "type this". */
+@utility part-code-shell {
+  & :is(.line, .code-line)::before {
+    content: "$";
+    opacity: 0.45;
+  }
+}
+
+/* -- THE MARKINGS --------------------------------------------------
+   The small type every part is labelled with, written once.
+
+     stamp     a marking scribed into a surface — a file tab, a rail
+               cell, a readout label. Mono, small, cut in. It is set
+               in LOWERCASE everywhere on this site (2026-09-07: no
+               all-caps inscriptions), which is why the tracking is
+               modest: wide letterspacing was doing the work of
+               capitals, and lowercase set that wide reads as
+               t y p e w r i t e r.
+     chip      a printed badge on a row — an author, a state. Not a
+               cut, so it takes the chip radius and a drawn edge.
+     chip-lit  the same badge in the accent, for "you" and for the
+               thing the stage is pointing at.
+
+   Colour is deliberately NOT baked into `stamp`: pair it with a
+   text-* utility the way `concave-text` is paired. */
+@utility stamp {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+@utility chip {
+  display: inline-block;
+  max-inline-size: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: none;
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--ui-border-accented);
+  padding: 1px 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ui-text-muted);
+}
+@utility chip-lit {
+  border-color: color-mix(in srgb, var(--ui-primary) 40%, transparent);
+  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
+}
+@utility chip-pending {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--ui-primary) 60%, transparent);
+  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
+}
+/* Accent INK — the one pair of shades a lit label takes in either
+   scheme. Written as a utility so no component carries the
+   `text-primary-700 dark:text-primary-300` pair by hand. */
+@utility text-lit {
+  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
 }

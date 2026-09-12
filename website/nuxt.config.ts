@@ -171,6 +171,12 @@ export default defineNuxtConfig({
   // nuxt-security, a root devDependency, when it detects it) must allow
   // WebAssembly compilation — extend `script-src` with `'wasm-unsafe-eval'`.
   security: {
+    // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
+    // sized for a built site. Vite serves a page as hundreds of module
+    // requests, so in dev one reload plus a couple of screenshots trips it
+    // and every page turns into a 429 for the next five minutes. Production
+    // keeps the default.
+    rateLimiter: process.env.NODE_ENV === 'production' ? undefined : false,
     headers: {
       contentSecurityPolicy: {
         'script-src': [

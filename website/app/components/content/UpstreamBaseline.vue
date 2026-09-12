@@ -34,7 +34,7 @@ const baseline = computed(() => upstreamBaselines[props.source])
       class="h-[3px] w-[22px] shrink-0 rounded-full bg-primary shadow-(--glow-primary-soft)"
       aria-hidden="true"
     />
-    <span class="concave-text font-semibold tracking-[0.14em] text-toned uppercase">
+    <span class="stamp text-toned">
       matches upstream
     </span>
     <span class="font-semibold text-highlighted">{{ baseline.package }}@{{ baseline.version }}</span>

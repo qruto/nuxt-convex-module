@@ -6,9 +6,9 @@
        panel at rest. -->
   <div class="w-full max-w-48 overflow-hidden rounded-lg border border-accented">
     <div class="flex items-center gap-1 border-b border-accented px-2 py-1 font-mono text-[0.5rem] font-bold tracking-[0.12em] text-dimmed">
-      <span class="px-1">NUXT</span>
-      <span class="relative px-1 text-primary-700 dark:text-primary-300">CONVEX<i class="absolute inset-x-1 -bottom-0.75 h-0.5 rounded-full bg-primary" /></span>
-      <span class="px-1">TIMELINE</span>
+      <span class="px-1">nuxt</span>
+      <span class="relative px-1 text-lit">convex<i class="absolute inset-x-1 -bottom-0.75 h-0.5 rounded-full bg-primary" /></span>
+      <span class="px-1">timeline</span>
       <i class="led ml-auto size-1.5 flex-none rounded-full" />
     </div>
     <div class="flex flex-col gap-1.5 p-2">
@@ -21,7 +21,7 @@
         <i class="shimmer absolute inset-y-0 w-1/2 rounded-full" />
       </div>
       <div class="mt-0.5 flex items-center gap-1.5 font-mono text-[0.5rem] font-bold tracking-widest text-dimmed">
-        <i class="led size-1 flex-none rounded-full" /><span>3 QUERIES LIVE</span>
+        <i class="led size-1 flex-none rounded-full" /><span>3 queries live</span>
       </div>
     </div>
   </div>

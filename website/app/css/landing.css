@@ -37,13 +37,61 @@
    the majors are gone and the 28px cell is the only cell. */
 .landing-mill-grid {
   background-color: var(--ui-bg);
+  background-image: var(--mill-ray), var(--mill-grain);
+  /* The grid is a FLOOR, not wallpaper (2026-09-08): the other three
+     finishes read as a surface with depth and a flat grid read as a
+     sheet of paper laid over the page. So the cells are drawn on a
+     pseudo-element laid down in perspective — a measured plane receding
+     from the reader toward the top of the plate — and faded out where
+     it meets the horizon, so the marking on the plate sits on it rather
+     than in it. `isolation` keeps the floor's negative z-index inside
+     this plate, above its own fill and below its content. */
+  isolation: isolate;
+  overflow: hidden;
+}
+.landing-mill-grid::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  /* The plane is wider than the plate so the converging verticals leave
+     the frame at the sides instead of ending in mid-air, and it is hung
+     from the plate's top edge so the near rows are the ones under the
+     reader. */
+  inset: 0 -55% -6%;
+  pointer-events: none;
+  /* THE FLOOR IS DRAWN IN ITS OWN INK, not the mill's rule tokens. Those
+     are cut for a pattern lying flat under the reader's nose; the same
+     alphas taken to 58 degrees are spread over three times the distance
+     per pixel and vanish. These are the same two-line scribe — a shade
+     with its light catch one pixel below — at the weight the tilt costs
+     back. */
+  --floor-lo: light-dark(oklch(0% 0 0 / 0.055), oklch(0% 0 0 / 0.5));
+  --floor-hi: light-dark(oklch(100% 0 0 / 0.6), oklch(100% 0 0 / 0.05));
   background-image:
-    var(--mill-ray),
     repeating-linear-gradient(180deg,
-      var(--mill-rule-lo) 0 1px, --alpha(var(--mill-rule-hi) / 14%) 1px 2px,
-      transparent 2px 28px),
+      var(--floor-lo) 0 1px, var(--floor-hi) 1px 2px,
+      transparent 2px 64px),
     repeating-linear-gradient(90deg,
-      var(--mill-rule-lo) 0 1px, transparent 1px 28px);
+      var(--floor-lo) 0 1px, var(--floor-hi) 1px 2px,
+      transparent 2px 64px);
+  transform-origin: 50% 100%;
+  transform: perspective(88rem) rotateX(55deg);
+  /* IT STAYS A FIELD OF CELLS (2026-09-08: "the cells have transformed
+     into just lines in the middle of the screen"). A tilted plane runs
+     out of cell HEIGHT long before it runs out of plane: past a certain
+     distance the rows sit closer together than the rule is thick, and
+     the grid stops being a floor and becomes a band of hatching across
+     the middle of the plate. So the far third of the plane is never
+     drawn — the fade finishes well before the rows close up — and the
+     sides fall off with it, so what is left is a lit patch of floor
+     rather than a sheet with edges. Two masks, intersected. */
+  mask-image:
+    linear-gradient(180deg, transparent 0 18%, black 62%, black 100%),
+    linear-gradient(90deg, transparent 0, black 16%, black 84%, transparent 100%);
+  mask-composite: intersect;
+}
+@media (forced-colors: active) {
+  .landing-mill-grid::before { display: none; }
 }
 /* 02 — a TURNED face: the part was spun against the tool, so the
    whole ground is fine concentric passes walking out of the socket
@@ -114,6 +162,16 @@
    a field of parallel lines is exactly how light travels along a bank
    of slats, each catching a slightly different amount of it. */
 .landing-hero-ground {
+  /* The headline's type size, shared: the spec board under it is cut to
+     the same measure (LandingVersionChip.vue) and has to move with every
+     step of this clamp.
+     TWO BANDS, because the headline is not always in the same column
+     (2026-09-08). Below `lg` it has the full container and 8vw keeps it
+     large; at `lg` the theme halves the container for the instrument
+     panel, and 4vw put the longest line (10.8em) past that half at 1024,
+     so the hand-set two-line headline came out as four. 3.8vw lands it
+     inside the half column at every width in the band. */
+  --hero-title-size: clamp(3rem, 8vw, 4.5rem);
   --hero-sheen: light-dark(oklch(100% 0 0 / 0.5), oklch(100% 0 0 / 0.045));
   --hero-shade: light-dark(oklch(0% 0 0 / 0.045), oklch(0% 0 0 / 0.3));
   background-color: var(--ui-bg);
@@ -257,6 +315,24 @@ html:has(.landing-panel) footer {
    a shorter hero would. */
 .landing-hero-ground > [data-slot="container"] {
   padding-block: clamp(1.5rem, 6svh, 6rem);
+}
+/* THE HEADLINE IS MEASURED AGAINST ITS OWN COLUMN, and the column
+   changes twice on the way up. Below `lg` it has the whole container;
+   from `lg` the theme splits it in half for the instrument panel; from
+   `xl` index.md re-splits it as `1fr / 32rem`, which hands the copy back
+   most of the extra width. The longest line is 10.8em, so each band's vw
+   is the largest one that still fits 10.8em inside that band's narrowest
+   column — 3.7vw at 1024 (a 416px column), 3.9vw at 1280 (560px).
+   Overshoot and the hand-set two-line headline silently becomes four. */
+@media (width >= 64rem) {
+  .landing-hero-ground {
+    --hero-title-size: clamp(2.2rem, 3.7vw, 4.5rem);
+  }
+}
+@media (width >= 80rem) {
+  .landing-hero-ground {
+    --hero-title-size: clamp(2.4rem, 3.9vw, 4.5rem);
+  }
 }
 /* Under `lg` the hero's container is a flex column, where centring is
    `justify-content`. At `lg` it becomes the two-column grid, which
@@ -411,7 +487,7 @@ html:has(.landing-panel) footer {
      floor below the two-column layout, where the title is full-width
      and the lines can afford to wrap again. Unlayered, so it beats the
      slot's text-5xl/sm:text-7xl utilities. */
-  font-size: clamp(3rem, 4vw, 4.5rem);
+  font-size: var(--hero-title-size, clamp(3rem, 8vw, 4.5rem));
 }
 /* The ghostwrite band — the hero's ONLY animation, and it is hung
    DIRECTLY ON THE BAND STOPS in HeroBillet's zero-size .billet-sweeps

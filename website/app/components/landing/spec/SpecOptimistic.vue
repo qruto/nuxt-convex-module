@@ -6,14 +6,14 @@
        contract in two chips. Reduced motion shows the committed row. -->
   <div class="grid w-full max-w-48 font-mono text-[0.64rem]">
     <div class="row-local flex min-w-0 items-center gap-2 rounded-md border border-dashed px-2 py-1.5 [grid-area:1/1]">
-      <span class="tag-local flex-none text-[0.52rem] font-bold tracking-widest">LOCAL</span>
+      <span class="tag-local flex-none text-[0.52rem] font-bold tracking-[0.08em]">local</span>
       <span class="min-w-0 truncate text-toned">hi, realtime</span>
-      <span class="tag-local ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">0 MS</span>
+      <span class="tag-local ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">0 ms</span>
     </div>
     <div class="row-db flex min-w-0 items-center gap-2 rounded-md border border-accented px-2 py-1.5 [grid-area:1/1]">
-      <span class="flex-none text-[0.52rem] font-bold tracking-widest text-dimmed">DB</span>
+      <span class="flex-none text-[0.52rem] font-bold tracking-widest text-dimmed">db</span>
       <span class="min-w-0 truncate text-default">hi, realtime</span>
-      <span class="ms ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">✓ 42 MS</span>
+      <span class="ms ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">✓ 42 ms</span>
     </div>
   </div>
 </template>
