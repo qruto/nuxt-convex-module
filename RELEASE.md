@@ -12,10 +12,14 @@ environment can do.
 1. **Actions → Release Prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
    from the commit messages since the last tag.
 
-   It bumps `package.json`, writes `CHANGELOG.md` and opens a pull request.
+   It bumps `package.json`, writes `CHANGELOG.md` and opens a pull request. Scoped commits land under
+   `#### Scope` sub-lists in each section (`scripts/changelog-postprocess.mjs`); a scope's
+   display name — `ci` → `CI` — is set in `changelog.scopeMap` in `package.json`.
 
 2. **Read that pull request, then squash-merge it.** Its body is the changelog the GitHub Release
-   will carry. Wait for `CI`, same as any other PR.
+   will carry. `CI` waits for **Approve and run** first: the pull request is authored by
+   `github-actions[bot]`, which the *Require approval for all external contributors* policy treats
+   like any outside contributor. After that, wait for it like any other PR.
 
 3. **Actions → Release → Run workflow.** It tags the merged commit, builds the tarball and sends
    it to npm.
@@ -295,6 +299,14 @@ by hand first.
    That same step ships `examples/playground` as a StackBlitz template via `--template`, which is
    what the **Open in StackBlitz** link in each PR comment opens. Without the flag pkg.pr.new
    quietly substitutes a generated template that can't run — see the comment in `preview.yml`.
+
+3. **Let Actions open pull requests.** `Release prepare` opens its pull request with
+   `GITHUB_TOKEN`, which GitHub refuses out of the box (`GitHub Actions is not permitted to create
+   or approve pull requests`). Turn on **Allow GitHub Actions to create and approve pull requests**
+   under *Workflow permissions* twice, organization first — the repository checkbox is greyed out
+   until then: <https://github.com/organizations/qruto/settings/actions>, then
+   <https://github.com/qruto/nuxt-convex-module/settings/actions>. `weekly.yml` can't watch this
+   one: reading it needs an admin scope `GITHUB_TOKEN` never gets.
 
 ## After the first publish
 

@@ -26,7 +26,8 @@ name: Release
 # OIDC handshake with npm and stops. Rehearse after every change to this file.
 #
 # `re-stage` is the recovery path when publishing failed after the tag was
-# already pushed: it skips the bump and stages that tag again.
+# already pushed: it skips the ci wait, the HEAD check and the tag, and builds and
+# stages that tag as it is.
 on:
   workflow_dispatch:
     inputs:
@@ -35,7 +36,7 @@ on:
         type: boolean
         default: false
       re-stage:
-        description: Existing tag (vX.Y.Z) to stage again after a failed publish — skips the bump
+        description: Existing tag (vX.Y.Z) to stage again after a failed publish — nothing is tagged
         type: string
         default: ''
 
@@ -64,7 +65,7 @@ jobs:
     timeout-minutes: 60
     environment: Release
     permissions:
-      contents: write # push the release commit + tag, create the GitHub Release
+      contents: write # push the tag, create the GitHub Release
       actions: read # `gh run list` / `gh run watch` read this repository's workflow runs
     outputs:
       version: ${{ steps.version.outputs.version }}

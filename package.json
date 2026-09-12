@@ -19,9 +19,9 @@
   },
   "keywords": [
     "nuxt",
+    "convex",
     "nuxt-module",
     "vue",
-    "convex",
     "better-auth",
     "polar",
     "realtime",
@@ -243,5 +243,16 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "changelog": {
+    "scopeMap": {
+      "better-auth": "Better Auth",
+      "ci": "CI",
+      "deps": "Dependencies",
+      "deps-dev": "Dev dependencies",
+      "devtools": "DevTools",
+      "dx": "DX",
+      "github": "GitHub"
+    }
   }
 }

@@ -90,6 +90,9 @@ jobs:
           set -- --release --no-commit --no-tag --no-github
           [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
           pnpm exec changelogen "$@"
+          # Regroup `**scope:**` lines under `#### Scope` sub-lists. Display names
+          # for scopes come from `changelog.scopeMap` in package.json.
+          node scripts/changelog-postprocess.mjs
 
       - name: Read the new version
         id: version
