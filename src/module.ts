@@ -2,7 +2,7 @@ import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHa
 import { isAbsolute, join } from 'node:path'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { formatStartupSummary, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { convexTypeFallbackContents } from './templates'
 
@@ -258,7 +258,9 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerSecurity(resolver)
   }
 
-  return { betterAuth, clerk, auth0, polar, security }
+  const flags = { betterAuth, clerk, auth0, polar, security }
+  for (const message of integrationWarnings(flags, pkg => isPackageInstalled(pkg, rootDir))) logger.warn(message)
+  return flags
 }
 
 /** The raw `convex.security` option — read before module options are resolved. */

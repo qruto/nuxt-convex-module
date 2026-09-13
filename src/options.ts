@@ -175,6 +175,37 @@ function authClientModuleExists(authClient: string, rootDir: string): boolean {
 }
 
 /**
+ * Warnings about how the enabled integrations combine, or what they still
+ * need. Pure: the caller logs each line.
+ *
+ * - Better Auth's plugins own the Convex client's auth. With Clerk or Auth0 on
+ *   as well, `provideConvexAuthFromClerk()` / `...FromAuth0()` would call
+ *   `setAuth` on the same client and the two fight over it.
+ * - `<CheckoutLink>` imports `@polar-sh/checkout`, a peer of `@convex-dev/polar`
+ *   that yarn and `--legacy-peer-deps` installs skip. Vite fails the client
+ *   build the first time the component is used — say so at startup instead.
+ */
+export function integrationWarnings(
+  flags: IntegrationFlags,
+  isInstalled: (pkg: string) => boolean,
+): string[] {
+  const warnings: string[] = []
+  const rivals = [flags.clerk && 'Clerk', flags.auth0 && 'Auth0'].filter((name): name is string => Boolean(name))
+  if (flags.betterAuth && rivals.length > 0) {
+    const options = rivals.map(name => `\`convex.${name.toLowerCase()}: false\``).join(' / ')
+    warnings.push(
+      `Better Auth and ${rivals.join(' and ')} are both enabled. Better Auth's plugin owns the Convex client's auth, so the ${rivals.join(' / ')} adapter would fight it — set ${options}, or \`convex.betterAuth: false\`, to pick one.`,
+    )
+  }
+  if (flags.polar && !isInstalled('@polar-sh/checkout')) {
+    warnings.push(
+      '`@convex-dev/polar` is installed but its peer `@polar-sh/checkout` is not — `<CheckoutLink>` imports it and the build fails the moment the component is used. Run `npm install @polar-sh/checkout`.',
+    )
+  }
+  return warnings
+}
+
+/**
  * The dev-mode one-line startup summary: resolved deployment URL, functions
  * directory, and which opt-in integrations are active.
  */
