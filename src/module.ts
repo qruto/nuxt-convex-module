@@ -1,9 +1,10 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
+import { watchConvexCodegen } from './codegen-watch'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -448,25 +449,6 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
     filename: 'types/nuxt-convex-module-api-fallback.d.ts',
     getContents: () => convexTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
   }, { nuxt: true, nitro: true })
-}
-
-/** Templates that must re-render when `convex dev` emits `_generated/api`. */
-const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-api-fallback.d.ts']
-
-/**
- * In dev, re-render the codegen-guarded templates the instant `convex dev`
- * emits `_generated/api`, so the generated `api` is wired app-wide (and the
- * placeholder types retire) without a dev-server restart — the fs-guarded
- * templates otherwise only re-evaluate on a full rebuild. Uses Nuxt's existing
- * file watcher via the `builder:watch` hook — no watcher of our own to tear
- * down.
- */
-function watchConvexCodegen(nuxt: Nuxt): void {
-  if (!nuxt.options.dev) return
-  nuxt.hook('builder:watch', async (_event, path) => {
-    if (!path.replace(/\\/g, '/').includes('_generated/api')) return
-    await updateTemplates({ filter: template => CODEGEN_GUARDED_TEMPLATES.includes(template.filename) })
-  })
 }
 
 /**
