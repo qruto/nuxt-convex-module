@@ -105,11 +105,7 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload. That app also turns the
-  module's auto-detected integrations off by name in `nuxt.config.ts`: run it
-  from a clone and Node's upward `node_modules` lookup finds Better Auth and
-  friends in this repository's root, which would mount an auth proxy the app has
-  no configuration for.
+  repository root's — is what filters the upload.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
 visitor's own account. `examples/playground/.env.local` is the one env file this

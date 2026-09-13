@@ -2,7 +2,7 @@ import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHa
 import { isAbsolute, join } from 'node:path'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { formatStartupSummary, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { formatStartupSummary, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { convexTypeFallbackContents } from './templates'
 
@@ -60,30 +60,31 @@ export interface ModuleOptions {
    */
   siteUrl?: string
   /**
-   * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is
-   * installed; set `false` to force it off, `true` to require it, or a
+   * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is a
+   * dependency of your app; set `false` to force it off, `true` to require it
+   * (a package a layer or workspace root provides counts then), or a
    * {@link BetterAuthModuleOptions} object to point at a custom auth client.
    */
   betterAuth?: boolean | BetterAuthModuleOptions
   /**
-   * Polar billing components. Auto-enabled when `@convex-dev/polar` is
-   * installed; set `false` to force it off (or `true` to require it).
+   * Polar billing components. Auto-enabled when `@convex-dev/polar` is a
+   * dependency of your app; set `false` to force it off (or `true` to require it).
    */
   polar?: boolean
   /**
    * Clerk auth adapter (`provideConvexAuthFromClerk` / `<ConvexProviderWithClerk>`).
-   * Auto-enabled when `@clerk/vue` is installed; set `false` to force it off.
+   * Auto-enabled when `@clerk/vue` is a dependency of your app; set `false` to force it off.
    */
   clerk?: boolean
   /**
    * Auth0 auth adapter (`provideConvexAuthFromAuth0` / `<ConvexProviderWithAuth0>`).
-   * Auto-enabled when `@auth0/auth0-vue` is installed; set `false` to force it off.
+   * Auto-enabled when `@auth0/auth0-vue` is a dependency of your app; set `false` to force it off.
    */
   auth0?: boolean
   /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
-   * Auto-enabled when `nuxt-security` is installed — the module registers it
-   * as a module dependency (no `modules` entry needed) and extends its
+   * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
+   * `modules`) — the module registers it as a module dependency and extends its
    * Content Security Policy with your deployment's origins at runtime. Set
    * `false` to leave nuxt-security's CSP alone, or `true` to require the
    * package. Disabling nuxt-security itself (`security: false` in
@@ -208,8 +209,8 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
 }
 
 /**
- * Enable the opt-in integrations, auto-detected when their package is installed
- * (the explicit option wins when set). Mirrors how `@convex-dev/better-auth` and
+ * Enable the opt-in integrations, auto-detected when their package is a
+ * dependency of the app and resolvable (the explicit option wins when set). Mirrors how `@convex-dev/better-auth` and
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
@@ -221,8 +222,9 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     }
     return state.enabled
   }
+  const rootDir = nuxt.options.rootDir
   const resolve = (key: Key, pkg: string): boolean =>
-    report(key, pkg, resolveIntegrationState(options[key], isPackageInstalled(pkg, nuxt.options.rootDir)))
+    report(key, pkg, resolveIntegrationState(options[key], isPackageInstalled(pkg, rootDir), isDeclaredDependency(pkg, rootDir)))
 
   const betterAuth = resolve('betterAuth', '@convex-dev/better-auth')
   if (betterAuth) {
@@ -276,8 +278,11 @@ function readSecurityOption(nuxt: Nuxt): boolean | undefined {
 function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): ReturnType<typeof resolveIntegrationState> {
   const opts = nuxt.options as unknown as Record<string, unknown>
   if (opts.security === false) return { enabled: false, missingPackage: false }
-  const installed = hasNuxtModule('nuxt-security', nuxt) || isPackageInstalled('nuxt-security', nuxt.options.rootDir)
-  return resolveIntegrationState(explicit, installed)
+  const registered = hasNuxtModule('nuxt-security', nuxt)
+  const installed = registered || isPackageInstalled('nuxt-security', nuxt.options.rootDir)
+  // Listing it in `modules` is as much a declaration as naming it in package.json.
+  const declared = registered || isDeclaredDependency('nuxt-security', nuxt.options.rootDir)
+  return resolveIntegrationState(explicit, installed, declared)
 }
 
 /**

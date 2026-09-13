@@ -14,24 +14,14 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
-  // No `url` here on purpose: the module reads `NUXT_PUBLIC_CONVEX_URL` and the
-  // `CONVEX_URL` that `npx convex dev` writes, so pointing this app at a
+  // No `convex` block on purpose: the module reads `NUXT_PUBLIC_CONVEX_URL` and
+  // the `CONVEX_URL` that `npx convex dev` writes, so pointing this app at a
   // deployment is one line in `.env.local` and nothing else. The `dev` script
   // passes `--dotenv .env.local`, which both loads that file and watches it, so
-  // the app flips from its setup panel to the live demo on save.
-  convex: {
-    // Data layer only. The module lights up its auth and billing integrations
-    // when it finds their packages installed, and Node's lookup walks *up* the
-    // directory tree — so run this app from a clone of the module repository
-    // and it finds them in the repository root, mounts a Better Auth proxy at
-    // /api/auth and 500s on every render. This app has no auth and no billing;
-    // saying so keeps it identical in a clone and in the StackBlitz sandbox.
-    betterAuth: false,
-    clerk: false,
-    auth0: false,
-    polar: false,
-    security: false,
-  },
+  // the app flips from its setup panel to the live demo on save. Integrations
+  // switch on only for packages this package.json declares — none — so a clone
+  // of the module repository, where Better Auth and friends resolve from the
+  // root, behaves the same as the StackBlitz sandbox.
 
   runtimeConfig: {
     public: {

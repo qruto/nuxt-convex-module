@@ -3,7 +3,7 @@
 // package's `.` entry — nuxt-module-build re-exports everything that file
 // exports, and none of this is API. Tests import this file directly.
 import { isAbsolute, join } from 'node:path'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
 /**
@@ -25,17 +25,40 @@ export interface IntegrationFlags {
  * misconfiguration case: explicitly enabled but the backing package is not
  * installed (`missingPackage`), where silently registering the runtime would
  * surface as an opaque Vite import error instead of an actionable message.
- * Auto-detection (option unset) treats package absence as the normal case.
+ *
+ * Auto-detection (option unset) needs the package both resolvable *and*
+ * declared by the app's own `package.json`. Resolution alone walks every
+ * ancestor `node_modules`, so in a monorepo a sibling app's Better Auth or
+ * nuxt-security would switch the integration on here — mounting an auth proxy
+ * the app has no configuration for. An explicit `true` keeps working on
+ * resolution alone, for a package a layer or the workspace root provides.
  */
 export function resolveIntegrationState(
   explicit: boolean | object | undefined,
   installed: boolean,
+  declared: boolean = installed,
 ): { enabled: boolean, missingPackage: boolean } {
   if (explicit === false) return { enabled: false, missingPackage: false }
-  if (explicit === undefined) return { enabled: installed, missingPackage: false }
+  if (explicit === undefined) return { enabled: installed && declared, missingPackage: false }
   return installed
     ? { enabled: true, missingPackage: false }
     : { enabled: false, missingPackage: true }
+}
+
+/**
+ * Whether the app's own `package.json` names the package in any dependency
+ * field. This is the "did the user ask for it" signal that auto-detection
+ * needs and resolution cannot give.
+ */
+export function isDeclaredDependency(id: string, rootDir: string): boolean {
+  try {
+    const manifest = JSON.parse(readFileSync(join(rootDir, 'package.json'), 'utf8')) as Record<string, unknown>
+    return ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
+      .some(field => typeof manifest[field] === 'object' && manifest[field] !== null && id in (manifest[field] as object))
+  }
+  catch {
+    return false
+  }
 }
 
 /** Result of {@link validateModuleOptions}: findings plus normalized values. */

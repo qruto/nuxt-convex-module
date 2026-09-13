@@ -510,11 +510,15 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 
 ##### A-09 — module wiring
 
-- **Port** · [`src/module.ts`](./src/module.ts), [`src/functions-dir.ts`](./src/functions-dir.ts),
-  [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
+- **Port** · [`src/module.ts`](./src/module.ts), [`src/options.ts`](./src/options.ts),
+  [`src/aliases.ts`](./src/aliases.ts), [`src/templates.ts`](./src/templates.ts),
+  [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
 - **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
-  generated-types fallback. Next apps wire Convex by hand.
+  generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
+  package is both declared in the app's own `package.json` and resolvable — resolution alone
+  walks every ancestor `node_modules`, so a sibling app's package would switch it on in a
+  monorepo; an explicit `true` needs only resolution.
 - **Also** · the module resolves the deployment URL itself (`resolveDeploymentUrls`):
   `convex.url`, then `NUXT_PUBLIC_CONVEX_URL`, then the unprefixed `CONVEX_URL`. Upstream has
   no such step — a Next app reads `process.env.NEXT_PUBLIC_CONVEX_URL` at the call site, and the

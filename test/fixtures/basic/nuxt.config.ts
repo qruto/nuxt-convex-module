@@ -9,9 +9,9 @@ export default defineNuxtConfig({
     // with the local Convex stub server's URL. `example.convex.cloud` is a
     // reserved example host (RFC 2606), never a real deployment.
     url: 'https://example.convex.cloud',
-    // @convex-dev/better-auth is a repo devDependency, so it would
-    // auto-enable; force it off so this fixture exercises the base client
-    // path (plugin.ts) that the repo's own apps never hit.
-    betterAuth: false,
+    // No auth integration: package.json declares only nuxt-security, so this
+    // fixture exercises the base client path (plugin.ts) that the repo's own
+    // apps never hit. The repo's @convex-dev/better-auth resolves from here but
+    // is not declared, which is exactly what auto-detection must ignore.
   },
 })
