@@ -158,4 +158,37 @@ describe('parity manifest — cited tests', () => {
       `PARITY.md cites ${path}, but that file does not exist — update the entry that names it`,
     ).toBe(true)
   })
+
+  // Existing is not asserting. A ledger entry's cited test has to be *about*
+  // the entry: it mentions the entry's ID, one of the quoted test names on the
+  // "Pinned by" line, or an identifier the title or "Port" line names. Without
+  // this, an entry can cite a test that never touches the divergence and the
+  // gate is satisfied by a file name.
+  const entries = [...PARITY.matchAll(/^#{4,5} ([NDAX]-\d{2}) — (.*)\n([\s\S]*?)(?=^#{3,5} |(?![\s\S]))/gm)]
+    .map(([, id, title, body]) => {
+      const pinned = body!.match(/\*\*Pinned by\*\* · (.*?)(?=\n- \*\*|\n\n|$)/s)?.[1] ?? ''
+      const port = body!.match(/\*\*Port\*\* · (.*?)(?=\n- \*\*|\n\n|$)/s)?.[1] ?? ''
+      const tests = [...pinned.matchAll(/`(test\/[a-z0-9/_.-]+\.test\.ts)`/g)].map(m => m[1]!)
+      const hints = [...pinned.matchAll(/"([^"]+)"/g)].map(m => m[1]!)
+      const identifiers = [...`${title} ${port}`.matchAll(/`([^`]+)`/g)]
+        .map(m => m[1]!)
+        .filter(token => !token.includes('/') && !token.endsWith('.ts'))
+        .map(token => token.replace(/\(.*$/, '').split('.').pop()!.replace(/\*/g, ''))
+        .filter(token => /^[a-z_$][\w$]*$/i.test(token))
+      return { id: id!, tests, hints, identifiers }
+    })
+    .filter(entry => entry.tests.length > 0)
+
+  it.each(entries.map(e => [e.id, e] as const))('%s is asserted by the tests it cites', (id, entry) => {
+    for (const path of entry.tests) {
+      if (!existsSync(root(path))) continue // reported by the case above
+      const text = read(path)
+      const needles = [id, ...entry.hints, ...entry.identifiers]
+      expect(
+        needles.some(needle => text.includes(needle)),
+        `PARITY.md ${id} cites ${path}, but that file mentions none of: ${needles.map(n => JSON.stringify(n)).join(', ')} — `
+        + 'cite the test that asserts the divergence (quote its name on the "Pinned by" line), or add a `PARITY: ' + id + '` comment to it',
+      ).toBe(true)
+    }
+  })
 })

@@ -21,6 +21,10 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**'],
       reporter: ['text', 'json', 'lcov'],
+      // e2e is excluded from this run (`--project '!e2e'`), so files only e2e
+      // reaches — better-auth/nuxt/proxy.ts, the module's register* functions —
+      // show 0% here. That is a measurement artifact, not an untested path:
+      // both fixtures install the module and the proxy answers real requests.
       // Lock in the current baseline (a small margin below the measured numbers)
       // so a regression fails CI without being brittle. Raise these as coverage
       // climbs; the harder build-time/runtime files (module, auth plugins/

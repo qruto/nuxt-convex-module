@@ -1,3 +1,4 @@
+// PARITY: A-11
 import { afterEach, describe, expect, it } from 'vitest'
 import convexSecurityPlugin from '../../src/runtime/nuxt/security'
 import type { SecurityRules } from '../../src/runtime/nuxt/csp'

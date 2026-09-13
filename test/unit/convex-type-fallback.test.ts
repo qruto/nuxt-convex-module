@@ -1,3 +1,4 @@
+// PARITY: A-09
 import { describe, expect, it } from 'vitest'
 import { convexTypeFallbackContents } from '../../src/templates'
 

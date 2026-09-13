@@ -1,3 +1,4 @@
+// PARITY: A-02
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { makeFunctionReference } from 'convex/server'

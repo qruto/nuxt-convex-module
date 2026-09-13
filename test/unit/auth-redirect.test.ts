@@ -1,3 +1,4 @@
+// PARITY: A-12
 import { describe, expect, it } from 'vitest'
 import { resolveAuthRedirect } from '../../src/runtime/better-auth/vue/redirect'
 

@@ -1,3 +1,6 @@
+// PARITY: A-13
+// PARITY: A-08
+// PARITY: A-07
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // Drive the Better Auth client plugin's setup directly with a stubbed `#app`

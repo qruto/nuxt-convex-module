@@ -1,3 +1,4 @@
+// PARITY: A-11
 import { describe, expect, it } from 'vitest'
 import { applyConvexSecurityDefaults, convexConnectSrc, convexResourceSrc, type SecurityRules } from '../../src/runtime/nuxt/csp'
 

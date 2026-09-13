@@ -1,0 +1,3 @@
+# Every path. Single-maintainer repository: this is what makes GitHub request the
+# review automatically, and what the CODEOWNERS-based rulesets can key on later.
+* @slavarazum

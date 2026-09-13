@@ -1,3 +1,4 @@
+// PARITY: D-01
 // Runs in the `unit-server` project, where `import.meta.server` is compiled
 // truthy like Nuxt's server bundle — exercising the SSR branches of the live
 // query composables: during SSR they must read local results only and never

@@ -1,3 +1,4 @@
+// PARITY: A-12
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 

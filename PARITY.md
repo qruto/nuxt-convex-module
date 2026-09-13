@@ -428,7 +428,7 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 ##### A-01 — `useConvex*` aliases
 
 - **Port** · [`vue/index.ts`](./src/runtime/vue/index.ts), below the "Vue-only additions" fence
-- **Pinned by** · `test/nuxt/composables.test.ts`
+- **Pinned by** · `test/nuxt/public-surface.test.ts` — the `useConvex*` names in the `./client` literal
 - **Why** · every composable is auto-imported into the app's global scope, where `useQuery` and
   `useAction` can collide with other modules. Each ported composable gets a `useConvexQuery` /
   `useConvexMutation` / `useConvexAction` / `useConvexQueries` / `useConvexPaginatedQuery`

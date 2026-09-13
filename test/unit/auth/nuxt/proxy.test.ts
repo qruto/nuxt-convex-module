@@ -1,3 +1,4 @@
+// PARITY: A-14
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The proxy is three lines; both matter. It must hand the site URL to
