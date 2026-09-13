@@ -35,6 +35,10 @@ on:
           - patch
           - minor
           - major
+      version:
+        description: Exact version to release (e.g. 1.0.0). Overrides the bump — required to leave 0.x
+        type: string
+        default: ''
 
 # Shared with `Release`, so a prepare cannot start while a release is running.
 concurrency:
@@ -95,12 +99,17 @@ jobs:
       # --no-tag` leave both edits in the working tree, where the step below
       # reads them. `--no-github` because the GitHub Release belongs to the tag,
       # which does not exist yet.
+      # `-r <version>` sets the version outright. changelogen otherwise steps a
+      # 0.x bump down one level — `--major` on 0.0.1 gives 0.1.0 — for explicit
+      # bumps as well as `auto`, so this is the only way to reach 1.0.0.
       - name: Bump version & changelog
         env:
           RELEASE_TYPE: ${{ inputs.release-type }}
+          VERSION: ${{ inputs.version }}
         run: |
           set -- --release --no-commit --no-tag --no-github
           [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
+          [ -n "$VERSION" ] && set -- "$@" -r "$VERSION"
           pnpm exec changelogen "$@"
           # Regroup `**scope:**` lines under `#### Scope` sub-lists. Display names
           # for scopes come from `changelog.scopeMap` in package.json.

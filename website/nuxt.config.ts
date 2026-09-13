@@ -63,6 +63,7 @@ export default defineNuxtConfig({
   },
   site: {
     name: 'Nuxt Convex',
+    url: 'https://nuxt-convex-module.dev',
   },
   // Use Node's built-in `node:sqlite` for Nuxt Content's local DB instead of the
   // `better-sqlite3` native addon. Requires Node >= 22.5 at build & runtime.

@@ -10,7 +10,8 @@ environment can do.
 ## Cut a release
 
 1. **Actions → Release Prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
-   from the commit messages since the last tag.
+   from the commit messages since the last tag. To name the version outright, fill in
+   `version` (`1.0.0`) — the bump is then ignored.
 
    It bumps `package.json`, writes `CHANGELOG.md` and opens a pull request. Scoped commits land under
    `#### Scope` sub-lists in each section (`scripts/changelog-postprocess.mjs`); a scope's
@@ -119,7 +120,9 @@ don't move the version. What counts as breaking — which surface a version numb
 how an upstream release maps to one here — is [STABILITY.md](./STABILITY.md).
 
 Below `1.0.0` changelogen steps everything down once: a `feat` gives a patch, a breaking change
-gives a minor. Pick `patch` / `minor` / `major` explicitly to override.
+gives a minor — and it does the same to an explicit `minor` or `major`, so `major` on `0.0.1`
+produces `0.1.0`. The `version` input bypasses the step-down: `1.0.0` is cut with
+`version: 1.0.0`, whatever `release-type` says.
 
 ## If something goes wrong
 
