@@ -9,10 +9,10 @@
 
 **The [Convex](https://convex.dev) module for [Nuxt](https://nuxt.com)**
 
-Reactive live queries, mutations, actions, cursor pagination, file storage, connection state
-and SSR preloading — auto-imported and typed against your deployment.
+Connects a Nuxt app to a Convex backend: live queries, mutations, actions, pagination,
+file storage and SSR, auto-imported and typed against your deployment.
 
-<sub>Underneath it is a complete [Vue](https://vuejs.org) client, so the same composables also run in a plain Vue app.</sub>
+<sub>The same [Vue](https://vuejs.org) client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub>
 
 [![Nuxt][nuxt-src]][nuxt-href]
 |
@@ -26,7 +26,7 @@ and SSR preloading — auto-imported and typed against your deployment.
 
 <code>npx nuxi@latest module add nuxt-convex-module</code>
 
-[Quick start](#quick-start) · [Documentation](./website) · [Supported packages](#supported-official-packages) · [Upstream parity](./PARITY.md) · [Security](#security)
+[Quick start](#quick-start) · [Documentation](https://nuxt-convex-module.dev) · [Supported packages](#supported-official-packages) · [Upstream parity](./PARITY.md) · [Security](#security)
 
 </div>
 
@@ -34,7 +34,7 @@ Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` 
 
 Coverage is complete rather than partial: `convex/react` and `convex/nextjs` are ported in full, hook-for-composable, and the port is kept diffable against upstream so new Convex releases can be tracked file-for-file — see [Relationship to upstream](#relationship-to-upstream) and [`PARITY.md`](./PARITY.md).
 
-> 📖 **Full documentation:** the **[docs site](./website)** (homepage and docs in one Nuxt app, with live Convex demos throughout) covers installation, the guide, every supported component, and the complete API reference.
+> 📖 **Full documentation:** **[nuxt-convex-module.dev](https://nuxt-convex-module.dev)** covers installation, the guide, every supported component, and the complete API reference, with live Convex demos throughout. Its source is [`website/`](./website).
 
 ## Supported official packages
 

@@ -2,14 +2,14 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module",
   "version": "0.0.1",
-  "description": "The Convex module for Nuxt — reactive live queries, mutations, actions, cursor pagination, file storage, connection state and SSR, on a complete Vue client that also runs without Nuxt, with opt-in Better Auth and Polar",
+  "description": "Connects a Nuxt app to a Convex backend: live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qruto/nuxt-convex-module.git"
   },
   "license": "MIT",
   "author": "Slava Razum <razum@qruto.to>",
-  "homepage": "https://github.com/qruto/nuxt-convex-module#readme",
+  "homepage": "https://nuxt-convex-module.dev",
   "bugs": {
     "url": "https://github.com/qruto/nuxt-convex-module/issues"
   },
@@ -22,10 +22,19 @@
     "convex",
     "nuxt-module",
     "vue",
-    "better-auth",
-    "polar",
     "realtime",
-    "ssr"
+    "live-queries",
+    "backend",
+    "database",
+    "ssr",
+    "file-storage",
+    "auth",
+    "authentication",
+    "better-auth",
+    "clerk",
+    "auth0",
+    "polar",
+    "billing"
   ],
   "type": "module",
   "exports": {
@@ -125,8 +134,7 @@
   ],
   "packageManager": "pnpm@11.26.0+sha512.fc0e2bf890b9f983611f1ab68c0637bce914390653699f83c1a78b005ed25f2c81e77920c8fd8eee2ecf0b58b28cdcb00a84d97f69bcf7c56b2f344710238664",
   "engines": {
-    "node": ">=24.11.0",
-    "pnpm": ">=11.6.0"
+    "node": ">=24.11.0"
   },
   "scripts": {
     "prepare": "test -d .githooks && git config core.hooksPath .githooks || true",
