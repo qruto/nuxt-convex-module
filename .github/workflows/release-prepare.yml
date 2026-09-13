@@ -11,6 +11,15 @@ name: Release Prepare
 # writes to main — so the branch ruleset needs no exception for a bot. RELEASE.md
 # has the rest.
 #
+# Two jobs, for release.yml's reason: credentials never sit next to dependency
+# code. `bump` installs and runs changelogen with a read-only token; `pull-request`
+# holds the write token, installs nothing, and can only reach GitHub. What crosses
+# between them is an artifact of two files. In one job, anything the install ran
+# could have appended to $GITHUB_PATH and served the write steps its own `gh`.
+#
+#   bump          pnpm install · changelogen · uploads package.json + CHANGELOG.md   contents: read
+#   pull-request  creates the branch, the commit and the PR through the API        contents + pull-requests: write
+#
 # The version is worked out here and nowhere else. release.yml reads it out of
 # the merged package.json. If it bumped too, a 0.1.0 release would be tagged
 # v0.1.1.
@@ -35,12 +44,15 @@ concurrency:
 permissions: {}
 
 jobs:
-  prepare:
+  # Runs the dependency code, so it holds nothing worth stealing: a read-only
+  # token, and no checkout credential either.
+  bump:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write # push the release branch
-      pull-requests: write # open the release PR
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -48,8 +60,8 @@ jobs:
           egress-policy: audit
 
       # Nothing is pushed from this checkout: the release branch and its commit
-      # are made through the API below. So no credential needs to persist here,
-      # and none does.
+      # are made through the API in the next job. So no credential needs to
+      # persist here, and none does.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history + tags: changelogen derives the bump from them
@@ -90,10 +102,52 @@ jobs:
           set -- --release --no-commit --no-tag --no-github
           [ "$RELEASE_TYPE" != "auto" ] && set -- "$@" "--$RELEASE_TYPE"
           pnpm exec changelogen "$@"
+          # Regroup `**scope:**` lines under `#### Scope` sub-lists. Display names
+          # for scopes come from `changelog.scopeMap` in package.json.
+          node scripts/changelog-postprocess.mjs
 
       - name: Read the new version
         id: version
         run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      # The two files the release commit consists of, and nothing else: the next
+      # job never has the repository's files on disk.
+      - name: Upload the release files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-files
+          path: |
+            package.json
+            CHANGELOG.md
+          retention-days: 1
+          if-no-files-found: error
+
+  # The only job that can write, and it writes through the API alone: a branch,
+  # one commit, one pull request. No checkout, no install, no Node — `gh` and
+  # `jq` come from the runner image. Block mode: harden-runner already allows
+  # the runner's own infrastructure (the artifact download); GitHub's API and
+  # the web host are the rest of what this job talks to.
+  pull-request:
+    needs: bump
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # push the release branch
+      pull-requests: write # open the release PR
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: block
+          disable-sudo-and-containers: true
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+
+      - name: Download the release files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-files
 
       # Made through GitHub's API rather than `git commit` + `git push`, because
       # `main-pr-gate` requires signed commits. A commit made on the runner is
@@ -113,7 +167,7 @@ jobs:
       # title through as the commit subject.
       - name: Commit the release
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.bump.outputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh api "/repos/$GITHUB_REPOSITORY/git/refs" --method POST \
@@ -151,7 +205,7 @@ jobs:
       # request shows exactly what the GitHub Release will say.
       - name: Open the release pull request
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.bump.outputs.version }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -160,18 +214,18 @@ jobs:
             echo "run **Release** afterwards to tag the merged commit and stage it on npm."
             echo
             awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md
-          } > /tmp/release-pr-body.md
+          } > "$RUNNER_TEMP/release-pr-body.md"
 
           gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base "$DEFAULT_BRANCH" \
             --head "release/v$VERSION" \
             --title "chore(release): v$VERSION" \
-            --body-file /tmp/release-pr-body.md
+            --body-file "$RUNNER_TEMP/release-pr-body.md"
 
       - name: Report
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.bump.outputs.version }}
         run: |
           {
             echo "## v${VERSION} prepared"
