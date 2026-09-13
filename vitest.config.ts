@@ -34,6 +34,18 @@ export default defineConfig({
     },
     projects: [
       {
+        // A plain Vue app: no Nuxt aliases and, above all, no `define` — in a
+        // consumer's Vite build neither `import.meta.client` nor
+        // `import.meta.server` exists, and the `/vue` entries advertised as
+        // Nuxt-free have to work with both undefined. Neither other project can
+        // express that: `unit` defines client true, `unit-server` defines both.
+        test: {
+          name: 'plain-vue',
+          include: ['test/plain-vue/**/*.{test,spec}.ts'],
+          environment: 'happy-dom',
+        },
+      },
+      {
         resolve: {
           alias: {
             '#imports': nuxtImportsTestAlias,

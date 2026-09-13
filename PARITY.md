@@ -182,6 +182,7 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `<ConvexProviderWithAuth useAuth>` | `provideConvexAuth({ client, useAuth })` composable |
 | `<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>` | `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0` composables (+ thin component wrappers) |
 | `useState` / `useEffect` reconciliation | `ref` + `watch` / `watchEffect` (see `vue/auth/index.ts` for the auth-state port and the comments explaining the live-sign-out edge case) |
+| `useEffect` (never runs during SSR) | `if (!import.meta.server) watch(…)` — the **negative** guard. In a plain Vue app neither `import.meta.client` nor `import.meta.server` is defined, so `import.meta.client && …` fails closed and the effect never runs; `!import.meta.server` fails open. Pinned by the `plain-vue` vitest project |
 | `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
 | Static hook arguments | `MaybeRefOrGetter` inputs, read via `toValue` |
 | Returns a plain value | Returns `ComputedRef` / `ShallowRef` (VueUse convention) |
