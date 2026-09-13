@@ -240,6 +240,16 @@ jobs:
             exit 1
           fi
 
+      # The release notes are the top section of the CHANGELOG.md this ref
+      # already carries, reviewed on the release pull request. Read out of the
+      # checkout of the ref being released, so a re-stage describes its tag and
+      # not whatever main has moved on to — and read before the install, so
+      # nothing that runs during it can touch the text that ends up on the
+      # Release page. The tarball and the SBOM are products of that code by
+      # nature; the notes need not be.
+      - name: Write the release notes
+        run: awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md > release-notes.md
+
       - name: Install pnpm, node & dependencies
         uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
@@ -269,19 +279,18 @@ jobs:
       - name: Check the tarball
         run: pnpm run check:tarball
 
-      # What the GitHub Release carries besides the tarball. The SBOM describes
-      # the package a consumer installs — the module's production dependencies,
-      # not the website's or the tests' — and the notes are the top section of
-      # the CHANGELOG.md this ref already carries, reviewed on the release pull
-      # request. Read out of the checkout of the ref being released, so a
-      # re-stage describes its tag and not whatever main has moved on to.
-      - name: Write the SBOM and the release notes
+      # The SBOM describes the package a consumer installs — the module's
+      # production dependencies, not the website's or the tests'. Written after
+      # the install on purpose: `--lockfile-only` would list every platform's
+      # optional binaries from the lockfile alone, but pnpm reads licenses and
+      # descriptions out of the installed packages, and an SBOM without licenses
+      # is half an SBOM. `publish` attests it alongside the tarball.
+      - name: Write the SBOM
         env:
           VERSION: ${{ needs.tag.outputs.version }}
         run: |
           pnpm --filter nuxt-convex-module sbom --sbom-format cyclonedx --prod \
             > "nuxt-convex-module-$VERSION.cdx.json"
-          awk '/^## /{n++} n==1 && !/^## /' CHANGELOG.md > release-notes.md
 
       - name: Upload the release assets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -392,6 +401,25 @@ jobs:
           subject-path: |
             nuxt-convex-module-*.tgz
             nuxt-convex-module-*.cdx.json
+
+      # The attestation is fetched back from GitHub and checked against the
+      # files before anything is published: a signature that cannot be verified
+      # the way a consumer will verify it is no proof. Retried briefly, because
+      # the record has only just been stored.
+      - name: Verify the attestation
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for file in nuxt-convex-module-*.tgz nuxt-convex-module-*.cdx.json; do
+            for attempt in 1 2 3 4 5 6; do
+              gh attestation verify "$file" --repo "$GITHUB_REPOSITORY" && continue 2
+              echo "$file: attestation not verifiable yet (attempt $attempt) — retrying in 10s."
+              sleep 10
+            done
+            echo "::error::The attestation for $file could not be verified; nothing was released."
+            exit 1
+          done
 
       # Assets go in with `gh release create`, in one call: immutable releases
       # are on, so nothing can be added to a Release once it is published — gh

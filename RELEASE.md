@@ -181,10 +181,12 @@ write token, and the job can only reach GitHub.
 
 `build` runs the dependency code, with nothing worth stealing nearby. Everything `publish` needs —
 the tarball, the SBOM, the release notes read out of the tag's `CHANGELOG.md` — leaves it as
-artifacts. `publish` works in a fixed order: it signs the tarball and the SBOM, creates the GitHub
-Release with them as assets (in one call, because immutable releases accept nothing after
-publication), and only then stages the tarball on npm. A step that fails stops the ones after it,
-so nothing reaches npm without its proof on GitHub. It holds the only credential that can reach
+artifacts — the notes are cut out of `CHANGELOG.md` before the install, so nothing that runs
+during it can touch the text on the Release page. `publish` works in a fixed order: it signs the
+tarball and the SBOM, verifies that signature the way a consumer would (`gh attestation verify`),
+creates the GitHub Release with them as assets (in one call, because immutable releases accept
+nothing after publication), and only then stages the tarball on npm. A step that fails stops the
+ones after it, so nothing reaches npm without its proof on GitHub. It holds the only credential that can reach
 npm, runs nothing but `gh` and one pinned pnpm on one tarball, and can only reach GitHub, npm and
 Sigstore.
 
