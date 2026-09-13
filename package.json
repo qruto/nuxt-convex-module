@@ -55,7 +55,15 @@
       "types": "./dist/runtime/nuxt/index.d.ts",
       "import": "./dist/runtime/nuxt/index.js"
     },
+    "./app": {
+      "types": "./dist/runtime/nuxt/app.d.ts",
+      "import": "./dist/runtime/nuxt/app.js"
+    },
     "./better-auth/client": {
+      "types": "./dist/runtime/better-auth/vue/index.d.ts",
+      "import": "./dist/runtime/better-auth/vue/index.js"
+    },
+    "./better-auth/vue": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
     },
@@ -103,7 +111,13 @@
       "server": [
         "./dist/runtime/nuxt/index.d.ts"
       ],
+      "app": [
+        "./dist/runtime/nuxt/app.d.ts"
+      ],
       "better-auth/client": [
+        "./dist/runtime/better-auth/vue/index.d.ts"
+      ],
+      "better-auth/vue": [
         "./dist/runtime/better-auth/vue/index.d.ts"
       ],
       "better-auth/server": [
@@ -177,8 +191,8 @@
   "peerDependencies": {
     "@auth0/auth0-vue": ">=2.0.0",
     "@clerk/vue": ">=2.0.0",
-    "@convex-dev/better-auth": ">=0.12.0",
-    "@convex-dev/polar": ">=0.9.0",
+    "@convex-dev/better-auth": ">=0.12.0 <0.13.0",
+    "@convex-dev/polar": ">=0.9.0 <0.10.0",
     "@polar-sh/checkout": ">=0.4.0",
     "better-auth": "~1.6.11",
     "convex": "^1.40.0",

@@ -469,7 +469,7 @@ function watchConvexCodegen(nuxt: Nuxt): void {
  * (Polar) are registered by their auto-enabled integrations below.
  */
 function registerVueComposables(resolver: Resolver): void {
-  const composables: Array<{ name: string, from: string }> = [
+  const composables: Array<{ name: string, from: string, type?: boolean }> = [
     { name: 'useConvex', from: resolver.resolve('./runtime/vue/client') },
     { name: 'useQuery', from: resolver.resolve('./runtime/vue/composables/use-query') },
     { name: 'useQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-query') },
@@ -497,6 +497,12 @@ function registerVueComposables(resolver: Resolver): void {
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
     { name: 'useAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
     { name: 'useConvexAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
+    // Its types too, so `import type { AsyncQueryReturn } from '#imports'` works
+    // without spelling out the `nuxt-convex-module/app` subpath.
+    { name: 'AsyncQueryData', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryOptions', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryReturn', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryStatus', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
     { name: 'usePaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'useConvexPaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'usePaginatedQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },

@@ -142,7 +142,7 @@ source.
 | `vue/composables/{use-upload,use-upload-queue,use-storage-url}.ts` | file-storage helpers | A-02 |
 | `vue/provide.ts` | `provideConvexApi` / `useConvexApi` | A-03 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
-| `nuxt/composables/use-async-query.ts` | `useAsyncQuery` | A-04 |
+| `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
@@ -445,11 +445,13 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 ##### A-04 — `useAsyncQuery`
 
 - **Port** · [`nuxt/composables/use-async-query.ts`](./src/runtime/nuxt/composables/use-async-query.ts)
-  — `useAsyncQuery` / `useConvexAsyncQuery`, returning `{ data, error, status, refresh }`
-- **Pinned by** · `test/nuxt/use-async-query.test.ts`
+  — `useAsyncQuery` / `useConvexAsyncQuery`, returning `{ data, error, status, refresh }`;
+  exported from [`nuxt/app.ts`](./src/runtime/nuxt/app.ts) as the `nuxt-convex-module/app` subpath
+- **Pinned by** · `test/nuxt/use-async-query.test.ts`, `test/nuxt/public-surface.test.ts`
 - **Why** · the Nuxt-idiomatic data layer: `useAsyncData`-style SSR fetch → payload hydration →
   live subscription upgrade. Lives under `runtime/nuxt/` (it imports `#app`) but deliberately
-  **not** in the ported `nuxt/index.ts`, which maps file-for-file to `nextjs/index.ts`.
+  **not** in the ported `nuxt/index.ts`, which maps file-for-file to `nextjs/index.ts` — hence
+  its own `./app` subpath: neither `./client` (plain Vue) nor `./server` (Nitro) can host it.
 
 ##### A-05 — one import path for every type an annotation needs
 

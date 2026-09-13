@@ -105,7 +105,7 @@ export interface AsyncQueryReturn<T> extends PromiseLike<AsyncQueryData<T>> {
   refresh: (opts?: { dedupe?: 'cancel' | 'defer' }) => Promise<void>
 }
 
-type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, 'data' | 'error' | 'status' | 'refresh'>
+export type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, 'data' | 'error' | 'status' | 'refresh'>
 
 // Wraps the query value so "no payload entry" (undefined/null) is
 // distinguishable from a query legitimately returning `null`.

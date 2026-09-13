@@ -1,20 +1,30 @@
 ---
-navigation: false
-description: "Nuxt-idiomatic data fetching for Convex queries — generated TypeScript API reference for nuxt-convex-module/nuxt/composables/use-async-query."
+navigation: true
+description: "Composables that need the Nuxt app context (#app) — the half of the package that runs in a Nuxt app but not in plain Vue."
 seo:
-  title: "API reference: nuxt/composables/use-async-query"
+  title: "API reference: app"
 ---
 
-# nuxt/composables/use-async-query
+# app
 
-Nuxt-idiomatic data fetching for Convex queries.
+Composables that need the Nuxt app context (`#app`) — the half of the
+package that runs in a Nuxt app but not in plain Vue.
 
-[useAsyncQuery](#useasyncquery) is a Vue/Nuxt-only addition (no `convex/react`
-counterpart — see PARITY.md): it marries Nuxt's `useAsyncData` model with
-Convex's live queries. During SSR the query runs over HTTP and the result is
-embedded in the Nuxt payload; after hydration the composable upgrades to the
-WebSocket subscription, so the page paints with server data and stays live —
-no loading flash, no client refetch.
+This module contains [useAsyncQuery](#useasyncquery): server-rendered Convex data
+that upgrades to a live subscription after hydration. It is auto-imported;
+import it from here when you need the explicit path or one of its types.
+
+## Usage
+
+```vue
+<script setup lang="ts">
+import { useAsyncQuery, type AsyncQueryReturn } from 'nuxt-convex-module/app'
+import { api } from '#convex/api'
+import type { Doc } from '#convex/dataModel'
+
+const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
+</script>
+```
 
 ## Interfaces
 
@@ -46,7 +56,7 @@ useAsyncQuery(...)` blocks until the initial fetch settles, like
 
 #### Extends
 
-- `PromiseLike`\<`AsyncQueryData`\<`T`\>\>
+- `PromiseLike`\<[`AsyncQueryData`](#asyncquerydata)\<`T`\>\>
 
 #### Type Parameters
 
@@ -79,7 +89,7 @@ Attaches callbacks for the resolution and/or rejection of the Promise.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TResult1` | `AsyncQueryData`\<`T`\> |
+| `TResult1` | [`AsyncQueryData`](#asyncquerydata)\<`T`\> |
 | `TResult2` | `never` |
 
 ###### Parameters
@@ -114,6 +124,22 @@ Defined in: [src/runtime/nuxt/composables/use-async-query.ts:31](https://github.
 Request status of a [useAsyncQuery](#useasyncquery) call — mirrors Nuxt's
 `useAsyncData` statuses.
 
+***
+
+### AsyncQueryData
+
+```ts
+type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, "data" | "error" | "status" | "refresh">;
+```
+
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:108](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L108)
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
 ## Variables
 
 ### useConvexAsyncQuery
@@ -145,7 +171,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `query` | `Query` | a `FunctionReference` for the public query to run, like `api.dir1.dir2.filename.func`. |
-| `args?` | `MaybeRefOrGetter`\<[`FunctionArgs`](/api-reference/reference/client#functionargs)\<`Query`\> \| `"skip"`\> | The arguments to the query function, or `'skip'`. Accepts a ref, computed, or getter for reactive args. |
+| `args?` | `MaybeRefOrGetter`\<`"skip"` \| [`FunctionArgs`](/api-reference/reference/client#functionargs)\<`Query`\>\> | The arguments to the query function, or `'skip'`. Accepts a ref, computed, or getter for reactive args. |
 | `options?` | [`AsyncQueryOptions`](#asyncqueryoptions) | [AsyncQueryOptions](#asyncqueryoptions). |
 
 #### Returns
@@ -211,7 +237,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `query` | `Query` | a `FunctionReference` for the public query to run, like `api.dir1.dir2.filename.func`. |
-| `args?` | `MaybeRefOrGetter`\<[`FunctionArgs`](/api-reference/reference/client#functionargs)\<`Query`\> \| `"skip"`\> | The arguments to the query function, or `'skip'`. Accepts a ref, computed, or getter for reactive args. |
+| `args?` | `MaybeRefOrGetter`\<`"skip"` \| [`FunctionArgs`](/api-reference/reference/client#functionargs)\<`Query`\>\> | The arguments to the query function, or `'skip'`. Accepts a ref, computed, or getter for reactive args. |
 | `options?` | [`AsyncQueryOptions`](#asyncqueryoptions) | [AsyncQueryOptions](#asyncqueryoptions). |
 
 #### Returns
