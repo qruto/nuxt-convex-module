@@ -61,8 +61,9 @@ function stripTrailingSlashes(value: string): string {
 /**
  * Validate the resolved module configuration, turning silent misconfiguration
  * (swapped `.convex.cloud`/`.convex.site` URLs, malformed URLs, an `authRoute`
- * that would produce a broken server-handler route, a `betterAuth.authClient`
- * path that doesn't exist) into actionable messages. Pure — the caller logs
+ * that would produce a broken server-handler route or that the bundled auth
+ * client cannot follow, a `betterAuth.authClient` path that doesn't exist)
+ * into actionable messages. Pure — the caller logs
  * the findings and applies the normalized `authRoute`.
  */
 export function validateModuleOptions(input: {
@@ -87,7 +88,7 @@ export function validateModuleOptions(input: {
   }
 
   if (input.siteUrl && input.siteUrl.endsWith('.convex.cloud')) {
-    warnings.push(
+    errors.push(
       `\`convex.siteUrl\` ("${input.siteUrl}") ends with .convex.cloud, which is the deployment domain — site URLs (HTTP Actions) end with .convex.site. Did you swap it with \`convex.url\`?`,
     )
   }
@@ -106,6 +107,14 @@ export function validateModuleOptions(input: {
   }
   if (authRoute.length > 1 && authRoute.endsWith('/')) {
     authRoute = stripTrailingSlashes(authRoute)
+  }
+  // The bundled Better Auth client is created with Better Auth's default
+  // `basePath`, `/api/auth`. Moving the proxy without moving the client leaves
+  // every auth call hitting a route that no longer exists — silently, as 404s.
+  if (authRoute !== '/api/auth' && !input.authClient) {
+    errors.push(
+      `\`convex.authRoute\` is "${authRoute}" but the bundled Better Auth client still calls /api/auth, so every auth request would 404. Keep the default route, or set \`convex.betterAuth.authClient\` to a client created with \`basePath: "${authRoute}"\`.`,
+    )
   }
 
   if (input.authClient && !authClientModuleExists(input.authClient, input.rootDir)) {
@@ -194,8 +203,11 @@ export function resolveDeploymentUrls(
   options: { url?: string, siteUrl?: string },
   env: Record<string, string | undefined>,
 ): { url: string, siteUrl: string } {
+  // Trailing slashes are stripped here, on every source at once: the swap
+  // checks in `validateModuleOptions` key on the suffix, and upstream's client
+  // builds `wss://host//api/...` from a URL that keeps one.
   return {
-    url: options.url || env.NUXT_PUBLIC_CONVEX_URL || env.CONVEX_URL || '',
-    siteUrl: options.siteUrl || env.NUXT_PUBLIC_CONVEX_SITE_URL || env.CONVEX_SITE_URL || '',
+    url: stripTrailingSlashes(options.url || env.NUXT_PUBLIC_CONVEX_URL || env.CONVEX_URL || ''),
+    siteUrl: stripTrailingSlashes(options.siteUrl || env.NUXT_PUBLIC_CONVEX_SITE_URL || env.CONVEX_SITE_URL || ''),
   }
 }
