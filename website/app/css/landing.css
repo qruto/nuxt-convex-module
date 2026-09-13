@@ -12,8 +12,7 @@
      landing-mill-grid   01 . the spec sheet's measurement grid
      landing-mill-rings  02 . a turned face — fine concentric passes
                          under scribed broadcast rings off the
-                         socket, set in a RECESSED tray (lip shade
-                         instead of the ray: staged in a well)
+                         socket (no ray: the rings are the light)
      landing-mill-hatch  03 . diagonal cross-feed marks off the bench
      landing-mill-knurl  04 . knurling — the grip texture on the
                          thing that ends up in your pocket
@@ -95,8 +94,11 @@
 }
 /* 02 — a TURNED face: the part was spun against the tool, so the
    whole ground is fine concentric passes walking out of the socket
-   at top center, where the other sections' ray sits. The tray lip
-   recesses the stage below the surface.
+   at top center, where the other sections' ray sits. It used to sit
+   in a recessed tray (an inset lip shade along the top edge); that
+   made its head the one plate boundary on the page drawn as a step
+   rather than a scribed line, so the lip is gone (2026-09-13) and
+   the plate meets its neighbours on the same `border-b` as the rest.
 
    The fine pass is the surface, at the same pitch family as the
    bench and the pocket (5/11, 6/13) so the four plates read as one
@@ -122,7 +124,6 @@
       var(--mill-line-hi) 0 1px, transparent 1px 5px),
     repeating-radial-gradient(circle at 50% 0%,
       var(--mill-line-lo) 0 1px, transparent 1px 11px);
-  box-shadow: var(--mill-lip);
 }
 /* 03 — one-direction diagonal tool marks (a cross-feed pass, not a
    weave): the brushed pair rotated to 45° and spaced wider. */
@@ -307,6 +308,11 @@ html:has(.landing-panel) footer {
    this was found on): the rail's foot now lands ON the fold at every
    one of them — plate 912px in an 836px slot before, 836 after.
 
+   2026-09-13: the capabilities board took a second row per line (the
+   parameters open into it), ~65px of copy. Paid for here (5svh, 5rem
+   cap: a 900px frame spends 45 a side instead of 54), on the rail
+   (py-9 → py-6) and on the footer's margin in index.md.
+
    THE GUARANTEE STOPS AT `lg`. Below the two-column breakpoint the
    copy and the instrument stack instead of sitting side by side, and
    two full-height blocks in one screen is not a padding problem — the
@@ -314,7 +320,7 @@ html:has(.landing-panel) footer {
    rail is meant to be scrolled to. Nothing above buys that back; only
    a shorter hero would. */
 .landing-hero-ground > [data-slot="container"] {
-  padding-block: clamp(1.5rem, 6svh, 6rem);
+  padding-block: clamp(1.25rem, 5svh, 5rem);
 }
 /* THE HEADLINE IS MEASURED AGAINST ITS OWN COLUMN, and the column
    changes twice on the way up. Below `lg` it has the whole container;
@@ -543,6 +549,36 @@ html:has(.landing-panel) footer {
      stopped, so the pass resumes where it was rather than restarting
      mid-sweep. */
   .hero-billet-line[data-offstage] .billet-sweeps stop {
+    animation-play-state: paused;
+  }
+  /* THE WEBKIT REPAINT PUMP. Safari runs the band and never shows it:
+     every frame recomputes the stops (the phase cycles, stop-opacity
+     with it — read it off getComputedStyle and it is right) and the
+     gradient is rebuilt, but WebKit does not repaint the PATHS THAT
+     FILL WITH IT. So the headline holds whatever frame the last
+     unrelated repaint happened to catch — one glint on load, then a
+     word parked half-lit for as long as the page is open (measured,
+     WebKit r2359: lit at 1.2s, frozen mid-pass to 3s, then a 90-of-96
+     stuck value for the rest of a 10s recording; screenshots hide it,
+     because a screenshot IS a repaint). Chrome repaints a gradient's
+     clients when its stops change; WebKit only when the client's own
+     style changes. So the clients get a style change of their own,
+     every frame: a second animation on the face copy's wordmark paths
+     that walks fill-opacity from 1 to 0.999 over the same 2.8s — a
+     value that moves every frame and paints as nothing. Linear and
+     un-delayed so it ticks exactly when the band does, paused off-stage
+     with it. Same fix confirmed in three shapes (fill-opacity here, an
+     inline-style nudge on the paths, one on the face svgs); this is the
+     one with no script. Free in Chrome: the face fills repaint every
+     frame of the pass regardless, and these are the same elements. */
+  .hero-billet-line .billet-face :is([aria-label="Convex"], [aria-label="Nuxt"]) path[fill="currentColor"] {
+    animation: ghostwrite-repaint 2.8s linear infinite;
+  }
+  @keyframes ghostwrite-repaint {
+    from { fill-opacity: 1; }
+    to   { fill-opacity: 0.999; }
+  }
+  .hero-billet-line[data-offstage] .billet-face :is([aria-label="Convex"], [aria-label="Nuxt"]) path[fill="currentColor"] {
     animation-play-state: paused;
   }
 }

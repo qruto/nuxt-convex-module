@@ -11,12 +11,20 @@ function mint(length: number) {
   return Math.random().toString(36).slice(2, 2 + length)
 }
 
+// A WINDOW OPENED BY SCRIPT STARTS WITH A COPY of its opener's
+// sessionStorage (the spec says so, and Chrome and Safari do it), which
+// would hand the hero's second window (utils/canvas-window.ts) the same
+// session id as the page that opened it — one visitor in two windows, and
+// presence would count one. The id is stamped with the name of the window
+// that minted it; a copy arriving in a window of another name is re-minted,
+// so the popup is the second visitor it is meant to be.
 function persisted(key: string, make: () => string) {
   try {
     const stored = sessionStorage.getItem(key)
-    if (stored) return stored
+    if (stored && sessionStorage.getItem(`${key}:window`) === window.name) return stored
     const fresh = make()
     sessionStorage.setItem(key, fresh)
+    sessionStorage.setItem(`${key}:window`, window.name)
     return fresh
   }
   catch {

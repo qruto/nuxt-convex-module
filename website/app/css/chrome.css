@@ -38,8 +38,7 @@
    every 7px (coprime, so the pattern never beats), the ray is the
    overhead lamp pooling at a plate's top edge, the rules are cuts in
    that surface (a shade line with its catch one pixel below, since
-   an overhead light lands on a groove's lower wall), and the lip
-   recesses a whole section below the surface. Alphas are
+   an overhead light lands on a groove's lower wall). Alphas are
    whisper-level on purpose — a finish is what a surface feels like,
    never a figure competing with the content on it. The landing's
    four section finishes (landing.css) are built out of these. */
@@ -60,7 +59,6 @@
       transparent 68%);
   --mill-rule-lo: light-dark(oklch(0% 0 0 / 0.05), oklch(100% 0 0 / 0.03));
   --mill-rule-hi: light-dark(oklch(100% 0 0 / 0.5), oklch(0% 0 0 / 0.5));
-  --mill-lip: inset 0 14px 18px -14px light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.65));
 }
 /* Nuxt UI paints `body` with bg-default (= --ui-bg); the grain rides
    on that fill. Every landing finish class carries an opaque
@@ -294,15 +292,13 @@ body {
      line in the one dish that sits at eye level all the way down the
      site is the last place to keep one. */
   --inset-shadow-1:
-    inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 2px 2px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.09)),
-    inset 0 -1px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.05)),
-    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
+    inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.05));
   --inset-shadow-2:
-    inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 3px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.11)),
-    inset 0 -1px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.055)),
-    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
+    inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.055));
 }
 
 /* -- THE FIELD-GROUP SEAM ----------------------------------------
@@ -406,6 +402,67 @@ body {
 @media (forced-colors: active) {
   .scribe, .scribe-y { background-image: none; border: 1px solid; }
   .lamp { border: 1px solid; box-shadow: none; }
+}
+
+/* -- THE FADER --------------------------------------------------------
+   A native range drawn as a groove with a raised knob, so it stays a
+   real slider (keyboard, touch, screen readers) and still reads as a
+   part of the plate. Written once here for the same reason as the
+   lamps: the console's level fader and the hero canvas's scrubber are
+   one recipe, and only the knob differs — a strip on the console, a
+   round head on the scrubber — so a plate sets the knob's figures on
+   `.fader` and inherits the rest. */
+.fader {
+  --fader-height: 1.5rem;
+  --knob-width: 1.6rem;
+  --knob-height: 1.1rem;
+  --knob-radius: var(--radius-strip);
+  /* Half the knob's overhang past the groove, so it sits centred on it. */
+  --knob-lift: -0.3rem;
+}
+.fader input {
+  inline-size: 100%;
+  block-size: var(--fader-height);
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: grab;
+}
+.fader input:active { cursor: grabbing; }
+.fader input::-webkit-slider-runnable-track {
+  block-size: 0.5rem;
+  border-radius: 999px;
+  background: var(--gradient-recessed);
+  box-shadow: var(--recess-lip), var(--inset-shadow-1);
+}
+.fader input::-moz-range-track {
+  block-size: 0.5rem;
+  border-radius: 999px;
+  background: var(--gradient-recessed);
+  box-shadow: var(--recess-lip), var(--inset-shadow-1);
+}
+.fader input::-webkit-slider-thumb {
+  appearance: none;
+  inline-size: var(--knob-width);
+  block-size: var(--knob-height);
+  margin-block-start: var(--knob-lift);
+  border-radius: var(--knob-radius);
+  background: var(--gradient-surface);
+  box-shadow: var(--elevation-1);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.fader input::-moz-range-thumb {
+  inline-size: var(--knob-width);
+  block-size: var(--knob-height);
+  border-radius: var(--knob-radius);
+  background: var(--gradient-surface);
+  box-shadow: var(--elevation-1);
+  border: 1px solid transparent;
+}
+.fader input:focus-visible { outline: none; }
+.fader input:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--elevation-1), 0 0 0 2px var(--ui-primary);
 }
 
 /* -- THE RAIL ---------------------------------------------------------

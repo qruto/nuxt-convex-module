@@ -39,6 +39,18 @@ const { data: consoleData } = client
 const { handle, sid } = useVisitor()
 const { count: here } = usePresence(sid)
 const online = useDemoOnline(error)
+// The lamp and its ink, on the head and on the rail: live is a machine
+// fact (the socket is up), offline is no light.
+const state = computed(() => (online.value
+  ? { lamp: 'lamp-live', tone: 'text-toned', label: 'live' }
+  : { lamp: 'lamp-dead', tone: 'text-dimmed', label: 'offline' }))
+// The head's reading: how many hands are on the console, or that it is
+// running on its own.
+const hands = computed(() => {
+  if (!online.value) return 'offline · local only'
+  if (here.value === undefined) return 'live'
+  return `${here.value} ${here.value === 1 ? 'hand' : 'hands'} on it`
+})
 
 // ---- the bank ------------------------------------------------------------
 const flipRemote = client
@@ -121,8 +133,13 @@ function onLevelRelease() {
 }
 onUnmounted(() => sendTimer && clearTimeout(sendTimer))
 
+// The meter: ten segments, lit from the left to the level, the top two
+// in the hot ink.
 const METER = 10
-const litSegments = computed(() => Math.round((level.value / 100) * METER))
+const segments = computed(() => {
+  const lit = Math.round((level.value / 100) * METER)
+  return Array.from({ length: METER }, (_, i) => (i >= lit ? '' : i >= 8 ? 'is-hot' : 'is-lit'))
+})
 
 // ---- the counter ---------------------------------------------------------
 const pulseRemote = client
@@ -157,6 +174,11 @@ async function pulse() {
 }
 
 const rtt = ref<number | null>(null)
+// The rail's last note: the latency of the last commit, or that the plate
+// came up from the server render and has not written yet.
+const note = computed(() => (rtt.value === null
+  ? { tone: 'text-dimmed', text: 'ssr hydrated' }
+  : { tone: 'text-lit', text: `commit ${rtt.value} ms` }))
 const rejection = ref<string | null>(null)
 const onCount = computed(() => switches.value.filter(row => row.on).length)
 </script>
@@ -170,14 +192,14 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
       <span class="concave-text">console · one shared table</span>
       <span
         class="inline-flex items-center gap-1.5"
-        :class="online ? 'text-toned' : 'text-dimmed'"
+        :class="state.tone"
       >
         <i
           aria-hidden="true"
           class="lamp"
-          :class="online ? 'lamp-live' : 'lamp-dead'"
+          :class="state.lamp"
         />
-        {{ online ? (here === undefined ? 'live' : `${here} ${here === 1 ? 'hand' : 'hands'} on it`) : 'offline · local only' }}
+        {{ hands }}
       </span>
     </header>
 
@@ -225,10 +247,10 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
             aria-hidden="true"
           >
             <i
-              v-for="n in METER"
+              v-for="(lit, n) in segments"
               :key="n"
               class="segment h-2 rounded-[2px] transition-[background,box-shadow] duration-150"
-              :class="n <= litSegments ? (n > 8 ? 'is-hot' : 'is-lit') : ''"
+              :class="lit"
             />
           </span>
         </div>
@@ -240,7 +262,6 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
             max="100"
             step="1"
             :value="level"
-            :disabled="!online && !client && false"
             @input="onLevel"
             @change="onLevelRelease"
             @pointerup="onLevelRelease"
@@ -275,7 +296,7 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
           <button
             type="button"
             class="pulse-key convex-accent hard-cast grid size-11 flex-none place-items-center rounded-full text-primary-900 outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            :class="pulsing ? 'is-pulsing' : ''"
+            :class="{ 'is-pulsing': pulsing }"
             aria-label="Send a pulse"
             @click="pulse"
           >
@@ -295,12 +316,12 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         <i
           aria-hidden="true"
           class="lamp"
-          :class="online ? 'lamp-live' : 'lamp-dead'"
+          :class="state.lamp"
         />
         <span
           class="concave-text"
-          :class="online ? 'text-toned' : 'text-dimmed'"
-        >{{ online ? 'live' : 'offline' }}</span>
+          :class="state.tone"
+        >{{ state.label }}</span>
       </span>
       <span class="rail-cell concave-text text-dimmed">{{ onCount }} of {{ switches.length }} on</span>
       <span
@@ -308,13 +329,9 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         class="rail-cell concave-text min-w-0 flex-1 text-error"
       ><span class="truncate">{{ rejection }}</span></span>
       <span
-        v-if="rtt !== null"
-        class="rail-cell rail-optional concave-text ml-auto text-lit"
-      >commit {{ rtt }} ms</span>
-      <span
-        v-else
-        class="rail-cell rail-optional concave-text ml-auto text-dimmed"
-      >ssr hydrated</span>
+        class="rail-cell rail-optional concave-text ml-auto"
+        :class="note.tone"
+      >{{ note.text }}</span>
     </figcaption>
   </figure>
 </template>
@@ -337,53 +354,8 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
   box-shadow: var(--glow-primary-soft);
 }
 
-/* THE FADER — a native range, drawn as a groove with a raised knob so it
-   stays a real slider (keyboard, touch, screen readers) and still reads
-   as a part of the plate. */
-.fader input {
-  inline-size: 100%;
-  block-size: 1.5rem;
-  margin: 0;
-  background: transparent;
-  appearance: none;
-  cursor: grab;
-}
-.fader input:active { cursor: grabbing; }
-.fader input::-webkit-slider-runnable-track {
-  block-size: 0.5rem;
-  border-radius: 999px;
-  background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-1), var(--recess-lip);
-}
-.fader input::-moz-range-track {
-  block-size: 0.5rem;
-  border-radius: 999px;
-  background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-1), var(--recess-lip);
-}
-.fader input::-webkit-slider-thumb {
-  appearance: none;
-  inline-size: 1.6rem;
-  block-size: 1.1rem;
-  margin-block-start: -0.3rem;
-  border-radius: var(--radius-strip);
-  background: var(--gradient-surface);
-  box-shadow: var(--elevation-1);
-  border: 1px solid transparent;
-  background-clip: padding-box;
-}
-.fader input::-moz-range-thumb {
-  inline-size: 1.6rem;
-  block-size: 1.1rem;
-  border-radius: var(--radius-strip);
-  background: var(--gradient-surface);
-  box-shadow: var(--elevation-1);
-  border: 1px solid transparent;
-}
-.fader input:focus-visible { outline: none; }
-.fader input:focus-visible::-webkit-slider-thumb {
-  box-shadow: var(--elevation-1), 0 0 0 2px var(--ui-primary);
-}
+/* THE FADER is chrome.css's recipe; this plate takes its default knob,
+   the strip. */
 
 /* THE COUNTER — a mechanical drum per digit: ten figures stacked in a
    slot one figure tall, translated to the figure showing. Rolling to the

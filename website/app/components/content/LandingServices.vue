@@ -38,7 +38,7 @@ const RAIL: Array<ServiceEntry | null> = [
        is noise across nine logos. With the finish gone the strip needs its
        own edges, so it takes a scribed hairline top and bottom. -->
   <div class="landing-services border-t border-b border-default">
-    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-8 py-9 sm:px-12 lg:justify-between lg:px-16">
+    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-8 py-6 sm:px-12 lg:justify-between lg:px-16">
       <p class="stamp m-0 text-dimmed">
         works with · official add-ons
       </p>

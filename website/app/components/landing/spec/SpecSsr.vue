@@ -5,10 +5,13 @@
        blinks in), and the SOCKET takes over the same rows live. The pulse
        walks the line; each station lights as it arrives. Reduced motion
        shows the finished, live document. -->
-  <div class="flex w-full max-w-64 flex-col gap-3 font-mono">
-    <div class="relative flex items-center justify-between">
-      <i class="line absolute inset-x-3 top-1/2 h-px -translate-y-1/2" />
-      <i class="pulse absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full" />
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <!-- Three equal columns, a station centred in each, so the LEDs sit
+         at 1/6, 1/2 and 5/6 of the width and the line and the pulse can
+         be placed against those thirds. -->
+    <div class="relative grid grid-cols-3">
+      <i class="line absolute top-1 h-px" />
+      <i class="pulse absolute top-1 size-1.5 -translate-y-[1px] rounded-full" />
       <span
         v-for="(station, i) in STATIONS"
         :key="station"
@@ -16,20 +19,22 @@
         :style="{ '--i': i }"
       >
         <i class="led size-2 rounded-full" />
-        <span class="text-[0.52rem] text-dimmed">{{ station }}</span>
+        <span class="text-[0.58rem] text-dimmed">{{ station }}</span>
       </span>
     </div>
-    <div class="part-well flex flex-col gap-1.5 px-3 py-2.5">
-      <div class="flex items-center justify-between text-[0.5rem] text-dimmed">
+    <div class="part-well flex flex-col gap-2 px-4 py-2.5">
+      <div class="flex items-center justify-between text-[0.58rem] text-dimmed">
         <span>&lt;ul&gt;</span>
-        <span class="state state-html [grid-area:1/1]">in the html</span>
-        <span class="state state-live absolute right-3">live</span>
+        <span class="grid justify-items-end">
+          <span class="state state-html [grid-area:1/1]">in the html</span>
+          <span class="state state-live [grid-area:1/1]">live</span>
+        </span>
       </div>
       <i
         v-for="n in 3"
         :key="n"
-        class="bar h-1 rounded-full"
-        :style="{ width: `${92 - n * 14}%` }"
+        class="bar h-1.5 rounded-full"
+        :style="{ width: `${88 - n * 14}%` }"
       />
     </div>
   </div>
@@ -41,13 +46,15 @@ const STATIONS = ['server', 'payload', 'socket']
 
 <style scoped>
 .line {
+  left: calc(100% / 6);
+  right: calc(100% / 6);
   background: var(--ui-border-accented);
 }
 .led {
   background: var(--ui-text-dimmed);
 }
 .pulse {
-  left: 0.75rem;
+  left: calc(100% / 6 - 0.1875rem);
   opacity: 0;
   background: var(--band, var(--color-signal-500));
   box-shadow: var(--band-glow, var(--glow-primary-soft));
@@ -68,11 +75,11 @@ const STATIONS = ['server', 'payload', 'socket']
   .state-live { animation: ssr-live 5.4s ease-in-out infinite; }
 }
 @keyframes ssr-pulse {
-  0%, 6% { left: 0.75rem; opacity: 0; }
+  0%, 6% { left: calc(100% / 6 - 0.1875rem); opacity: 0; }
   10% { opacity: 1; }
-  32% { left: 50%; }
-  54% { left: calc(100% - 0.75rem - 0.375rem); opacity: 1; }
-  60%, 100% { left: calc(100% - 0.75rem - 0.375rem); opacity: 0; }
+  32% { left: calc(50% - 0.1875rem); }
+  54% { left: calc(100% * 5 / 6 - 0.1875rem); opacity: 1; }
+  60%, 100% { left: calc(100% * 5 / 6 - 0.1875rem); opacity: 0; }
 }
 @keyframes ssr-led {
   0%, 8% { background: var(--ui-text-dimmed); box-shadow: none; }

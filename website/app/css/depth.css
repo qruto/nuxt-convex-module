@@ -241,16 +241,23 @@
      time, because with the floor now a step below the plate a small
      turn at the bottom is a floor catching light again rather than
      the only thing saying there is a floor. */
+  /* THE CAST SITS ONE PIXEL INBOARD OF THE LIP (2026-09-12). The lip
+     (--recess-lip below) is an opaque ring on the outermost pixel and
+     paints on top, so anything drawn ON that pixel is under it and
+     lost. The shade's offset is one more than it was so its darkest
+     row lands on the first row inside the ring, and the floor catch
+     is a 2px band whose outer row the ring covers — leaving the 1px
+     lit line just inside the edge, where the floor of a cut meets its
+     wall. The figures are the ones the concave effect had before the
+     lip went opaque; only their position moved. */
   --inset-shadow-1:
-    inset 0 1px 2px -0.5px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 2px 2px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.03)),
-    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.8), oklch(80% 0.035 65 / 0.016)),
-    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.02), transparent);
+    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.8), oklch(80% 0.035 65 / 0.016));
   --inset-shadow-2:
-    inset 0 2px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 3px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.035)),
-    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.018)),
-    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.03), transparent);
+    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.018));
   /* The lip of a cut, as a BORDER colour — for the recesses that want a
      drawn edge as well as the cast, so a stack of wells reads as one
      machining pass instead of one boxed well over three unedged ones.
@@ -292,7 +299,19 @@
      Opaque, not alpha, precisely so it lands the same on the page
      ground, on a plate, and over the fill a code block paints for
      itself — one border, one weight, everywhere. */
-  --recess-edge: light-dark(oklch(84.5% 0 0), oklch(37% 0 0));
+  /* LIGHTER STILL (2026-09-12: "now you just added a dark border, and
+     that decision broke the concave effect"). At 84.5% the ring, once
+     it sat on top of the cast, was the darkest thing on a light plate
+     and read as a box drawn on it rather than the edge of a cut. 88%
+     is still a full step below the 97% floor, so the outline holds
+     against the ground, but the top shade inside it is now the darker
+     of the two and the eye reads the shade, not the line — which is
+     what makes it a recess. Dark comes down a step with it. */
+  /* AND LIGHTER AGAIN (2026-09-13: "make the borders that belong to the
+     concave box lighter"). 90.5% sits between the old ring and the 93.8%
+     ground: still a line, no longer a drawn frame. Dark is unchanged; the
+     request was made looking at light. */
+  --recess-edge: light-dark(oklch(90.5% 0 0), oklch(34% 0 0));
   /* THE LIP IS PART OF THE CUT (2026-09-07). Every concave recipe used
      to be cut without its edge, and each component then decided for
      itself whether to draw one with `border border-(--recess-edge)` —
@@ -300,7 +319,17 @@
      that did not, side by side. The edge is now a ring in the recipe's
      own shadow list, so a well is a well wherever it is cut and no
      component has to remember the border. A shadow, not a border, so
-     the box does not grow by 2px when it becomes a well. */
+     the box does not grow by 2px when it becomes a well.
+
+     AND IT GOES FIRST IN EVERY LIST (2026-09-12). Box-shadows paint in
+     order, first on top, and the lip sat LAST — so every catch and
+     shade in the recess painted over it: the top pixel took the black
+     shade on top of the grey and read as a heavy dark rule, and the
+     bottom pixel took the 0.8/0.9 white floor catches and dissolved
+     into the floor. Half a border, twice the weight. With the ring on
+     top it is one opaque grey pixel all the way round, and the
+     shadows fall inside it — see the note on --inset-shadow-1 for
+     how the cast moved a pixel inboard so the ring does not hide it. */
   --recess-lip: inset 0 0 0 1px var(--recess-edge);
 
   /* Glows — keyed to the semantic aliases. */
@@ -397,6 +426,11 @@
     color-mix(in srgb, var(--dish-body-ground), #000 3.5%),
     var(--dish-body-ground) 34%, var(--dish-body-ground) 76%,
     color-mix(in srgb, var(--dish-body-ground), var(--dish-floor-lift) 3%));
+  /* The ground dish's floor catch — the one extra layer a cut into the
+     page ground carries over a plate's well (the argument is at
+     `concave-ground` below). No var() inside, so it reads the same
+     wherever it is inherited. */
+  --dish-ground-floor: inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014));
   /* 1px machined edge: specular top -> shaded bottom. Painted by
      every convex recipe on the border box, so it only shows where a
      `bevel` has opened a 1px transparent border for it. */
@@ -447,12 +481,15 @@
   --accent-edge: 0 0 0 1px light-dark(
       --alpha(var(--color-signal-700) / 88%),
       --alpha(var(--color-signal-950) / 88%));
-  /* The part's own body: lit crown, warm base line, warm cast. */
-  --elevation-accent:
+  /* The part's own body: lit crown and warm base line (on their own the
+     `hard-cast` variant below), then the warm cast. */
+  --accent-body:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.28)),
     inset 0 -1px 0 light-dark(
       color-mix(in oklab, var(--color-signal-950) 30%, transparent),
-      rgb(0 0 0 / 0.3)),
+      rgb(0 0 0 / 0.3));
+  --elevation-accent:
+    var(--accent-body),
     0 1px 2px light-dark(
       color-mix(in oklab, var(--color-signal-950) 22%, transparent),
       rgb(0 0 0 / 0.4)),
@@ -573,13 +610,13 @@
 @utility concave {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-1), var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-1);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility concave-2 {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-2), var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-2);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 /* `concave-ground` is the deep tray cut into the PAGE rather than into
@@ -609,10 +646,7 @@
 @utility concave-ground {
   --depth: concave;
   background: var(--gradient-recessed-ground);
-  box-shadow:
-    var(--inset-shadow-2),
-    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014)),
-    var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-2), var(--dish-ground-floor);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
@@ -701,11 +735,7 @@
    (see the token block and `convex-accent`'s text-shadow), so the two
    re-points are gone from here as redundant, not as reverted. */
 @utility hard-cast {
-  --elevation-accent:
-    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.28)),
-    inset 0 -1px 0 light-dark(
-      color-mix(in oklab, var(--color-signal-950) 30%, transparent),
-      rgb(0 0 0 / 0.3));
+  --elevation-accent: var(--accent-body);
   --accent-cast:
     0 1px 0 light-dark(
       --alpha(var(--color-signal-950) / 26%), --alpha(var(--color-signal-500) / 62%)),
@@ -906,24 +936,21 @@
 @utility part-well {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-1), var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-1);
   border-radius: var(--radius-well);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility part-tray {
   --depth: concave;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-2), var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-2);
   border-radius: var(--radius-well);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility part-dish {
   --depth: concave;
   background: var(--gradient-recessed-ground);
-  box-shadow:
-    var(--inset-shadow-2),
-    inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014)),
-    var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-2), var(--dish-ground-floor);
   border-radius: var(--radius-card);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
@@ -959,7 +986,7 @@
      here is what makes the responsive half possible at all. */
   white-space: pre;
   background: var(--gradient-recessed);
-  box-shadow: var(--inset-shadow-2), var(--recess-lip);
+  box-shadow: var(--recess-lip), var(--inset-shadow-2);
   border-radius: var(--radius-well);
   border: 0;
   @supports (corner-shape: squircle) { corner-shape: squircle; }

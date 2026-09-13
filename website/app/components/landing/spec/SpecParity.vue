@@ -3,21 +3,27 @@
        flipping between Convex's own React entry and this module — the
        call never changes, only the import does. Nothing of React's is
        drawn; the point is the line surviving the swap. Reduced motion
-       shows the Vue import. -->
-  <div class="flex w-full max-w-64 flex-col items-stretch gap-2 font-mono">
-    <div class="grid h-4 text-[0.58rem] text-dimmed">
+       shows the Vue import.
+
+       THE COLLECTION'S RULES (every spec figure): the root is `w-full`
+       of the stage canvas and sizes nothing of its own; rows sit
+       `gap-3` apart; labels are 0.58rem, code and body 0.7rem; a
+       readout is a `part-well`, a thing (chip, window, menu) is a
+       `border-accented` box. -->
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <div class="grid h-4 px-1 text-[0.58rem] text-dimmed">
       <span class="from from-react truncate [grid-area:1/1]">from <span class="text-toned">'convex/react'</span></span>
       <span class="from from-vue truncate [grid-area:1/1]">from <span class="text-toned">'nuxt-convex-module/vue'</span></span>
     </div>
-    <div class="part-well flex items-center gap-2 px-3 py-2 text-[0.7rem] text-highlighted">
+    <div class="part-well flex items-center gap-3 px-4 py-3 text-[0.7rem] text-highlighted">
       <UIcon
         name="i-simple-icons-vuedotjs"
-        class="vue size-3.5 flex-none"
+        class="vue size-4 flex-none"
         aria-hidden="true"
       />
       <code class="truncate">useQuery(api.messages.list)</code>
       <span
-        class="same ml-auto flex-none text-[0.52rem] font-bold"
+        class="same ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]"
         aria-hidden="true"
       >same</span>
     </div>

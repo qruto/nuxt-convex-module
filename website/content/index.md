@@ -21,10 +21,11 @@ ui:
   # theme's own scale so the copy reads as the sentence under a headline,
   # not a second one; `text-pretty` so the closer's last line never
   # orphans a word.
-  description: "mt-8 text-base text-pretty sm:text-lg/7 lg:mt-10"
+  description: "mt-8 text-base text-pretty sm:text-lg/7"
   # The spec board sits in #body at the theme's distance from the text;
-  # the footer closes up under it — a nameplate over the controls.
-  footer: "mt-6 sm:mt-8"
+  # the footer closes up under it — a nameplate over the controls. Closed
+  # up two points more (2026-09-13) to pay for the board's second rows.
+  footer: "mt-5 sm:mt-6"
 links:
   - label: get started
     to: /getting-started/introduction
@@ -49,43 +50,15 @@ links:
     ui:
       label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
+<!-- ONE FENCE: the code that runs the panel under it (2026-09-12). The
+     six-scene recording went with the chat it narrated; the plate types
+     this once and is live from the first paint. -->
 ::landing-hero-panel
 ```ts
-const { data } = await useAsyncQuery(
-  api.messages.list,
-)
-```
-
-```ts
-const send =
-  useMutation(api.messages.send)
-
-await send({ body: 'hi, realtime' })
-```
-
-```ts
-const { results, loadMore } =
-  usePaginatedQuery(api.messages.list,
-    {}, { initialNumItems: 3 })
-```
-
-```ts
-const { upload, progress } =
-  useUpload(api.files.generateUploadUrl)
-
-const id = await upload(file)
-```
-
-```ts
-const analyze = useAction(api.analyze.text)
-
-const { sha256 } = await analyze({ input })
-```
-
-```ts
-import { api } from '#convex/api'
-const { data } = await useAsyncQuery(api.messages.list)
-const send = useMutation(api.messages.send)
+const at = ref<number | null>(null)   // null reads now
+const { data: frame } = await useAsyncQuery(
+  api.canvas.at, () => ({ at: at.value }))
+const paint = useMutation(api.canvas.paint)
 ```
 ::
 
@@ -96,11 +69,12 @@ in a :brand-nuxt application
 ::
 
 #description
-<!-- THE FEATURES FIRST, then what Convex is (2026-09-08). The legend is
-     the reason to read on — mark, name, and every composable that IS that
-     feature (LandingCapabilities.vue), lit row by row as the instrument
-     panel beside it demonstrates each one. The sentence under it is one
-     line: the essence of Convex and nothing else. -->
+<!-- THE FEATURES FIRST, then what Convex is (2026-09-08). The board is
+     the reason to read on — six lines of split-flap type, each a mark, a
+     feature and every composable that IS that feature
+     (LandingCapabilities.vue), clattering in when the hero comes into
+     view. The sentence under it is one line: the essence of Convex and
+     nothing else. -->
 :landing-capabilities
 
 Convex is a reactive backend — one socket for your data, functions and files, where every query stays live.
@@ -175,7 +149,7 @@ Throw the switch. The setup changes; the component does not.
 :::u-page-section
 ---
 id: deploy
-class: "landing-mill-knurl landing-panel landing-reveal"
+class: "landing-mill-knurl landing-panel landing-reveal border-b border-default"
 links:
   # THE SAME KEY AS THE HERO'S: one primary control, one size, one cast.
   - label: install the kit

@@ -3,12 +3,12 @@
        two components swap in the same slot, while the providers that can
        feed that state sit on the shelf below. Reduced motion shows the
        signed-in state. -->
-  <div class="flex w-full max-w-52 flex-col items-center gap-3 font-mono">
-    <div class="grid text-[0.64rem] text-highlighted">
-      <span class="state state-in inline-flex items-center gap-1.5 [grid-area:1/1]"><i class="led size-1.5 rounded-full" />&lt;Authenticated&gt;</span>
-      <span class="state state-out inline-flex items-center gap-1.5 text-dimmed [grid-area:1/1]"><i class="size-1.5 rounded-full bg-(--ui-text-dimmed)" />&lt;Unauthenticated&gt;</span>
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <div class="part-well grid px-4 py-3 text-[0.7rem] text-highlighted">
+      <span class="state state-in inline-flex items-center gap-2.5 [grid-area:1/1]"><i class="led size-2 flex-none rounded-full" />&lt;Authenticated&gt;</span>
+      <span class="state state-out inline-flex items-center gap-2.5 text-dimmed [grid-area:1/1]"><i class="size-2 flex-none rounded-full bg-(--ui-text-dimmed)" />&lt;Unauthenticated&gt;</span>
     </div>
-    <ul class="m-0 flex list-none items-center gap-3.5 p-0 text-toned">
+    <ul class="m-0 flex list-none items-center justify-center gap-6 p-0 text-toned">
       <li
         v-for="logo in LOGOS"
         :key="logo.id"
@@ -19,14 +19,14 @@
         <svg
           v-if="logo.id === 'better-auth'"
           viewBox="0 0 400 300"
-          class="size-3.5 fill-current"
+          class="size-4 fill-current"
           role="img"
           :aria-label="logo.label"
         ><path d="M200 0h200v300H200V200h100V100H200zM0 0h100v100h100v100H100v100H0z" /></svg>
         <UIcon
           v-else
           :name="logo.icon!"
-          class="size-4"
+          class="size-4.5"
           :aria-label="logo.label"
         />
       </li>

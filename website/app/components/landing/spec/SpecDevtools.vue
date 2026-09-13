@@ -4,28 +4,32 @@
        panel's live telemetry breathes in the card's Nuxt-emerald band: LEDs,
        and log lanes shimmering underneath. Reduced motion shows the open
        panel at rest. -->
-  <div class="w-full max-w-48 overflow-hidden rounded-lg border border-accented">
-    <div class="flex items-center gap-1 border-b border-accented px-2 py-1 font-mono text-[0.5rem] font-bold tracking-[0.12em] text-dimmed">
+  <div class="w-full overflow-hidden rounded-lg border border-accented font-mono">
+    <div class="flex items-center gap-2 border-b border-accented px-3 py-1.5 text-[0.56rem] font-bold tracking-[0.12em] text-dimmed">
       <span class="px-1">nuxt</span>
-      <span class="relative px-1 text-lit">convex<i class="absolute inset-x-1 -bottom-0.75 h-0.5 rounded-full bg-primary" /></span>
+      <span class="relative px-1 text-lit">convex<i class="absolute inset-x-1 -bottom-2 h-0.5 rounded-full bg-primary" /></span>
       <span class="px-1">timeline</span>
-      <i class="led ml-auto size-1.5 flex-none rounded-full" />
+      <i class="led ml-auto size-2 flex-none rounded-full" />
     </div>
-    <div class="flex flex-col gap-1.5 p-2">
+    <div class="flex flex-col gap-2.5 px-4 py-2.5">
       <div
-        v-for="n in 2"
+        v-for="(width, n) in LANES"
         :key="n"
         class="relative h-1.5 overflow-hidden rounded-full bg-(--ui-border-accented)"
-        :style="{ 'width': n === 1 ? '82%' : '58%', '--i': n - 1 }"
+        :style="{ width, '--i': n }"
       >
         <i class="shimmer absolute inset-y-0 w-1/2 rounded-full" />
       </div>
-      <div class="mt-0.5 flex items-center gap-1.5 font-mono text-[0.5rem] font-bold tracking-widest text-dimmed">
-        <i class="led size-1 flex-none rounded-full" /><span>3 queries live</span>
+      <div class="mt-0.5 flex items-center gap-2 text-[0.56rem] font-bold tracking-widest text-dimmed">
+        <i class="led size-1.5 flex-none rounded-full" /><span>3 queries live</span>
       </div>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+const LANES = ['82%', '58%', '70%']
+</script>
 
 <style scoped>
 .led {

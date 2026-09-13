@@ -1,5 +1,6 @@
 import { mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
+import { spend } from './gate'
 
 // The switchboard — the landing page's live proof that one table reaches
 // every client. A bank of eight toggles shared by everyone on the page; a
@@ -40,17 +41,10 @@ export const flip = mutation({
     if (!HANDLE.test(by)) {
       throw new ConvexError('Handle must be 1–16 lowercase letters, digits or dashes.')
     }
-    const now = Date.now()
-
-    // The global budget: one `meta` row holding the window's start and the
-    // flips counted inside it. Convex serialises mutations, so this is
-    // race-free without any locking.
-    const gate = await ctx.db.query('meta').withIndex('by_key', q => q.eq('key', 'switches.flips')).unique()
-    const inWindow = gate !== null && now - gate.at < WINDOW_MS
-    const used = inWindow ? (gate.count ?? 0) : 0
-    if (used >= GLOBAL_PER_WINDOW) {
-      throw new ConvexError('The board is cooling down — a lot of flips this minute. Try again in a moment.')
-    }
+    // The global budget first: one `meta` row holding the window's start
+    // and the flips counted inside it (gate.ts).
+    const now = await spend(ctx, 'switches.flips', GLOBAL_PER_WINDOW, WINDOW_MS,
+      'The board is cooling down — a lot of flips this minute. Try again in a moment.')
 
     // The per-hand window off the rows themselves: `at` is the last flip per
     // position, so the whole bank is one bounded read.
@@ -66,16 +60,6 @@ export const flip = mutation({
     }
     else {
       await ctx.db.insert('switches', { position, on: true, by, at: now })
-    }
-
-    if (gate === null) {
-      await ctx.db.insert('meta', { key: 'switches.flips', at: now, count: 1 })
-    }
-    else if (inWindow) {
-      await ctx.db.patch(gate._id, { count: used + 1 })
-    }
-    else {
-      await ctx.db.patch(gate._id, { at: now, count: 1 })
     }
   },
 })

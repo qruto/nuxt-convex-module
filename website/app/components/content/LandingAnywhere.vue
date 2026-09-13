@@ -8,9 +8,10 @@
 //
 // No network and nothing to type: the point is a comparison, and a
 // comparison wants both sides in front of you at once.
-type Side = 'nuxt' | 'vue'
+import type { Seg } from '../landing/TonedCode.vue'
+import TonedCode from '../landing/TonedCode.vue'
 
-interface Seg { text: string, tone?: 'key' | 'str' | 'fn' | 'dim' }
+type Side = 'nuxt' | 'vue'
 
 // `short` is the phone's label: at 390 the row is 284px wide and "plain
 // Vue" was truncating to "plain V…", which is worse than saying "Vue".
@@ -149,19 +150,10 @@ function onKey(event: KeyboardEvent) {
           :name="side === 'vue' ? 'swap-left' : 'swap-right'"
           mode="out-in"
         >
-          <pre
+          <TonedCode
             :key="side"
-            class="part-code m-0 overflow-x-auto px-3 py-3.5 font-mono text-[0.66rem] leading-[1.9] sm:px-4 sm:text-[0.78rem]"
-          ><code><span
-            v-for="(l, i) in SETUP[side].lines"
-            :key="i"
-            class="code-line block"
-            :line="i + 1"
-          ><span
-            v-for="(seg, j) in l"
-            :key="j"
-            :class="seg.tone ? `tone-${seg.tone}` : 'text-highlighted'"
-          >{{ seg.text }}</span></span></code></pre>
+            :lines="SETUP[side].lines"
+          />
         </Transition>
         <p class="mt-2 mb-0 min-h-10 text-sm leading-relaxed text-muted">
           {{ SETUP[side].note }}
@@ -188,16 +180,7 @@ function onKey(event: KeyboardEvent) {
             component · identical
           </span>
         </div>
-        <pre class="part-code m-0 overflow-x-auto px-3 py-3.5 font-mono text-[0.66rem] leading-[1.9] sm:px-4 sm:text-[0.78rem]"><code><span
-          v-for="(l, i) in COMPONENT"
-          :key="i"
-          class="code-line block"
-          :line="i + 1"
-        ><span
-          v-for="(seg, j) in l"
-          :key="j"
-          :class="seg.tone ? `tone-${seg.tone}` : 'text-highlighted'"
-        >{{ seg.text }}</span></span></code></pre>
+        <TonedCode :lines="COMPONENT" />
       </div>
     </div>
   </figure>
@@ -222,12 +205,6 @@ function onKey(event: KeyboardEvent) {
 .knob {
   cursor: pointer;
 }
-/* The three inks the site's shiki theme uses, hand-set: these wells are
-   built markup rather than fences, so they colour their own tokens. */
-.tone-key { color: var(--ui-primary); }
-.tone-fn { color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300)); }
-.tone-str { color: light-dark(var(--ui-color-primary-600), var(--ui-color-primary-300)); }
-.tone-dim { color: var(--ui-text-dimmed); font-style: italic; }
 /* The seal: dim until the switch is thrown, then lit for a beat — the
    moment the reader is looking for a change in this well and not
    finding one. */

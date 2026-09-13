@@ -351,23 +351,34 @@ function segments(body: string) {
    cut for the longest entry, so every part is presented in the same
    frame and the index beside it never slides. */
 .figure {
-  block-size: 15rem;
+  block-size: 16rem;
 }
 .caption {
   min-block-size: 10.5rem;
 }
 @media (width < 40rem) {
   .figure {
-    block-size: 12.5rem;
+    block-size: 13.5rem;
   }
   .caption {
     min-block-size: 12rem;
   }
 }
-/* The figure is drawn at card scale; on the stage it is read at arm's
-   length, so it is zoomed rather than redrawn. */
+/* ONE CANVAS FOR THE WHOLE COLLECTION (2026-09-12: "some illustrations
+   are very tiny and the elements are very close to each other"). The
+   art is drawn at card scale and zoomed to arm's length; the canvas it
+   fills is a FIXED width the figures share, centred in the tray with
+   the same margin on every part. Every figure is `w-full` of it and
+   sizes nothing of its own, so the eight read as one set.
+
+   The width is set explicitly because a grid item that is only
+   `place-items: center` is shrink-to-fit: a figure's `width: 100%`
+   then resolves against its own max-content — the SSR station labels
+   ran together and the pulse ran off the line for exactly that reason. */
 .art {
   zoom: 1.5;
+  inline-size: 100%;
+  max-inline-size: 19rem;
 }
 @media (width < 40rem) {
   .art { zoom: 1.15; }

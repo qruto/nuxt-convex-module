@@ -4,8 +4,9 @@ import { v } from 'convex/values'
 // Convex functions for the docs playground and the homepage's live demos — a
 // small team-chat + tasks demo that exercises every client feature: live
 // queries, mutations (with optimistic updates), actions, cursor pagination,
-// and file storage — plus the three tiny shared instruments the landing page
-// runs against the same deployment (switches, presence, a poll).
+// and file storage — plus the shared instruments the landing page runs
+// against the same deployment (the hero's canvas, switches, the console,
+// presence).
 export default defineSchema({
   messages: defineTable({
     author: v.string(),
@@ -57,4 +58,17 @@ export default defineSchema({
     value: v.number(),
     at: v.number(),
   }).index('by_key', ['key']),
+
+  // THE CANVAS (hero panel). An append-only log of strokes on a 21 × 11
+  // grid: a cell taking an ink, or a clear. Never patched — the frame is
+  // folded from the rows up to a timestamp (canvas.ts), which is what the
+  // hero's scrubber reads through. `_creationTime` is the commit order.
+  strokes: defineTable(v.union(
+    v.object({
+      kind: v.literal('paint'),
+      cell: v.number(),
+      ink: v.union(v.literal('signal'), v.literal('graphite'), v.literal('none')),
+    }),
+    v.object({ kind: v.literal('clear') }),
+  )),
 })

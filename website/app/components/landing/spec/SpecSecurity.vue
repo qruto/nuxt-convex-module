@@ -3,25 +3,25 @@
        deployment's origins at runtime. The two Convex origins append to the
        directive one after the other, and the shield closes once they have.
        Reduced motion shows the finished header. -->
-  <div class="flex w-full max-w-52 flex-col gap-2 font-mono text-[0.58rem]">
-    <div class="flex items-center gap-1.5 text-dimmed">
-      <span class="relative grid size-3.5 flex-none place-items-center">
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <div class="flex items-center gap-2 px-1 text-[0.58rem] text-dimmed">
+      <span class="relative grid size-4 flex-none place-items-center">
         <UIcon
           name="i-lucide-shield"
-          class="ico-open size-3.5 [grid-area:1/1]"
+          class="ico-open size-4 [grid-area:1/1]"
         />
         <UIcon
           name="i-lucide-shield-check"
-          class="ico-shut size-3.5 [grid-area:1/1]"
+          class="ico-shut size-4 [grid-area:1/1]"
         />
       </span>
       <span class="truncate">content-security-policy</span>
     </div>
-    <div class="rounded-md border border-accented px-2 py-1.5 leading-relaxed">
+    <div class="part-well px-4 py-3 text-[0.62rem] leading-relaxed">
       <span class="text-toned">connect-src</span>
       <span class="text-highlighted"> 'self'</span>
-      <span class="origin origin-a block truncate pl-3">https://…convex.cloud</span>
-      <span class="origin origin-b block truncate pl-3">wss://…convex.cloud</span>
+      <span class="origin origin-a block truncate pl-4">https://…convex.cloud</span>
+      <span class="origin origin-b block truncate pl-4">wss://…convex.cloud</span>
     </div>
   </div>
 </template>
