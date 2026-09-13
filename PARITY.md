@@ -587,7 +587,7 @@ so none can be "restored" by syncing.
 - **Port** · [`better-auth/nuxt/proxy.ts`](./src/runtime/better-auth/nuxt/proxy.ts) and
   `AUTH_PROXY_SECURITY_RULES` in [`src/module.ts`](./src/module.ts); the site-URL protocol guard
   in [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
-- **Pinned by** · `test/e2e/better-auth-proxy.test.ts`
+- **Pinned by** · `test/e2e/better-auth-proxy.test.ts`, `test/unit/auth/nuxt/proxy.test.ts`
 - **On sync** · `xssValidator: false` is **load-bearing** — do not "tidy" it away
 - **Why** · the proxy delegates to `convexAuth(event).handler()`, which strips hop-by-hop
   headers and rewrites forwarded-host headers exactly as `convexBetterAuthNextJs` does; only
@@ -595,8 +595,12 @@ so none can be "restored" by syncing.
   `xssValidator: false` is a **correctness** fix, not hardening — `nuxt-security`'s validator
   HTML-escapes the JSON body and 400s when that changes anything, so a password containing `<`
   or `>` would never reach Better Auth. `allowedMethodsRestricter` pins the route to
-  GET/HEAD/POST/OPTIONS. Both apply regardless of `convex.security`, since they concern the
-  module's own route rather than the app's CSP. The site URL must parse as `http:`/`https:`
+  GET/HEAD/POST/OPTIONS, and the handler asserts the same list itself, so the route stays
+  closed without nuxt-security. Both rules apply regardless of `convex.security`, since they
+  concern the module's own route rather than the app's CSP. The handler resolves the site URL
+  through `convexAuth` (private runtime key, then public, then env) rather than reading one
+  key — a build without the URL, configured at start-up through
+  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. The site URL must parse as `http:`/`https:`
   before any request is made, because it is the only thing pinning the proxy's destination host.
 
 #### Tooling
