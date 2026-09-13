@@ -1,7 +1,7 @@
 ---
 seo:
   title: Use Convex backend in a Nuxt application
-  description: One install wires Convex into Nuxt — live queries, mutations, actions, cursor pagination, file storage and SSR, auto-imported and typed against your deployment. The same client runs standalone in any Vue app.
+  description: "Connects a Nuxt app to a Convex backend: live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in."
 ---
 
 :::u-page-hero

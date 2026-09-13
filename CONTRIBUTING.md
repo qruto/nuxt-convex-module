@@ -29,7 +29,7 @@ after you report.
 
 ## Development Setup
 
-**Prerequisites:** Node.js 24.11+ (latest LTS, matching `engines` in `package.json`), pnpm 11+
+**Prerequisites:** Node.js 24.11+ (latest LTS, matching `engines` in `package.json`), pnpm 11+ (the exact version is pinned by `packageManager`)
 (`pnpm install` also points Git at the repo's [`.githooks/`](./.githooks) — see
 [Git Hooks](#git-hooks); CI enforces the same gates either way)
 
