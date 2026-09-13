@@ -3,20 +3,43 @@
  * package that runs in a Nuxt app but not in plain Vue.
  *
  * This module contains {@link useAsyncQuery}: server-rendered Convex data
- * that upgrades to a live subscription after hydration. It is auto-imported;
- * import it from here when you need the explicit path or one of its types.
+ * that upgrades to a live subscription after hydration.
  *
  * ## Usage
  *
+ * **Default — auto-imported.** In any page, component or composable, call it
+ * with no import; its types are auto-imported too:
+ *
  * ```vue
  * <script setup lang="ts">
- * import { useAsyncQuery, type AsyncQueryReturn } from 'nuxt-convex-module/app'
  * import { api } from '#convex/api'
- * import type { Doc } from '#convex/dataModel'
  *
- * const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
+ * const { data: messages, status } = useAsyncQuery(api.messages.list, {})
+ * // `AsyncQueryStatus`, `AsyncQueryReturn`, … resolve without an import as well:
+ * const label = (s: AsyncQueryStatus) => s === 'pending' ? 'Loading…' : ''
  * </script>
  * ```
+ *
+ * **Explicit import — this subpath.** For a project that turns auto-imports
+ * off, a file outside the app's auto-import scope, or an editor that wants
+ * the import spelled out:
+ *
+ * ```ts
+ * import { useAsyncQuery } from 'nuxt-convex-module/app'
+ * ```
+ *
+ * **Types.** From `#imports` (Nuxt's auto-import barrel) or from this subpath,
+ * whichever your file already uses:
+ *
+ * ```ts
+ * import type { AsyncQueryReturn } from '#imports'
+ * import type { AsyncQueryReturn } from 'nuxt-convex-module/app'
+ *
+ * const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
+ * ```
+ *
+ * Before 1.0 the composable was auto-imported but reachable from no subpath,
+ * so neither the explicit form nor the types could be written at all.
  *
  * @module app
  */
