@@ -254,6 +254,7 @@
     "nuxt": "catalog:",
     "nuxt-security": "^2.6.0",
     "pkg-pr-new": "^0.0.88",
+    "playwright-core": "^1.63.0",
     "portless": "0.15.6",
     "publint": "^0.3.24",
     "taze": "^21.1.0",

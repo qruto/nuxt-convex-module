@@ -221,7 +221,8 @@ already ran — and `CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so they wou
 the wrong reason anyway.
 
 **What the hooks cannot cover.** These stay CI's alone, so a green push is not a promise of a
-green pipeline: the `e2e` job (builds fixture apps, minutes), `pack` (tarball, `publint`,
+green pipeline: the `e2e` job (builds fixture apps, minutes; `pnpm test:e2e` runs it locally once
+`pnpm exec playwright-core install chromium` has fetched the browser the hydration test drives), `pack` (tarball, `publint`,
 `attw`, and a real npm consumer install), `dependency-review` and the workflow lint, which need
 GitHub, the Windows leg of the test matrix, and the coverage thresholds.
 

@@ -140,6 +140,8 @@ export default defineConfig({
         // exercises the module against a real Nitro server. Each fixture build
         // takes on the order of a minute, so the default scripts exclude this
         // project (`--project '!e2e'`) — run it via `pnpm test:e2e` (own CI step).
+        // hydration.test.ts also needs Chromium: `pnpm exec playwright-core
+        // install chromium` once per machine.
         test: {
           name: 'e2e',
           include: ['test/e2e/**/*.{test,spec}.ts'],

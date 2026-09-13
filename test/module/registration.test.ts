@@ -1,8 +1,8 @@
 // PARITY: A-01, A-09
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { loadNuxt, type Nuxt } from '@nuxt/kit'
-import type { NuxtOptions } from '@nuxt/schema'
+import { loadNuxt } from '@nuxt/kit'
+import type { Nuxt, NuxtOptions } from '@nuxt/schema'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS } from '../../src/registry'
 
@@ -143,9 +143,9 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(plugins.some(p => /runtime\/vue\/plugin(?:\.[cm]?[jt]s)?$/.test(p))).toBe(false)
   })
 
-  it('registers the nuxt-security CSP plugin and the codegen watch', () => {
-    expect(r.options.nitro.plugins?.some(p => /runtime\/nuxt\/security(?:\.[cm]?[jt]s)?$/.test(p))).toBe(true)
-    // `dev: false` here; the watch only registers in dev — see codegen-watch.test.ts.
+  it('registers the nuxt-security CSP plugin', () => {
+    // (The codegen watch registers only in dev — see codegen-watch.test.ts.)
+    expect(r.options.nitro.plugins?.some(p => /runtime\/nuxt\/security(?:\.[cm]?[jt]s)?$/.test(p ?? ''))).toBe(true)
   })
 
   it('points every registration at a file that exists', () => {
