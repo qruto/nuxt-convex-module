@@ -139,12 +139,12 @@ third-party app holds write access to this repository.
 - [zizmor](https://docs.zizmor.sh) statically analyses the workflows themselves — template
   injection, unpinned actions, impostor commits, credential persistence. Accepted findings carry
   their reasoning.
-- The release is four jobs so the credentials never meet the code: the job that tags holds no npm
+- The release is three jobs so the credentials never meet the code: the job that tags holds no npm
   credential and cannot start until a maintainer approves the run; the job that builds holds
-  nothing; the job that attests the tarball and creates the GitHub Release holds `contents`,
-  `id-token` and `attestations: write`, and the job that publishes holds only the OIDC token —
-  both check out nothing, install nothing, and run behind `step-security/harden-runner` in
-  `block` mode with an allowlist of GitHub, Sigstore and (for `publish`) npm.
+  nothing; the job that publishes checks out nothing, installs nothing, runs behind
+  `step-security/harden-runner` in `block` mode with an allowlist of GitHub, npm and Sigstore, and
+  works in a fixed order — attest the tarball, create the GitHub Release, then stage on npm — so
+  nothing reaches npm without its proof.
   `Release Prepare` is split the same way: the job that runs changelogen has a read-only token, and
   the job that commits and opens the pull request installs nothing.
 - Every release carries its own proof: the tarball and its SBOM are attested with

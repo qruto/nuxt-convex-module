@@ -7,11 +7,9 @@ name: Release
 #   tag      waits for CI · checks HEAD bumped the version · pushes the tag  contents: write
 #            installs nothing                                               environment: Release
 #   build    checks out the tag · pnpm pack · check:tarball · pnpm sbom      no credentials
-#   release  attests the tarball · creates the GitHub Release with the      contents: write
-#            tarball, its attestation and the SBOM as assets                id-token + attestations: write
-#                                                                           environment: Release
-#   publish  pnpm stage publish (OIDC + provenance)                          id-token: write
-#                                                                           environment: Release
+#   publish  attests the tarball · creates the GitHub Release with the      contents: write
+#            tarball, its attestation and the SBOM as assets · then         id-token + attestations: write
+#            pnpm stage publish (OIDC + provenance)                         environment: Release
 #   laptop   pnpm stage approve <id>   2FA — this is what makes it installable
 #
 # Three rules this file enforces. RELEASE.md explains each one:
@@ -25,8 +23,8 @@ name: Release
 #      installs anything, and all of them run behind an egress allowlist.
 #
 # `dry-run: true` writes and uploads nothing: `tag` reports the version it would
-# release, `build` packs and checks main as it is, `release` is skipped, and
-# `publish` does the real OIDC handshake with npm and stops. Rehearse after every change to this file.
+# release, `build` packs and checks main as it is, and `publish` skips the
+# attestation and the Release, does the real OIDC handshake with npm and stops. Rehearse after every change to this file.
 #
 # `re-stage` is the recovery path when publishing failed after the tag was
 # already pushed: it skips the ci wait, the HEAD check and the tag, and builds and
@@ -57,8 +55,8 @@ env:
 
 jobs:
   # The job that writes to git, and it writes exactly one thing: a tag, on a
-  # commit that is already on main and already green. (`release` below writes
-  # the GitHub Release, once `build` has produced what goes in it.)
+  # commit that is already on main and already green. (`publish` writes the
+  # GitHub Release, once `build` has produced what goes in it.)
   #
   # Nothing from node_modules runs here. There is no install — git, jq and gh
   # come from the runner image. That is what lets the egress policy below be
@@ -305,50 +303,52 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Attests the tarball and creates the GitHub Release, with the tarball, its
-  # attestation bundle and the SBOM as assets. No checkout, no install, no Node:
-  # everything it touches came out of `build` as an artifact, and `gh` comes
-  # from the runner image.
+  # The only job that can publish, and it publishes in a fixed order: the
+  # tarball's proof first, the tarball itself last. It attests the tarball and
+  # the SBOM, creates the GitHub Release with the tarball, the attestation
+  # bundle and the SBOM as assets, and only then stages the tarball on npm. One
+  # job rather than two, so the order is a plain sequence of steps — a Release
+  # that fails to be created stops the run before anything reaches npm — and
+  # the environment asks once, not once per job.
   #
-  # Attested here, not in `build`: signing needs `id-token: write`, and `build`
-  # is the job that runs the dependency code, so it holds no credential at all.
+  # Everything it can touch came out of `build` as an artifact: no checkout, no
+  # install, no build, no Node. `gh` comes from the runner image, and pnpm is
+  # the one pinned executable. Attested here, not in `build`: signing needs
+  # `id-token: write`, and `build` is the job that runs the dependency code,
+  # so it holds no credential at all.
+  #
   # `gh attestation verify <tarball> --owner qruto` checks the result; the
   # bundle is also uploaded as `<tarball>.sigstore.json` so the Release carries
   # its own proof (and Scorecard's Signed-Releases sees it).
-  #
-  # Assets go in with `gh release create`, in one call: immutable releases are
-  # on, so nothing can be added to a Release once it is published — gh creates
-  # it as a draft, uploads, then publishes. Runs on a re-stage too, and returns
-  # early if the Release is published: if the tag push lands and this job then
-  # fails, the tag exists with no Release, and a re-stage is what repairs it.
-  # A draft is what a failed upload or publication leaves behind, so a draft is
-  # deleted and made again rather than mistaken for the finished Release —
-  # immutability starts at publication, and `gh release delete` leaves the tag.
-  #
-  # `--verify-tag` stops gh inventing a tag if `tag`'s push did not land. The
-  # Release it creates is immutable and carries GitHub's own attestation —
-  # `gh release verify vX.Y.Z`.
-  #
-  # Same environment as `publish`, and it waits at the same point, so GitHub
-  # asks once for both.
-  release:
+  publish:
     needs:
       - tag
       - build
-    if: ${{ !inputs.dry-run }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # npm's Trusted Publisher is bound to this environment, and the environment
+    # only runs from main. The reviewer is asked a second time here: after the
+    # build, before anything reaches GitHub Releases or npm.
     environment: Release
     permissions:
       contents: write # create the GitHub Release and upload its assets
-      id-token: write # sign the attestation
-      attestations: write # store it
+      id-token: write # npm Trusted Publishing (OIDC), and signing the attestation
+      attestations: write # store the attestation
     steps:
-      # Block mode. harden-runner already allows the runner's own infrastructure
-      # (the artifact downloads and the OIDC token endpoint). GitHub's API
-      # creates the Release and stores the attestation, uploads.github.com takes
-      # the assets, and `*.sigstore.dev` covers Fulcio, Rekor, the TUF CDN and
-      # the TSA that sign it.
+      # Block mode: DNS lookups and connections to anything unlisted fail.
+      #
+      # harden-runner already allows GitHub's own runner infrastructure — the
+      # artifact downloads and the OIDC token endpoint
+      # (*.actions.githubusercontent.com,
+      # productionresultssa*.blob.core.windows.net) — and reads github.com and
+      # api.github.com from GitHub's meta API. Those two are listed anyway, so
+      # this job does not depend on that fetch; api.github.com also creates the
+      # Release and stores the attestation, and uploads.github.com takes the
+      # Release assets. registry.npmjs.org serves pnpm/setup's download of pnpm,
+      # the OIDC exchange and the stage upload. `*.sigstore.dev` covers Fulcio,
+      # Rekor v1 and the v2 shards, the TUF CDN and the TSA, for both the npm
+      # provenance and the GitHub attestation. Nothing here needs sudo or
+      # containers.
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
@@ -358,7 +358,18 @@ jobs:
             api.github.com:443
             github.com:443
             uploads.github.com:443
+            registry.npmjs.org:443
             *.sigstore.dev:443
+
+      # pnpm's native executable, the exact version `packageManager` pins,
+      # fetched from the registry and checked against npm's signature. No Node
+      # runtime, because pnpm does not need one to publish. No install, because
+      # there is no project here — only a tarball.
+      - name: Install pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: ${{ needs.tag.outputs.pnpm-version }}
+          install: false
 
       - name: Download the tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -371,8 +382,10 @@ jobs:
           name: release-assets
 
       # Both files are subjects of one attestation: what a consumer installs,
-      # and what it says is inside.
+      # and what it says is inside. Skipped on a dry run, which has no tag to
+      # attest against.
       - name: Attest the tarball and the SBOM
+        if: env.DRY_RUN != 'true'
         id: attest
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
@@ -380,7 +393,21 @@ jobs:
             nuxt-convex-module-*.tgz
             nuxt-convex-module-*.cdx.json
 
+      # Assets go in with `gh release create`, in one call: immutable releases
+      # are on, so nothing can be added to a Release once it is published — gh
+      # creates it as a draft, uploads, then publishes. Runs on a re-stage too,
+      # and returns early if the Release is published: if the tag push lands
+      # and this step then fails, the tag exists with no Release, and a
+      # re-stage is what repairs it. A draft is what a failed upload or
+      # publication leaves behind, so a draft is deleted and made again rather
+      # than mistaken for the finished Release — immutability starts at
+      # publication, and `gh release delete` leaves the tag.
+      #
+      # `--verify-tag` stops gh inventing a tag if `tag`'s push did not land.
+      # The Release it creates is immutable and carries GitHub's own
+      # attestation — `gh release verify vX.Y.Z`.
       - name: Create the GitHub Release
+        if: env.DRY_RUN != 'true'
         env:
           VERSION: ${{ needs.tag.outputs.version }}
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
@@ -403,59 +430,6 @@ jobs:
             --title "v$VERSION" \
             --notes-file release-notes.md \
             "$tarball" "$tarball.sigstore.json" "nuxt-convex-module-$VERSION.cdx.json"
-
-  # The only job that can publish. Everything it can touch is one pinned pnpm
-  # and one tarball: no checkout, no install, no build, no Node.
-  publish:
-    needs:
-      - tag
-      - build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # npm's Trusted Publisher is bound to this environment, and the environment
-    # only runs from main. The reviewer is asked a second time here: after the
-    # build, before anything reaches npm.
-    environment: Release
-    permissions:
-      contents: read
-      id-token: write # npm Trusted Publishing (OIDC)
-    steps:
-      # Block mode: DNS lookups and connections to anything unlisted fail.
-      #
-      # harden-runner already allows GitHub's own runner infrastructure — the
-      # artifact download and the OIDC token endpoint
-      # (*.actions.githubusercontent.com,
-      # productionresultssa*.blob.core.windows.net) — and reads github.com and
-      # api.github.com from GitHub's meta API. Those two are listed anyway, so
-      # this job does not depend on that fetch. registry.npmjs.org serves
-      # pnpm/setup's download of pnpm, the OIDC exchange and the stage upload.
-      # `*.sigstore.dev` covers Fulcio, Rekor v1 and the v2 shards, the TUF CDN
-      # and the TSA. Nothing here needs sudo or containers.
-      - name: Harden runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
-        with:
-          egress-policy: block
-          disable-sudo-and-containers: true
-          allowed-endpoints: >
-            api.github.com:443
-            github.com:443
-            registry.npmjs.org:443
-            *.sigstore.dev:443
-
-      # pnpm's native executable, the exact version `packageManager` pins,
-      # fetched from the registry and checked against npm's signature. No Node
-      # runtime, because pnpm does not need one to publish. No install, because
-      # there is no project here — only a tarball.
-      - name: Install pnpm
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
-        with:
-          version: ${{ needs.tag.outputs.pnpm-version }}
-          install: false
-
-      - name: Download the tarball
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: tarball
 
       # npm puts the tarball in a queue. It becomes installable only after a
       # maintainer approves it with 2FA:
