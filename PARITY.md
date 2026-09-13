@@ -505,12 +505,14 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 - **Port** · [`vue/plugin.ts`](./src/runtime/vue/plugin.ts),
   [`better-auth/vue/plugin.client.ts`](./src/runtime/better-auth/vue/plugin.client.ts),
   [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts)
-- **Pinned by** · `test/unit/base-client-plugin.test.ts`, `test/unit/auth/vue/plugin-client.test.ts`, `test/nuxt/auth/vue/plugin-server-cache.test.ts`
+- **Pinned by** · `test/unit/base-client-plugin.test.ts`, `test/unit/auth/vue/plugin-client.test.ts`, `test/nuxt/auth/vue/plugin-server-cache.test.ts`, `test/unit-server/prerender-auth-prefetch.test.ts`
 - **Why** · the file-level counterpart of N-03 / N-04. `vue/plugin.ts` registers only when no
   auth integration owns the client. The client plugin deliberately does **not** tear down on
   `beforeunload` — that event is cancelable and fires before the user answers an
   unsaved-changes dialog, so closing there would drop in-flight mutations; upstream never
-  closes on unload either.
+  closes on unload either. The server plugin skips the token prefetch under
+  `import.meta.prerender`: a prerendered page has no visitor. Next has no analog — its
+  `getToken()` reads `next/headers`, which opts the route out of static rendering entirely.
 
 ##### A-08 — `createScopedConvexAuthState`
 

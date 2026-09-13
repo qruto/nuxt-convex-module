@@ -78,6 +78,9 @@ export default defineConfig({
         define: {
           'import.meta.server': 'true',
           'import.meta.client': 'false',
+          // The server bundle in its static-generation flavour. Nothing else
+          // under src/ reads the flag, so the SSR guards above are unaffected.
+          'import.meta.prerender': 'true',
         },
         test: {
           name: 'unit-server',

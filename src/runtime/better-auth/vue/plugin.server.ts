@@ -78,8 +78,11 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
     }
     nuxtApp.vueApp.provide(ConvexAuthStateKey, ssrAuthState)
 
+    // A prerendered page has no visitor, so there is no session to prefetch:
+    // skip the per-route Better Auth round-trip (and, with no site URL, the
+    // per-route warning). The payload is the same either way — a null token.
     const event = useRequestEvent()
-    if (event) {
+    if (event && !import.meta.prerender) {
       await prefetchAuthToken(event, initialToken)
     }
 
