@@ -115,7 +115,8 @@ With `release-type: auto`, the bump comes from the
 | `feat!:` / `BREAKING CHANGE:` footer | major   |
 
 `chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:` and `perf:` show up in the changelog but
-don't move the version.
+don't move the version. What counts as breaking — which surface a version number covers, and
+how an upstream release maps to one here — is [STABILITY.md](./STABILITY.md).
 
 Below `1.0.0` changelogen steps everything down once: a `feat` gives a patch, a breaking change
 gives a minor. Pick `patch` / `minor` / `major` explicitly to override.

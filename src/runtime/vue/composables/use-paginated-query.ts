@@ -507,6 +507,7 @@ function nextPaginationId(): number {
 
 /**
  * Reset pagination id for tests only, so tests know what it is.
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export function resetPaginationId(): void {
   paginationId = 0
@@ -860,6 +861,7 @@ function matchesArgs(
  * identical observable results (`results`/`data`, `status`, `loadMore`).
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
   query: Query,

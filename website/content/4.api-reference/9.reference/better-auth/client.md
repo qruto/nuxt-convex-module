@@ -264,7 +264,9 @@ const AuthBoundary: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:82](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-boundary.ts#L82)
+Defined in: [src/runtime/better-auth/vue/auth-boundary.ts:83](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-boundary.ts#L83)
+
+**`Experimental`**
 
 _Experimental_
 
@@ -330,6 +332,8 @@ The component provides a query for this via `export const { getAuthUser } = auth
 **props.isAuthError**
 
 Function to check if the error is auth related.
+
+ May change in a minor release — see STABILITY.md.
 
 ***
 

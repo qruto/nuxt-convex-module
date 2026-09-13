@@ -554,6 +554,7 @@ export class ConvexVueClient {
    * deployment.
    *
    * @returns The {@link ConnectionState} with the Convex deployment.
+   * @experimental May change in a minor release — see STABILITY.md.
    */
   connectionState(): ConnectionState {
     return this.sync.connectionState()
@@ -570,6 +571,7 @@ export class ConvexVueClient {
    * out what information is most useful. As such this API is considered unstable.
    *
    * @returns An unsubscribe function to stop listening.
+   * @experimental May change in a minor release — see STABILITY.md.
    */
   subscribeToConnectionState(
     cb: (connectionState: ConnectionState) => void,

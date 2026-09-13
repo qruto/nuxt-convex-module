@@ -26,7 +26,7 @@ file storage and SSR, auto-imported and typed against your deployment.
 
 <code>npx nuxi@latest module add nuxt-convex-module</code>
 
-[Quick start](#quick-start) · [Documentation](https://nuxt-convex-module.dev) · [Supported packages](#supported-official-packages) · [Upstream parity](./PARITY.md) · [Security](#security)
+[Quick start](#quick-start) · [Documentation](https://nuxt-convex-module.dev) · [Supported packages](#supported-official-packages) · [Upstream parity](./PARITY.md) · [Stability](./STABILITY.md) · [Security](#security)
 
 </div>
 
@@ -256,6 +256,8 @@ This package is intentionally kept **diffable against the upstream React/Next so
 | `src/runtime/polar/**` | `@convex-dev/polar/src/react/**` |
 
 [`PARITY.md`](./PARITY.md) is the authoritative ledger: pinned upstream baselines, the file-by-file map, a compatibility matrix per upstream entry point, and every deliberate divergence with its reason and the test that pins it. It also carries the migration contract and the React→Vue translation rules the port is held to. The sync procedure itself is packaged as the [`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md).
+
+[`STABILITY.md`](./STABILITY.md) is the other contract: what a version number promises from 1.0.0 on — the covered surface, the experimental tier, and how an upstream release maps to a release here (an upstream breaking change is a major here, whatever upstream called it).
 
 ## Contributing
 

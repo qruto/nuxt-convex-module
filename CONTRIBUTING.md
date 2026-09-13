@@ -161,7 +161,8 @@ docs: update contributing guide
 chore: bump dependencies
 ```
 
-Breaking changes must include `BREAKING CHANGE:` in the commit footer or use `!` after the type:
+Breaking changes — anything [STABILITY.md](./STABILITY.md) covers that is removed, renamed, or
+changes default — must include `BREAKING CHANGE:` in the commit footer or use `!` after the type:
 
 ```
 feat!: rename createClient to defineClient

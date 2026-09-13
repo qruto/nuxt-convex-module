@@ -132,7 +132,7 @@ it may be canonicalized.
 get logger(): Logger;
 ```
 
-Defined in: [src/runtime/vue/client.ts:585](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L585)
+Defined in: [src/runtime/vue/client.ts:587](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L587)
 
 Get the logger for this client.
 
@@ -349,7 +349,9 @@ A promise of the query's result.
 connectionState(): ConnectionState;
 ```
 
-Defined in: [src/runtime/vue/client.ts:558](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L558)
+Defined in: [src/runtime/vue/client.ts:559](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L559)
+
+**`Experimental`**
 
 Get the current [ConnectionState](#connectionstate) between the client and the Convex
 deployment.
@@ -359,6 +361,7 @@ deployment.
 [`ConnectionState`](#connectionstate)
 
 The [ConnectionState](#connectionstate) with the Convex deployment.
+ May change in a minor release — see STABILITY.md.
 
 ##### subscribeToConnectionState()
 
@@ -366,7 +369,9 @@ The [ConnectionState](#connectionstate) with the Convex deployment.
 subscribeToConnectionState(cb): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:574](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L574)
+Defined in: [src/runtime/vue/client.ts:576](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L576)
+
+**`Experimental`**
 
 Subscribe to the [ConnectionState](#connectionstate) between the client and the Convex
 deployment, calling a callback each time it changes.
@@ -386,6 +391,7 @@ out what information is most useful. As such this API is considered unstable.
 ###### Returns
 
 An unsubscribe function to stop listening.
+ May change in a minor release — see STABILITY.md.
 
 () => `void`
 
@@ -395,7 +401,7 @@ An unsubscribe function to stop listening.
 close(): Promise<void>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:597](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L597)
+Defined in: [src/runtime/vue/client.ts:599](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L599)
 
 Close any network handles associated with this client and stop all subscriptions.
 
@@ -1572,7 +1578,7 @@ type UsePaginatedQueryReturnType<Query> = {
 };
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:529](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L529)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:530](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L530)
 
 Return shape of [usePaginatedQuery](#usepaginatedquery) — the fields of upstream's
 `UsePaginatedQueryResult` as `ComputedRef`s plus a *stable* `loadMore`
@@ -1595,10 +1601,10 @@ keep compiling. The plain union stays available as
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="results"></a> `results` | `ComputedRef`\<[`PaginatedQueryItem`](#paginatedqueryitem)\<`Query`\>[]\> | - | [src/runtime/vue/composables/use-paginated-query.ts:530](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L530) |
-| <a id="status"></a> `status` | `ComputedRef`\<[`PaginationStatus`](#paginationstatus)\> | - | [src/runtime/vue/composables/use-paginated-query.ts:531](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L531) |
-| <a id="isloading-1"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/vue/composables/use-paginated-query.ts:532](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L532) |
-| <a id="loadmore"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more results. Stable across state changes; only fetches when `status` is `'CanLoadMore'` (matching the documented semantics). | [src/runtime/vue/composables/use-paginated-query.ts:537](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L537) |
+| <a id="results"></a> `results` | `ComputedRef`\<[`PaginatedQueryItem`](#paginatedqueryitem)\<`Query`\>[]\> | - | [src/runtime/vue/composables/use-paginated-query.ts:531](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L531) |
+| <a id="status"></a> `status` | `ComputedRef`\<[`PaginationStatus`](#paginationstatus)\> | - | [src/runtime/vue/composables/use-paginated-query.ts:532](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L532) |
+| <a id="isloading-1"></a> `isLoading` | `ComputedRef`\<`boolean`\> | - | [src/runtime/vue/composables/use-paginated-query.ts:533](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L533) |
+| <a id="loadmore"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more results. Stable across state changes; only fetches when `status` is `'CanLoadMore'` (matching the documented semantics). | [src/runtime/vue/composables/use-paginated-query.ts:538](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L538) |
 
 ***
 
@@ -1624,9 +1630,13 @@ Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qru
 type UseQueryResult<QueryResult, ThrowOnError> = ConvexUseQueryResult<QueryResult, ThrowOnError>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:26](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L26)
+Defined in: [src/runtime/vue/composables/use-query.ts:27](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L27)
+
+**`Experimental`**
 
 Result returned by object-form [useQuery\_experimental](#usequery_experimental).
+
+ May change in a minor release — see STABILITY.md.
 
 #### Type Parameters
 
@@ -1909,7 +1919,7 @@ Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-con
 const ConvexClientKey: InjectionKey<ConvexVueClient>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:628](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L628)
+Defined in: [src/runtime/vue/client.ts:630](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L630)
 
 Vue injection key for the [ConvexVueClient](#convexvueclient).
 
@@ -2041,7 +2051,7 @@ async function handleClick() {
 const useConvexPaginatedQuery: <Query>(query, args, options) => UsePaginatedQueryReturnType<Query> = usePaginatedQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:545](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L545)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:546](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L546)
 
 Load data reactively from a paginated query to create a growing list.
 
@@ -2159,7 +2169,7 @@ loading, or an `Error` if it threw an exception.
 const useConvexQuery: <Query>(query, ...args) => ComputedRef<Query["_returnType"] | undefined> = useQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:208](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L208)
+Defined in: [src/runtime/vue/composables/use-query.ts:210](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L210)
 
 Load a reactive query within a Vue component.
 
@@ -2546,7 +2556,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 function useConvex(): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:640](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L640)
+Defined in: [src/runtime/vue/client.ts:642](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L642)
 
 Get the [ConvexVueClient](#convexvueclient) within a Vue component.
 
@@ -2632,7 +2642,9 @@ async function handleClick() {
 function useConvexConnectionState(): ShallowRef<ConnectionState>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-connection-state.ts:33](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-connection-state.ts#L33)
+Defined in: [src/runtime/vue/composables/use-connection-state.ts:34](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-connection-state.ts#L34)
+
+**`Experimental`**
 
 Vue composable to get the current [ConnectionState](#connectionstate) and subscribe to changes.
 
@@ -2650,6 +2662,8 @@ Throws an error if no Convex client has been provided.
 `ShallowRef`\<[`ConnectionState`](#connectionstate)\>
 
 The current [ConnectionState](#connectionstate) with the Convex deployment.
+
+ May change in a minor release — see STABILITY.md.
 
 #### Example
 
@@ -2783,9 +2797,12 @@ const { results, status, loadMore } = usePaginatedQuery(
 function resetPaginationId(): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:511](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L511)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:512](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L512)
+
+**`Experimental`**
 
 Reset pagination id for tests only, so tests know what it is.
+ May change in a minor release — see STABILITY.md.
 
 #### Returns
 
@@ -2804,7 +2821,7 @@ function optimisticallyUpdateValueInPaginatedQuery<Query>(
 ): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:552](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L552)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:553](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L553)
 
 Optimistically update values in a paginated list.
 
@@ -2835,7 +2852,7 @@ Optimistically update values in a paginated list.
 function insertAtTop<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:594](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L594)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:595](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L595)
 
 Insert an item at the top of a paginated list, regardless of sort order.
 
@@ -2870,7 +2887,7 @@ would flash in/out once the real first page arrives.
 function insertAtBottomIfLoaded<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:623](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L623)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:624](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L624)
 
 Insert an item at the bottom of a paginated list, but only if the final
 page has loaded (otherwise it would pop out when the server responds).
@@ -2903,7 +2920,7 @@ page has loaded (otherwise it would pop out when the server responds).
 function insertAtPosition<Query>(options): void;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:662](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L662)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:663](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L663)
 
 Insert an item at its sorted position across loaded pages of a paginated
 query, given a sort order and a function deriving the sort key.
@@ -2944,7 +2961,9 @@ function usePaginatedQuery_experimental<Query>(
 ): UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:864](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L864)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:866](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L866)
+
+**`Experimental`**
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -2962,6 +2981,8 @@ Note: React backs its experimental hook with the Convex client's native
 `PaginatedQueryClient`, which the published `convex` package does not export.
 This port reuses our manual page-management implementation, which produces
 identical observable results (`results`/`data`, `status`, `loadMore`).
+
+ May change in a minor release — see STABILITY.md.
 
 ##### Type Parameters
 
@@ -2988,7 +3009,9 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 function usePaginatedQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UsePaginatedQueryObjectReturnType<Query, ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-paginated-query.ts:870](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L870)
+Defined in: [src/runtime/vue/composables/use-paginated-query.ts:872](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-paginated-query.ts#L872)
+
+**`Experimental`**
 
 Experimental paginated query that adds an object-form overload on top of the
 positional [usePaginatedQuery](#usepaginatedquery), mirroring the public name React's
@@ -3006,6 +3029,8 @@ Note: React backs its experimental hook with the Convex client's native
 `PaginatedQueryClient`, which the published `convex` package does not export.
 This port reuses our manual page-management implementation, which produces
 identical observable results (`results`/`data`, `status`, `loadMore`).
+
+ May change in a minor release — see STABILITY.md.
 
 ##### Type Parameters
 
@@ -3097,7 +3122,7 @@ loading, or an `Error` if it threw an exception.
 function useQuery<Query>(query, ...args): ComputedRef<Query["_returnType"] | undefined>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L77)
+Defined in: [src/runtime/vue/composables/use-query.ts:78](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L78)
 
 Load a reactive query within a Vue component.
 
@@ -3156,7 +3181,9 @@ const profile = useQuery(
 function useQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UseQueryResult<Query["_returnType"], ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:144](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L144)
+Defined in: [src/runtime/vue/composables/use-query.ts:146](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L146)
+
+**`Experimental`**
 
 Load a reactive query within a Vue component using an options object.
 
@@ -3187,6 +3214,8 @@ the error will be thrown instead.
 
 a computed ref with the current query state as a
 [UseQueryResult](#usequeryresult) object.
+
+ May change in a minor release — see STABILITY.md.
 
 #### Example
 
