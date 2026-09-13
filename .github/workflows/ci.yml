@@ -396,11 +396,16 @@ jobs:
         # Pinning also keeps this job reproducible when the runner image moves.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
-          SMOKE="$RUNNER_TEMP/smoke"
-          cp -R examples/minimal "$SMOKE"
-          cd "$SMOKE"
-          npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL"
-          npx --yes npm@11.17.0 run build
+          # Both examples: `minimal` is what the README's first link opens,
+          # `playground` is the StackBlitz template pkg.pr.new ships — and
+          # nothing else ever builds it (pkg.pr.new only uploads the directory).
+          for example in minimal playground; do
+            SMOKE="$RUNNER_TEMP/smoke-$example"
+            cp -R "examples/$example" "$SMOKE"
+            (cd "$SMOKE" \
+              && npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL" \
+              && npx --yes npm@11.17.0 run build)
+          done
 
       # The step above proves the tarball installs and builds. This one proves
       # its type declarations compile inside an app. `vue-tsc` checks the
@@ -408,7 +413,7 @@ jobs:
       # and this package's product is its types.
       - name: Consumer type check (built package)
         if: ${{ !cancelled() }}
-        run: pnpm run check:consumer-types "$RUNNER_TEMP/smoke"
+        run: pnpm run check:consumer-types "$RUNNER_TEMP/smoke-minimal"
 
       # Checks the registry signature and provenance of every dependency the
       # install above pulled in. pnpm's `trustPolicy: no-downgrade` refuses a
@@ -416,7 +421,7 @@ jobs:
       # the evidence is valid at all, on the npm path a consumer uses.
       - name: Verify dependency signatures
         if: ${{ !cancelled() }}
-        working-directory: ${{ runner.temp }}/smoke
+        working-directory: ${{ runner.temp }}/smoke-minimal
         run: npx --yes npm@11.17.0 audit signatures # zizmor: ignore[adhoc-packages]
 
   # The docs site is the only place in this repository that calls the public

@@ -12,7 +12,7 @@ pnpm-debug.log*
 
 # Generated dirs
 dist
-website/convex/_generated
+**/convex/_generated/ai/
 
 # Nuxt
 .nuxt

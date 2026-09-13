@@ -1,0 +1,11 @@
+node_modules
+.nuxt
+.output
+.data
+.convex
+# `npx convex dev` writes CONVEX_URL and CONVEX_DEPLOYMENT here — yours, not the example's.
+.env
+.env.*
+
+# NOT ignored, on purpose: convex/_generated. Committing the codegen is what
+# lets the example type-check and build before `npx convex dev` has ever run.
