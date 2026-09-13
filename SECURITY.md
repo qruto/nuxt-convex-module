@@ -181,4 +181,41 @@ fallow deliberately leaves credentials to GitHub, so these settings are what cat
 Everything above protects *this repository*. What the module does for an application built on it
 — the Convex-aware CSP, the hardened auth proxy, auth tokens in SSR payloads, safe post-sign-in
 redirects, cross-domain one-time tokens — is documented in the
-[security guide](./website/content/1.getting-started/4.security.md).
+[security guide](https://nuxt-convex-module.dev/getting-started/security).
+
+### Review notes
+
+The attacker-reachable surface — the auth proxy, the one-time-token exchange, the SSR token
+prefetch, the `auth` middleware, the redirect guard, the CSP, and the DevTools panel — was
+reviewed by hand before 1.0.0 (2026-09-13), one question per file. What was found, and what
+was decided:
+
+- **Proxy path.** Nitro routes the raw request path and the handler forwarded the URL-normalised
+  one, so `/api/auth/../../x` matched `/api/auth/**` and was sent to the site origin as `/x` —
+  any HTTP action on the deployment, through the app's origin, with its cookies. Next.js
+  normalises paths before routing, which is why upstream's handler never sees one. **Fixed:** the
+  proxy refuses a request whose normalised path differs from the routed one (400).
+- **Proxy forwarded host.** `x-forwarded-host` / `x-better-auth-forwarded-host` carry the
+  incoming `Host`, exactly as upstream's `convexBetterAuthNextJs` does. A spoofed `Host` reaches
+  Better Auth on the Convex side as the request origin. **Accepted, with the upstream mitigation:**
+  set `baseURL` and `trustedOrigins` in the Convex-side Better Auth config, as its docs require.
+  The response relay is verbatim (`Set-Cookie`, `Location`); the origin it relays from is pinned
+  by config, so nothing foreign is relayed.
+- **Cross-domain tokens.** `crossDomainCallbackRoute` is off by default, matching upstream: a
+  fresh token completes sign-in on whatever page receives it. **Accepted as upstream's design;**
+  in `nuxt dev` the exchange now warns once when no callback route is set, naming the option.
+- **SSR token prefetch.** `Cache-Control: private, no-store` is set only when a token exists.
+  Without one the payload carries no per-user data — Convex enforces auth inside the function —
+  so a signed-out render is cacheable. **Accepted.** A custom `token` passed to `useAsyncQuery`
+  is the caller's to protect.
+- **`auth` middleware.** Under `nuxt generate` the guard runs with a request event and no cookie,
+  so a protected page prerenders as a redirect to `loginPath` — nothing guarded is baked in.
+  Without a request event it used to let the page render. **Fixed:** it fails closed.
+- **Redirect guard.** `resolveAuthRedirect` re-resolves every candidate against the app origin
+  and refuses anything that lands elsewhere; the backslash, scheme-relative, dot-segment,
+  percent-encoded and control-character spellings are all covered by its tests. **No change.**
+- **CSP.** Origins are derived through `new URL()`'s `origin` / `host`, so a malformed
+  `convex.url` yields no source rather than a mangled directive. **No change.**
+- **DevTools.** The panel and its RPC run only under `nuxt dev`, on Vite's middleware — reachable
+  exactly as far as Nuxt DevTools itself. `getInfo` exposes the deployment URLs and the project's
+  root path, information Nuxt DevTools already shows. **Accepted.**

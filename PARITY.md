@@ -578,7 +578,8 @@ so none can be "restored" by syncing.
 - **Why** · upstream ships no route middleware, so the convention is the port's — and so is the
   open-redirect surface its `?redirect=` query creates. `resolveAuthRedirect` closes it:
   same-origin paths pass; absolute, scheme-relative (`//host`), backslash (`/\host`),
-  non-HTTP-scheme and repeated-parameter values fall back to the default.
+  non-HTTP-scheme and repeated-parameter values fall back to the default. `serverGuard` fails
+  closed: with no request event it redirects rather than rendering the page.
 
 ##### A-13 — `crossDomainCallbackRoute` restricts `?ott=` exchange to one route
 
@@ -619,7 +620,11 @@ so none can be "restored" by syncing.
   concern the module's own route rather than the app's CSP. The handler resolves the site URL
   through `convexAuth` (private runtime key, then public, then env) rather than reading one
   key — a build without the URL, configured at start-up through
-  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. The site URL must parse as `http:`/`https:`
+  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. It also refuses a request whose
+  URL-normalised path differs from the routed one: Nitro routes the raw path, so
+  `/api/auth/../../x` matches the route and would be forwarded as `/x` — any HTTP action on the
+  site origin, through the app's origin. Next normalises before routing; upstream's handler never
+  sees such a path. The site URL must parse as `http:`/`https:`
   before any request is made, because it is the only thing pinning the proxy's destination host.
 
 #### Tooling

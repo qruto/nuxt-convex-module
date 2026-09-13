@@ -122,6 +122,12 @@ export default defineConfig({
             '#convex/auth-client': authClientTestAlias,
           },
         },
+        // The app as `nuxt dev` runs it: dev-only branches — the cross-domain
+        // callback-route nudge — are real here. (`security.ts` reads the flag
+        // too, but its tests live in `unit`, where it is undefined.)
+        define: {
+          'import.meta.dev': 'true',
+        },
         test: {
           name: 'nuxt',
           include: ['test/nuxt/**/*.{test,spec}.ts'],

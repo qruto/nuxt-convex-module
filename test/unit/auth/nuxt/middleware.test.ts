@@ -93,12 +93,13 @@ describe('auth route middleware', () => {
       expect(mockNavigateTo).not.toHaveBeenCalled()
     })
 
-    it('is a no-op without a request event', async () => {
+    it('fails closed without a request event: redirects, and never lets the page render', async () => {
       mockUseRequestEvent.mockReturnValue(undefined)
       const { serverGuard } = await loadMiddleware()
 
-      await expect(serverGuard(route('/profile'), '/login')).resolves.toBeUndefined()
+      await serverGuard(route('/profile'), '/login')
       expect(mockIsAuthenticated).not.toHaveBeenCalled()
+      expect(mockNavigateTo).toHaveBeenCalledWith({ path: '/login', query: { redirect: '/profile' } })
     })
   })
 

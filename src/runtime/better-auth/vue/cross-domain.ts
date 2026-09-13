@@ -98,6 +98,14 @@ export async function consumeCrossDomainOneTimeToken(
       )
       return
     }
+    // Port-only, dev only: with no callback route, this exchange completes
+    // sign-in on whatever page received the link. Say so once, where it
+    // happens, so the option is found before production.
+    if (import.meta.dev && !options.callbackRoute) {
+      console.warn(
+        `[nuxt-convex-module] exchanged a cross-domain one-time token on "${url.pathname}" with no \`convex.betterAuth.crossDomainCallbackRoute\` set — any page can complete sign-in. Restrict it to your callback route.`,
+      )
+    }
     // Port-only catch: this runs while the Nuxt app bootstraps (not in a
     // fire-and-forget effect), so a failed exchange must not break startup.
     try {
