@@ -326,7 +326,8 @@ upstream routes through that client has to land somewhere else here.
 - **Pinned by** · `test/unit/client.test.ts` — "watchPaginatedQuery"
 - **On sync** · keep the throw; port page-management changes into `use-paginated-query.ts`
 - **Why** · upstream's method only hands work to `PaginatedQueryClient`. It is retained for
-  structural parity and throws loudly rather than silently mis-subscribing.
+  structural parity and throws loudly rather than silently mis-subscribing. Like upstream's, it
+  is `@internal`: present at runtime, absent from the published types (`stripInternal`).
 
 ##### D-06 — the sync client's transition callback is wired directly
 

@@ -102,7 +102,7 @@ export { useQuery, useQuery_experimental } from './composables/use-query'
 export { useMutation } from './composables/use-mutation'
 export { useAction } from './composables/use-action'
 export { useConvexConnectionState } from './composables/use-connection-state'
-// `convexQueryOptions` (marked `@internal` upstream) is deliberately not ported — see PARITY.md.
+// `convexQueryOptions` (an internal upstream symbol) is deliberately not ported — see PARITY.md.
 export type { QueryOptions } from 'convex/browser'
 
 // --- Vue-only additions beyond the upstream `convex/react` index surface ---

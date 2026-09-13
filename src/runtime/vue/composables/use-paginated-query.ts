@@ -504,7 +504,9 @@ function nextPaginationId(): number {
   return ++paginationId
 }
 
-/** @internal */
+/**
+ * Reset pagination id for tests only, so tests know what it is.
+ */
 export function resetPaginationId(): void {
   paginationId = 0
 }

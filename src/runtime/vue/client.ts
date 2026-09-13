@@ -43,7 +43,7 @@ const DEFAULT_EXTEND_SUBSCRIPTION_FOR = 5_000
  * A watch on the output of a Convex query function.
  *
  * Derived from upstream's `Watch` (per-member docs live there), extended with
- * the `@internal` `localQueryLogs`, which is stripped from the published
+ * the internal `localQueryLogs`, which is stripped from the published
  * `convex/react` types but present at runtime.
  *
  * @public
@@ -170,7 +170,7 @@ function instantiateDefaultLogger({ verbose }: { verbose: boolean }): ConvexLogg
   }
 }
 
-// The published `BaseConvexClient` types omit these `@internal` members
+// The published `BaseConvexClient` types omit these internal members
 // (present at runtime and used directly by upstream `ConvexReactClient`).
 interface SyncClientWithInternals extends BaseConvexClient {
   setAdminAuth(token: string, identity?: UserIdentityAttributes): void
@@ -463,7 +463,7 @@ export class ConvexVueClient {
   watchPaginatedQuery<Query extends FunctionReference<'query'>>(
     _query: Query,
     _args: Query['_args'],
-    // Upstream: `options: WatchPaginatedQueryOptions` (`@internal`, stripped
+    // Upstream: `options: WatchPaginatedQueryOptions` (internal, stripped
     // from the published types); typed loosely since this method only throws.
     _options: unknown,
   ): PaginatedWatch<FunctionReturnType<Query>> {

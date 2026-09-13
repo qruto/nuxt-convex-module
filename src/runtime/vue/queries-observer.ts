@@ -130,7 +130,7 @@ export class QueriesObserver {
     > = {}
     for (const identifier of Object.keys(queries)) {
       const { query, args } = queries[identifier]!
-      // `paginationOptions` is `@internal` upstream and stripped from the
+      // `paginationOptions` is internal upstream and stripped from the
       // published `RequestForQueries` type, so read it through a cast.
       const paginationOptions = (queries[identifier]! as {
         paginationOptions?: SubscribeToPaginatedQueryOptions

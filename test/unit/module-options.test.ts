@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { resolveDeploymentUrls, validateModuleOptions } from '../../src/module'
+import { resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
 
 const rootDir = mkdtempSync(join(tmpdir(), 'convex-module-options-'))
 afterAll(() => rmSync(rootDir, { recursive: true, force: true }))

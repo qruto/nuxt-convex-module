@@ -27,7 +27,7 @@ interface ClientInternals {
   transition(updatedQueries: QueryToken[]): void
 }
 
-// `@internal` members of BaseConvexClient (stripped from published types,
+// Internal members of BaseConvexClient (stripped from published types,
 // present at runtime) — same access pattern as `SyncClientWithInternals` in
 // `vue/client.ts`. Every access is optional-chained: if an upstream release
 // moves them, the panel degrades (no results/logs) instead of throwing.

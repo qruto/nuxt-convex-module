@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { convexTypeFallbackContents } from '../../src/module'
+import { convexTypeFallbackContents } from '../../src/templates'
 
 describe('convexTypeFallbackContents', () => {
   it('declares placeholder #convex modules while codegen is absent', () => {

@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { formatStartupSummary, resolveIntegrationState } from '../../src/module'
+import { formatStartupSummary, resolveIntegrationState } from '../../src/options'
 import { hasGeneratedApi } from '../../src/functions-dir'
 
 describe('resolveIntegrationState', () => {

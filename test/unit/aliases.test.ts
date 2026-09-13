@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { getConvexAliases } from '../../src/module'
+import { getConvexAliases } from '../../src/aliases'
 
 // resolveFunctionsDir falls back to the standard `convex/` dir when no
 // convex.json exists, so an empty root keeps this test pure.
