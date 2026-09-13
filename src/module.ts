@@ -5,6 +5,7 @@ import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, type Integration, type Registration } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -179,7 +180,6 @@ export default defineNuxtModule<ModuleOptions>({
     registerConvexTypeFallback(nuxt)
     registerVueComposables(resolver)
     registerAuthComponents(resolver)
-    registerServerImports(resolver)
     const integrations = registerIntegrations(resolver, nuxt, options)
     watchConvexCodegen(nuxt)
 
@@ -452,51 +452,15 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
 }
 
 /**
- * Expose the core Vue composables (`useQuery`, `useMutation`, `useAction`,
+ * Expose the core composables (`useQuery`, `useMutation`, `useAction`,
  * pagination, file storage, generic auth state, preloaded-query helpers, ...)
- * as Nuxt auto-imports. Auth-provider composables (Better Auth) and billing
- * (Polar) are registered by their auto-enabled integrations below.
+ * as Nuxt auto-imports, and the core Nitro helpers (`fetchQuery`, …) as server
+ * auto-imports. Auth-provider composables (Better Auth) and billing (Polar) are
+ * registered by their auto-enabled integrations below. The lists are data in
+ * `src/registry.ts`, where the docs gate reads them too.
  */
 function registerVueComposables(resolver: Resolver): void {
-  const composables: Array<{ name: string, from: string, type?: boolean }> = [
-    { name: 'useConvex', from: resolver.resolve('./runtime/vue/client') },
-    { name: 'useQuery', from: resolver.resolve('./runtime/vue/composables/use-query') },
-    { name: 'useQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-query') },
-    { name: 'useConvexQuery', from: resolver.resolve('./runtime/vue/composables/use-query') },
-    { name: 'useQueries', from: resolver.resolve('./runtime/vue/composables/use-queries') },
-    { name: 'useConvexQueries', from: resolver.resolve('./runtime/vue/composables/use-queries') },
-    { name: 'useMutation', from: resolver.resolve('./runtime/vue/composables/use-mutation') },
-    { name: 'useConvexMutation', from: resolver.resolve('./runtime/vue/composables/use-mutation') },
-    { name: 'useAction', from: resolver.resolve('./runtime/vue/composables/use-action') },
-    { name: 'useConvexAction', from: resolver.resolve('./runtime/vue/composables/use-action') },
-    { name: 'useConvexConnectionState', from: resolver.resolve('./runtime/vue/composables/use-connection-state') },
-    { name: 'useUpload', from: resolver.resolve('./runtime/vue/composables/use-upload') },
-    { name: 'useConvexUpload', from: resolver.resolve('./runtime/vue/composables/use-upload') },
-    { name: 'uploadFile', from: resolver.resolve('./runtime/vue/composables/use-upload') },
-    { name: 'useUploadQueue', from: resolver.resolve('./runtime/vue/composables/use-upload-queue') },
-    { name: 'useConvexUploadQueue', from: resolver.resolve('./runtime/vue/composables/use-upload-queue') },
-    { name: 'useStorageUrl', from: resolver.resolve('./runtime/vue/composables/use-storage-url') },
-    { name: 'useConvexStorageUrl', from: resolver.resolve('./runtime/vue/composables/use-storage-url') },
-    { name: 'useConvexAuth', from: resolver.resolve('./runtime/vue/auth/index') },
-    { name: 'provideConvexAuth', from: resolver.resolve('./runtime/vue/auth/index') },
-    { name: 'provideConvexApi', from: resolver.resolve('./runtime/vue/provide') },
-    { name: 'useConvexApi', from: resolver.resolve('./runtime/vue/provide') },
-    { name: 'useConvexNamespace', from: resolver.resolve('./runtime/vue/provide') },
-    { name: 'usePreloadedQuery', from: resolver.resolve('./runtime/vue/hydration') },
-    // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
-    { name: 'useAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
-    { name: 'useConvexAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
-    // Its types too, so `import type { AsyncQueryReturn } from '#imports'` works
-    // without spelling out the `nuxt-convex-module/app` subpath.
-    { name: 'AsyncQueryData', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
-    { name: 'AsyncQueryOptions', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
-    { name: 'AsyncQueryReturn', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
-    { name: 'AsyncQueryStatus', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
-    { name: 'usePaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
-    { name: 'useConvexPaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
-    { name: 'usePaginatedQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
-  ]
-  addImports(composables)
+  registerIntegrationImports(resolver, 'core')
 }
 
 /**
@@ -506,20 +470,21 @@ function registerVueComposables(resolver: Resolver): void {
  * integration's exports.
  */
 function registerAuthComponents(resolver: Resolver): void {
-  const helpersFile = resolver.resolve('./runtime/vue/auth/helpers')
-  for (const name of ['Authenticated', 'Unauthenticated', 'AuthLoading', 'AuthRefreshing'] as const) {
-    addComponent({ name, filePath: helpersFile, export: name })
-  }
+  registerComponents(resolver, 'core')
 }
 
-/**
- * Expose server-side utilities (`fetchQuery`, `preloadQuery`, ...) as Nitro
- * server auto-imports for use inside server routes and SSR.
- */
-function registerServerImports(resolver: Resolver): void {
-  const fromNuxt = resolver.resolve('./runtime/nuxt/index')
-  const serverUtils = ['fetchQuery', 'fetchMutation', 'fetchAction', 'preloadQuery', 'preloadedQueryResult']
-  addServerImports(serverUtils.map(name => ({ name, from: fromNuxt })))
+/** `addImports` + `addServerImports` for everything an integration registers. */
+function registerIntegrationImports(resolver: Resolver, integration: Integration): void {
+  const resolve = (entry: Registration) => ({ ...entry, from: resolver.resolve(`./${entry.from}`) })
+  if (APP_IMPORTS[integration].length > 0) addImports(APP_IMPORTS[integration].map(resolve))
+  if (SERVER_IMPORTS[integration].length > 0) addServerImports(SERVER_IMPORTS[integration].map(resolve))
+}
+
+/** `addComponent` for everything an integration registers; the name is the export. */
+function registerComponents(resolver: Resolver, integration: Integration): void {
+  for (const { name, from } of APP_COMPONENTS[integration]) {
+    addComponent({ name, filePath: resolver.resolve(`./${from}`), export: name })
+  }
 }
 
 /**
@@ -561,17 +526,8 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
 
-  addImports([
-    { name: 'useAuth', from: resolver.resolve('./runtime/better-auth/vue/use-auth') },
-    { name: 'usePreloadedAuthQuery', from: resolver.resolve('./runtime/better-auth/vue/hydration') },
-    { name: 'resolveAuthRedirect', from: resolver.resolve('./runtime/better-auth/vue/redirect') },
-  ])
-
-  addComponent({
-    name: 'AuthBoundary',
-    filePath: resolver.resolve('./runtime/better-auth/vue/auth-boundary'),
-    export: 'AuthBoundary',
-  })
+  registerIntegrationImports(resolver, 'betterAuth')
+  registerComponents(resolver, 'betterAuth')
 
   addServerHandler({
     route: `${authRoute}/**`,
@@ -590,11 +546,6 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
     path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
     global: false,
   })
-
-  addServerImports([
-    { name: 'convexAuth', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
-    { name: 'convexBetterAuthNuxt', from: resolver.resolve('./runtime/better-auth/nuxt/server') },
-  ])
 }
 
 /**
@@ -612,9 +563,8 @@ function registerBaseConvexClient(resolver: Resolver): void {
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
 function registerClerk(resolver: Resolver): void {
-  const from = resolver.resolve('./runtime/clerk/vue/index')
-  addImports({ name: 'provideConvexAuthFromClerk', from })
-  addComponent({ name: 'ConvexProviderWithClerk', filePath: from, export: 'ConvexProviderWithClerk' })
+  registerIntegrationImports(resolver, 'clerk')
+  registerComponents(resolver, 'clerk')
 }
 
 /**
@@ -623,9 +573,8 @@ function registerClerk(resolver: Resolver): void {
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
 function registerAuth0(resolver: Resolver): void {
-  const from = resolver.resolve('./runtime/auth0/vue/index')
-  addImports({ name: 'provideConvexAuthFromAuth0', from })
-  addComponent({ name: 'ConvexProviderWithAuth0', filePath: from, export: 'ConvexProviderWithAuth0' })
+  registerIntegrationImports(resolver, 'auth0')
+  registerComponents(resolver, 'auth0')
 }
 
 /**
@@ -633,8 +582,5 @@ function registerAuth0(resolver: Resolver): void {
  * Vue ports of `@convex-dev/polar/react`) as global components.
  */
 function registerPolarComponents(resolver: Resolver): void {
-  const componentsFile = resolver.resolve('./runtime/polar/vue/components')
-  for (const name of ['CheckoutLink', 'CustomerPortalLink'] as const) {
-    addComponent({ name, filePath: componentsFile, export: name })
-  }
+  registerComponents(resolver, 'polar')
 }

@@ -524,8 +524,9 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 
 ##### A-09 — module wiring
 
-- **Port** · [`src/module.ts`](./src/module.ts), [`src/options.ts`](./src/options.ts),
-  [`src/aliases.ts`](./src/aliases.ts), [`src/templates.ts`](./src/templates.ts),
+- **Port** · [`src/module.ts`](./src/module.ts), [`src/registry.ts`](./src/registry.ts),
+  [`src/options.ts`](./src/options.ts), [`src/aliases.ts`](./src/aliases.ts),
+  [`src/templates.ts`](./src/templates.ts), [`src/codegen-watch.ts`](./src/codegen-watch.ts),
   [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
 - **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the

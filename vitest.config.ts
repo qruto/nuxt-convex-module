@@ -38,6 +38,16 @@ export default defineConfig({
     },
     projects: [
       {
+        // Docs ↔ code contract: reads markdown and source, imports only
+        // src/registry.ts. Runs in CI's `static` job, which every PR gets —
+        // the `test` job is skipped for docs-only changes.
+        test: {
+          name: 'docs',
+          include: ['test/docs/**/*.{test,spec}.ts'],
+          environment: 'node',
+        },
+      },
+      {
         // A plain Vue app: no Nuxt aliases and, above all, no `define` — in a
         // consumer's Vite build neither `import.meta.client` nor
         // `import.meta.server` exists, and the `/vue` entries advertised as
