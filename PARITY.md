@@ -29,7 +29,7 @@ full, always part of the module, and covered by the one `convex` baseline.
 
 | Upstream entry point | Ported to | Status |
 |---|---|---|
-| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07 |
+| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07, D-12 |
 | [`convex/nextjs`](https://docs.convex.dev/client/react/nextjs/server-rendering) — `fetchQuery` / `fetchMutation` / `fetchAction`, `preloadQuery` | `src/runtime/nuxt/index.ts` | Complete + additive · D-10 |
 | [`convex/react-clerk`](https://docs.convex.dev/auth/clerk) — the official Clerk adapter | `src/runtime/clerk/vue/index.ts` | Complete |
 | [`convex/react-auth0`](https://docs.convex.dev/auth/auth0) — the official Auth0 adapter | `src/runtime/auth0/vue/index.ts` | Complete |
@@ -379,6 +379,17 @@ fixes one, drop the entry rather than reverting.
 - **Why** · unlike `<a target="_blank">`, `window.open` keeps `window.opener` live, letting the
   checkout tab navigate the opener. The forced `null` return is unused, so there is no cost.
   Not an open redirect: `url` is the app's own Convex action response.
+
+##### D-12 — `usePaginatedQuery` throws the missing-client error
+
+- **Kind** · missing guard
+- **Upstream** · `convex@1.45.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
+- **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
+- **On sync** · keep
+- **Why** · without a provider, upstream dereferences `undefined` and the user reads a raw
+  `TypeError`. Every other hook here throws the descriptive `Could not find Convex client!`
+  message; this was the one that did not.
 
 #### Type and signature refinements
 
