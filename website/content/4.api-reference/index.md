@@ -10,6 +10,6 @@ Two hand-written index pages and the generated TypeDoc output.
 
 - [App Auto-imports](/api-reference/auto-imports) — every composable and component auto-imported into pages, components, and composables.
 - [Server Auto-imports](/api-reference/server-imports) — every helper auto-imported into Nitro server code.
-- [Generated Reference](/api-reference/reference) — full TypeScript signatures for `client`, `server`, and each integration subpath.
+- [Generated Reference](/api-reference/reference) — full TypeScript signatures for `client`, `app`, `server`, and each integration subpath.
 
 For prose explanations of the same surface, start with the [Guide](/guide/queries).
