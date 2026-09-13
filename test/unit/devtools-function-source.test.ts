@@ -37,6 +37,8 @@ describe('resolveFunctionSource', () => {
   it('rejects path traversal and degenerate paths', () => {
     expect(resolveFunctionSource(rootDir, functionsDir, '../secrets:read')).toEqual({})
     expect(resolveFunctionSource(rootDir, functionsDir, 'chat/../../secrets:read')).toEqual({})
+    // Windows separators are one segment to split('/'); they must not slip through.
+    expect(resolveFunctionSource(rootDir, functionsDir, '..\\..\\secrets:read')).toEqual({})
     expect(resolveFunctionSource(rootDir, functionsDir, ':list')).toEqual({})
     expect(resolveFunctionSource(rootDir, functionsDir, '')).toEqual({})
   })

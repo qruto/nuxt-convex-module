@@ -12,7 +12,7 @@ export function resolveFunctionSource(rootDir: string, functionsDir: string, udf
   // The module part may itself contain `/`; only the last `:` segment is the
   // function name (canonicalizeUdfPath guarantees exactly one `:`).
   const modulePath = udfPath.split(':')[0]
-  if (!modulePath || modulePath.split('/').some(segment => segment === '' || segment === '.' || segment === '..')) {
+  if (!modulePath || modulePath.split(/[\\/]/).some(segment => segment === '' || segment === '.' || segment === '..')) {
     return {}
   }
 
