@@ -224,7 +224,7 @@ const CheckoutLink: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/polar/vue/components.ts:106](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L106)
+Defined in: [src/runtime/polar/vue/components.ts:108](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L108)
 
 Renders a checkout link. Supports embedded or redirect checkout, with optional lazy loading and trial configuration.
 
