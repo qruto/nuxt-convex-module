@@ -97,7 +97,7 @@ describe('better-auth client plugin', () => {
 
     expect(result).toEqual({ provide: {} })
     expect(provided.size).toBe(0)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('No Convex URL configured'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('NUXT_PUBLIC_CONVEX_URL'))
     warn.mockRestore()
   })
 })
