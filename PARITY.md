@@ -428,7 +428,7 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 ##### A-01 — `useConvex*` aliases
 
 - **Port** · [`vue/index.ts`](./src/runtime/vue/index.ts), below the "Vue-only additions" fence
-- **Pinned by** · `test/nuxt/public-surface.test.ts` — the `useConvex*` names in the `./client` literal
+- **Pinned by** · `test/nuxt/public-surface.test.ts` — the `useConvex*` names in the `./client` literal; `test/module/registration.test.ts` — the exact auto-import set on a loaded Nuxt
 - **Why** · every composable is auto-imported into the app's global scope, where `useQuery` and
   `useAction` can collide with other modules. Each ported composable gets a `useConvexQuery` /
   `useConvexMutation` / `useConvexAction` / `useConvexQueries` / `useConvexPaginatedQuery`
@@ -528,7 +528,7 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
   [`src/options.ts`](./src/options.ts), [`src/aliases.ts`](./src/aliases.ts),
   [`src/templates.ts`](./src/templates.ts), [`src/codegen-watch.ts`](./src/codegen-watch.ts),
   [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
-- **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
+- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
   generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
   package is both declared in the app's own `package.json` and resolvable — resolution alone

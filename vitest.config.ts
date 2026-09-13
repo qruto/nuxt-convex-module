@@ -25,18 +25,32 @@ export default defineConfig({
       // reaches — better-auth/nuxt/proxy.ts, the module's register* functions —
       // show 0% here. That is a measurement artifact, not an untested path:
       // both fixtures install the module and the proxy answers real requests.
-      // Lock in the current baseline (a small margin below the measured numbers)
-      // so a regression fails CI without being brittle. Raise these as coverage
-      // climbs; the harder build-time/runtime files (module, auth plugins/
-      // middleware) keep the global ceiling modest for now.
+      // Lock in the current baseline (a small margin below the measured numbers:
+      // 94.6 / 86.0 / 94.6 / 95.5 with the `module` project counted) so a
+      // regression fails CI without being brittle. Raise these as coverage
+      // climbs. module.ts has its own floor: the registration test is what
+      // took it from 27% to 75%, and nothing else reaches its register*
+      // functions.
       thresholds: {
-        statements: 84,
-        branches: 77,
-        functions: 85,
-        lines: 85,
+        'statements': 92,
+        'branches': 83,
+        'functions': 92,
+        'lines': 93,
+        'src/module.ts': { lines: 70, functions: 75 },
       },
     },
     projects: [
+      {
+        // The module's registration contract, on a real Nuxt instance via
+        // `loadNuxt` (setup only, no build). Node environment: it needs the
+        // Nuxt loader, not a running app.
+        test: {
+          name: 'module',
+          include: ['test/module/**/*.{test,spec}.ts'],
+          environment: 'node',
+          testTimeout: 60_000,
+        },
+      },
       {
         // Docs ↔ code contract: reads markdown and source, imports only
         // src/registry.ts. Runs in CI's `static` job, which every PR gets —

@@ -171,6 +171,7 @@
     "test:types:lib": "pnpm run dev:prepare:lib && pnpm run typecheck",
     "test:unit": "vitest --project unit --run",
     "test:nuxt": "vitest --project nuxt --run",
+    "test:module": "vitest --project module --run",
     "test:docs": "vitest --project docs --run",
     "test:e2e": "vitest --run --project e2e",
     "test:quality": "fallow",
