@@ -1,6 +1,6 @@
 # The documentation site
 
-The Nuxt app behind the docs, the landing page and the playground.
+The Nuxt app behind the docs and the landing page, with the live demos embedded in the guide.
 
 It deploys to Vercel. The `vercel.json` next to this file is its whole configuration, because the
 Vercel project's **Root Directory** is set to `website`.
@@ -16,8 +16,8 @@ clone the build dies before rendering anything:
 [error] Cannot resolve module "nuxt-convex-module"
 ```
 
-So the build command is `pnpm --dir .. run dev:prepare:lib && pnpm --dir .. run build`, and it
-needs both halves:
+So the build command is `pnpm --dir .. run dev:prepare:lib && pnpm --dir .. run build && pnpm exec
+nuxt build`, and the two root halves are both needed before the site's own build:
 
 - `dev:prepare:lib` generates the repository root's `.nuxt/tsconfig.json`. Without it
   `nuxt-module-build` can't resolve compiler options and fails with

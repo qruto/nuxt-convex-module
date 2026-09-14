@@ -23,8 +23,9 @@ export default createConfigForNuxt({
     // `.agents/` holds AI tooling references (skill scripts, fetched examples),
     // not package source — exclude it from the project's lint rules. `.claude/`
     // is the same content seen through Claude Code's own skills directory,
-    // which is symlinks back into `.agents/skills` (see
-    // `scripts/link-agent-skills.mjs`), so it has to be ignored alongside it.
+    // which is symlinks back into `.agents/skills` (written by `npx skills add
+    // … --agent claude-code`, see CONTRIBUTING.md), so it has to be ignored
+    // alongside it.
     // `.deepsec/` is the deepsec security-scanner workspace (its own
     // package.json/lockfile) — not package source either.
     {

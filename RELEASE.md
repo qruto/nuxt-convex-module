@@ -18,7 +18,8 @@ environment can do.
    display name — `ci` → `CI` — is set in `changelog.scopeMap` in `package.json`.
 
 2. **Read that pull request, then squash-merge it.** Its body is the changelog the GitHub Release
-   will carry. `CI` waits for **Approve and run** first: the pull request is authored by
+   will carry. Edit `CHANGELOG.md` on the release branch first if a line needs rewording — the
+   notes are read from the tag, so the edit ships. `CI` waits for **Approve and run** first: the pull request is authored by
    `github-actions[bot]`, which the *Require approval for all external contributors* policy treats
    like any outside contributor. After that, wait for it like any other PR.
 
@@ -229,7 +230,7 @@ The rules that protect `main` and the tags are committed under
 | `main-guard` ruleset | `main` can't be deleted or force-pushed. History can be added to, never rewritten. |
 | `main-pr-gate` ruleset | `main` takes pull requests only, requires `All checks passed`, and requires signed commits. That last one is why `Release Prepare` commits through GitHub's API instead of `git commit` — a commit made on a runner is unverified, and a rebase merge would carry it onto `main` as-is. |
 | `tag-guard` ruleset | `v*` tags can't be deleted, moved or force-updated. Release history stays pinned to its commit. |
-| Immutable releases | The Release that `tag` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
+| Immutable releases | The Release that `publish` creates locks its tag and carries an attestation: `gh release verify vX.Y.Z`. |
 | `sha_pinning_required` | GitHub itself refuses a workflow that references a floating action tag, not just zizmor. |
 | Secret scanning + push protection, Dependabot alerts and security updates | On. |
 

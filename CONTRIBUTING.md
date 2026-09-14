@@ -215,10 +215,10 @@ Every tool runs through `pnpm exec` / `pnpm run`, because each CLI is a devDepen
 `PATH` only inside a pnpm script. Bypass once with `git commit --no-verify` or
 `git push --no-verify`; every one of these has a CI counterpart that cannot be bypassed.
 
-Both gates are skipped when `CI` is set. The release job commits through `changelogen`, which
-shells out to a plain `git commit`, and a release must not be gated on checks the pull request
-already ran — and `CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so they would fail there for
-the wrong reason anyway.
+Both gates are skipped when `CI` is set: every check they run is its own CI job already, and
+`CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so they would fail there for the wrong reason
+anyway. (No CI job runs `git commit` — the release commit is made through GitHub's API, so hooks
+never see it.)
 
 **What the hooks cannot cover.** These stay CI's alone, so a green push is not a promise of a
 green pipeline: the `e2e` job (builds fixture apps, minutes; `pnpm test:e2e` runs it locally once

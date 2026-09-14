@@ -24,7 +24,7 @@
     },
     "better-auth-docs": {
       "url": "https://mcp.better-auth.com/mcp",
-      "type": "https"
+      "type": "http"
     },
     "github": {
       "type": "http",

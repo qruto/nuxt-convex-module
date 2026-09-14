@@ -34,6 +34,11 @@ coverage
 *.junit.xml
 .nyc_output
 
+# Claude Code — per-machine settings and its scratch writes; `.claude/` itself
+# (launch.json, the skill symlinks) is tracked
+.claude/settings.local.json
+.claude/.cc-writes/
+
 # VSCode
 .vscode/*
 !.vscode/settings.json

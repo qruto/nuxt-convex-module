@@ -42,7 +42,7 @@ Run the full gate before opening a PR:
 pnpm dev:prepare    # build the module stub + prepare Nuxt
 pnpm lint
 pnpm test:types     # vue-tsc (lib + website)
-pnpm test           # vitest: unit + nuxt projects
+pnpm test           # vitest: every project but e2e (unit, unit-server, nuxt, module, docs, plain-vue)
 pnpm test:quality   # fallow: unused exports, duplication, file-health
 ```
 
