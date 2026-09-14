@@ -50,6 +50,13 @@ export interface BetterAuthModuleOptions {
   loginPath?: string
 }
 
+/**
+ * Options for the `convex` key in `nuxt.config`. Every key is optional: the
+ * URLs default to the environment, and each integration auto-enables from
+ * your `package.json`.
+ *
+ * @public
+ */
 export interface ModuleOptions {
   /**
    * Convex deployment URL. Defaults to `NUXT_PUBLIC_CONVEX_URL`, then to the
@@ -162,12 +169,14 @@ export default defineNuxtModule<ModuleOptions>({
       url,
       siteUrl,
       authRoute: options.authRoute || '/api/auth',
+      loginPath: nuxt.options.runtimeConfig.public.convex.loginPath,
       authClient: typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined,
       rootDir: nuxt.options.rootDir,
     })
     for (const message of diagnostics.errors) logger.error(message)
     for (const message of diagnostics.warnings) logger.warn(message)
     options.authRoute = diagnostics.authRoute
+    nuxt.options.runtimeConfig.public.convex.loginPath = diagnostics.loginPath
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
     // prefix of `#convex/auth-client`, so the auth-client alias must be

@@ -21,6 +21,7 @@ describe('validateModuleOptions', () => {
       errors: [],
       warnings: [],
       authRoute: '/api/auth',
+      loginPath: '/login',
     })
   })
 
@@ -66,6 +67,16 @@ describe('validateModuleOptions', () => {
 
     const trailingSlash = validateModuleOptions({ ...base, authRoute: '/api/auth/' })
     expect(trailingSlash.authRoute).toBe('/api/auth')
+    expect(trailingSlash.warnings).toEqual([])
+  })
+
+  it('normalizes betterAuth.loginPath the same way, so the middleware guard can match it', () => {
+    const missingSlash = validateModuleOptions({ ...base, loginPath: 'sign-in' })
+    expect(missingSlash.loginPath).toBe('/sign-in')
+    expect(missingSlash.warnings).toEqual([expect.stringContaining('`convex.betterAuth.loginPath`')])
+
+    const trailingSlash = validateModuleOptions({ ...base, loginPath: '/sign-in/' })
+    expect(trailingSlash.loginPath).toBe('/sign-in')
     expect(trailingSlash.warnings).toEqual([])
   })
 

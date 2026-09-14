@@ -67,6 +67,8 @@ export interface ModuleOptionDiagnostics {
   warnings: string[]
   /** `authRoute` with a leading slash ensured and any trailing slash stripped. */
   authRoute: string
+  /** `betterAuth.loginPath`, normalised the same way. */
+  loginPath: string
 }
 
 /**
@@ -75,24 +77,40 @@ export interface ModuleOptionDiagnostics {
  * every position and the cost is quadratic in the length of the slash run —
  * 6.5s on a 60,000-slash input against 0.04ms here (CodeQL js/polynomial-redos).
  */
-function stripTrailingSlashes(value: string): string {
+export function stripTrailingSlashes(value: string): string {
   let end = value.length
   while (end > 0 && value[end - 1] === '/') end--
   return value.slice(0, end)
 }
 
 /**
+ * Ensure a leading slash — with a warning, since the value was most likely a
+ * typo — and drop trailing ones silently: the proxy route and the `auth`
+ * middleware compare paths exactly, so `login/` would never match `/login`.
+ */
+function normalizeRoutePath(value: string, option: string, warnings: string[]): string {
+  let path = value
+  if (!path.startsWith('/')) {
+    path = `/${path}`
+    warnings.push(`\`${option}\` ("${value}") must start with "/" — using "${path}".`)
+  }
+  return path.length > 1 && path.endsWith('/') ? stripTrailingSlashes(path) : path
+}
+
+/**
  * Validate the resolved module configuration, turning silent misconfiguration
  * (swapped `.convex.cloud`/`.convex.site` URLs, malformed URLs, an `authRoute`
  * that would produce a broken server-handler route or that the bundled auth
- * client cannot follow, a `betterAuth.authClient` path that doesn't exist)
- * into actionable messages. Pure — the caller logs
- * the findings and applies the normalized `authRoute`.
+ * client cannot follow, a `loginPath` the middleware's self-redirect guard
+ * could never match, a `betterAuth.authClient` path that doesn't exist) into
+ * actionable messages. Pure — the caller logs the findings and applies the
+ * normalized `authRoute` and `loginPath`.
  */
 export function validateModuleOptions(input: {
   url: string
   siteUrl: string
   authRoute: string
+  loginPath?: string
   authClient?: string
   rootDir: string
 }): ModuleOptionDiagnostics {
@@ -121,16 +139,8 @@ export function validateModuleOptions(input: {
     )
   }
 
-  let authRoute = input.authRoute
-  if (!authRoute.startsWith('/')) {
-    authRoute = `/${authRoute}`
-    warnings.push(
-      `\`convex.authRoute\` ("${input.authRoute}") must start with "/" — using "${authRoute}".`,
-    )
-  }
-  if (authRoute.length > 1 && authRoute.endsWith('/')) {
-    authRoute = stripTrailingSlashes(authRoute)
-  }
+  const authRoute = normalizeRoutePath(input.authRoute, 'convex.authRoute', warnings)
+  const loginPath = normalizeRoutePath(input.loginPath ?? '/login', 'convex.betterAuth.loginPath', warnings)
   // The bundled Better Auth client is created with Better Auth's default
   // `basePath`, `/api/auth`. Moving the proxy without moving the client leaves
   // every auth call hitting a route that no longer exists — silently, as 404s.
@@ -146,7 +156,7 @@ export function validateModuleOptions(input: {
     )
   }
 
-  return { errors, warnings, authRoute }
+  return { errors, warnings, authRoute, loginPath }
 }
 
 function isHttpUrl(value: string): boolean {
@@ -252,8 +262,6 @@ export function isPackageInstalled(id: string, rootDir: string): boolean {
  * writes — the Convex CLI picks its variable name per framework and has no Nuxt
  * case, so it falls back to `CONVEX_URL`. Reading both means someone who has
  * only ever run the CLI needs no `convex.url` in `nuxt.config` at all.
- *
- *
  */
 export function resolveDeploymentUrls(
   options: { url?: string, siteUrl?: string },
