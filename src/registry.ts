@@ -18,6 +18,7 @@ export type Integration = 'core' | 'betterAuth' | 'clerk' | 'auth0' | 'polar'
 const vue = (file: string) => `runtime/vue/${file}`
 const composable = (file: string) => vue(`composables/${file}`)
 const asyncQuery = 'runtime/nuxt/composables/use-async-query'
+const asyncPaginatedQuery = 'runtime/nuxt/composables/use-async-paginated-query'
 
 /** App-side auto-imports (`addImports`). */
 export const APP_IMPORTS: Record<Integration, Registration[]> = {
@@ -58,6 +59,11 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'usePaginatedQuery', from: composable('use-paginated-query') },
     { name: 'useConvexPaginatedQuery', from: composable('use-paginated-query') },
     { name: 'usePaginatedQuery_experimental', from: composable('use-paginated-query') },
+    { name: 'useAsyncPaginatedQuery', from: asyncPaginatedQuery },
+    { name: 'useConvexAsyncPaginatedQuery', from: asyncPaginatedQuery },
+    { name: 'AsyncPaginatedQueryData', from: asyncPaginatedQuery, type: true },
+    { name: 'AsyncPaginatedQueryOptions', from: asyncPaginatedQuery, type: true },
+    { name: 'AsyncPaginatedQueryReturn', from: asyncPaginatedQuery, type: true },
   ],
   betterAuth: [
     { name: 'useBetterAuth', from: 'runtime/better-auth/vue/use-better-auth' },
@@ -71,8 +77,11 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
 
 /** Auto-registered components (`addComponent`); `name` is also the export. */
 export const APP_COMPONENTS: Record<Integration, Registration[]> = {
-  core: ['Authenticated', 'Unauthenticated', 'AuthLoading', 'AuthRefreshing']
-    .map(name => ({ name, from: vue('auth/helpers') })),
+  core: [
+    ...['Authenticated', 'Unauthenticated', 'AuthLoading', 'AuthRefreshing']
+      .map(name => ({ name, from: vue('auth/helpers') })),
+    { name: 'ConvexImage', from: vue('components/convex-image') },
+  ],
   betterAuth: [{ name: 'AuthBoundary', from: 'runtime/better-auth/vue/auth-boundary' }],
   clerk: [{ name: 'ConvexProviderWithClerk', from: 'runtime/clerk/vue/index' }],
   auth0: [{ name: 'ConvexProviderWithAuth0', from: 'runtime/auth0/vue/index' }],

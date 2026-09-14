@@ -36,6 +36,13 @@ const LINK = /\]\((?!https?:\/\/|\/|#|mailto:)([^)]+)\)/g
 // markdown-escaped (`node\_modules`), so match either spelling.
 const PNPM_STORE = /node(\\?)_modules\/\.pnpm\/[^/]+\/node\\?_modules\//g
 
+// typedoc.json spells the source link as a template rooted at src/runtime (git
+// detection is off, so the output is the same from a worktree). A symbol that
+// lives in a dependency then gets a link that climbs out of that root —
+// `blob/main/src/runtime/../../node_modules/…` — which points at nothing on
+// GitHub. Keep the path text, drop the link.
+const DEPENDENCY_SOURCE_LINK = /\[([^\]]+)\]\(https:\/\/github\.com\/[^)]*\/src\/runtime\/\.\.\/[^)]*\)/g
+
 // Upstream's doc-comments reference `{@link server.FunctionReference}`, the
 // `server` module of the `convex` package. Here `server` is our own Nitro entry
 // and holds no such symbol, so TypeDoc drops the braces and leaves the literal
@@ -101,6 +108,7 @@ for await (const file of walk(ROOT)) {
 
   let out = src
     .replace(PNPM_STORE, 'node$1_modules/')
+    .replace(DEPENDENCY_SOURCE_LINK, '$1')
     .replace(UPSTREAM_FUNCTION_REFERENCE, FUNCTION_REFERENCE_LINK)
     .replace(LINK, (_match, target) => {
       const hash = target.indexOf('#')

@@ -58,7 +58,7 @@ const ENTRY: Record<string, Entry> = {
   './client': {
     source: 'src/runtime/vue/index.ts',
     values: [
-      'AuthLoading', 'AuthRefreshing', 'Authenticated', 'Unauthenticated',
+      'AuthLoading', 'AuthRefreshing', 'Authenticated', 'Unauthenticated', 'ConvexImage',
       'ConvexApiKey', 'ConvexAuthStateKey', 'ConvexClientKey', 'ConvexVueClient',
       'createConvexAuthState', 'createScopedConvexAuthState', 'provideConvexAuth', 'useConvexAuth',
       'insertAtBottomIfLoaded', 'insertAtPosition', 'insertAtTop', 'optimisticallyUpdateValueInPaginatedQuery',
@@ -95,8 +95,11 @@ const ENTRY: Record<string, Entry> = {
   },
   './app': {
     source: 'src/runtime/nuxt/app.ts',
-    values: ['useAsyncQuery', 'useConvexAsyncQuery'],
-    types: ['AsyncQueryData', 'AsyncQueryOptions', 'AsyncQueryReturn', 'AsyncQueryStatus'],
+    values: ['useAsyncQuery', 'useConvexAsyncQuery', 'useAsyncPaginatedQuery', 'useConvexAsyncPaginatedQuery'],
+    types: [
+      'AsyncQueryData', 'AsyncQueryOptions', 'AsyncQueryReturn', 'AsyncQueryStatus',
+      'AsyncPaginatedQueryData', 'AsyncPaginatedQueryOptions', 'AsyncPaginatedQueryReturn',
+    ],
   },
   './better-auth/client': {
     source: 'src/runtime/better-auth/vue/index.ts',
