@@ -39,15 +39,6 @@ const { state } = useDemoScript(plate, async (t) => {
 watch(state, (value) => {
   if (value === 'stopped') reveal?.finish()
 })
-
-// The keypad in the copy sinks the key of the scene on the plate. With the
-// recording gone there is one scene: the live query (useAsyncQuery, the
-// "Server & SSR" key), and no key while the socket is down. Scene REQUESTS
-// from the keypad have nothing to play here yet — see useHeroScene.
-const heroScene = useHeroScene()
-function onOnline(online: boolean) {
-  heroScene.value = online ? 'LIVE' : null
-}
 </script>
 
 <template>
@@ -126,6 +117,6 @@ function onOnline(online: boolean) {
     </div>
 
     <!-- The canvas well and, under it, the status rail. -->
-    <LiveCanvas @online="onOnline" />
+    <LiveCanvas />
   </figure>
 </template>

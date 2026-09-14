@@ -1,9 +1,11 @@
 <script setup lang="ts">
 // Overrides Docus's AppHeader to drop the light/dark toggle. The scheme is
-// the operating system's (see plugins/color-mode.client.ts) — Docus's own
+// the operating system's (see colorMode in nuxt.config.ts) — Docus's own
 // switch for hiding the button (`docus.colorMode: 'light' | 'dark'`) would
-// pin the site to one scheme instead. Everything else is Docus's markup
-// (its composables arrive through the layer's auto-imports).
+// pin the site to one scheme instead. Everything else is Docus's markup,
+// copied verbatim from docus@5.13.0 app/components/app/AppHeader.vue (its
+// composables arrive through the layer's auto-imports); re-diff on a
+// Docus bump.
 const appConfig = useAppConfig()
 
 const { isEnabled: isAssistantEnabled } = useAssistant()

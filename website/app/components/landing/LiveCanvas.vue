@@ -25,10 +25,6 @@ import { api } from '#convex/api'
 // Offline (no client, or the socket is down) the canvas keeps working on
 // local rows so the stage never reads as broken — the rail says so.
 
-// Whether the plate can honestly say live — the hero reads it to sink the
-// matching key in the copy. An emit rather than an expose: the value only
-// exists after the awaited query below, and expose must come before it.
-const emit = defineEmits<{ online: [value: boolean] }>()
 // The second window has no key to open a third; its rail skips the hint.
 const props = defineProps<{ second?: boolean }>()
 
@@ -45,8 +41,6 @@ const INKS: { id: Ink, label: string }[] = [
   { id: 'graphite', label: 'graphite ink' },
 ]
 const blank = (): Ink[] => Array.from({ length: CELLS }, () => 'none')
-
-const client = useConvex()
 
 // The cells this window is committing, and the rail's passing note (a
 // commit that landed, a stroke from elsewhere) — declared up here because
@@ -65,15 +59,10 @@ onUnmounted(() => clearTimeout(noteTimer))
 // `null` reads now; a timestamp reads the table as it stood then. The
 // getter makes the argument reactive: moving the scrubber re-subscribes.
 const at = ref<number | null>(null)
-const { data: frame, error } = client
-  ? await useAsyncQuery(api.canvas.at, () => ({ at: at.value }))
-  : { data: shallowRef<Ink[] | undefined>(undefined), error: shallowRef(null) }
-const { data: log } = client
-  ? await useAsyncQuery(api.canvas.log, {})
-  : { data: shallowRef<Commit[] | undefined>(undefined) }
+const { data: frame, error } = await useDemoQuery(api.canvas.at, () => ({ at: at.value }))
+const { data: log } = await useDemoQuery(api.canvas.log, {})
 
 const online = useDemoOnline(error)
-watch(online, value => emit('online', value), { immediate: true })
 
 // Who is here: this window heartbeats the presence table under its own
 // session id, and reads the live count back — the same query the console
@@ -143,7 +132,7 @@ const live = computed(() => at.value === null)
 // is up and the query reads now), snapshot (signal orange — the query is
 // pinned to a commit), offline (no light).
 const state = computed(() => {
-  if (!online.value) return { lamp: 'lamp-dead', tone: 'text-dimmed', label: 'offline' }
+  if (!online.value) return { lamp: '', tone: 'text-dimmed', label: 'offline' }
   return live.value
     ? { lamp: 'lamp-live', tone: 'text-toned', label: 'live' }
     : { lamp: 'lamp-rec', tone: 'text-toned', label: 'snapshot' }
@@ -221,21 +210,17 @@ const atLabel = computed(() => {
 const ink = ref<Ink>('signal')
 const rejection = ref<string | null>(null)
 
-const paintRemote = client
-  ? useMutation(api.canvas.paint).withOptimisticUpdate((store, { cell, ink }) => {
-      const current = store.getQuery(api.canvas.at, { at: null })
-      if (current) store.setQuery(api.canvas.at, { at: null }, current.map((v, i) => (i === cell ? ink : v)))
-      const ticks = store.getQuery(api.canvas.log, {})
-      if (ticks) store.setQuery(api.canvas.log, {}, [...ticks, { at: Math.max(Date.now(), since + 1), clear: false }])
-    })
-  : undefined
-const clearRemote = client
-  ? useMutation(api.canvas.clear).withOptimisticUpdate((store) => {
-      if (store.getQuery(api.canvas.at, { at: null })) store.setQuery(api.canvas.at, { at: null }, blank())
-      const ticks = store.getQuery(api.canvas.log, {})
-      if (ticks) store.setQuery(api.canvas.log, {}, [...ticks, { at: Math.max(Date.now(), since + 1), clear: true }])
-    })
-  : undefined
+const paintRemote = useDemoMutation(api.canvas.paint, (store, { cell, ink }) => {
+  const current = store.getQuery(api.canvas.at, { at: null })
+  if (current) store.setQuery(api.canvas.at, { at: null }, current.map((v, i) => (i === cell ? ink : v)))
+  const ticks = store.getQuery(api.canvas.log, {})
+  if (ticks) store.setQuery(api.canvas.log, {}, [...ticks, { at: Math.max(Date.now(), since + 1), clear: false }])
+})
+const clearRemote = useDemoMutation(api.canvas.clear, (store) => {
+  if (store.getQuery(api.canvas.at, { at: null })) store.setQuery(api.canvas.at, { at: null }, blank())
+  const ticks = store.getQuery(api.canvas.log, {})
+  if (ticks) store.setQuery(api.canvas.log, {}, [...ticks, { at: Math.max(Date.now(), since + 1), clear: true }])
+})
 
 async function commit(mark: number[], run: () => Promise<unknown>, local: () => void) {
   rejection.value = null

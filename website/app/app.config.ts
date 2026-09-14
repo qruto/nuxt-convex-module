@@ -4,8 +4,9 @@ export default defineAppConfig({
     // Left EMPTY on purpose: 'light' / 'dark' here would force one scheme.
     // The site follows the OS instead — the toggle is removed from the
     // header, footer and ⌘K palette (app/components/app overrides), the
-    // `d` shortcut is off below, and plugins/color-mode.client.ts resets
-    // any preference a visitor stored while the toggle still existed.
+    // `d` shortcut is off below, and nuxt.config's colorMode.storageKey
+    // keeps any preference a visitor stored while the toggle still
+    // existed from being read.
     colorMode: '',
     shortcuts: { toggleColorMode: '' },
   },

@@ -43,31 +43,25 @@ const cells = computed(() => [
        column the board sits in, not the viewport. -->
   <div class="spec-board">
     <!-- A definition list is what a scoreboard IS — a name over a figure,
-         four times — so a screen reader gets "NUXT ≥ 4.1" as one pair. The
-         dish is depth.css's shallow well, the same plate the upstream
-         baseline stamps on the component pages are cut into.
+         four times — so a screen reader gets "NUXT ≥ 4.1" as one pair.
 
-         The dish is `concave-ground`: the floor is the PAGE'S own colour,
-         not the well fill a plate would take. This board sits on the hero
-         ground with nothing under it, so `concave`'s lighter tile read as
-         a panel laid on the page rather than as a readout cut into it —
-         and it is opaque, which is what stops the hero's mill grain
-         carrying through the cut. With no tonal step left to see it by,
-         the recess is drawn entirely by its walls: the deep well's shade
-         under the lip, a floor catch, and the lip itself as
-         `--recess-edge`.
+         The dish is `part-dish` (depth.css: `concave-ground` at the card
+         radius): the floor is the PAGE'S own colour, not the well fill a
+         plate would take. This board sits on the hero ground with nothing
+         under it, so `concave`'s lighter tile would read as a panel laid
+         on the page rather than as a readout cut into it — and it is
+         opaque, which is what stops the hero's mill grain carrying through
+         the cut. With no tonal step to see it by, the recess is drawn
+         entirely by its walls: the lip, the deep well's shade under it,
+         and a floor catch.
 
          The two lines of a cell are cut and raised, not big and small: the
          LABEL is scribed into the dish (`concave-text`) because it is the
          plate's own marking, and the FIGURE stands proud of it
          (`convex-text`) because it is the reading — the part that changes.
-         Neither is the loudest thing in the hero, and the figures used to
-         be: black `text-highlighted` numerals pulled the eye off the
-         headline and the primary call, which is exactly backwards for a
-         nameplate. The ink is re-tuned for the darker floor rather than
-         stepped again — figures at `text-default`, labels back up to
-         `text-toned`, where `text-muted` at 8.8px went to a whisper once
-         the dish stopped being the lightest thing in the hero. -->
+         Neither is the loudest thing in the hero: figures at
+         `text-default` and labels at `text-toned` keep the eye on the
+         headline and the primary call, which is what a nameplate is for. -->
     <dl class="board part-dish m-0">
       <div
         v-for="cell in cells"
@@ -90,10 +84,9 @@ const cells = computed(() => [
   container-type: inline-size;
 }
 /* THE BOARD IS AS WIDE AS THE HEADLINE, and the headline is not as wide
-   as its column (2026-09-08). Told to run "one size with the main title",
-   it was given 100% of the copy column — 720px against a headline whose
-   longest line measures 623 at the same width, so the board overhung the
-   thing it was supposed to line up with.
+   as its column: 100% of the copy column is 720px against a headline
+   whose longest line measures 623 at the same width, so a full-width
+   board would overhang the thing it lines up with.
 
    The figure is the headline's own measure, in ems of the headline's own
    type: the hard-broken second line ("in a [Nuxt] application") renders

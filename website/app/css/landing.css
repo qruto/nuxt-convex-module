@@ -9,13 +9,16 @@
    section carries the finish its own content asks for, the way one
    billet takes different tool passes:
 
-     landing-mill-grid   01 . the spec sheet's measurement grid
-     landing-mill-rings  02 . a turned face — fine concentric passes
+     landing-mill-grid   the measurement grid under the tour of
+                         what ships (#ships)
+     landing-mill-rings  a turned face — fine concentric passes
                          under scribed broadcast rings off the
                          socket (no ray: the rings are the light)
-     landing-mill-hatch  03 . diagonal cross-feed marks off the bench
-     landing-mill-knurl  04 . knurling — the grip texture on the
-                         thing that ends up in your pocket
+                         — the live table (#live)
+     landing-mill-hatch  diagonal cross-feed marks — the two names
+                         (#names) and the plain-Vue plate (#anywhere)
+     landing-mill-knurl  knurling — the grip texture on the thing
+                         that ends up in your pocket (#deploy)
 
    Every one of them repaints the ground opaquely before laying its
    own finish down. That is load-bearing since chrome.css put the
@@ -25,15 +28,14 @@
    the beat the coprime periods exist to avoid.
 
    The hero's ground is the fifth finish, in its own rule below (it
-   trades the ray for a bloom). The services rail sitting on the foot
+   trades the ray for a sheen and a shade). The services rail sitting on the foot
    of that hero is the one surface with NO finish at all — a flat fill,
    deliberately; see LandingServices.vue. */
 
-/* 01 — the drawing grid: ONE rule every 28px, scribed (shade + 1px
-   light catch below/beside). A second, darker rule every 140px used to
-   ride on top of this one; it read as two grids of different weights
-   fighting over the same plate rather than as one measurement field, so
-   the majors are gone and the 28px cell is the only cell. */
+/* The drawing grid: ONE rule every 28px, scribed (shade + 1px light
+   catch below/beside). No darker major rule on top: two grids of
+   different weights read as fighting over the same plate rather than
+   as one measurement field. */
 .landing-mill-grid {
   background-color: var(--ui-bg);
   background-image: var(--mill-ray), var(--mill-grain);
@@ -92,7 +94,7 @@
 @media (forced-colors: active) {
   .landing-mill-grid::before { display: none; }
 }
-/* 02 — a TURNED face: the part was spun against the tool, so the
+/* A TURNED face: the part was spun against the tool, so the
    whole ground is fine concentric passes walking out of the socket
    at top center, where the other sections' ray sits. It used to sit
    in a recessed tray (an inset lip shade along the top edge); that
@@ -125,7 +127,7 @@
     repeating-radial-gradient(circle at 50% 0%,
       var(--mill-line-lo) 0 1px, transparent 1px 11px);
 }
-/* 03 — one-direction diagonal tool marks (a cross-feed pass, not a
+/* One-direction diagonal tool marks (a cross-feed pass, not a
    weave): the brushed pair rotated to 45° and spaced wider. */
 .landing-mill-hatch {
   background-color: var(--ui-bg);
@@ -134,7 +136,7 @@
     repeating-linear-gradient(45deg, var(--mill-line-hi) 0 1px, transparent 1px 5px),
     repeating-linear-gradient(45deg, var(--mill-line-lo) 0 1px, transparent 1px 11px);
 }
-/* 04 — crossed knurl: the two diagonals interleave into diamonds;
+/* Crossed knurl: the two diagonals interleave into diamonds;
    light one way, shade the other, so the raised points read lit. */
 .landing-mill-knurl {
   background-color: var(--ui-bg);
@@ -146,17 +148,15 @@
 }
 
 /* Hero ground — brushed silver under a raking light. Composed here
-   rather than stacking the landing-mill class: two classes setting
-   background-image on one element would stomp each other, and the
-   hero trades the mill's overhead ray for a sweep of its own.
+   as its own rule rather than on top of a mill finish: two classes
+   setting background-image on one element would stomp each other, and
+   the hero trades the mill's overhead ray for a sweep of its own.
 
-   The sweep used to be a wash of signal orange at the top right. On a
-   ground this close to neutral a 12% chroma haze doesn't read as
-   accent, it reads as a STAIN — the same failure the header cast had.
-   It is two neutral layers now: the lamp's pool where the orange
-   used to sit, and a shallow diagonal fall-off into shade across the
-   rest of the plate. Neither adds a hue; together they take the
-   ground from ~248 in the lit corner to ~226 in the far one.
+   The sweep is two neutral layers: the lamp's pool at the top right
+   and a shallow diagonal fall-off into shade across the rest of the
+   plate. Neither adds a hue — on a ground this close to neutral a
+   chroma haze reads as a STAIN, not an accent — and together they
+   take the ground from ~248 in the lit corner to ~226 in the far one.
 
    Both layers ride OVER the grain, and that is what makes the panel
    read louvred rather than merely shaded: a smooth gradient crossing
@@ -970,13 +970,13 @@ html:has(.landing-panel) footer {
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#8D2676"] { --mark-material: #8d2676; }
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#EE342F"] { --mark-material: #ee342f; }
 .hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="#00DC82"] { --mark-material: #00dc82; }
-/* No :root.dark block down here any more. The dark plate wants a
-   dimmer rim — a mark rimmed in paper white on a dark ground stops
-   being metal and starts being a lamp, the same argument --ghost-sheen
-   settles a few blocks down — and it gets one automatically now that
-   the rim IS --ink-light: that derives from --text-color, which the
-   dark block a few blocks up already moves to 0.44, landing the rim at
-   ~0.73. One knob, two schemes, no second copy to drift. */
+/* No dark override for the rim. The dark plate wants a dimmer one — a
+   mark rimmed in paper white on a dark ground stops being metal and
+   starts being a lamp, the same argument --ghost-sheen settles a few
+   blocks down — and it gets one because the rim IS --ink-light: that
+   derives from --text-color, which the dark block a few blocks up
+   already moves to 0.44, landing the rim at ~0.73. One knob, two
+   schemes, no second copy to drift. */
 /* -- THE GHOSTWRITE BAND ------------------------------------------
    A soft SILVER band sweeping the two dark wordmarks — the "82
    Ghostwrite" recipe's geometry, ported off a `background-clip: text`
@@ -1115,16 +1115,11 @@ html:has(.landing-panel) footer {
    throughout and only its opacity is profiled: over an opaque graphite
    letter that IS the gradation — shoulders let the metal through,
    the core covers it — and mixing a second colour in on top of that
-   was modelling the same falloff twice.
-
-   abs() would say --ghost-d more plainly and is now widely enough
-   supported; max(x, -x) is kept because it always was, and this file
-   has no build step to polyfill behind it. */
+   was modelling the same falloff twice. */
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop {
   --ghost-at: calc(var(--ghost-lead) + var(--stop-at) * var(--ghost-span));
   --ghost-centre: calc(1.5 - 6 * var(--ghost-phase));
-  --ghost-d: max(calc(var(--ghost-at) - var(--ghost-centre)),
-                 calc(var(--ghost-centre) - var(--ghost-at)));
+  --ghost-d: abs(var(--ghost-at) - var(--ghost-centre));
   --wash: clamp(0, calc((0.3 - var(--ghost-d)) / 0.18), 1);
   --core: clamp(0, calc((0.12 - var(--ghost-d)) / 0.12), 1);
   stop-color: var(--ghost-sheen);

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // Overrides Docus's AppFooterRight: the social/GitHub buttons without the
 // light/dark toggle that Docus puts after them — the scheme follows the OS.
+// Copied verbatim from docus@5.13.0 app/components/app/AppFooterRight.vue
+// minus the button; re-diff on a Docus bump.
 const appConfig = useAppConfig()
 
 interface FooterLink {

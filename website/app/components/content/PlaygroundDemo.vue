@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Shared chrome for playground demos: frames the live example and surfaces the
 // WebSocket connection state so a stopped local deployment reads as "offline"
-// instead of a silently empty demo. Same material language as the homepage
-// bench: a raised plate with the demo seated in a recessed well.
+// instead of a silently empty demo. Same material language as the landing
+// page's plates: a raised plate with the demo seated in a recessed well.
 withDefaults(defineProps<{ title?: string }>(), { title: 'Demo' })
 
 const connectionState = useConvexConnectionState()
@@ -21,7 +21,7 @@ const isConnected = computed(() => connectionState.value.isWebSocketConnected)
         <i
           aria-hidden="true"
           class="lamp"
-          :class="isConnected ? 'lamp-live' : 'lamp-dead'"
+          :class="{ 'lamp-live': isConnected }"
         />
         {{ isConnected ? 'live' : 'offline' }}
       </span>

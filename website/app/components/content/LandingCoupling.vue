@@ -71,22 +71,25 @@ const PARTS: Part[] = [
 
 // The enamel ramps, five stops each: lit crown toward the 330° lamp, a
 // lit shoulder, the vendor hue at the body, its shade, the deep shade
-// away from the light. The same figures the hero's badges use; the dish
+// away from the light. The colours are the `.enamel-*` tokens in the
+// style block (OKLCH, with a wider-chroma pass on P3 screens); the dish
 // runs them in REVERSE (see .mark-cut below) so the same enamel reads
 // cut in rather than domed.
-const ENAMEL: Array<{ hue: Hue, ramp: string[] }> = [
-  { hue: 'green', ramp: ['#c2ffe0', '#68f2b4', '#00dc82', '#00ad66', '#009156'] },
-  { hue: 'gold', ramp: ['#ffeec2', '#fdd077', '#f3b01c', '#cd8c11', '#ab740b'] },
-  { hue: 'magenta', ramp: ['#e0a6d1', '#b8619f', '#8d2676', '#6e1a5a', '#5c1449'] },
-  { hue: 'red', ramp: ['#ffc6c0', '#fb8a82', '#ee342f', '#c02320', '#a31c1a'] },
-]
 const STOPS = [0, 0.2, 0.5, 0.79, 1]
 
 // One set of gradients per instance: `fill: url(#id)` resolves against
 // the document, and a second copy of this section would otherwise paint
-// with the first one's ramps.
+// with the first one's ramps. Only the (hue, face) pairs a path wears.
 const uid = useId()
 const gradientId = (hue: Hue, face: 'dome' | 'cut') => `${uid}-${hue}-${face}`
+const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
+  id: gradientId(path.hue, part.face),
+  hue: path.hue,
+  stops: STOPS.map((offset, index) => ({
+    offset,
+    color: `var(--stop-${part.face === 'cut' ? STOPS.length - 1 - index : index})`,
+  })),
+})))
 </script>
 
 <template>
@@ -97,39 +100,23 @@ const gradientId = (hue: Hue, face: 'dome' | 'cut') => `${uid}-${hue}-${face}`
       aria-hidden="true"
     >
       <defs>
-        <template
-          v-for="{ hue, ramp } in ENAMEL"
-          :key="hue"
+        <linearGradient
+          v-for="{ id, hue, stops } in GRADIENTS"
+          :id="id"
+          :key="id"
+          :class="`enamel-${hue}`"
+          x1="0"
+          y1="0"
+          x2="0.72"
+          y2="1"
         >
-          <linearGradient
-            :id="gradientId(hue, 'dome')"
-            x1="0"
-            y1="0"
-            x2="0.72"
-            y2="1"
-          >
-            <stop
-              v-for="(color, index) in ramp"
-              :key="index"
-              :offset="STOPS[index]"
-              :stop-color="color"
-            />
-          </linearGradient>
-          <linearGradient
-            :id="gradientId(hue, 'cut')"
-            x1="0"
-            y1="0"
-            x2="0.72"
-            y2="1"
-          >
-            <stop
-              v-for="(color, index) in ramp"
-              :key="index"
-              :offset="STOPS[index]"
-              :stop-color="ramp[ramp.length - 1 - index]"
-            />
-          </linearGradient>
-        </template>
+          <stop
+            v-for="{ offset, color } in stops"
+            :key="offset"
+            :offset="offset"
+            :style="{ stopColor: color }"
+          />
+        </linearGradient>
       </defs>
     </svg>
 
@@ -213,6 +200,75 @@ const gradientId = (hue: Hue, face: 'dome' | 'cut') => `${uid}-${hue}-${face}`
 </template>
 
 <style scoped>
+/* -- The enamel -----------------------------------------------------
+   Five stops per hue, crown to deep shade, in OKLCH. The base set is
+   the vendors' published sRGB ramp measured exactly (the mid stop is
+   the brand colour itself), so no browser gamut-maps it. On a P3
+   screen every stop keeps its lightness and hue and takes the same
+   share of the wider gamut's chroma that it had of sRGB's — computed,
+   not eyeballed — so the enamel reads as the same colour, deeper: the
+   greens gain most (+38% at the body), the golds and reds a step, the
+   magentas least. Each gradient's stops read --stop-0..4 off its own
+   `.enamel-*` class. */
+.enamel-green {
+  --stop-0: oklch(95.0% 0.074 162.6);
+  --stop-1: oklch(86.9% 0.150 161.4);
+  --stop-2: oklch(78.6% 0.191 155.7);
+  --stop-3: oklch(65.7% 0.159 156.0);
+  --stop-4: oklch(57.8% 0.138 156.5);
+}
+.enamel-gold {
+  --stop-0: oklch(95.2% 0.059 89.4);
+  --stop-1: oklch(87.9% 0.118 83.1);
+  --stop-2: oklch(80.0% 0.160 80.0);
+  --stop-3: oklch(68.8% 0.141 75.1);
+  --stop-4: oklch(60.1% 0.123 75.1);
+}
+.enamel-magenta {
+  --stop-0: oklch(79.2% 0.088 335.9);
+  --stop-1: oklch(61.4% 0.135 339.1);
+  --stop-2: oklch(45.9% 0.163 338.3);
+  --stop-3: oklch(38.1% 0.137 339.2);
+  --stop-4: oklch(33.5% 0.120 340.6);
+}
+.enamel-red {
+  --stop-0: oklch(87.6% 0.065 25.3);
+  --stop-1: oklch(75.5% 0.138 25.1);
+  --stop-2: oklch(61.9% 0.221 27.7);
+  --stop-3: oklch(52.3% 0.192 27.8);
+  --stop-4: oklch(46.3% 0.170 27.6);
+}
+@media (color-gamut: p3) {
+  .enamel-green {
+    --stop-0: oklch(95.0% 0.083 162.6);
+    --stop-1: oklch(86.9% 0.197 161.4);
+    --stop-2: oklch(78.6% 0.265 155.7);
+    --stop-3: oklch(65.7% 0.220 156.0);
+    --stop-4: oklch(57.8% 0.192 156.5);
+  }
+  .enamel-gold {
+    --stop-0: oklch(95.2% 0.072 89.4);
+    --stop-1: oklch(87.9% 0.147 83.1);
+    --stop-2: oklch(80.0% 0.184 80.0);
+    --stop-3: oklch(68.8% 0.162 75.1);
+    --stop-4: oklch(60.1% 0.142 75.1);
+  }
+  .enamel-magenta {
+    --stop-0: oklch(79.2% 0.117 335.9);
+    --stop-1: oklch(61.4% 0.150 339.1);
+    --stop-2: oklch(45.9% 0.180 338.3);
+    --stop-3: oklch(38.1% 0.152 339.2);
+    --stop-4: oklch(33.5% 0.133 340.6);
+  }
+  .enamel-red {
+    --stop-0: oklch(87.6% 0.085 25.3);
+    --stop-1: oklch(75.5% 0.177 25.1);
+    --stop-2: oklch(61.9% 0.249 27.7);
+    --stop-3: oklch(52.3% 0.216 27.8);
+    --stop-4: oklch(46.3% 0.191 27.6);
+  }
+}
+
 /* -- The drawing ----------------------------------------------------
    Three columns past lg — housing, coupling, dome — and one column
    under it, where the coupling turns on end between the two parts.

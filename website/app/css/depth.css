@@ -146,10 +146,7 @@
 }
 
 @utility rounded-plate { border-radius: var(--radius-plate); }
-@utility rounded-card  { border-radius: var(--radius-card); }
-@utility rounded-well  { border-radius: var(--radius-well); }
 @utility rounded-strip { border-radius: var(--radius-strip); }
-@utility rounded-chip  { border-radius: var(--radius-chip); }
 
 :root:not(.dark) {
   --ui-bg:          oklch(93.8% 0 0);
@@ -658,7 +655,7 @@
    well's shadow plus a floor catch of its own: with no tonal step
    between the dish and the page there is nothing else to see it by,
    and the catch is what makes the cut read as lit from overhead rather
-   than as a smudge. Pair it with `border-(--recess-edge)` for the lip.
+   than as a smudge. The lip is in the list (--recess-lip-ground).
 
    For a readout sitting directly on a section ground — the hero's spec
    board — where `concave` would put a lighter tile on the page.
@@ -669,7 +666,7 @@
    0.09 anodize they were a second light source under the first: the
    spec board's last band measured 60/255 against a 21/255 page, the
    brightest thing in the hero after the primary key. It is 0.014 of
-   the warm tone now (from 0.05 via 0.016 and 0.006, 2026-09-06) — a
+   the warm tone — a
    turn at the foot of a floor that is already a step down, rather
    than the one thing proving the floor was there. The light scheme's
    0.85 is untouched. */
@@ -1075,23 +1072,16 @@
   }
 }
 
-/* -- THE MARKINGS --------------------------------------------------
-   The small type every part is labelled with, written once.
+/* -- THE MARKING ---------------------------------------------------
+   The small type every part is labelled with, written once: a marking
+   scribed into a surface — a file tab, a rail cell, a readout label.
+   Mono, small, cut in. It is set in LOWERCASE everywhere on this site
+   (no all-caps inscriptions), which is why the tracking is modest:
+   wide letterspacing does the work of capitals, and lowercase set
+   that wide reads as t y p e w r i t e r.
 
-     stamp     a marking scribed into a surface — a file tab, a rail
-               cell, a readout label. Mono, small, cut in. It is set
-               in LOWERCASE everywhere on this site (2026-09-07: no
-               all-caps inscriptions), which is why the tracking is
-               modest: wide letterspacing was doing the work of
-               capitals, and lowercase set that wide reads as
-               t y p e w r i t e r.
-     chip      a printed badge on a row — an author, a state. Not a
-               cut, so it takes the chip radius and a drawn edge.
-     chip-lit  the same badge in the accent, for "you" and for the
-               thing the stage is pointing at.
-
-   Colour is deliberately NOT baked into `stamp`: pair it with a
-   text-* utility the way `concave-text` is paired. */
+   Colour is deliberately NOT baked in: pair it with a text-* utility
+   the way `concave-text` is paired. */
 @utility stamp {
   font-family: var(--font-mono);
   font-size: 0.66rem;
@@ -1099,31 +1089,6 @@
   letter-spacing: 0.06em;
   line-height: 1;
   text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
-}
-@utility chip {
-  display: inline-block;
-  max-inline-size: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: none;
-  border-radius: var(--radius-chip);
-  border: 1px solid var(--ui-border-accented);
-  padding: 1px 0.3rem;
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--ui-text-muted);
-}
-@utility chip-lit {
-  border-color: color-mix(in srgb, var(--ui-primary) 40%, transparent);
-  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
-}
-@utility chip-pending {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--ui-primary) 60%, transparent);
-  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
 }
 /* Accent INK — the one pair of shades a lit label takes in either
    scheme. Written as a utility so no component carries the

@@ -5,11 +5,10 @@ import { cooldown } from './gate'
 import { LIMITS, rejectMessage } from './moderation'
 import { ConvexError, v } from 'convex/values'
 
-// Live chat — powers the `useQuery` / `useMutation` playground demos AND the
-// live hero panel on the marketing homepage.
+// Live chat — powers the `useQuery` / `useMutation` playground demos.
 
 // Shared-deployment guardrails: the chat is public and unauthenticated, and
-// its rows are on the homepage, so every write goes through `rejectMessage`
+// its rows render for every visitor, so every write goes through `rejectMessage`
 // (length, links, profanity — see ./moderation) and `send` evicts the oldest
 // messages beyond the cap, keeping every full-table read below Convex's
 // per-query limits.

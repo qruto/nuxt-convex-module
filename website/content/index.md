@@ -12,7 +12,7 @@ class: "landing-hero-ground landing-panel"
 ui:
   # Past 1280 the panel track is the plate's own width and the copy takes
   # the rest; below it the theme's halves stand (at 1024 there is no slack
-  # to redistribute — see git history for the measurements).
+  # to redistribute).
   container: "xl:grid-cols-[minmax(0,1fr)_32rem] xl:gap-x-20"
   header: "motion-safe:animate-fade-up"
   title: "landing-billet"
@@ -23,8 +23,7 @@ ui:
   # orphans a word.
   description: "mt-8 text-base text-pretty sm:text-lg/7"
   # The spec board sits in #body at the theme's distance from the text;
-  # the footer closes up under it — a nameplate over the controls. Closed
-  # up two points more (2026-09-13) to pay for the board's second rows.
+  # the footer closes up under it — a nameplate over the controls.
   footer: "mt-5 sm:mt-6"
 links:
   - label: get started
@@ -50,8 +49,7 @@ links:
     ui:
       label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
-<!-- ONE FENCE: the code that runs the panel under it (2026-09-12). The
-     six-scene recording went with the chat it narrated; the plate types
+<!-- ONE FENCE: the code that runs the panel under it. The plate types
      this once and is live from the first paint. -->
 ::landing-hero-panel
 ```ts
@@ -69,13 +67,12 @@ in a :brand-nuxt application
 ::
 
 #description
-<!-- THE FEATURES, and only the features (2026-09-08). The board is the
-     reason to read on — six lines of split-flap type, each a mark, a
-     feature and every composable that IS that feature
-     (LandingCapabilities.vue), clattering in when the hero comes into
-     view. What Nuxt is and what Convex is used to follow it as two
-     sentences; that is plate two's whole job now (#names below,
-     2026-09-14), so the hero column ends on the board. -->
+<!-- THE FEATURES, and only the features. The board is the reason to
+     read on — six lines of split-flap type, each a mark, a feature and
+     every composable that IS that feature (LandingCapabilities.vue),
+     clattering in when the hero comes into view. What Nuxt is and what
+     Convex is belongs to plate two (#names below), so the hero column
+     ends on the board. -->
 :landing-capabilities
 
 #body
@@ -94,10 +91,9 @@ in a :brand-nuxt application
 id: names
 class: "landing-mill-hatch landing-panel border-b border-default"
 ---
-<!-- NO TITLE, NO DESCRIPTION (2026-09-14, the user's call): the drawing
-     is the whole plate. Two parts, the module as the fitting between
-     them, and one line under each name — anything written above it
-     said the same thing twice. -->
+<!-- NO TITLE, NO DESCRIPTION: the drawing is the whole plate. Two parts,
+     the module as the fitting between them, and one line under each name
+     — anything written above it would say the same thing twice. -->
 #body
 :landing-coupling
 :::

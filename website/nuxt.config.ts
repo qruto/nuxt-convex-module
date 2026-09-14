@@ -22,6 +22,13 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-convex-module',
   ],
+  // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
+  // sized for a built site. Vite serves a page as hundreds of module
+  // requests, so in dev one reload plus a couple of screenshots trips it
+  // and every page turns into a 429 for the next five minutes.
+  $development: {
+    security: { rateLimiter: false },
+  },
   devtools: { enabled: true },
   app: {
     head: {
@@ -65,6 +72,12 @@ export default defineNuxtConfig({
     name: 'Nuxt Convex',
     url: 'https://nuxt-convex-module.dev',
   },
+  // The scheme is the operating system's: no toggle on the page (the
+  // app/components/app overrides) and no `d` shortcut (app.config
+  // `docus.shortcuts`). A key of this site's own, so a light/dark
+  // preference a visitor stored while a toggle existed under
+  // @nuxtjs/color-mode's default key is never read again.
+  colorMode: { storageKey: 'nuxt-convex-module-color-mode' },
   // Use Node's built-in `node:sqlite` for Nuxt Content's local DB instead of the
   // `better-sqlite3` native addon. Requires Node >= 22.5 at build & runtime.
   content: {
@@ -183,12 +196,6 @@ export default defineNuxtConfig({
   // nuxt-security, declared in this app's package.json, when it detects it) must allow
   // WebAssembly compilation — extend `script-src` with `'wasm-unsafe-eval'`.
   security: {
-    // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
-    // sized for a built site. Vite serves a page as hundreds of module
-    // requests, so in dev one reload plus a couple of screenshots trips it
-    // and every page turns into a 429 for the next five minutes. Production
-    // keeps the default.
-    rateLimiter: process.env.NODE_ENV === 'production' ? undefined : false,
     headers: {
       contentSecurityPolicy: {
         'script-src': [

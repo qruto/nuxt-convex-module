@@ -1,7 +1,9 @@
 <script setup lang="ts">
 // Overrides Docus's AppSearch with `color-mode` off: the ⌘K palette
 // otherwise carries a System / Light / Dark group, and the scheme here is
-// the OS's, with no toggle anywhere on the page. Search itself is Docus's.
+// the OS's, with no toggle anywhere on the page. Search itself is Docus's:
+// copied verbatim from docus@5.13.0 app/components/app/AppSearch.vue with
+// only that prop changed; re-diff on a Docus bump.
 import type { ContentNavigationItem, PageCollections } from '@nuxt/content'
 
 const props = defineProps<{

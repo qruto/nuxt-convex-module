@@ -150,7 +150,7 @@ const { state, replay } = useDemoScript(root, async ({ wait }) => {
     await wait(HOLD_MS)
     active.value = (active.value + 1) % ENTRIES.length
   }
-}, { loop: false })
+})
 const turning = computed(() => state.value === 'playing')
 
 const holdRun = ref(0)

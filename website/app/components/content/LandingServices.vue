@@ -2,13 +2,12 @@
 // The compatibility plate — a slim rail under the hero listing the services
 // the module works with, grouped by what each one does for the app (three
 // interchangeable auth providers, then billing, then email). Informational
-// only: the ADD-ONS spec card below carries the navigation, so the plate
-// stays a plate. Marks follow the SpecAddons rule — the vendors' published
-// brand colors, and only on hover; ink-only brands (Better Auth, Resend)
-// take full page ink instead. The hover is per-entry where the spec card
-// lights its whole shelf: here each service is its own listing, not one
-// card's cargo. Better Auth's mark is inlined from its brand SVG (no
-// iconify set carries the official one).
+// only: the tour's auth entry (LandingTour.vue) carries the navigation to
+// /components, so the plate stays a plate. Marks wear the vendors'
+// published brand colors, and only on hover; ink-only brands (Better
+// Auth, Resend) take full page ink instead. The hover is per-entry: each
+// service is its own listing. Better Auth's mark is inlined from its brand
+// SVG (no iconify set carries the official one).
 interface ServiceEntry {
   id: string
   label: string
@@ -35,7 +34,7 @@ const RAIL: Array<ServiceEntry | null> = [
   <!-- The rail is the ONE flat surface on the landing: no mill finish of its
        own, and an opaque fill so the hero's grain stops at its top edge. The
        marks it carries are other people's brands — a texture running under them
-       is noise across nine logos. With the finish gone the strip needs its
+       is noise across five logos. With the finish gone the strip needs its
        own edges, so it takes a scribed hairline top and bottom. -->
   <div class="landing-services border-t border-b border-default">
     <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-8 py-6 sm:px-12 lg:justify-between lg:px-16">

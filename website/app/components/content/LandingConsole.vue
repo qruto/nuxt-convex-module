@@ -28,13 +28,8 @@ const POSITIONS = 8
 const blank = (): SwitchRow[] =>
   Array.from({ length: POSITIONS }, (_, position) => ({ position, on: false, by: '', at: 0 }))
 
-const client = useConvex()
-const { data: switchData, error } = client
-  ? await useAsyncQuery(api.switches.list, {})
-  : { data: shallowRef<SwitchRow[] | undefined>(undefined), error: shallowRef(null) }
-const { data: consoleData } = client
-  ? await useAsyncQuery(api.console.read, {})
-  : { data: shallowRef<{ level: number, pulses: number } | undefined>(undefined) }
+const { data: switchData, error } = await useDemoQuery(api.switches.list, {})
+const { data: consoleData } = await useDemoQuery(api.console.read, {})
 
 const { handle, sid } = useVisitor()
 const { count: here } = usePresence(sid)
@@ -43,7 +38,7 @@ const online = useDemoOnline(error)
 // fact (the socket is up), offline is no light.
 const state = computed(() => (online.value
   ? { lamp: 'lamp-live', tone: 'text-toned', label: 'live' }
-  : { lamp: 'lamp-dead', tone: 'text-dimmed', label: 'offline' }))
+  : { lamp: '', tone: 'text-dimmed', label: 'offline' }))
 // The head's reading: how many hands are on the console, or that it is
 // running on its own.
 const hands = computed(() => {
@@ -53,14 +48,12 @@ const hands = computed(() => {
 })
 
 // ---- the bank ------------------------------------------------------------
-const flipRemote = client
-  ? useMutation(api.switches.flip).withOptimisticUpdate((store, { position, by }) => {
-      const rows = store.getQuery(api.switches.list, {})
-      if (!rows) return
-      store.setQuery(api.switches.list, {}, rows.map(row =>
-        row.position === position ? { ...row, on: !row.on, by, at: Date.now() } : row))
-    })
-  : undefined
+const flipRemote = useDemoMutation(api.switches.flip, (store, { position, by }) => {
+  const rows = store.getQuery(api.switches.list, {})
+  if (!rows) return
+  store.setQuery(api.switches.list, {}, rows.map(row =>
+    row.position === position ? { ...row, on: !row.on, by, at: Date.now() } : row))
+})
 const localSwitches = ref<SwitchRow[]>(blank())
 const switches = computed<SwitchRow[]>(() => (online.value && switchData.value ? switchData.value : localSwitches.value))
 const busy = ref<number | null>(null)
@@ -87,12 +80,10 @@ async function flip(position: number) {
 }
 
 // ---- the fader -----------------------------------------------------------
-const setLevelRemote = client
-  ? useMutation(api.console.setLevel).withOptimisticUpdate((store, { value }) => {
-      const current = store.getQuery(api.console.read, {})
-      if (current) store.setQuery(api.console.read, {}, { ...current, level: value })
-    })
-  : undefined
+const setLevelRemote = useDemoMutation(api.console.setLevel, (store, { value }) => {
+  const current = store.getQuery(api.console.read, {})
+  if (current) store.setQuery(api.console.read, {}, { ...current, level: value })
+})
 const localLevel = ref(40)
 // While the hand is on the fader the knob follows the hand, not the table:
 // the committed value catches up a round trip later and must not yank the
@@ -142,12 +133,10 @@ const segments = computed(() => {
 })
 
 // ---- the counter ---------------------------------------------------------
-const pulseRemote = client
-  ? useMutation(api.console.pulse).withOptimisticUpdate((store) => {
-      const current = store.getQuery(api.console.read, {})
-      if (current) store.setQuery(api.console.read, {}, { ...current, pulses: current.pulses + 1 })
-    })
-  : undefined
+const pulseRemote = useDemoMutation(api.console.pulse, (store) => {
+  const current = store.getQuery(api.console.read, {})
+  if (current) store.setQuery(api.console.read, {}, { ...current, pulses: current.pulses + 1 })
+})
 const localPulses = ref(0)
 const pulses = computed(() => (online.value && consoleData.value ? consoleData.value.pulses : localPulses.value))
 const digits = computed(() => String(pulses.value).padStart(6, '0').split(''))
@@ -173,12 +162,9 @@ async function pulse() {
   }
 }
 
+// The rail's last note: the latency of the last commit. Nothing before the
+// first one — the plate's state is already on the lamp.
 const rtt = ref<number | null>(null)
-// The rail's last note: the latency of the last commit, or that the plate
-// came up from the server render and has not written yet.
-const note = computed(() => (rtt.value === null
-  ? { tone: 'text-dimmed', text: 'ssr hydrated' }
-  : { tone: 'text-lit', text: `commit ${rtt.value} ms` }))
 const rejection = ref<string | null>(null)
 const onCount = computed(() => switches.value.filter(row => row.on).length)
 </script>
@@ -218,7 +204,7 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         <i
           aria-hidden="true"
           class="lamp transition-[background,box-shadow] duration-200"
-          :class="row.on ? 'lamp-live' : 'lamp-dead'"
+          :class="{ 'lamp-live': row.on }"
         />
         <span
           class="slot part-well relative h-16 w-9"
@@ -277,7 +263,7 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         <div class="flex items-center justify-between gap-3">
           <span
             class="counter flex gap-0.5"
-            aria-live="polite"
+            role="status"
             :aria-label="`${pulses} pulses`"
           >
             <span
@@ -329,9 +315,9 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         class="rail-cell concave-text min-w-0 flex-1 text-error"
       ><span class="truncate">{{ rejection }}</span></span>
       <span
-        class="rail-cell rail-optional concave-text ml-auto"
-        :class="note.tone"
-      >{{ note.text }}</span>
+        v-if="rtt !== null"
+        class="rail-cell rail-optional concave-text text-lit ml-auto"
+      >commit {{ rtt }} ms</span>
     </figcaption>
   </figure>
 </template>

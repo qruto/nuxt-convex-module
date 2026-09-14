@@ -204,14 +204,14 @@ body {
      wherever the layers stack, and the near field is blurred wider and
      offset less so the band under the bar fades out instead of ending.
      Dark mode keeps black — on a dark ground a grey cast is a LIFT — and
-     takes its own SHAPE below: light-dark() swaps a layer's colour, not
-     the list's geometry, and the two rooms want different geometry. */
+     takes its own SHAPE, so :root.dark below replaces the whole list
+     rather than swapping colours inside this one. */
   --header-cast: oklch(76% 0 0);
   --elevation-header:
-    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.07)),
-    0 1px 0 light-dark(--alpha(var(--header-cast) / 16%), rgb(0 0 0 / 0.5)),
-    0 4px 10px -4px light-dark(--alpha(var(--header-cast) / 12%), rgb(0 0 0 / 0.4)),
-    0 16px 32px -16px light-dark(--alpha(var(--header-cast) / 18%), rgb(0 0 0 / 0.5));
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    0 1px 0 --alpha(var(--header-cast) / 16%),
+    0 4px 10px -4px --alpha(var(--header-cast) / 12%),
+    0 16px 32px -16px --alpha(var(--header-cast) / 18%);
 }
 /* THE DARK RAIL SITS CLOSER (2026-09-14: "too dark and too blurry, the
    header feels like it's floating too far above"). The light list's far
@@ -345,20 +345,19 @@ body {
 
 /* -- THE LAMPS AND THE SCRIBE ---------------------------------------
    The two instrument marks every demo on the site shares, written
-   once here rather than in each component's scoped block (they used
-   to be copied into three).
+   once here rather than in each component's scoped block.
 
    A LAMP sits in a counterbore — a ring of shade around the light,
    which is what stops a coloured dot on a metal panel reading as a
    sticker. Only the LIT states get a glow: green for a machine fact
    (a socket is open), signal orange for something authored (a
-   recording is running, this is the current step). A dead lamp keeps
-   the bore and loses the light; a pending one is the bore with
-   nothing in it.
+   recording is running, this is the current step). A dead lamp is
+   the bare base: it keeps the bore and loses the light.
 
    A SCRIBE is the seam stood on its own: a shade line with its catch
    one pixel below, run across a plate as a rule — the same two-pixel
-   cut the mill finishes and --seam-x draw, as a standalone element. */
+   cut the mill finishes and --seam-x draw, as a standalone element.
+   Stood on end it divides the cells of a rail (.rail-cell below). */
 .lamp {
   --lamp-bore: 0 0 0 2px light-dark(oklch(0% 0 0 / 0.07), oklch(0% 0 0 / 0.55));
   flex: none;
@@ -376,12 +375,6 @@ body {
 .lamp-rec {
   background: var(--ui-primary);
   box-shadow: var(--lamp-bore), var(--glow-primary-soft);
-}
-.lamp-pending {
-  background: transparent;
-}
-.lamp-dead {
-  background: var(--ui-text-dimmed);
 }
 @media (prefers-reduced-motion: no-preference) {
   .lamp-rec {
@@ -409,16 +402,8 @@ body {
     var(--seam-shade) 0 1px,
     var(--seam-catch) 1px 2px);
 }
-/* The same cut stood on end — a divider between two cells of a rail. */
-.scribe-y {
-  display: block;
-  inline-size: 2px;
-  background-image: linear-gradient(90deg,
-    var(--seam-shade) 0 1px,
-    var(--seam-catch) 1px 2px);
-}
 @media (forced-colors: active) {
-  .scribe, .scribe-y { background-image: none; border: 1px solid; }
+  .scribe { background-image: none; border: 1px solid; }
   .lamp { border: 1px solid; box-shadow: none; }
 }
 
