@@ -45,8 +45,8 @@ export interface UseUploadQueueOptions {
   onComplete?: (items: UploadQueueItem[]) => void
 }
 
-/** Accepted inputs to {@link VueUploadQueue.enqueue}. */
-type EnqueueInput = Blob | Blob[] | FileList | null | undefined
+/** Accepted inputs to {@link VueUploadQueue.enqueue}. @public */
+export type EnqueueInput = Blob | Blob[] | FileList | null | undefined
 
 /**
  * The reactive queue returned by {@link useUploadQueue}.

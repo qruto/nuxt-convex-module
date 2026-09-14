@@ -75,7 +75,7 @@ const ENTRY: Record<string, Entry> = {
     ],
     types: [
       'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexApi', 'ConvexAuthProviderOptions',
-      'ConvexAuthState', 'ConvexLogger', 'ConvexVueClientOptions', 'FunctionArgs', 'FunctionReference',
+      'ConvexAuthState', 'ConvexLogger', 'ConvexVueClientOptions', 'EnqueueInput', 'FunctionArgs', 'FunctionReference',
       'FunctionReturnType', 'GenerateUploadUrl', 'GetStorageUrl', 'IConvexVueClient', 'MutationOptions',
       'OptimisticUpdate', 'OptionalRestArgs', 'OptionalRestArgsOrSkip', 'PaginatedQueryArgs', 'PaginatedQueryItem',
       'PaginatedQueryReference', 'PaginatedWatch', 'PaginationStatus', 'Preloaded', 'QueryJournal', 'QueryOptions',
