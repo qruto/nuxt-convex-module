@@ -1,17 +1,21 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import ts from 'typescript'
 
 const root = process.cwd()
 export const at = (file: string) => resolve(root, file)
 export const read = (file: string) => readFileSync(at(file), 'utf8')
 
-/** Every file under `dir` (relative to the repo root) with one of `exts`. */
+/**
+ * Every file under `dir` (relative to the repo root) with one of `exts`.
+ * Paths come back `/`-separated on every platform — the tests match them with
+ * `/` patterns, and Node's fs accepts that spelling on Windows too.
+ */
 export function walk(dir: string, exts: string[], skip: (path: string) => boolean = () => false): string[] {
   const out: string[] = []
   const visit = (d: string) => {
     for (const entry of readdirSync(d)) {
-      const path = join(d, entry)
+      const path = join(d, entry).split(sep).join('/')
       if (skip(path)) continue
       if (statSync(path).isDirectory()) visit(path)
       else if (exts.some(ext => path.endsWith(ext))) out.push(path)

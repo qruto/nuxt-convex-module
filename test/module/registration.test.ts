@@ -1,6 +1,7 @@
 // PARITY: A-01, A-09
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { sep } from 'node:path'
 import { loadNuxt } from '@nuxt/kit'
 import type { Nuxt, NuxtOptions } from '@nuxt/schema'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -20,7 +21,9 @@ import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS } from '../../src/registry'
 // collector. Everything else lands on `nuxt.options` synchronously.
 
 const fixture = fileURLToPath(new URL('../fixtures/registration', import.meta.url))
-const moduleDir = fileURLToPath(new URL('../../src', import.meta.url))
+// `/`-separated like the paths kit's resolver registers, so the prefix check
+// below holds on Windows too.
+const moduleDir = fileURLToPath(new URL('../../src', import.meta.url)).split(sep).join('/')
 
 type Registered = {
   options: NuxtOptions
@@ -191,6 +194,6 @@ describe('with a custom authRoute and auth client', () => {
     expect(r.options.serverHandlers.some(h => h.route === '/auth/**')).toBe(true)
     expect(r.options.serverHandlers.some(h => h.route === '/api/auth/**')).toBe(false)
     expect(r.options.routeRules?.['/auth/**']).toMatchObject({ cache: false })
-    expect(r.options.alias['#convex/auth-client']).toMatch(/registration\/auth-client$/)
+    expect(r.options.alias['#convex/auth-client']?.split(sep).join('/')).toMatch(/registration\/auth-client$/)
   })
 })
