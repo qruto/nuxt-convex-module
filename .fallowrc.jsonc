@@ -23,7 +23,11 @@
   // cannot follow the computed path.
   "dynamicallyLoaded": [
     "src/runtime/better-auth/nuxt/proxy.ts", // addServerHandler({ handler })
+    "src/runtime/better-auth/nuxt/middleware.ts", // addRouteMiddleware({ path })
+    "src/runtime/better-auth/vue/plugin.client.ts", // addPlugin(resolver.resolve(...))
     "src/runtime/better-auth/vue/plugin.server.ts", // addPlugin(resolver.resolve(...))
+    "src/runtime/nuxt/security.ts", // addServerPlugin(resolver.resolve(...))
+    "src/runtime/vue/plugin.ts", // addPlugin(resolver.resolve(...))
     "src/runtime/devtools/plugin.client.ts" // addPlugin({ src }, { append: true })
   ],
 

@@ -1,7 +1,7 @@
 // PARITY: A-12
 import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent, useRuntimeConfig } from '#app'
 import { watch } from 'vue'
-import { useAuth } from '../vue/use-auth'
+import { useBetterAuth } from '../vue/use-better-auth'
 import { convexAuth } from './server'
 
 /**
@@ -30,13 +30,15 @@ function loginTarget(to: GuardedRoute, loginPath: string) {
 
 /** Exported for unit tests — `import.meta.server` is compile-time. @internal */
 export async function serverGuard(to: GuardedRoute, loginPath: string) {
-  const event = useRequestEvent()
-  if (!event) return
   // Capture the Nuxt app *before* the await — awaiting loses the async context,
   // so a bare `navigateTo` afterwards throws "called outside of setup". Restore
   // it with runWithContext so the server-side redirect works on direct loads.
   const nuxtApp = useNuxtApp()
-  const authed = await convexAuth(event).isAuthenticated()
+  const event = useRequestEvent()
+  // No request event means no session to check, so the answer is "not signed
+  // in" — never "let it through". A server render always has one; this is
+  // the guard failing closed, not a path a page takes.
+  const authed = event ? await convexAuth(event).isAuthenticated() : false
   if (!authed && to.path !== loginPath) {
     return nuxtApp.runWithContext(() => navigateTo(loginTarget(to, loginPath)))
   }
@@ -67,7 +69,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return serverGuard(to, loginPath)
   }
 
-  const { session } = useAuth()
+  const { session } = useBetterAuth()
   if (session.value.isPending) {
     await waitForSession(() => session.value.isPending)
   }

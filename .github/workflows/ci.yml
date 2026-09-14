@@ -144,6 +144,14 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run docs:api:check
 
+      # The hand-written docs against the code: every module option, runtime
+      # config key, auto-import, component, subpath and printed message has to
+      # be documented, and everything the docs name has to exist. Here rather
+      # than in `test`, which a docs-only change skips.
+      - name: Docs contract
+        if: ${{ !cancelled() }}
+        run: pnpm run test:docs
+
       # Security analysis of the workflow files: template injection, credentials
       # left on disk, unpinned actions. Accepted findings live in
       # .github/zizmor.yml.
@@ -323,6 +331,13 @@ jobs:
       - uses: $/.github/actions/setup
         with:
           prepare: lib
+
+      # test/e2e/hydration.test.ts boots the client bundle in a real browser.
+      # Chromium comes from playwright-core's own installer, pinned by the
+      # lockfile's playwright-core version; `--with-deps` adds the system
+      # libraries the runner image lacks.
+      - name: Install Chromium
+        run: pnpm exec playwright-core install --with-deps chromium
 
       - name: End-to-end tests
         run: pnpm run test:e2e

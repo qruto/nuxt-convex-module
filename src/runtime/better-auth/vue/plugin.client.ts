@@ -1,21 +1,18 @@
 import { defineNuxtPlugin, useRuntimeConfig, useState } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { ConvexAuthStateKey, createScopedConvexAuthState } from '../../vue/auth/index'
-import { useAuth } from './use-auth'
+import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
+import { useBetterAuth } from './use-better-auth'
 import { consumeCrossDomainOneTimeToken } from './cross-domain'
 
-type ConvexNuxtInjection = {
-  convex?: ConvexVueClient
-}
-
-export default defineNuxtPlugin<ConvexNuxtInjection>({
+export default defineNuxtPlugin({
   name: 'nuxt-convex-module:better-auth:client',
   async setup(nuxtApp) {
     const { url, crossDomainCallbackRoute } = useRuntimeConfig().public.convex
 
     if (!url) {
       console.warn('[nuxt-convex-module] No Convex deployment URL configured — client and auth not created. Set NUXT_PUBLIC_CONVEX_URL, or `convex.url` in nuxt.config.')
-      return { provide: {} }
+      return
     }
 
     const client = new ConvexVueClient(url)
@@ -29,11 +26,11 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
 
     // Read the SSR-prefetched token from the Nuxt payload. Mirrors the React
     // integration's `initialToken={await getToken()}` prop.
-    const initialToken = useState<string | null>('convex:initialToken', () => null)
+    const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
 
     const { state, scope } = createScopedConvexAuthState({
       client,
-      useAuth: () => useAuth(initialToken.value),
+      useAuth: () => useBetterAuth(initialToken.value),
     })
     nuxtApp.vueApp.provide(ConvexAuthStateKey, state)
 
@@ -42,11 +39,5 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
     // would drop in-flight mutations when the user chooses to stay (upstream
     // never closes on unload). `scope` lives for the app's lifetime.
     void scope
-
-    return {
-      provide: {
-        convex: client,
-      },
-    }
   },
 })

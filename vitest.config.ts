@@ -21,18 +21,46 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**'],
       reporter: ['text', 'json', 'lcov'],
-      // Lock in the current baseline (a small margin below the measured numbers)
-      // so a regression fails CI without being brittle. Raise these as coverage
-      // climbs; the harder build-time/runtime files (module, auth plugins/
-      // middleware) keep the global ceiling modest for now.
+      // e2e is excluded from this run (`--project '!e2e'`), so files only e2e
+      // reaches — better-auth/nuxt/proxy.ts, the module's register* functions —
+      // show 0% here. That is a measurement artifact, not an untested path:
+      // both fixtures install the module and the proxy answers real requests.
+      // Lock in the current baseline (a small margin below the measured numbers:
+      // 94.6 / 86.0 / 94.6 / 95.5 with the `module` project counted) so a
+      // regression fails CI without being brittle. Raise these as coverage
+      // climbs. module.ts has its own floor: the registration test is what
+      // took it from 27% to 75%, and nothing else reaches its register*
+      // functions.
       thresholds: {
-        statements: 84,
-        branches: 77,
-        functions: 85,
-        lines: 85,
+        'statements': 92,
+        'branches': 83,
+        'functions': 92,
+        'lines': 93,
+        'src/module.ts': { lines: 70, functions: 75 },
       },
     },
     projects: [
+      {
+        // The module's registration contract, on a real Nuxt instance via
+        // `loadNuxt` (setup only, no build). Node environment: it needs the
+        // Nuxt loader, not a running app.
+        test: {
+          name: 'module',
+          include: ['test/module/**/*.{test,spec}.ts'],
+          environment: 'node',
+          testTimeout: 60_000,
+        },
+      },
+      {
+        // Docs ↔ code contract: reads markdown and source, imports only
+        // src/registry.ts. Runs in CI's `static` job, which every PR gets —
+        // the `test` job is skipped for docs-only changes.
+        test: {
+          name: 'docs',
+          include: ['test/docs/**/*.{test,spec}.ts'],
+          environment: 'node',
+        },
+      },
       {
         // A plain Vue app: no Nuxt aliases and, above all, no `define` — in a
         // consumer's Vite build neither `import.meta.client` nor
@@ -94,6 +122,12 @@ export default defineConfig({
             '#convex/auth-client': authClientTestAlias,
           },
         },
+        // The app as `nuxt dev` runs it: dev-only branches — the cross-domain
+        // callback-route nudge — are real here. (`security.ts` reads the flag
+        // too, but its tests live in `unit`, where it is undefined.)
+        define: {
+          'import.meta.dev': 'true',
+        },
         test: {
           name: 'nuxt',
           include: ['test/nuxt/**/*.{test,spec}.ts'],
@@ -112,6 +146,8 @@ export default defineConfig({
         // exercises the module against a real Nitro server. Each fixture build
         // takes on the order of a minute, so the default scripts exclude this
         // project (`--project '!e2e'`) — run it via `pnpm test:e2e` (own CI step).
+        // hydration.test.ts also needs Chromium: `pnpm exec playwright-core
+        // install chromium` once per machine.
         test: {
           name: 'e2e',
           include: ['test/e2e/**/*.{test,spec}.ts'],

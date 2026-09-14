@@ -1,3 +1,4 @@
+// PARITY: A-07
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // The base client plugin (registered only when no auth integration owns the

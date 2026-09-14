@@ -1,3 +1,4 @@
+// PARITY: A-04
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import ts from 'typescript'
@@ -101,9 +102,9 @@ const ENTRY: Record<string, Entry> = {
     source: 'src/runtime/better-auth/vue/index.ts',
     values: [
       'AuthBoundary', 'authClient', 'consumeCrossDomainOneTimeToken', 'convexClient', 'crossDomainClient',
-      'resolveAuthRedirect', 'useAuth', 'usePreloadedAuthQuery',
+      'resolveAuthRedirect', 'useBetterAuth', 'usePreloadedAuthQuery',
     ],
-    types: ['AuthClient', 'AuthSession', 'AuthUser', 'ConsumeCrossDomainOneTimeTokenOptions', 'UseAuthService'],
+    types: ['AuthClient', 'BetterAuthSession', 'BetterAuthUser', 'ConsumeCrossDomainOneTimeTokenOptions', 'UseBetterAuthReturn'],
   },
   './better-auth/vue': { source: 'src/runtime/better-auth/vue/index.ts', aliasOf: './better-auth/client', values: [], types: [] },
   './better-auth/server': {

@@ -1,3 +1,4 @@
+// PARITY: A-02
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { makeFunctionReference } from 'convex/server'
 import type { GenericId } from 'convex/values'

@@ -3,7 +3,7 @@ import { computed, ref, type ComputedRef } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
 
 /**
- * Module-level state, shared across all `useAuth()` calls in the Nuxt app.
+ * Module-level state, shared across all `useBetterAuth()` calls in the Nuxt app.
  *
  * The cached JWT and in-flight token promise are kept at module scope so
  * concurrent `fetchAccessToken()` callers share the same Better Auth round-trip.
@@ -27,28 +27,35 @@ type BetterAuthSessionData = {
 
 const useClientSession = () => authClient.useSession()
 
-export type AuthSession = ReturnType<typeof useClientSession>
+export type BetterAuthSession = ReturnType<typeof useClientSession>
 
 /** The signed-in user (loose — exact fields depend on your auth schema). */
-export type AuthUser = { id: string, email: string, name: string } & Record<string, unknown>
+export type BetterAuthUser = { id: string, email: string, name: string } & Record<string, unknown>
 
-export interface UseAuthService {
+/** What `useBetterAuth()` returns. */
+export interface UseBetterAuthReturn {
   // Upstream's `useAuthFromBetterAuth` return shape, in upstream order.
+  /** `true` until the session is known and no prefetched token covers the gap. */
   isLoading: ComputedRef<boolean>
+  /** `true` when Better Auth reports a session, or a token is cached while it reloads. */
   isAuthenticated: ComputedRef<boolean>
+  /** Convex's token fetcher: the Better Auth JWT for the current session, or `null`. */
   fetchAccessToken: AuthTokenFetcher
   // Vue-only service extensions (documented in PARITY.md). Auth *flows*
   // (sign-in, sign-out, OTP, passkeys, ...) are not wrapped here — call them
   // on `client`, which is fully typed by the plugins your auth client installs.
+  /** The Better Auth client from `#convex/auth-client` — sign-in, sign-out and every plugin flow live here. */
   client: AuthClient
-  session: AuthSession
+  /** Better Auth's own `useSession()` ref: `{ data, isPending, error }`. */
+  session: BetterAuthSession
   /** The current user, or `null` when signed out / still loading. */
-  user: ComputedRef<AuthUser | null>
+  user: ComputedRef<BetterAuthUser | null>
+  /** The session id (or user id); changes when the signed-in identity changes. */
   authVersion: ComputedRef<string | null>
 }
 
 /**
- * Unified Better Auth service for the Vue/Nuxt runtime.
+ * The Better Auth service for the Vue/Nuxt runtime.
  *
  * Returns the full Better Auth client, the reactive session wrapper, and the
  * Convex-compatible auth state used by the packaged auth plugin.
@@ -56,7 +63,7 @@ export interface UseAuthService {
  * @param initialToken - Optional preloaded token, used once per app lifetime
  *   to avoid a round-trip on initial load (e.g. from SSR).
  */
-export function useAuth(initialToken?: string | null): UseAuthService {
+export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn {
   if (!initialTokenUsed && initialToken) {
     cachedToken.value = initialToken
     cachedTokenVersion = PENDING_AUTH_VERSION
@@ -131,8 +138,8 @@ export function useAuth(initialToken?: string | null): UseAuthService {
     // PARITY: A-06 — Vue-only service extensions.
     client,
     session,
-    user: computed<AuthUser | null>(() => {
-      const data = session.value.data as { user?: AuthUser } | null | undefined
+    user: computed<BetterAuthUser | null>(() => {
+      const data = session.value.data as { user?: BetterAuthUser } | null | undefined
       return data?.user ?? null
     }),
     authVersion,
@@ -140,7 +147,7 @@ export function useAuth(initialToken?: string | null): UseAuthService {
 }
 
 /** Reset module-level token cache — intended for tests only. */
-export function __resetUseAuthForTests() {
+export function __resetUseBetterAuthForTests() {
   cachedToken.value = null
   cachedTokenVersion = null
   pendingToken = null

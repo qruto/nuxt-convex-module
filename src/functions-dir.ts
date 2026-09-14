@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { useLogger } from '@nuxt/kit'
+import { stripTrailingSlashes } from './options'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
 const logger = useLogger('nuxt-convex-module')
@@ -45,8 +46,6 @@ function readFunctionsDirFromConvexJson(convexJsonPath: string): string | undefi
 }
 
 function normalizeFunctionsDir(functionsDir: string): string | undefined {
-  const normalized = functionsDir
-    .replace(/^\.?\//, '')
-    .replace(/\/+$/, '')
+  const normalized = stripTrailingSlashes(functionsDir.replace(/^\.?\//, ''))
   return normalized || undefined
 }

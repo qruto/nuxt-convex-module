@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "name": "registration-fixture",
+  "type": "module",
+  "devDependencies": {
+    "@convex-dev/better-auth": "*",
+    "nuxt-security": "*"
+  }
+}

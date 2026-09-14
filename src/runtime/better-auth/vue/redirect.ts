@@ -32,7 +32,7 @@ const SENTINEL_ORIGIN = 'http://redirect.invalid'
  * ```vue
  * <script setup lang="ts">
  * const route = useRoute()
- * const { client } = useAuth()
+ * const { client } = useBetterAuth()
  *
  * async function onSubmit() {
  *   await client.signIn.email({ email, password })

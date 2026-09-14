@@ -72,6 +72,19 @@ describe('auth/vue/cross-domain', () => {
     expect(new URL(window.location.href).searchParams.get('next')).toBe('/dashboard')
   })
 
+  it('warns, in dev, when the exchange completes with no callback route configured', async () => {
+    const { consumeCrossDomainOneTimeToken } = await loadModule()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
+    window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/anywhere?ott=one-time-token')
+
+    await consumeCrossDomainOneTimeToken()
+
+    expect(mockVerify).toHaveBeenCalledTimes(1)
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('crossDomainCallbackRoute'))
+    warnSpy.mockRestore()
+  })
+
   it('no-ops when the OTT exchange does not return a session token', async () => {
     const { consumeCrossDomainOneTimeToken } = await loadModule()
     mockVerify.mockResolvedValue({ data: { session: null } })

@@ -2,21 +2,15 @@ import { computed } from 'vue'
 import { setResponseHeader } from 'h3'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
+import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
-
-type ConvexNuxtInjection = {
-  convex?: ConvexVueClient
-}
-
-function buildProvide(ssrClient?: ConvexVueClient): { provide: ConvexNuxtInjection } {
-  return ssrClient ? { provide: { convex: ssrClient } } : { provide: {} }
-}
 
 /**
  * Prefetch the Convex JWT for SSR and stash it in `initialToken`.
  *
- * Exported for unit testing.
+ * Exported for unit tests.
+ * @internal
  */
 export async function prefetchAuthToken(
   event: ReturnType<typeof useRequestEvent>,
@@ -46,15 +40,15 @@ export async function prefetchAuthToken(
  * Mirrors the Next.js parity layer that calls `getToken()` from the root
  * server layout and passes it as `initialToken` to `ConvexBetterAuthProvider`.
  *
- * The token is stashed into a Nuxt `useState('convex:initialToken')` so the
- * client plugin can hand it to `useAuth(initialToken)` before the first
- * Convex `setAuth` call — avoiding an extra Better Auth round-trip on first
- * paint.
+ * The token is stashed into a Nuxt `useState` (`CONVEX_INITIAL_TOKEN_KEY`) so
+ * the client plugin can hand it to `useBetterAuth(initialToken)` before the
+ * first Convex `setAuth` call — avoiding an extra Better Auth round-trip on
+ * first paint.
  */
-export default defineNuxtPlugin<ConvexNuxtInjection>({
+export default defineNuxtPlugin({
   name: 'nuxt-convex-module:better-auth:server',
   async setup(nuxtApp) {
-    const initialToken = useState<string | null>('convex:initialToken', () => null)
+    const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
 
     // Provide a Convex client on SSR so composables like `useMutation` /
     // `useAction` that call `useConvex()` during component setup don't throw.
@@ -85,7 +79,5 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
     if (event && !import.meta.prerender) {
       await prefetchAuthToken(event, initialToken)
     }
-
-    return buildProvide(ssrClient)
   },
 })

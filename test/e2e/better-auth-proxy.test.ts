@@ -1,3 +1,4 @@
+// PARITY: A-14
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import { setup, fetch } from '@nuxt/test-utils/e2e'

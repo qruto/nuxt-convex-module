@@ -127,7 +127,7 @@ source.
 | Upstream | Ported |
 |---|---|
 | better-auth `react/index.tsx` — export surface | `better-auth/vue/index.ts` |
-| better-auth `react/index.tsx` — `AuthBoundary`, provider's `useUseAuthFromBetterAuth` | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,use-auth}.ts` |
+| better-auth `react/index.tsx` — `AuthBoundary`, provider's `useUseAuthFromBetterAuth` | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,use-better-auth}.ts` |
 | better-auth `react/index.tsx` — provider's `?ott=` `useEffect` | `better-auth/vue/cross-domain.ts` |
 | better-auth `nextjs/index.ts` — `convexBetterAuthNextJs` | `better-auth/nuxt/server.ts` — `convexAuth` |
 | better-auth `nextjs/client.tsx` — `usePreloadedAuthQuery` | `better-auth/vue/hydration.ts` |
@@ -252,7 +252,7 @@ because that is what decides how to treat one on a sync.
 | <a id="n-07"></a>**N-07** | `NextjsOptions`, `convexBetterAuthNextJs` | `NuxtOptions`, `convexBetterAuthNuxt` | *Framework-qualified names* + *Ambient per-request context*. `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }` pair |
 | <a id="n-08"></a>**N-08** | Polar `polarApi`, `productIds` props | Same names; `polarApi` optional | [§2.1](#21-the-contract) — a required prop may become optional with an auto-provided default (`api.billing`). Names stay verbatim |
 | <a id="n-09"></a>**N-09** | better-auth `convexSiteUrl`, required | Optional; falls back to runtime config / `NUXT_PUBLIC_CONVEX_SITE_URL` | [§2.1](#21-the-contract), same rule as N-08. An upstream call site passing it behaves identically, and a missing value still throws. Its sibling `convexUrl` is accepted and ignored — upstream requires but never reads it either. Pinned by `test/unit/auth/nuxt/server.test.ts` |
-| <a id="n-10"></a>**N-10** | `useAuthFromBetterAuth` | `useAuth` | The provider prop it fed does not exist here; the service is consumed directly |
+| <a id="n-10"></a>**N-10** | `useAuthFromBetterAuth` | `useBetterAuth` | The provider prop it fed does not exist here; the service is consumed directly |
 | <a id="n-11"></a>**N-11** | `use_paginated_query.ts` + `use_paginated_query2.ts` | one `use-paginated-query.ts` | Both files' exports form one composable surface; splitting them in Vue would duplicate the state machine |
 | <a id="n-12"></a>**N-12** | Hooks declared in `react/client.ts` | `vue/composables/{use-query,use-mutation,use-action,use-connection-state}.ts` | *Hook `useX()`*. `vue/index.ts` re-exports them in upstream's order; `vue/client.ts` carries a header naming the split |
 | <a id="n-13"></a>**N-13** | New `fetchAccessToken` identity between renders re-triggers auth | Pass the fetcher as a `Ref`/`ComputedRef`, or bump the additive `authVersion` key | *`fetchAccessToken` identity change between renders* |
@@ -294,8 +294,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · no re-render between a session settling and the cache-clearing effect
 - **Upstream** · `@convex-dev/better-auth@0.12.5` `react/index.tsx` — `Boolean(session?.session) || cachedToken !== null`
-- **Port** · [`better-auth/vue/use-auth.ts`](./src/runtime/better-auth/vue/use-auth.ts)
-- **Pinned by** · `test/unit/auth/vue/use-auth.test.ts` — "treats a settled missing session as
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "treats a settled missing session as
   unauthenticated even with a stale cached token"
 - **On sync** · keep the predicate; port changes to the *inputs*, not the shape
 - **Why** · a settled signed-out session must read unauthenticated immediately, so
@@ -428,7 +428,7 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 ##### A-01 — `useConvex*` aliases
 
 - **Port** · [`vue/index.ts`](./src/runtime/vue/index.ts), below the "Vue-only additions" fence
-- **Pinned by** · `test/nuxt/composables.test.ts`
+- **Pinned by** · `test/nuxt/public-surface.test.ts` — the `useConvex*` names in the `./client` literal; `test/module/registration.test.ts` — the exact auto-import set on a loaded Nuxt
 - **Why** · every composable is auto-imported into the app's global scope, where `useQuery` and
   `useAction` can collide with other modules. Each ported composable gets a `useConvexQuery` /
   `useConvexMutation` / `useConvexAction` / `useConvexQueries` / `useConvexPaginatedQuery`
@@ -486,13 +486,13 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   counterpart to import: `PaginatedWatch` (what `watchPaginatedQuery` returns), `ConvexLogger`
   (the type behind `ConvexVueClientOptions.logger`) and `VueMutationOptions` (N-02).
 
-##### A-06 — `useAuth` service extensions
+##### A-06 — `useBetterAuth` service extensions
 
-- **Port** · [`better-auth/vue/use-auth.ts`](./src/runtime/better-auth/vue/use-auth.ts)
-- **Pinned by** · `test/unit/auth/vue/use-auth.test.ts`
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts`
 - **Why** · beyond upstream's `{ isLoading, isAuthenticated, fetchAccessToken }`, the service
   exposes the raw `client`, the `session` ref, a `user` computed and an `authVersion` computed,
-  plus the `AuthUser` / `UseAuthService` / `AuthSession` types. Auth *flows* (sign-in/out, OTP,
+  plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
   passkeys, …) are deliberately **not** wrapped — like upstream, they are called on the app's
   own `authClient` (exposed as `client`), typed by whatever plugins that client installs.
 
@@ -524,10 +524,11 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 
 ##### A-09 — module wiring
 
-- **Port** · [`src/module.ts`](./src/module.ts), [`src/options.ts`](./src/options.ts),
-  [`src/aliases.ts`](./src/aliases.ts), [`src/templates.ts`](./src/templates.ts),
+- **Port** · [`src/module.ts`](./src/module.ts), [`src/registry.ts`](./src/registry.ts),
+  [`src/options.ts`](./src/options.ts), [`src/aliases.ts`](./src/aliases.ts),
+  [`src/templates.ts`](./src/templates.ts), [`src/codegen-watch.ts`](./src/codegen-watch.ts),
   [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
-- **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
+- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
   generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
   package is both declared in the app's own `package.json` and resolvable — resolution alone
@@ -577,7 +578,8 @@ so none can be "restored" by syncing.
 - **Why** · upstream ships no route middleware, so the convention is the port's — and so is the
   open-redirect surface its `?redirect=` query creates. `resolveAuthRedirect` closes it:
   same-origin paths pass; absolute, scheme-relative (`//host`), backslash (`/\host`),
-  non-HTTP-scheme and repeated-parameter values fall back to the default.
+  non-HTTP-scheme and repeated-parameter values fall back to the default. `serverGuard` fails
+  closed: with no request event it redirects rather than rendering the page.
 
 ##### A-13 — `crossDomainCallbackRoute` restricts `?ott=` exchange to one route
 
@@ -618,7 +620,11 @@ so none can be "restored" by syncing.
   concern the module's own route rather than the app's CSP. The handler resolves the site URL
   through `convexAuth` (private runtime key, then public, then env) rather than reading one
   key — a build without the URL, configured at start-up through
-  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. The site URL must parse as `http:`/`https:`
+  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. It also refuses a request whose
+  URL-normalised path differs from the routed one: Nitro routes the raw path, so
+  `/api/auth/../../x` matches the route and would be forwarded as `/x` — any HTTP action on the
+  site origin, through the app's origin. Next normalises before routing; upstream's handler never
+  sees such a path. The site URL must parse as `http:`/`https:`
   before any request is made, because it is the only thing pinning the proxy's destination host.
 
 #### Tooling

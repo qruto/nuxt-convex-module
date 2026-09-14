@@ -1,3 +1,6 @@
+// PARITY: A-13
+// PARITY: A-08
+// PARITY: A-07
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // Drive the Better Auth client plugin's setup directly with a stubbed `#app`
@@ -25,9 +28,9 @@ vi.mock('../../../../src/runtime/better-auth/vue/cross-domain', () => ({
   consumeCrossDomainOneTimeToken: (...args: unknown[]) => consumeCrossDomainOneTimeToken(...args),
 }))
 
-const useAuth = vi.fn()
-vi.mock('../../../../src/runtime/better-auth/vue/use-auth', () => ({
-  useAuth: (...args: unknown[]) => useAuth(...args),
+const useBetterAuth = vi.fn()
+vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
+  useBetterAuth: (...args: unknown[]) => useBetterAuth(...args),
 }))
 
 const createScopedConvexAuthState = vi.fn(() => ({
@@ -47,7 +50,7 @@ const { ConvexAuthStateKey } = await import('../../../../src/runtime/vue/auth/in
 const pluginMod = await import('../../../../src/runtime/better-auth/vue/plugin.client')
 const runPlugin = pluginMod.default as unknown as (app: {
   vueApp: { provide: (key: unknown, value: unknown) => void }
-}) => Promise<{ provide: Record<string, unknown> }>
+}) => Promise<void>
 
 function fakeNuxtApp() {
   const provided = new Map<unknown, unknown>()
@@ -70,7 +73,8 @@ describe('better-auth client plugin', () => {
 
     expect(provided.get(ConvexClientKey)).toBeInstanceOf(ConvexVueClient)
     expect(provided.get(ConvexAuthStateKey)).toEqual({ fake: 'auth-state' })
-    expect(result.provide.convex).toBe(provided.get(ConvexClientKey))
+    // The client is reached through `useConvex()` only — nothing on `$convex`.
+    expect(result).toBeUndefined()
 
     expect(consumeCrossDomainOneTimeToken).toHaveBeenCalledTimes(1)
     // Unset in runtime config → no route restriction (upstream parity).
@@ -95,7 +99,7 @@ describe('better-auth client plugin', () => {
 
     const result = await runPlugin(app)
 
-    expect(result).toEqual({ provide: {} })
+    expect(result).toBeUndefined()
     expect(provided.size).toBe(0)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('NUXT_PUBLIC_CONVEX_URL'))
     warn.mockRestore()

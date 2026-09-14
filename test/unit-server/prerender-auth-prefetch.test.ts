@@ -1,3 +1,4 @@
+// PARITY: A-07
 import { describe, expect, it, vi } from 'vitest'
 
 // `nuxt generate` renders every route through the server plugin. There is no

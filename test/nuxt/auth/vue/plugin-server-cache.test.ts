@@ -1,3 +1,4 @@
+// PARITY: A-07
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // `prefetchAuthToken` writes the SSR-prefetched Convex JWT into the Nuxt

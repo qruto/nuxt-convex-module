@@ -198,7 +198,7 @@ They mirror CI, split by how often each check can afford to run:
 |---|---|---|---|
 | [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `static` · Quality (fallow), Lint | ~6s |
 | [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `static` · Commit messages | instant |
-| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test`, API-reference drift | `static` · Quality, Security candidates, Manifest ranges, Type check, API reference drift; `test` | ~20s |
+| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test` (which includes the `docs` contract project), API-reference drift | `static` · Quality, Security candidates, Manifest ranges, Type check, API reference drift, Docs contract; `test` | ~20s |
 
 `pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
 — only findings your change *introduces*, in the files it touched. `pre-push` runs once per
@@ -221,7 +221,8 @@ already ran — and `CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so they wou
 the wrong reason anyway.
 
 **What the hooks cannot cover.** These stay CI's alone, so a green push is not a promise of a
-green pipeline: the `e2e` job (builds fixture apps, minutes), `pack` (tarball, `publint`,
+green pipeline: the `e2e` job (builds fixture apps, minutes; `pnpm test:e2e` runs it locally once
+`pnpm exec playwright-core install chromium` has fetched the browser the hydration test drives), `pack` (tarball, `publint`,
 `attw`, and a real npm consumer install), `dependency-review` and the workflow lint, which need
 GitHub, the Windows leg of the test matrix, and the coverage thresholds.
 

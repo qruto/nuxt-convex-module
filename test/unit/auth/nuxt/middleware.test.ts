@@ -1,3 +1,4 @@
+// PARITY: A-12
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
@@ -25,8 +26,8 @@ vi.mock('#app', () => ({
   useRuntimeConfig: mockUseRuntimeConfig,
 }))
 
-vi.mock('../../../../src/runtime/better-auth/vue/use-auth', () => ({
-  useAuth: mockUseAuth,
+vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
+  useBetterAuth: mockUseAuth,
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({
@@ -92,12 +93,13 @@ describe('auth route middleware', () => {
       expect(mockNavigateTo).not.toHaveBeenCalled()
     })
 
-    it('is a no-op without a request event', async () => {
+    it('fails closed without a request event: redirects, and never lets the page render', async () => {
       mockUseRequestEvent.mockReturnValue(undefined)
       const { serverGuard } = await loadMiddleware()
 
-      await expect(serverGuard(route('/profile'), '/login')).resolves.toBeUndefined()
+      await serverGuard(route('/profile'), '/login')
       expect(mockIsAuthenticated).not.toHaveBeenCalled()
+      expect(mockNavigateTo).toHaveBeenCalledWith({ path: '/login', query: { redirect: '/profile' } })
     })
   })
 
