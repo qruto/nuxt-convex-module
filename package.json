@@ -174,7 +174,7 @@
     "test:module": "vitest --project module --run",
     "test:docs": "vitest --project docs --run",
     "test:e2e": "vitest --run --project e2e",
-    "test:quality": "fallow",
+    "test:quality": "fallow --fail-on-issues",
     "test:security": "fallow security --fail-on-issues",
     "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
     "docs:api:check": "pnpm run docs:api && git diff --exit-code -- website/content/4.api-reference",

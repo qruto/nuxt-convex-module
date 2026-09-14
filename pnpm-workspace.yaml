@@ -81,13 +81,6 @@ trustPolicyExclude:
 # lockfile already resolves elsewhere (no new code enters the tree), and lists
 # the condition for removing it.
 overrides:
-  # @ai-sdk/provider-utils@4 (docus -> ai@6) pins undici ^5.29.0 — the EOL 5.x
-  # branch with unpatched CVEs (WebSocket DoS, request smuggling, CRLF
-  # injection; GHSA-vxpw-j846-p89q et al., fixed in 6.24/6.27). It only uses
-  # `Agent` and `fetch({ dispatcher })`, identical across undici 6-8 (its own
-  # 5.x line pins ^7). Remove when the docus/ai chain reaches
-  # @ai-sdk/provider-utils@5, which drops undici 5.
-  '@ai-sdk/provider-utils>undici': ^6.28.0
   # fontless@0.2.1 (latest; via @nuxt/fonts and nuxt-og-image) pins esbuild
   # ^0.27.0, in range for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows,
   # fixed in 0.28.1). fontless only imports `transform`, stable across 0.x.
