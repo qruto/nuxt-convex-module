@@ -19,7 +19,13 @@
   "readme": "none",
   // Pin source links to the branch, not the current commit SHA — otherwise
   // every commit drifts the generated reference and the CI drift gate fails.
-  "gitRevision": "main",
+  // Spelled out as a template (not derived from the git remote) so the output
+  // is identical from a worktree, where TypeDoc cannot detect the repository.
+  // `{path}` is relative to the entry points' common directory, src/runtime;
+  // `basePath` only governs the displayed "Defined in" text.
+  "disableGit": true,
+  "basePath": ".",
+  "sourceLinkTemplate": "https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/{path}#L{line}",
   "githubPages": false,
   "hideGenerator": true,
   "skipErrorChecking": true,

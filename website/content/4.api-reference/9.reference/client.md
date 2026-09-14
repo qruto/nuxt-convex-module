@@ -1936,6 +1936,68 @@ Vue injection key for the [ConvexVueClient](#convexvueclient).
 
 ***
 
+### ConvexImage
+
+```ts
+const ConvexImage: DefineComponent<ExtractPropTypes<{
+  getUrl: {
+     type: PropType<GetStorageUrl>;
+     required: true;
+  };
+  storageId: {
+     type: PropType<string | StorageId | null | undefined>;
+     default: undefined;
+  };
+}>, () => 
+  | VNode<RendererNode, RendererElement, {
+[key: string]: any;
+}>
+  | VNode<RendererNode, RendererElement, {
+[key: string]: any;
+}>[]
+  | null, {
+}, {
+}, {
+}, ComponentOptionsMixin, ComponentOptionsMixin, {
+}, string, PublicProps, ToResolvedProps<ExtractPropTypes<{
+  getUrl: {
+     type: PropType<GetStorageUrl>;
+     required: true;
+  };
+  storageId: {
+     type: PropType<string | StorageId | null | undefined>;
+     default: undefined;
+  };
+}>, {
+}>, {
+  storageId: string | StorageId | null | undefined;
+}, {
+}, {
+}, {
+}, string, ComponentProvideOptions, true, {
+}, any>;
+```
+
+Defined in: [src/runtime/vue/components/convex-image.ts:24](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/components/convex-image.ts#L24)
+
+An `<img>` for a file in Convex storage. Resolves the served URL through
+[useStorageUrl](#usestorageurl) and renders the image once it is known; every other
+attribute (`alt`, `class`, `loading`, `width`, …) goes onto the `<img>`.
+
+- default slot — rendered while the URL is loading or `storageId` is empty
+- `missing` slot — rendered when the file no longer exists (the query returned `null`)
+
+#### Example
+
+```vue
+<ConvexImage :get-url="api.files.url" :storage-id="doc.imageId" alt="Cover" class="rounded">
+  <div class="skeleton" />
+  <template #missing><div class="placeholder" /></template>
+</ConvexImage>
+```
+
+***
+
 ### useConvexAction
 
 ```ts

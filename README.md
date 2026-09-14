@@ -143,6 +143,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 - `useMutation` / `useConvexMutation` — call a Convex mutation
 - `useAction` / `useConvexAction` — call a Convex action
 - `usePaginatedQuery` / `useConvexPaginatedQuery` — cursor pagination (plus `usePaginatedQuery_experimental`, dual-overload)
+- `useAsyncPaginatedQuery` / `useConvexAsyncPaginatedQuery` — SSR-fetched first page, then `usePaginatedQuery` live; `AsyncPaginatedQueryReturn` / `AsyncPaginatedQueryOptions` / `AsyncPaginatedQueryData` types
 - `useConvexConnectionState` — live WebSocket connection status
 - `useConvex` — the underlying Convex client
 
@@ -161,6 +162,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 ### Auto-imported components · `addComponent`
 
 - `<Authenticated>` / `<Unauthenticated>` / `<AuthLoading>` / `<AuthRefreshing>` — render by auth state
+- `<ConvexImage>` — an `<img>` for a file in Convex storage, with loading and missing slots
 
 > Integration-specific composables and components auto-import too **when their package is installed** — `useBetterAuth` + `<AuthBoundary>` (Better Auth), `provideConvexAuthFromClerk` + `<ConvexProviderWithClerk>` (Clerk), `provideConvexAuthFromAuth0` + `<ConvexProviderWithAuth0>` (Auth0), `<CheckoutLink>` + `<CustomerPortalLink>` (Polar). See [Supported official packages](#supported-official-packages).
 
@@ -196,7 +198,7 @@ Everything above is auto-imported in Nuxt, but each surface is also a real **sub
 | `nuxt-convex-module` | the Nuxt module (for `modules: []`) |
 | `nuxt-convex-module/client` (alias `/vue`) | `ConvexVueClient`, `ConvexClientKey`, every composable (`useQuery`, `useMutation`, `useAction`, pagination, upload, …), auth (`provideConvexAuth`, `useConvexAuth`, `<Authenticated>` …), `usePreloadedQuery`, and all public types |
 | `nuxt-convex-module/server` | Nitro/server: `fetchQuery`, `fetchMutation`, `fetchAction`, `preloadQuery`, `preloadedQueryResult` |
-| `nuxt-convex-module/app` | Nuxt app context: `useAsyncQuery`, `useConvexAsyncQuery`, and the `AsyncQueryReturn` / `AsyncQueryOptions` / `AsyncQueryStatus` / `AsyncQueryData` types |
+| `nuxt-convex-module/app` | Nuxt app context: `useAsyncQuery`, `useAsyncPaginatedQuery` (+ `useConvex*` aliases) and their `AsyncQueryReturn` / `AsyncQueryOptions` / `AsyncQueryStatus` / `AsyncQueryData` / `AsyncPaginatedQuery*` types |
 | `nuxt-convex-module/clerk/client` (alias `/clerk/vue`) | `provideConvexAuthFromClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/client` (alias `/auth0/vue`) | `provideConvexAuthFromAuth0`, `<ConvexProviderWithAuth0>` |
 | `nuxt-convex-module/better-auth/client` (alias `/better-auth/vue`) | `useBetterAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |

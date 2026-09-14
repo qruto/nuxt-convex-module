@@ -143,6 +143,8 @@ source.
 | `vue/provide.ts` | `provideConvexApi` / `useConvexApi` | A-03 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
 | `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
+| `nuxt/composables/use-async-paginated-query.ts` | `useAsyncPaginatedQuery` — the paginated `useAsyncQuery` | A-16 |
+| `vue/components/convex-image.ts` | `<ConvexImage>` over `useStorageUrl` | A-17 |
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
@@ -636,6 +638,29 @@ so none can be "restored" by syncing.
 - **On sync** · the bridge reads client internals — see [§4](#4-keeping-parity)
 - **Why** · dev-only query/mutation inspection. `runtime/devtools/bridge.ts` deliberately observes
   `ConvexVueClient` from the *outside* so `vue/client.ts` stays byte-diffable.
+
+##### A-16 — `useAsyncPaginatedQuery`
+
+- **Port** · [`nuxt/composables/use-async-paginated-query.ts`](./src/runtime/nuxt/composables/use-async-paginated-query.ts)
+  — `useAsyncPaginatedQuery` / `useConvexAsyncPaginatedQuery`, returning `usePaginatedQuery`'s
+  `{ results, status, isLoading, loadMore }` plus `{ error, refresh }`; exported from `nuxt/app.ts`
+- **Pinned by** · `test/nuxt/use-async-paginated-query.test.ts`, `test/nuxt/public-surface.test.ts`
+- **Why** · A-04 for lists: the first page is fetched with `fetchQuery` during SSR
+  (`paginationOpts: { numItems, cursor: null }`) and hydrated from the payload; on the client
+  `usePaginatedQuery` takes over and its first page replaces the server one. Client-side
+  navigation fetches nothing over HTTP — a one-shot page could not be deduplicated against the
+  subscription, whose args carry the pagination id. The query error lands in `error` rather than
+  being thrown, as in A-04.
+
+##### A-17 — `<ConvexImage>`
+
+- **Port** · [`vue/components/convex-image.ts`](./src/runtime/vue/components/convex-image.ts)
+  — `ConvexImage`, auto-registered; props `getUrl`, `storageId`; slots default (loading) and
+  `missing` (the file is gone)
+- **Pinned by** · `test/nuxt/convex-image.test.ts`
+- **Why** · the one thing every app does with A-02's `useStorageUrl` — `<img v-if="url" :src="url">`
+  with a placeholder while the URL resolves and another when the query returns `null`. Attributes
+  fall through to the `<img>`; `getUrl` is read once, like `useStorageUrl`'s argument.
 
 ### 3.4 Upstream fixes the translation already rules out
 
