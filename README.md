@@ -30,11 +30,73 @@ file storage and SSR, auto-imported and typed against your deployment.
 
 </div>
 
-Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns) while keeping the public API Convex already documents — same names, same arguments, same return shapes, so Convex's own docs and examples translate line for line. Authentication is **provider-agnostic**: the core ships the generic `provideConvexAuth` plumbing plus Vue adapters for [Clerk](https://clerk.com) and [Auth0](https://auth0.com), while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
+Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns) while keeping the public API Convex already documents. Authentication is **provider-agnostic**: the core ships the generic `provideConvexAuth` plumbing plus Vue adapters for [Clerk](https://clerk.com) and [Auth0](https://auth0.com), while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
 
 Coverage is complete rather than partial: `convex/react` and `convex/nextjs` are ported in full, hook-for-composable, and the port is kept diffable against upstream so new Convex releases can be tracked file-for-file — see [Relationship to upstream](#relationship-to-upstream) and [`PARITY.md`](./PARITY.md).
 
 > 📖 **Full documentation:** **[nuxt-convex-module.dev](https://nuxt-convex-module.dev)** covers installation, the guide, every supported component, and the complete API reference, with live Convex demos throughout. Its source is [`website/`](./website).
+
+## Quick start
+
+### 1. Install
+
+Requires Nuxt ≥ 4.1 and Node ≥ 24.11; `convex` (≥ 1.40) is a peer dependency — the package your functions in `convex/` import from.
+
+```bash
+npm i convex
+npx nuxi@latest module add nuxt-convex-module
+```
+
+> Using **strict** pnpm? Set `publicHoistPattern: ['@convex-dev/*']` in `pnpm-workspace.yaml` (`public-hoist-pattern[]=@convex-dev/*` in `.npmrc` on pnpm 9, or `nodeLinker: hoisted`) so Convex can resolve component definitions.
+
+### 2. Add the module
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['nuxt-convex-module'],
+})
+```
+
+### 3. Configure environment
+
+```bash
+# .env (the file Nuxt loads automatically)
+NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+NUXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
+```
+
+`npx convex dev` also writes the URL itself, as the unprefixed `CONVEX_URL` in
+`.env.local` — the module reads that too, so `nuxt dev --dotenv .env.local` is
+the other way to get there.
+
+### 4. Start the app, then Convex
+
+```bash
+npm run dev
+npx convex dev
+```
+
+## A taste
+
+```vue
+<script setup lang="ts">
+import { api } from '#convex/api'
+
+// SSR-rendered AND live-updating — Nuxt's { data, status, error } shape:
+const { data: messages } = useAsyncQuery(api.messages.list, {})
+const send = useMutation(api.messages.send)
+</script>
+
+<template>
+  <ul><li v-for="m in messages" :key="m._id">{{ m.body }}</li></ul>
+  <button @click="send({ body: 'hi' })">Send</button>
+</template>
+```
+
+A runnable version lives in [`examples/minimal`](examples/minimal) — or open it directly in [StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/minimal).
+
+For something you can click around in, [`examples/playground`](examples/playground) is a live message board covering the same ground plus mutations and connection state — [open it in StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/playground). It's also what the **Open in StackBlitz** link on every pull request opens, with that commit's build already wired in, so a change can be tried in a real Nuxt app without setting one up. Both examples run against a Convex deployment of your own — add `NUXT_PUBLIC_CONVEX_URL` and you're live.
 
 ## Supported official packages
 
@@ -59,8 +121,8 @@ Convex [components](https://www.convex.dev/components) are backend modules, and 
 
 | What you get | Enable |
 |---|---|
-| **[Better Auth](https://better-auth.com)** — `useBetterAuth`, the same-origin `/api/auth/**` proxy, SSR prefetch, the `auth` route middleware, `<AuthBoundary>`, and `convexAuth(event)` for server calls | `npm i @convex-dev/better-auth` |
-| **[Polar](https://polar.sh) billing** — `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar` |
+| **[Better Auth](https://better-auth.com)** — `useBetterAuth`, the same-origin `/api/auth/**` proxy, SSR prefetch, the `auth` route middleware, `<AuthBoundary>`, and `convexAuth(event)` for server calls | `npm i @convex-dev/better-auth better-auth` |
+| **[Polar](https://polar.sh) billing** — `<CheckoutLink>` · `<CustomerPortalLink>` | `npm i @convex-dev/polar @polar-sh/checkout` |
 
 At parity with [`@convex-dev/better-auth@0.12.5`](https://github.com/get-convex/better-auth) (its `react` **and** `nextjs` halves) and [`@convex-dev/polar@0.9.2`](https://github.com/get-convex/polar).
 
@@ -173,74 +235,13 @@ export default defineNuxtConfig({
 })
 ```
 
-- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useBetterAuth` (session, sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `convexAuth(event)` for request-scoped server calls. Imported directly via `nuxt-convex-module/better-auth/client`. Bring your own auth client (to choose plugins — e.g. `emailOTPClient()`, `passkeyClient()`, or `crossDomainClient()` for cross-domain auth) by pointing `convex.betterAuth.authClient` at a module that exports `authClient`; otherwise a minimal bundled default (`convexClient()` only) is used.
+- **Better Auth** (when `@convex-dev/better-auth` is installed) — a Vue/Nuxt port of its `react` + `nextjs` integration: `useBetterAuth` (session, user, and the Better Auth `client` for sign-in/out), the same-origin `/api/auth/**` proxy, SSR token prefetch, the opt-in `auth` route middleware, the `<AuthBoundary>` component, and `convexAuth(event)` for request-scoped server calls. Imported directly via `nuxt-convex-module/better-auth/client`. Bring your own auth client (to choose plugins — e.g. `emailOTPClient()`, `passkeyClient()`, or `crossDomainClient()` for cross-domain auth) by pointing `convex.betterAuth.authClient` at a module that exports `authClient`; otherwise a minimal bundled default (`convexClient()` only) is used.
 - **Clerk** (when `@clerk/vue` is installed) — a Vue port of `convex/react-clerk`: `provideConvexAuthFromClerk()` and `<ConvexProviderWithClerk>`. Types via `nuxt-convex-module/clerk/client`.
 - **Auth0** (when `@auth0/auth0-vue` is installed) — a Vue port of `convex/react-auth0`: `provideConvexAuthFromAuth0()` and `<ConvexProviderWithAuth0>`. Types via `nuxt-convex-module/auth0/client`.
 - **Polar** (when `@convex-dev/polar` is installed) — a Vue port of `@convex-dev/polar/react`'s `<CheckoutLink>` and `<CustomerPortalLink>`. Types via `nuxt-convex-module/polar/client`.
 - **nuxt-security** (when `nuxt-security` is installed) — registered as a module dependency and its Content Security Policy extended with your Convex origins: `connect-src` (production only — dev keeps it open for HMR), `img-src`, and `media-src`. Applied at runtime from `runtimeConfig`, so the deployment URL may come from the environment and the order of `modules` doesn't matter. Your own directives are kept; the origins are appended.
 
 Pure Convex with no auth? Install none of them — you get just the data layer (the module provides a base client on its own), and nothing drags an auth provider or Polar into your bundle.
-
-## Quick start
-
-### 1. Install
-
-Requires Nuxt ≥ 4.1 and Node ≥ 24.11.
-
-```bash
-npx nuxi@latest module add nuxt-convex-module
-```
-
-> Using **strict** pnpm? Add `public-hoist-pattern[]=@convex-dev/*` to `.npmrc` (or set `node-linker=hoisted`) so Convex can resolve component definitions.
-
-### 2. Add the module
-
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  modules: ['nuxt-convex-module'],
-})
-```
-
-### 3. Configure environment
-
-```bash
-# .env (the file Nuxt loads automatically)
-NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
-NUXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
-```
-
-`npx convex dev` also writes the URL itself, as the unprefixed `CONVEX_URL` in
-`.env.local` — the module reads that too, so `nuxt dev --dotenv .env.local` is
-the other way to get there.
-
-### 4. Start the app, then Convex
-
-```bash
-npm run dev
-npx convex dev
-```
-
-## A taste
-
-```vue
-<script setup lang="ts">
-import { api } from '#convex/api'
-
-// SSR-rendered AND live-updating — Nuxt's { data, status, error } shape:
-const { data: messages } = useAsyncQuery(api.messages.list, {})
-const send = useMutation(api.messages.send)
-</script>
-
-<template>
-  <ul><li v-for="m in messages" :key="m._id">{{ m.body }}</li></ul>
-  <button @click="send({ body: 'hi' })">Send</button>
-</template>
-```
-
-A runnable version lives in [`examples/minimal`](examples/minimal) — or open it directly in [StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/minimal).
-
-For something you can click around in, [`examples/playground`](examples/playground) is a live message board covering the same ground plus mutations and connection state — [open it in StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/playground). It's also what the **Open in StackBlitz** link on every pull request opens, with that commit's build already wired in, so a change can be tried in a real Nuxt app without setting one up. Both examples run against a Convex deployment of your own — add `NUXT_PUBLIC_CONVEX_URL` and you're live.
 
 ## Relationship to upstream
 
