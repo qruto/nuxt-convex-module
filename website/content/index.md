@@ -69,15 +69,14 @@ in a :brand-nuxt application
 ::
 
 #description
-<!-- THE FEATURES FIRST, then what Convex is (2026-09-08). The board is
-     the reason to read on — six lines of split-flap type, each a mark, a
+<!-- THE FEATURES, and only the features (2026-09-08). The board is the
+     reason to read on — six lines of split-flap type, each a mark, a
      feature and every composable that IS that feature
      (LandingCapabilities.vue), clattering in when the hero comes into
-     view. The sentence under it is one line: the essence of Convex and
-     nothing else. -->
+     view. What Nuxt is and what Convex is used to follow it as two
+     sentences; that is plate two's whole job now (#names below,
+     2026-09-14), so the hero column ends on the board. -->
 :landing-capabilities
-
-Convex is a reactive backend — one socket for your data, functions and files, where every query stays live.
 
 #body
 <!-- The spec board — version, the peer ranges, and the upstream Convex
@@ -88,6 +87,19 @@ Convex is a reactive backend — one socket for your data, functions and files, 
 
 #bottom
 :landing-services
+:::
+
+:::u-page-section
+---
+id: names
+class: "landing-mill-hatch landing-panel border-b border-default"
+---
+<!-- NO TITLE, NO DESCRIPTION (2026-09-14, the user's call): the drawing
+     is the whole plate. Two parts, the module as the fitting between
+     them, and one line under each name — anything written above it
+     said the same thing twice. -->
+#body
+:landing-coupling
 :::
 
 :::u-page-section

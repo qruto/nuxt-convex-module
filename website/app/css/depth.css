@@ -331,6 +331,27 @@
      shadows fall inside it — see the note on --inset-shadow-1 for
      how the cast moved a pixel inboard so the ring does not hide it. */
   --recess-lip: inset 0 0 0 1px var(--recess-edge);
+  /* THE DISH CUT INTO THE PAGE HAS A DARKER LIP IN THE DARK ROOM
+     (2026-09-14: "this element's border is too light — it looks like a
+     standard border, we're going for a concave effect"). The 34% ring
+     above is a step LIGHTER than the 27% plate the wells are cut into,
+     which on a plate is a small step; on the 20% page ground it is a
+     14-point light line all the way round, and a light line round a
+     hole is the outline of a box, not the edge of a cut. A recess is
+     drawn by its walls, and lit from overhead the wall you can see is
+     the one in shade — so this lip is a SHADE, below both the ground
+     and the dish floor, and what marks the lower edge instead is the
+     rim outside the cut catching the light (--dish-ground-rim). Light
+     keeps the grey ring: the request was made looking at dark. */
+  --recess-edge-ground: light-dark(var(--recess-edge), oklch(12% 0 0));
+  --recess-lip-ground: inset 0 0 0 1px var(--recess-edge-ground);
+  /* The lit lower lip — one pixel BELOW the box, outside the cut: the
+     ground's own surface turning up into the light where the hole
+     ends, the same row --seam-x's catch draws under a rule. Only the
+     dark room needs it (the shade ring has nothing to close it at the
+     bottom otherwise); in light the floor catch inside the cut and the
+     grey ring already do this work, so the layer is transparent. */
+  --dish-ground-rim: 0 1px 0 light-dark(transparent, rgb(255 255 255 / 0.055));
 
   /* Glows — keyed to the semantic aliases. */
   --glow-primary-soft: 0 0 14px color-mix(in srgb, var(--ui-primary) 30%, transparent);
@@ -339,9 +360,7 @@
 
 /* -- The faces ---------------------------------------------------
    The tonal ramps that make a surface read as gently domed or as
-   dished, endpoints from the --ui-bg ladder. --gradient-surface must
-   stay a SINGLE gradient: it pairs with padding-box in the convex
-   recipe's bevel trick. */
+   dished, endpoints from the --ui-bg ladder. */
 :root {
   --gradient-surface: linear-gradient(180deg,
     color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
@@ -431,13 +450,24 @@
      `concave-ground` below). No var() inside, so it reads the same
      wherever it is inherited. */
   --dish-ground-floor: inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.85), oklch(80% 0.035 65 / 0.014));
-  /* 1px machined edge: specular top -> shaded bottom. Painted by
-     every convex recipe on the border box, so it only shows where a
-     `bevel` has opened a 1px transparent border for it. */
-  --gradient-bevel: linear-gradient(180deg,
-    light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
-    light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)) 40%,
-    light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)));
+  /* 1px machined edge: specular top -> shaded bottom, as THREE INSET
+     SHADOWS — the top line, the bottom line, and the faint ring that
+     joins them down the sides. It used to be a gradient painted on
+     the border box behind a `surface padding-box` layer and a 1px
+     transparent border (2026-09-14). Chrome 153 traces a
+     `padding-box` background with plain ROUND inner corners while the
+     border box keeps its squircle, so the gradient showed through a
+     wedge at every corner of every plate — a lit sliver in dark,
+     where the edge is 14% white on a near-black face (in light it is
+     white on white and nothing shows). Box-shadows follow the squircle
+     (every cut's --recess-lip proves it), so the edge lives here now
+     and the convex recipes paint ONE background layer, no border.
+     The convex rungs take it through `bevel` (--bevel-ring below);
+     the plate and card parts bake it in. */
+  --bevel:
+    inset 0 1px 0 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
+    inset 0 -1px 0 0 light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)),
+    inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035));
 }
 
 /* -- The accent material -----------------------------------------
@@ -569,38 +599,38 @@
 }
 
 /* -- CONVEX: titanium surfaces that stick out ---------------------
-   Every rung paints the bevel on its border box as well, where it
-   stays invisible until `bevel` opens a 1px transparent border for
-   it — so the machined edge composes instead of competing for the
-   background property. */
+   Every rung leaves the first slot of its box-shadow to `bevel`
+   (--bevel-ring, a no-op shadow until that utility sets it), so the
+   machined edge composes with the cast instead of competing for the
+   box-shadow property. */
 @utility convex {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-1);
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel-ring, 0 0 #0000), var(--elevation-1);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility convex-0 {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-0);
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel-ring, 0 0 #0000), var(--elevation-0);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility convex-2 {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-2);
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel-ring, 0 0 #0000), var(--elevation-2);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility convex-3 {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-3);
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel-ring, 0 0 #0000), var(--elevation-3);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
-/* The machined edge — opens the 1px border the bevel gradient shows
-   through. Pair with any convex rung. */
+/* The machined edge — hands --bevel to the convex rung's box-shadow.
+   Pair with any convex rung. */
 @utility bevel {
-  border: 1px solid transparent;
+  --bevel-ring: var(--bevel);
 }
 
 /* -- CONCAVE: titanium surfaces that are cut in -------------------
@@ -646,7 +676,7 @@
 @utility concave-ground {
   --depth: concave;
   background: var(--gradient-recessed-ground);
-  box-shadow: var(--recess-lip), var(--inset-shadow-2), var(--dish-ground-floor);
+  box-shadow: var(--recess-lip-ground), var(--inset-shadow-2), var(--dish-ground-floor), var(--dish-ground-rim);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
@@ -723,9 +753,20 @@
    at falling alpha, the way a milled part stacks against the surface
    it stands on. The part's own two 1px lines were already hard and
    carry over unchanged; only --elevation-accent's two soft outer
-   layers go. In dark the cast is leaked light rather than shade, so
-   the steps are signal, not black — same shape, the scheme's own
-   material.
+   layers go.
+
+   THE DARK STEPS ARE SHADE TOO (2026-09-14: "something went wrong with
+   the button's shadows or borders in dark"). They used to be signal
+   orange, on the argument that in the dark room the plate's cast is
+   leaked light. That is true of a BLURRED leak — the soft accent cast
+   above works — and false of a hard one: three crisp bars of 62%
+   orange under the part's dark keyline painted, top to bottom, a dark
+   shade line, a dark ring, then a BRIGHT orange bar, then a dimmer one
+   — a second, lit edge drawn under the real one, and the part read as
+   standing on a glowing shelf. A hard step is a contact shade or it is
+   an outline; so in dark it is black, at the alphas a 20% ground needs
+   to show a step at all. The keyline and the crown catch are what say
+   "raised" there — as they do on every other dark plate.
 
    THE CUT NEEDS NOTHING FROM THIS UTILITY ANY MORE. It used to zero
    --accent-cut-*-blur here, because on a part whose every other layer
@@ -737,28 +778,20 @@
 @utility hard-cast {
   --elevation-accent: var(--accent-body);
   --accent-cast:
-    0 1px 0 light-dark(
-      --alpha(var(--color-signal-950) / 26%), --alpha(var(--color-signal-500) / 62%)),
-    0 2px 0 light-dark(
-      --alpha(var(--color-signal-900) / 16%), --alpha(var(--color-signal-500) / 34%)),
-    0 3px 0 light-dark(
-      --alpha(var(--color-signal-800) / 8%), --alpha(var(--color-signal-400) / 16%));
+    0 1px 0 light-dark(--alpha(var(--color-signal-950) / 26%), rgb(0 0 0 / 0.55)),
+    0 2px 0 light-dark(--alpha(var(--color-signal-900) / 16%), rgb(0 0 0 / 0.35)),
+    0 3px 0 light-dark(--alpha(var(--color-signal-800) / 8%), rgb(0 0 0 / 0.18));
   /* Hover lifts by one more step — the gap under the part grows, and
      that is the whole animation a hard cast can carry. */
   --accent-cast-lifted:
-    0 1px 0 light-dark(
-      --alpha(var(--color-signal-950) / 28%), --alpha(var(--color-signal-400) / 72%)),
-    0 2px 0 light-dark(
-      --alpha(var(--color-signal-900) / 20%), --alpha(var(--color-signal-500) / 46%)),
-    0 3px 0 light-dark(
-      --alpha(var(--color-signal-900) / 13%), --alpha(var(--color-signal-500) / 28%)),
-    0 4px 0 light-dark(
-      --alpha(var(--color-signal-800) / 7%), --alpha(var(--color-signal-400) / 15%));
+    0 1px 0 light-dark(--alpha(var(--color-signal-950) / 28%), rgb(0 0 0 / 0.58)),
+    0 2px 0 light-dark(--alpha(var(--color-signal-900) / 20%), rgb(0 0 0 / 0.42)),
+    0 3px 0 light-dark(--alpha(var(--color-signal-900) / 13%), rgb(0 0 0 / 0.28)),
+    0 4px 0 light-dark(--alpha(var(--color-signal-800) / 7%), rgb(0 0 0 / 0.14));
   /* Seated: the gap is closed, so one contact line is all that is
-     left — and in dark the emitter dims rather than switching off. */
+     left. */
   --accent-cast-pressed:
-    0 1px 0 light-dark(
-      --alpha(var(--color-signal-950) / 24%), --alpha(var(--color-signal-500) / 40%));
+    0 1px 0 light-dark(--alpha(var(--color-signal-950) / 24%), rgb(0 0 0 / 0.5));
 }
 
 /* -- CONCAVE and CONVEX type, and icons ---------------------------
@@ -856,6 +889,11 @@
     z-index: -1;
     inset: 0;
     border-radius: inherit;
+    /* `border-radius: inherit` copies the radius, not the shape:
+       corner-shape is not inherited, so the finish was a ROUND layer
+       inside a squircle plate and left a bare wedge at every corner
+       (2026-09-14, visible in dark as a step in the face's tone). */
+    corner-shape: inherit;
     pointer-events: none;
     background:
       radial-gradient(120% 80% at 18% -10%,
@@ -876,6 +914,7 @@
     z-index: -1;
     inset: 0;
     border-radius: inherit;
+    corner-shape: inherit;
     pointer-events: none;
     opacity: 0.035;
     mix-blend-mode: overlay;
@@ -919,17 +958,15 @@
    ground takes the one-step cast and reads as bolted to it. */
 @utility part-plate {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-1);
-  border: 1px solid transparent;
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel), var(--elevation-1);
   border-radius: var(--radius-plate);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 @utility part-card {
   --depth: convex;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-1);
-  border: 1px solid transparent;
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel), var(--elevation-1);
   border-radius: var(--radius-card);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
@@ -950,7 +987,7 @@
 @utility part-dish {
   --depth: concave;
   background: var(--gradient-recessed-ground);
-  box-shadow: var(--recess-lip), var(--inset-shadow-2), var(--dish-ground-floor);
+  box-shadow: var(--recess-lip-ground), var(--inset-shadow-2), var(--dish-ground-floor), var(--dish-ground-rim);
   border-radius: var(--radius-card);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }

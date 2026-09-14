@@ -8,7 +8,12 @@ import { v } from 'convex/values'
 // Shared-deployment guardrails: one row per session (upsert, never insert
 // twice), a short window so the table stays a few rows deep, and an
 // alphanumeric session id so nothing arbitrary lands in the table.
-const WINDOW_MS = 45_000
+//
+// The window is short (2026-09-13: the canvas rail says who is here, and
+// "you and 1 other" must go back to "only you" soon after the second
+// window closes, not a minute later). A window leaves on pagehide too;
+// the window covers the ones that never got to.
+const WINDOW_MS = 25_000
 const SID = /^[a-z0-9]{6,24}$/
 const MAX_ROWS = 500
 
@@ -27,6 +32,16 @@ export const heartbeat = mutation({
     const live = await ctx.db.query('presence').withIndex('by_at', q => q.gt('at', now - WINDOW_MS)).take(MAX_ROWS)
     if (live.length >= MAX_ROWS) return
     await ctx.db.insert('presence', { sid, at: now })
+  },
+})
+
+/** The window is going: drop its row now rather than when it goes stale. */
+export const leave = mutation({
+  args: { sid: v.string() },
+  handler: async (ctx, { sid }) => {
+    if (!SID.test(sid)) return
+    const existing = await ctx.db.query('presence').withIndex('by_sid', q => q.eq('sid', sid)).unique()
+    if (existing) await ctx.db.delete(existing._id)
   },
 })
 

@@ -1,7 +1,13 @@
 export default defineAppConfig({
   docus: {
     locale: 'en',
+    // Left EMPTY on purpose: 'light' / 'dark' here would force one scheme.
+    // The site follows the OS instead — the toggle is removed from the
+    // header, footer and ⌘K palette (app/components/app overrides), the
+    // `d` shortcut is off below, and plugins/color-mode.client.ts resets
+    // any preference a visitor stored while the toggle still existed.
     colorMode: '',
+    shortcuts: { toggleColorMode: '' },
   },
 
   // No `navigation.sub`: the sidebar carries the WHOLE tree, every section and

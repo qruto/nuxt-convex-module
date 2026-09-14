@@ -5,8 +5,11 @@
  * window that is already open instead of opening another.
  */
 export function openCanvasWindow() {
-  const width = 440
-  const height = 560
+  // As wide as the hero plate itself (32rem plus the page's gutters), so
+  // the two canvases are the same size side by side and the rail's line
+  // fits in both.
+  const width = 560
+  const height = 620
   const left = Math.round(window.screenX + (window.outerWidth - width) / 2)
   const top = Math.round(window.screenY + (window.outerHeight - height) / 2)
   const popup = window.open('/canvas', 'nc-canvas', `popup=yes,width=${width},height=${height},left=${left},top=${top}`)

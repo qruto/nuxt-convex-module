@@ -9,17 +9,30 @@
 // line by line, and afterwards the board refreshes one line now and
 // then, the way a departure board does.
 //
-// A token OPENS under the pointer, the way an editor shows a signature
-// for the call under the caret: its parameters clatter into the
-// brackets — `useQuery(query, args?)` — and clear again when the
-// pointer leaves. The clock opens the tokens of the line it refreshes
-// one after another. One token open per line at a time: a whole line
-// of signatures does not fit its column on a laptop (2026-09-13, the
-// three file-storage calls need ~520px of a 443px column), and one
-// signature plus the bare names always fits in two rows. Every line
-// keeps that second row whether or not anything is open, so opening
-// spills into room the line already owns and nothing under it moves
-// ("don't make the interface jump").
+// A line OPENS on hover, and the clock opens the line it refreshes: the
+// parameters of every call on it clatter into the brackets —
+// `useQuery(query, args?)` — and clear again when the pointer leaves or
+// the clock moves on. A line is ONE row, open or closed: an open
+// signature that outgrows the board's width does not wrap, it runs off
+// the right edge and the row scrolls sideways (2026-09-14). Nothing
+// under a line moves when it opens — "don't make the interface jump" —
+// and nothing is clipped for good, only parked off the edge; the
+// reserved second and third rows of the earlier setting went with this.
+//
+// THE SLOT. A row that overflows has to say so, and the clock opens
+// lines with nobody's pointer on them, so a cursor alone does not
+// (2026-09-14: "it's not obvious that we have a horizontal scroll
+// here"). When a row overflows, a slot fades in around it: a shallow
+// groove cut into the ground (the dish physics — the ground's own
+// tone a step down, the lip, the cast under the top wall), and the
+// type runs INTO the wall at either end — masked to nothing over the
+// last 1.75rem — so the eye reads a tape passing under an edge rather
+// than text that stops. The fade at the start only appears once there
+// is something behind it. Then, when the CLOCK opened the line, the
+// tape does the reading itself: a carriage sweep runs the row to its
+// end, holds, and comes back, before the line closes. Hover owns its
+// own line (no sweep; a wheel, a swipe, or a drag with the ew-resize
+// pointer), and any touch of the tape stops a sweep in progress.
 //
 // Sound is a switch, off until asked (browsers will not play a note
 // before a gesture anyway, and a landing page that clatters unasked is a
@@ -97,9 +110,101 @@ const LINES: Line[] = [
   },
 ]
 
-// Which token of each line is open (parameters showing), or -1.
-// Reactive: the parameter flaps are rendered only while open.
-const open = ref<number[]>(LINES.map(() => -1))
+// Which lines are open (parameters showing). Reactive: the parameter
+// flaps are rendered only while their line is open.
+const open = ref<boolean[]>(LINES.map(() => false))
+// Which lines run past the board's edge, and so scroll. Measured when
+// a line opens or closes (after the parameter flaps mount or go) and
+// whenever the board is resized — a narrow board overflows at rest,
+// closed — so the slot and the cursor only promise a scroll where
+// there is one. `edge` is where the tape stands — at its start, at its
+// end, or between — which is which wall the type fades under.
+const scrolls = ref<boolean[]>(LINES.map(() => false))
+const edge = ref<{ start: boolean, end: boolean }[]>(LINES.map(() => ({ start: true, end: true })))
+const rails = new Map<number, HTMLElement>()
+let sizer: ResizeObserver | null = null
+function setRail(line: number, el: unknown) {
+  const node = el as HTMLElement | null
+  const prev = rails.get(line)
+  if (prev && prev !== node) sizer?.unobserve(prev)
+  if (node) {
+    rails.set(line, node)
+    sizer?.observe(node)
+  }
+  else rails.delete(line)
+}
+function measure(line: number) {
+  const rail = rails.get(line)
+  if (!rail) return
+  scrolls.value[line] = rail.scrollWidth > rail.clientWidth
+  readEdges(line)
+}
+function readEdges(line: number) {
+  const rail = rails.get(line)
+  if (!rail) return
+  const max = rail.scrollWidth - rail.clientWidth
+  edge.value[line] = { start: rail.scrollLeft <= 1, end: rail.scrollLeft >= max - 1 }
+}
+
+// ---- the carriage sweep ---------------------------------------------------
+// When the clock opens a line that overflows, the tape runs to its end,
+// holds, and comes back — the row reading itself out, since no pointer
+// is there to. One rAF loop per line; anything real on the tape (a
+// wheel, a drag, the pointer arriving) cancels it where it stands.
+const SWEEP_OUT = 900
+const SWEEP_HOLD = 700
+const SWEEP_BACK = 900
+const sweeps = new Map<number, number>()
+const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2)
+function sweep(line: number) {
+  const rail = rails.get(line)
+  if (!rail || reduced.value || hovered.has(line) || sweeps.has(line)) return
+  const max = rail.scrollWidth - rail.clientWidth
+  if (max <= 0) return
+  const t0 = performance.now()
+  const frame = (now: number) => {
+    const t = now - t0
+    let p: number
+    if (t < SWEEP_OUT) p = easeInOut(t / SWEEP_OUT)
+    else if (t < SWEEP_OUT + SWEEP_HOLD) p = 1
+    else if (t < SWEEP_OUT + SWEEP_HOLD + SWEEP_BACK) p = 1 - easeInOut((t - SWEEP_OUT - SWEEP_HOLD) / SWEEP_BACK)
+    else {
+      rail.scrollLeft = 0
+      sweeps.delete(line)
+      return
+    }
+    rail.scrollLeft = p * max
+    sweeps.set(line, requestAnimationFrame(frame))
+  }
+  sweeps.set(line, requestAnimationFrame(frame))
+}
+function stopSweep(line: number) {
+  const id = sweeps.get(line)
+  if (id !== undefined) cancelAnimationFrame(id)
+  sweeps.delete(line)
+}
+
+// ---- the drag ---------------------------------------------------------------
+// The ew-resize pointer is a promise: a mouse can take the tape and
+// pull it. Touch pans natively (touch-action below), so only a mouse
+// drags here.
+let drag: { line: number, x: number, left: number } | null = null
+function onDragStart(line: number, e: PointerEvent) {
+  if (e.pointerType !== 'mouse' || !scrolls.value[line]) return
+  const rail = rails.get(line)
+  if (!rail) return
+  stopSweep(line)
+  drag = { line, x: e.clientX, left: rail.scrollLeft }
+  rail.setPointerCapture(e.pointerId)
+}
+function onDragMove(e: PointerEvent) {
+  if (!drag) return
+  const rail = rails.get(drag.line)
+  if (rail) rail.scrollLeft = drag.left - (e.clientX - drag.x)
+}
+function onDragEnd() {
+  drag = null
+}
 
 // A word as flaps. Spaces are blank flaps: they hold their width and
 // never turn. NBSP so the flex row cannot collapse them.
@@ -124,10 +229,15 @@ function setCell(line: number, token: number, part: Part, i: number, el: unknown
 // ---- sound ------------------------------------------------------------------
 const SOUND_KEY = 'nc-board-sound'
 const sound = ref(false)
-// The switch's marking, one reading per position.
+// The switch is written as the thing a press DOES, not the position it
+// is in: everyone arrives with sound off, so the off position is the
+// board's one call — "turn sound on", in the accent ink, the way the
+// demo's "try real-time" is set. Once on, the same switch goes quiet
+// (dim ink, "turn sound off"): a way back, not a call. The label
+// changes with the state, so there is no aria-pressed on top of it.
 const soundMark = computed(() => (sound.value
-  ? { tone: 'text-toned', icon: 'i-lucide-volume-2', label: 'sound on' }
-  : { tone: 'text-dimmed hover:text-toned', icon: 'i-lucide-volume-x', label: 'sound off' }))
+  ? { tone: 'text-dimmed hover:text-toned', icon: 'i-lucide-volume-x', label: 'turn sound off' }
+  : { tone: 'text-lit', icon: 'i-lucide-volume-2', label: 'turn sound on' }))
 let audio: AudioContext | null = null
 let noise: AudioBuffer | null = null
 let lastClack = 0
@@ -228,18 +338,27 @@ function spinLine(line: number) {
   LINES[line]!.tokens.forEach((token, t) => spinField(line, t, 'name', flaps(token.name), gen))
 }
 
-// Open one token of a line (closing whichever was open): its parameter
-// flaps mount, then clatter in. Under reduced motion they simply appear.
-async function openToken(line: number, t: number) {
-  if (!canHover.value || open.value[line] === t) return
-  open.value[line] = t
-  if (reduced.value) return
+// Open a line: its parameter flaps mount, then clatter in. Under
+// reduced motion they simply appear.
+async function openLine(line: number) {
+  if (!canHover.value || open.value[line]) return
+  open.value[line] = true
   await nextTick()
-  if (open.value[line] !== t) return
-  spinField(line, t, 'params', flaps(LINES[line]!.tokens[t]!.params), generation)
+  if (!open.value[line]) return
+  measure(line)
+  if (reduced.value) return
+  const gen = generation
+  LINES[line]!.tokens.forEach((token, t) => spinField(line, t, 'params', flaps(token.params), gen))
 }
-function closeToken(line: number, t: number) {
-  if (open.value[line] === t) open.value[line] = -1
+async function closeLine(line: number) {
+  open.value[line] = false
+  stopSweep(line)
+  // Back to the start of the row, so the next opening reads from the
+  // name, not from wherever the last scroll left it.
+  const rail = rails.get(line)
+  if (rail) rail.scrollLeft = 0
+  await nextTick()
+  if (!open.value[line]) measure(line)
 }
 
 function clatter() {
@@ -248,12 +367,14 @@ function clatter() {
 }
 
 // The board's own clock: clatter in on first sight, then every nine
-// seconds or so refresh one line and walk its tokens, each open for a
-// couple of seconds — unless the pointer is on the line, in which case
-// the hover owns what is open. useDemoScript gates it to the viewport
-// and pauses it with the tab; a pointerdown or focus inside the board
-// stops the clock for good (hover is not a takeover: it works a token
-// by itself, below).
+// seconds or so refresh one line and open it for a few seconds — the
+// tape sweeping if the line overflows, once its parameters have
+// clattered in (~1s: the longest list is 27 flaps at 10ms plus up to
+// ten turns at 70) — unless the pointer is on it, in which case the
+// hover owns the close.
+// useDemoScript gates it to the viewport and pauses it with the tab; a
+// pointerdown or focus inside the board stops the clock for good (hover
+// is not a takeover: it works a line by itself, below).
 const hovered = new Set<number>()
 const root = ref<HTMLElement | null>(null)
 useDemoScript(root, async ({ wait }) => {
@@ -262,35 +383,25 @@ useDemoScript(root, async ({ wait }) => {
     await wait(9000)
     const line = Math.floor(Math.random() * LINES.length)
     spinLine(line)
-    for (let t = 0; t < LINES[line]!.tokens.length; t++) {
-      if (hovered.has(line)) break
-      void openToken(line, t)
-      await wait(2200)
-      if (!hovered.has(line)) closeToken(line, t)
-    }
+    await openLine(line)
+    if (scrolls.value[line]) later(() => sweep(line), 1000)
+    await wait(SWEEP_OUT + SWEEP_HOLD + SWEEP_BACK + 2000)
+    if (!hovered.has(line)) closeLine(line)
   }
 }, { initialDelay: 400 })
 
-// Hover on a token opens it; it closes a beat after the pointer leaves,
-// so crossing the gap between two tokens does not blink. Hover on the
-// line re-flips its names (throttled so a pointer crossing back and
-// forth does not keep the drum turning).
+// Hover opens a line and re-flips its names (the re-flip throttled so a
+// pointer crossing back and forth does not keep the drum turning); the
+// line closes a beat after the pointer leaves, so a brush across the
+// gap between two lines does not blink.
 const lastHover = new Map<number, number>()
 const leaveTimers = new Map<number, ReturnType<typeof setTimeout>>()
-function onEnterToken(line: number, t: number) {
-  clearTimeout(leaveTimers.get(line))
-  leaveTimers.delete(line)
-  void openToken(line, t)
-}
-function onLeaveToken(line: number, t: number) {
-  clearTimeout(leaveTimers.get(line))
-  leaveTimers.set(line, setTimeout(() => {
-    leaveTimers.delete(line)
-    closeToken(line, t)
-  }, 350))
-}
 function onEnter(line: number) {
   hovered.add(line)
+  stopSweep(line)
+  clearTimeout(leaveTimers.get(line))
+  leaveTimers.delete(line)
+  void openLine(line)
   const now = performance.now()
   if (now - (lastHover.get(line) ?? 0) < 1500) return
   lastHover.set(line, now)
@@ -298,11 +409,18 @@ function onEnter(line: number) {
 }
 function onLeave(line: number) {
   hovered.delete(line)
+  clearTimeout(leaveTimers.get(line))
+  leaveTimers.set(line, setTimeout(() => {
+    leaveTimers.delete(line)
+    closeLine(line)
+  }, 350))
 }
 
 onMounted(() => {
   reduced.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   canHover.value = window.matchMedia('(hover: hover)').matches
+  sizer = new ResizeObserver(() => LINES.forEach((_, line) => measure(line)))
+  for (const rail of rails.values()) sizer.observe(rail)
   try {
     sound.value = localStorage.getItem(SOUND_KEY) === '1'
   }
@@ -316,6 +434,8 @@ onBeforeUnmount(() => {
   timers.clear()
   for (const id of leaveTimers.values()) clearTimeout(id)
   leaveTimers.clear()
+  for (const line of sweeps.keys()) stopSweep(line)
+  sizer?.disconnect()
   audio?.close()
 })
 </script>
@@ -327,7 +447,7 @@ onBeforeUnmount(() => {
   >
     <ul
       aria-label="What the module ships"
-      class="lines m-0 grid list-none gap-x-3 gap-y-3 p-0"
+      class="lines m-0 grid list-none gap-x-3 gap-y-5 p-0"
     >
       <li
         v-for="(entry, line) in LINES"
@@ -345,48 +465,65 @@ onBeforeUnmount(() => {
         <!-- The composables are code, and written the way a reference
              writes a function: `useQuery()`, mono, the call parens in the
              dim ink, and the parameters in the dim ink inside them while
-             the token is open. No box, no accent (2026-09-13: boxes were
+             the line is open. No box, no accent (2026-09-13: boxes were
              too many, the accent did not read as code — the parens do). -->
-        <span class="fns">
+        <!-- The row: the slot (the groove, painted by ::before once the
+             row overflows) around the rail (the scroller, its type
+             fading under the walls) around the tape (the tokens, with
+             the slot's wall clearance as its own padding, so the type
+             stands where it would without any of this). -->
+        <span
+          class="fns"
+          :class="{ 'is-scroll': scrolls[line] }"
+        >
           <span class="sr-only">{{ reading(entry) }}</span>
           <span
+            :ref="el => setRail(line, el)"
             aria-hidden="true"
-            class="flex flex-wrap gap-x-3"
+            class="rail"
+            :class="{ 'at-start': edge[line]!.start, 'at-end': edge[line]!.end }"
+            @scroll.passive="readEdges(line)"
+            @wheel.passive="stopSweep(line)"
+            @touchstart.passive="stopSweep(line)"
+            @pointerdown="onDragStart(line, $event)"
+            @pointermove="onDragMove"
+            @pointerup="onDragEnd"
+            @pointercancel="onDragEnd"
           >
-            <code
-              v-for="(token, t) in entry.tokens"
-              :key="token.name"
-              class="token flex text-toned"
-              @pointerenter="onEnterToken(line, t)"
-              @pointerleave="onLeaveToken(line, t)"
-            >
-              <span
-                v-for="(ch, i) in flaps(token.name)"
-                :key="i"
-                :ref="el => setCell(line, t, 'name', i, el)"
-                class="flap"
-              >{{ ch }}</span><span class="text-dimmed">(</span><span
-                v-if="open[line] === t"
-                class="params flex text-dimmed"
-              ><span
-                v-for="(ch, i) in flaps(token.params)"
-                :key="i"
-                :ref="el => setCell(line, t, 'params', i, el)"
-                class="flap"
-                :class="{ blank: ch === NBSP }"
-              >{{ ch }}</span></span><span class="text-dimmed">)</span>
-            </code>
+            <span class="tape flex w-max gap-x-3">
+              <code
+                v-for="(token, t) in entry.tokens"
+                :key="token.name"
+                class="token flex shrink-0 text-toned"
+              >
+                <span
+                  v-for="(ch, i) in flaps(token.name)"
+                  :key="i"
+                  :ref="el => setCell(line, t, 'name', i, el)"
+                  class="flap"
+                >{{ ch }}</span><span class="text-dimmed">(</span><span
+                  v-if="open[line]"
+                  class="params flex text-dimmed"
+                ><span
+                  v-for="(ch, i) in flaps(token.params)"
+                  :key="i"
+                  :ref="el => setCell(line, t, 'params', i, el)"
+                  class="flap"
+                  :class="{ blank: ch === NBSP }"
+                >{{ ch }}</span></span><span class="text-dimmed">)</span>
+              </code>
+            </span>
           </span>
         </span>
       </li>
     </ul>
-    <!-- The sound switch: a small marking at the board's foot, off until
-         asked. -->
+    <!-- The sound switch at the board's foot. Off (everyone's arrival)
+         it is the board's one call, in the accent ink; on, it is a
+         quiet way back. -->
     <button
       type="button"
-      class="switch stamp mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-strip px-1 py-0.5 text-[0.58rem] outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      class="switch stamp mt-5 inline-flex cursor-pointer items-center gap-1.5 rounded-strip px-1 py-0.5 text-[0.62rem] outline-none focus-visible:ring-2 focus-visible:ring-primary"
       :class="soundMark.tone"
-      :aria-pressed="sound"
       @click="toggleSound"
     >
       <UIcon
@@ -408,18 +545,11 @@ onBeforeUnmount(() => {
    longest name, and every row of tokens starts on one edge.
 
    One row of the board is --row; the name and the tokens share it so
-   they sit on one baseline. With a hover pointer every line keeps TWO
-   rows for its tokens — the second is where the tokens land when one
-   of them opens and the row no longer fits, room the line owns at rest
-   so opening moves nothing under it — and is clipped there, so on a
-   column too narrow even for that the board still does not grow under
-   the pointer.
-
-   The gap BETWEEN lines is wider than a row, so a second row that fills
-   sits nearer its own line than the next one's name — otherwise a
-   wrapped signature read as the line below's. */
+   they sit on one baseline. A line's tokens are ONE row whether or not
+   it is open: an open signature that does not fit runs past the edge
+   and the row scrolls sideways (below), so opening moves nothing. */
 .lines {
-  --row: 1rem;
+  --row: 0.95rem;
   grid-template-columns: 1rem max-content minmax(0, 1fr);
 }
 .line {
@@ -429,18 +559,101 @@ onBeforeUnmount(() => {
 .name {
   line-height: var(--row);
 }
-@media (hover: hover) {
-  .fns {
-    block-size: calc(var(--row) * 2);
-    overflow: hidden;
-  }
+/* THE ROW of tokens: slot, rail, tape.
+
+   The SLOT is the box a groove will be cut in. It is always there —
+   one row plus a wall's clearance above and below, reaching --slot-x
+   into the name's padding on the left and the same over the edge on
+   the right — with the clearance paid back in negative margin, so the
+   grid row stays one --row tall and the tape stands exactly where a
+   bare row would. The groove itself is a ::before that fades in once
+   the row overflows: the dish physics (the ground's tone a step down,
+   an opaque fill that stops the mill grain, the lip, the cast under the
+   top wall, the floor catch), not a plate's lighter well — the board
+   is cut into the ground it sits on. */
+.fns {
+  --slot-x: 0.5rem;
+  --slot-y: 0.3rem;
+  position: relative;
+  isolation: isolate;
+  block-size: calc(var(--row) + 2 * var(--slot-y));
+  margin-inline: calc(-1 * var(--slot-x));
+  margin-block: calc(-1 * var(--slot-y));
+  padding-block: var(--slot-y);
+}
+.fns::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--radius-well);
+  background: var(--gradient-recessed-ground);
+  box-shadow: var(--recess-lip-ground), var(--inset-shadow-2), var(--dish-ground-floor), var(--dish-ground-rim);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+.fns.is-scroll::before {
+  opacity: 1;
+}
+/* The RAIL is the scroller. One row high, the overflow sideways, no
+   bar drawn (a bar would add a height and the line would jump). Where
+   the tape runs under a wall the type is masked to nothing over its
+   last 3rem, gone a third of a wall short of the lip so nothing ever
+   touches it — the sign that there is more — and the mask at either
+   end comes and goes with the tape's position: none at the start until
+   something has passed behind it, none at the end once the end is in
+   view. The two lengths are registered so the coming and going is a
+   slide, not a cut. */
+@property --board-fade-s {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --board-fade-e {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+.rail {
+  --board-fade-s: 0px;
+  --board-fade-e: 0px;
+  display: block;
+  block-size: var(--row);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  --wall: calc(var(--slot-x) / 3);
+  mask-image: linear-gradient(to right,
+    transparent min(var(--wall), var(--board-fade-s)), #000 var(--board-fade-s),
+    #000 calc(100% - var(--board-fade-e)), transparent calc(100% - min(var(--wall), var(--board-fade-e))));
+  transition: --board-fade-s 200ms ease, --board-fade-e 200ms ease;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.fns.is-scroll .rail {
+  cursor: ew-resize;
+}
+.fns.is-scroll .rail:not(.at-start) {
+  --board-fade-s: 3rem;
+}
+.fns.is-scroll .rail:not(.at-end) {
+  --board-fade-e: 3rem;
+}
+/* The TAPE carries the wall clearance as its own padding — inside the
+   scroller, so the last token stops a wall's width short of the end
+   wall, the same as the first stands off the start. */
+.tape {
+  padding-inline: var(--slot-x);
 }
 /* A TOKEN: one composable set as a call — mono, the text ink, and the
    `()` after it in the dim ink with the parameters inside while the
    token is open. Nothing drawn around it: the name is display type, the
    token is mono with call syntax, and that is the whole difference
-   between a name and something you type. A token never breaks: when
-   its parameters do not fit the first row it drops whole to the second. */
+   between a name and something you type. A token never breaks or
+   shrinks: what does not fit the row rides past the edge and scrolls. */
 .token {
   font-family: var(--font-mono);
   font-size: 0.78rem;

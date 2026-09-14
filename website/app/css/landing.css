@@ -917,9 +917,24 @@ html:has(.landing-panel) footer {
      rules — all deleted with it. The hues still live where they are
      actually seen, in the FILLS (BrandConvex.vue / BrandNuxt.vue and
      the ramp blocks below). */
-  --mark-rim-hi: color-mix(in oklab, var(--ink-light)
+  --mark-rim-hi: color-mix(in oklab, var(--mark-light)
       min(calc(var(--mark-highlight) * 1% * (1 + var(--solidness) * 0.005)), 98%),
       transparent);
+  /* THE RIM IS THE MATERIAL'S OWN LIGHT AGAIN (2026-09-14: "colour the
+     shadow close to the logos' colours"). The wordmarks keep the words'
+     white — --mark-light defaults to --ink-light, so nothing changes
+     for "convex" and "Nuxt" — but on the ENAMEL the same grey read as
+     a grey sliver drawn along the lit edge of a magenta lobe or a
+     green triangle: the lit edge of a coloured dome is that colour
+     with the lamp on it, not the room's grey. So each symbol path
+     names its vendor hue below as --mark-material and the rim is the
+     words' own --ink-light formula run on THAT — the same lift, the
+     same 22% white, the mark's own hue — which lands it right on the
+     crown stop of the dome gradient it is rimming and the sliver reads
+     as the dome turning into the light. What retired the tint before
+     was that it was invisible; that was a third of the chroma laid
+     over a fixed near-white. This keeps the hue whole. */
+  --mark-light: var(--ink-light);
   /* One pass, toward the lamp, ZERO BLUR (2026-09-06, on instruction —
      the same call ConcaveText.vue's white passes took the same day: a
      surface edge catching light is a hard line, and blurred it smears
@@ -937,6 +952,24 @@ html:has(.landing-panel) footer {
     drop-shadow(calc(var(--mark-rim-x) * -1) calc(var(--mark-rim-y) * -1)
       0 var(--mark-rim-hi));
 }
+/* The enamel's materials — the kits' own hues, the same values the
+   fill ramps below hold at their 50% body stop. Attribute selectors,
+   like the fill swaps: they read the attribute, not the computed paint. */
+.hero-billet-line .billet-ink .brand-lockup path:not([fill="currentColor"]) {
+  /* The words' lift (+0.22 L) with the material's chroma kept WHOLE:
+     --ink-light drains 15% of it and mixes in 22% white because a grey
+     glyph's rim should be the room's white, and the enamel's should
+     not — dilute a lit orange and it is beige. Alpha comes up to the
+     words' own 75 too: the enamel's rim is fully exposed against the
+     ground, and at 65% the hue thinned to a dull tint of itself over
+     the near-black. */
+  --mark-highlight: 75;
+  --mark-light: oklch(from var(--mark-material) min(calc(l + 0.22), 0.96) c h);
+}
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#F3B01C"] { --mark-material: #f3b01c; }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#8D2676"] { --mark-material: #8d2676; }
+.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#EE342F"] { --mark-material: #ee342f; }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="#00DC82"] { --mark-material: #00dc82; }
 /* No :root.dark block down here any more. The dark plate wants a
    dimmer rim — a mark rimmed in paper white on a dark ground stops
    being metal and starts being a lamp, the same argument --ghost-sheen

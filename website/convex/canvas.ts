@@ -1,5 +1,5 @@
 import type { MutationCtx } from './_generated/server'
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
 import { cooldown, spend } from './gate'
 
@@ -103,5 +103,40 @@ export const clear = mutation({
     await spendStroke(ctx)
     await makeRoom(ctx, true)
     await ctx.db.insert('strokes', { kind: 'clear' })
+  },
+})
+
+// THE OPENING FRAME — what the canvas shows before anyone has touched it.
+// A 21 × 11 picture, one character per cell: `#` signal, `+` graphite,
+// `.` empty. "hi" in signal on the left; on the right a waving hand drawn
+// in outline, graphite so it reads white on the dark plate, thumb on the
+// left (the mirror of 👋).
+const OPENING = [
+  '.....................',
+  '.....................',
+  '...#.........+.+.....',
+  '...#.......+.+.+.+...',
+  '...###.#...+.+.+.+...',
+  '...#.#.#..+......+...',
+  '...#.#.#..+......+...',
+  '...#.#.#...+....+....',
+  '...#.#.#....++++.....',
+  '.....................',
+  '.....................',
+]
+
+/** Reset the table to the opening frame: `npx convex run canvas:seed`. */
+export const seed = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query('strokes').take(MAX_STROKES + 50)
+    for (const row of rows) await ctx.db.delete(row._id)
+    for (const [y, line] of OPENING.entries()) {
+      for (const [x, char] of [...line].entries()) {
+        if (char === '.') continue
+        const cell = y * COLUMNS + x
+        await ctx.db.insert('strokes', { kind: 'paint', cell, ink: char === '#' ? 'signal' : 'graphite' })
+      }
+    }
   },
 })

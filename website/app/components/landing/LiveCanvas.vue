@@ -29,6 +29,8 @@ import { api } from '#convex/api'
 // matching key in the copy. An emit rather than an expose: the value only
 // exists after the awaited query below, and expose must come before it.
 const emit = defineEmits<{ online: [value: boolean] }>()
+// The second window has no key to open a third; its rail skips the hint.
+const props = defineProps<{ second?: boolean }>()
 
 type Ink = 'signal' | 'graphite' | 'none'
 interface Commit { at: number, clear: boolean }
@@ -46,10 +48,19 @@ const blank = (): Ink[] => Array.from({ length: CELLS }, () => 'none')
 
 const client = useConvex()
 
-// The cells this window is committing, and the rail's last line — declared
-// up here because the frame watch below reads both.
+// The cells this window is committing, and the rail's passing note (a
+// commit that landed, a stroke from elsewhere) — declared up here because
+// the frame watch below writes both. A note stays a few seconds, then the
+// rail goes back to saying who is here.
 const pending = ref(new Set<number>())
-const event = ref<string>('ssr hydrated')
+const note = ref<string | null>(null)
+let noteTimer: ReturnType<typeof setTimeout> | undefined
+function say(text: string | null) {
+  note.value = text
+  clearTimeout(noteTimer)
+  if (text) noteTimer = setTimeout(() => (note.value = null), 4000)
+}
+onUnmounted(() => clearTimeout(noteTimer))
 
 // `null` reads now; a timestamp reads the table as it stood then. The
 // getter makes the argument reactive: moving the scrubber re-subscribes.
@@ -70,14 +81,6 @@ watch(online, value => emit('online', value), { immediate: true })
 // so opening the window ticks the count to 2 in both.
 const { sid } = useVisitor()
 const { count: here } = usePresence(sid)
-// The rail's presence cell: nothing until the count arrives, dim while it
-// is just this window, toned once someone else is on the canvas.
-const hereCell = computed(() => {
-  if (!online.value || here.value === undefined) return null
-  return here.value <= 1
-    ? { text: 'just you', tone: 'text-dimmed' }
-    : { text: `${here.value} here`, tone: 'text-toned' }
-})
 
 // ---- local fallback --------------------------------------------------------
 // The same fold the server does, over rows this browser wrote, for when
@@ -125,7 +128,7 @@ watch(frame, (value) => {
   if (changed.length === 0) return
   changed.forEach(ring)
   const swept = value.every(ink => ink === 'none') && changed.length > 1
-  event.value = swept ? 'someone swept' : 'someone painted'
+  say(swept ? 'someone else swept the canvas' : `someone else painted ${changed.length > 1 ? `${changed.length} cells` : 'a cell'}`)
 })
 const cells = computed<Ink[]>(() => (online.value ? lastFrame.value : fold(localRows.value, at.value)))
 
@@ -135,7 +138,6 @@ const cells = computed<Ink[]>(() => (online.value ? lastFrame.value : fold(local
 // a fresh one. Pinning `at` to it reads the frame as it was found.
 const since = log.value?.at(-1)?.at ?? 0
 const commits = computed<Commit[]>(() => (online.value && log.value ? log.value.filter(commit => commit.at > since) : localRows.value))
-const painted = computed(() => cells.value.filter(ink => ink !== 'none').length)
 const live = computed(() => at.value === null)
 // The rail's lamp and its word: live (green — a machine fact: the socket
 // is up and the query reads now), snapshot (signal orange — the query is
@@ -146,10 +148,30 @@ const state = computed(() => {
     ? { lamp: 'lamp-live', tone: 'text-toned', label: 'live' }
     : { lamp: 'lamp-rec', tone: 'text-toned', label: 'snapshot' }
 })
-// The query's arguments, verbatim: the tie between the scrubber and the
-// code above.
-const args = computed(() => `args { at: ${at.value === null ? 'null' : at.value} }`)
 const gridLabel = computed(() => `a ${COLUMNS} by ${ROWS} canvas${live.value ? '' : ', reading a snapshot'}`)
+
+// THE RAIL'S LINE — one sentence, whichever of these is true first:
+//   a rejected write        the reason, until the next stroke
+//   a passing note          what just happened, in the same words for
+//                           both hands: "you painted a cell", "someone
+//                           else painted a cell", swept likewise
+//   offline                 where the strokes are going instead
+//   a snapshot              the moment the query is reading
+//   live                    who is on the canvas — "only you here" with
+//                           the nudge to open the second window (on the
+//                           page that has the key), or "you and N others"
+// (2026-09-13: "what is 6 here? who here?" — a bare count said nothing;
+// the line now says who, what and where in words.)
+const line = computed(() => {
+  if (rejection.value) return { text: rejection.value, tone: 'text-error' }
+  if (note.value) return { text: note.value, tone: 'text-lit' }
+  if (!online.value) return { text: 'strokes stay in this browser until it is back', tone: 'text-dimmed' }
+  if (!live.value) return { text: atLabel.value, tone: 'text-toned' }
+  if (here.value === undefined) return null
+  const others = here.value - 1
+  if (others <= 0) return { text: props.second ? 'only this window on the canvas' : 'only you here · open a second window', tone: 'text-dimmed' }
+  return { text: `you and ${others} other${others === 1 ? '' : 's'} on this canvas`, tone: 'text-toned' }
+})
 
 // ---- the scrubber ----------------------------------------------------------
 // The strip's position is derived from `at`, never stored twice: the end is
@@ -166,26 +188,37 @@ const index = computed({
     const next = value >= list.length ? null : value <= 0 ? since : list[value - 1]!.at
     if (next === at.value) return
     at.value = next
-    event.value = next === null ? 'back to live' : 'args changed'
+    say(null)
   },
 })
+// Each tick's x on the strip, as a percentage of the knob's travel. Not a
+// scaled viewBox: one stretched `0 0 N 1` over the track put a 1-unit box
+// under a ~460× horizontal scale for the first commit, and Chrome drew the
+// two hairlines as blobs (2026-09-13). Unscaled, a line is a line.
+function tickX(n: number) {
+  return `${(n / Math.max(commits.value.length, 1)) * 100}%`
+}
 function onScrub(e: Event) {
   index.value = Number((e.target as HTMLInputElement).value)
 }
 function backToLive() {
   at.value = null
-  event.value = 'back to live'
+  say(null)
 }
+// Where the scrubber is, in the visitor's own terms: the left end is their
+// starting point (the canvas as they found it), every other tick so many changes back
+// from now — the ticks are changes, so that is the unit a person scrubs
+// in (2026-09-13: "on load" and a wall-clock with centiseconds were not
+// human).
 const atLabel = computed(() => {
   if (at.value === null) return 'now'
-  if (at.value === since) return 'on load'
-  const d = new Date(at.value)
-  return `${d.toLocaleTimeString([], { hour12: false })}.${String(d.getMilliseconds()).padStart(3, '0').slice(0, 2)}`
+  if (at.value === since) return 'your starting point'
+  const back = commits.value.length - index.value
+  return `as it was ${back === 1 ? 'a change' : `${back} changes`} ago`
 })
 
 // ---- painting --------------------------------------------------------------
 const ink = ref<Ink>('signal')
-const rtt = ref<number | null>(null)
 const rejection = ref<string | null>(null)
 
 const paintRemote = client
@@ -211,11 +244,9 @@ async function commit(mark: number[], run: () => Promise<unknown>, local: () => 
     return
   }
   for (const cell of mark) pending.value.add(cell)
-  const t0 = performance.now()
   try {
     await run()
-    rtt.value = Math.round(performance.now() - t0)
-    event.value = `commit ${rtt.value} ms`
+    say(mark.length > 1 ? 'you swept the canvas' : 'you painted a cell')
   }
   catch (e) {
     rejection.value = demoRejectionReason(e)
@@ -284,8 +315,9 @@ function onCellClick(cell: number, e: MouseEvent) {
 </script>
 
 <template>
-  <!-- The canvas well: the ink keys, the count and the sweep on its head,
-       the grid in a `part-tray`, the strip under it. -->
+  <!-- The canvas well: the ink keys and the sweep on its head (the painted
+       count went 2026-09-13 — nobody needs it), the grid in a `part-tray`,
+       the strip under it. -->
   <div class="part-well px-4.5 py-3.5 @max-[30rem]:px-3.5">
     <div class="mb-3 flex items-center gap-3 stamp">
       <span class="concave-text text-toned">canvas</span>
@@ -308,13 +340,10 @@ function onCellClick(cell: number, e: MouseEvent) {
           <i aria-hidden="true" />
         </button>
       </div>
-      <!-- The scribe gives way first: on a phone it shrinks to nothing so
-           the count and the sweep stay on the head's one line. -->
       <span
         class="scribe min-w-0 flex-1"
         aria-hidden="true"
       />
-      <span class="concave-text whitespace-nowrap text-dimmed tabular-nums">{{ painted }} of {{ CELLS }} painted</span>
       <!-- The sweep: one more mutation, a commit that wipes the frame —
            the strip keeps it, so the scrubber can go back past it. -->
       <button
@@ -366,14 +395,9 @@ function onCellClick(cell: number, e: MouseEvent) {
 
     <!-- The strip: one tick per commit, the knob on the one the query
          reads. The end is live; anywhere else is a snapshot. -->
+    <!-- No header row: it read "commit N of M" and the pinned time, and
+         the rail already says what the query is reading (2026-09-13). -->
     <div class="strip mt-3 grid gap-1">
-      <div class="flex items-center justify-between gap-2 stamp">
-        <span class="concave-text text-dimmed tabular-nums">commit {{ index }} of {{ commits.length }}</span>
-        <span
-          class="concave-text tabular-nums"
-          :class="live ? 'text-lit' : 'text-toned'"
-        >{{ atLabel }}</span>
-      </div>
       <label class="fader block">
         <span class="sr-only">Scrub through the table's commits</span>
         <input
@@ -392,23 +416,20 @@ function onCellClick(cell: number, e: MouseEvent) {
            out. -->
       <svg
         class="ticks"
-        :viewBox="`0 0 ${Math.max(commits.length, 1)} 1`"
-        preserveAspectRatio="none"
         aria-hidden="true"
       >
         <line
           v-for="n in commits.length + 1"
           :key="n"
-          :x1="n - 1"
-          :x2="n - 1"
+          :x1="tickX(n - 1)"
+          :x2="tickX(n - 1)"
           y1="0"
-          y2="1"
-          vector-effect="non-scaling-stroke"
+          y2="100%"
           :class="n - 1 === index ? 'is-at' : undefined"
         />
       </svg>
       <div class="flex items-center justify-between gap-2 stamp">
-        <span class="concave-text text-dimmed">on load</span>
+        <span class="concave-text text-dimmed">your starting point</span>
         <UButton
           size="xs"
           color="neutral"
@@ -425,15 +446,13 @@ function onCellClick(cell: number, e: MouseEvent) {
 
   <!-- THE STATUS RAIL — the panel's one readout, and the only place it
        reports state (the cells and their scribes are chrome.css's .rail).
-
-         state    the lamp. live (green — a machine fact: the socket is
-                  up and the query reads now), snapshot (signal orange —
-                  the query is pinned to a commit), offline (no light).
-         here     how many windows are on the canvas — presence, live.
-         args     the arguments the query is running with, verbatim: the
-                  tie between the scrubber and the code above.
-         event    the last thing that happened: hydration, a commit's
-                  latency, a change of arguments, or a rejected write. -->
+       Two cells: the lamp with its word (live — green, a machine fact: the
+       socket is up and the query reads now; snapshot — signal orange, the
+       query is pinned to a commit; offline — no light), and one sentence
+       (`line` above) that says who is here, what just happened, or what
+       the query is reading. It used to be a row of readouts — the query's
+       arguments verbatim, `ssr hydrated`, a bare count — and none of them
+       told a visitor anything (2026-09-13). -->
   <figcaption class="part-well mt-3.5 flex min-h-[2.15rem] items-stretch stamp">
     <span class="rail-cell">
       <i
@@ -446,25 +465,15 @@ function onCellClick(cell: number, e: MouseEvent) {
         :class="state.tone"
       >{{ state.label }}</span>
     </span>
-    <!-- The count of windows on the canvas: the presence table, live.
-         Two here means the second window (or a stranger) is on it. -->
-    <span
-      v-if="hereCell"
-      class="rail-cell concave-text whitespace-nowrap tabular-nums"
-      :class="hereCell.tone"
-    >{{ hereCell.text }}</span>
-    <span class="rail-cell concave-text min-w-0 text-dimmed"><span class="truncate">{{ args }}</span></span>
-    <span
-      v-if="rejection"
-      class="rail-cell concave-text min-w-0 flex-1 text-error"
-    ><span class="truncate">{{ rejection }}</span></span>
     <!-- Not `rail-optional`: the plate's content box sits under that
-         query's 30rem, and this cell is where a commit's latency and a
-         change of arguments are reported. It truncates instead. -->
+         query's 30rem, and this is the cell that says anything. It
+         truncates instead. -->
     <span
-      v-else
-      class="rail-cell concave-text min-w-0 flex-1 text-lit"
-    ><span class="truncate">{{ event }}</span></span>
+      v-if="line"
+      class="rail-cell concave-text min-w-0 flex-1"
+      :class="line.tone"
+      aria-live="polite"
+    ><span class="truncate">{{ line.text }}</span></span>
   </figcaption>
 </template>
 
@@ -476,12 +485,11 @@ function onCellClick(cell: number, e: MouseEvent) {
   block-size: 1.35rem;
   padding: 0;
   border-radius: 999px;
-  border: 1px solid transparent;
   cursor: pointer;
   display: grid;
   place-items: center;
-  background: var(--gradient-surface) padding-box, var(--gradient-bevel) border-box;
-  box-shadow: var(--elevation-1);
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel), var(--elevation-1);
 }
 .ink i {
   display: block;
@@ -536,7 +544,7 @@ function onCellClick(cell: number, e: MouseEvent) {
   box-shadow: var(--glow-primary-soft), inset 0 1px 0 rgb(255 255 255 / 0.3);
 }
 .px[data-ink="graphite"] {
-  background: light-dark(oklch(32% 0 0), oklch(88% 0 0));
+  background: light-dark(oklch(32% 0 0), oklch(97% 0 0));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
 /* Over a cell already wearing the chosen ink the click wipes it, and the
@@ -584,8 +592,8 @@ function onCellClick(cell: number, e: MouseEvent) {
 
 /* THE TICKS — one hairline per commit under the groove, on the knob's
    own travel (inset by half the knob, so tick n sits under the knob at
-   n). Drawn as an SVG stretched to the track: the lines keep their one
-   pixel whatever the count, and snap to it. One weight for all of them;
+   n). Drawn in an SVG the size of the track, each at its own percentage,
+   so a line is one pixel whatever the count. One weight for all of them;
    the read one is the accent. */
 .ticks {
   display: block;

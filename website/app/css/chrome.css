@@ -203,13 +203,31 @@ body {
      (pure grey; titanium has no hue, same call as the palette) stays shade
      wherever the layers stack, and the near field is blurred wider and
      offset less so the band under the bar fades out instead of ending.
-     Dark mode keeps black — on a dark ground a grey cast is a LIFT. */
+     Dark mode keeps black — on a dark ground a grey cast is a LIFT — and
+     takes its own SHAPE below: light-dark() swaps a layer's colour, not
+     the list's geometry, and the two rooms want different geometry. */
   --header-cast: oklch(76% 0 0);
   --elevation-header:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.07)),
     0 1px 0 light-dark(--alpha(var(--header-cast) / 16%), rgb(0 0 0 / 0.5)),
     0 4px 10px -4px light-dark(--alpha(var(--header-cast) / 12%), rgb(0 0 0 / 0.4)),
     0 16px 32px -16px light-dark(--alpha(var(--header-cast) / 18%), rgb(0 0 0 / 0.5));
+}
+/* THE DARK RAIL SITS CLOSER (2026-09-14: "too dark and too blurry, the
+   header feels like it's floating too far above"). The light list's far
+   layer — 32px of blur reaching 16px down the page — is what makes a
+   sheer bar read as hovering over the plate, and in light it is a 18%
+   grey that fades before anyone notices. The same layer in 50% black on
+   a 20% ground is a band of soot under the bar. So the dark cast is the
+   near field only: the hard 1px contact line that is the bar's bottom
+   edge, and one short soft layer that ends within a few pixels. The
+   bar still stands off the ground; it no longer floats above it. */
+:root.dark {
+  --elevation-header:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 1px 0 rgb(0 0 0 / 0.5),
+    0 2px 3px -1px rgb(0 0 0 / 0.3),
+    0 5px 8px -5px rgb(0 0 0 / 0.28);
 }
 
 /* The bar is brighter than the page, and the search trigger's dish is
