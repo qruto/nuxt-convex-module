@@ -54,10 +54,10 @@ describe('upstream baselines', () => {
   // The components overview still carries a version per row, as the row's last
   // cell. Keyed by a subpath unique to that row.
   const overviewRows: Array<[token: string, version: string]> = [
-    ['`/clerk/vue`', upstreamBaselines.convex.version],
-    ['`/auth0/vue`', upstreamBaselines.convex.version],
-    ['`/better-auth/vue`', upstreamBaselines['better-auth'].version],
-    ['`/polar/vue`', upstreamBaselines.polar.version],
+    ['`/clerk/client`', upstreamBaselines.convex.version],
+    ['`/auth0/client`', upstreamBaselines.convex.version],
+    ['`/better-auth/client`', upstreamBaselines['better-auth'].version],
+    ['`/polar/client`', upstreamBaselines.polar.version],
   ]
 
   it.each(overviewRows)('states the components overview’s %s row as the pinned version', (token, version) => {

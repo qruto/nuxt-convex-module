@@ -24,7 +24,7 @@ const STABILITY_PAGE = read('website/content/1.getting-started/5.stability.md')
 
 const contentPages = walk('website/content', ['.md'])
 const handWritten = contentPages.filter(p => !p.includes('/9.reference/'))
-const manifest = JSON.parse(read('package.json')) as { exports: Record<string, unknown>, engines: { node: string } }
+const manifest = JSON.parse(read('package.json')) as { exports: Record<string, unknown>, engines: { node: string }, peerDependencies: Record<string, string> }
 
 describe('module options', () => {
   const options = interfaceKeys(at('src/module.ts'), 'ModuleOptions')
@@ -113,10 +113,16 @@ describe('subpath exports', () => {
     expect(known.has(specifier), `${specifier} is imported in ${where} but is not a key of package.json exports`).toBe(true)
   })
 
-  it.each(keys)('%s is in the README subpath table', (key) => {
+  const tables = [
+    { file: 'README.md', text: README },
+    { file: 'website/content/4.api-reference/index.md', text: read('website/content/4.api-reference/index.md') },
+  ]
+  it.each(keys)('%s is in the README and API-reference subpath tables', (key) => {
     const specifier = key === '.' ? 'nuxt-convex-module' : `nuxt-convex-module${key.slice(1)}`
     const alias = key.endsWith('/vue') || key === './vue' ? `(alias \`${key.slice(1)}\`)` : undefined
-    expect(README.includes(`| \`${specifier}\``) || (alias !== undefined && README.includes(alias)), `${key} is a package.json export with no row (or alias mention) in README.md's subpath table`).toBe(true)
+    for (const { file, text } of tables) {
+      expect(text.includes(`| \`${specifier}\``) || (alias !== undefined && text.includes(alias)), `${key} is a package.json export with no row (or alias mention) in ${file}'s subpath table`).toBe(true)
+    }
   })
 })
 
@@ -193,6 +199,14 @@ describe('stability', () => {
 
   it.each([...listed])('`%s` exists in src/', (name) => {
     expect(new RegExp(`\\b${name}\\b`).test(source), `STABILITY.md lists \`${name}\` as experimental but nothing in src/ declares it`).toBe(true)
+  })
+
+  // The supported-versions table is the one place a reader sees the ranges;
+  // package.json is where they change.
+  it.each(Object.entries(manifest.peerDependencies))('`%s` range %s is in both supported-versions tables', (pkg, range) => {
+    const row = `| \`${pkg}\` | \`${range}\` |`
+    expect(STABILITY, `STABILITY.md's supported-versions table has no row for ${pkg}@${range}`).toContain(row)
+    expect(STABILITY_PAGE, `the stability page's supported-versions table has no row for ${pkg}@${range}`).toContain(row)
   })
 })
 
