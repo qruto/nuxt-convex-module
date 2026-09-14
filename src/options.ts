@@ -3,7 +3,7 @@
 // package's `.` entry — nuxt-module-build re-exports everything that file
 // exports, and none of this is API. Tests import this file directly.
 import { isAbsolute, join } from 'node:path'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
 /**
@@ -165,13 +165,15 @@ function isHttpUrl(value: string): boolean {
 /**
  * Whether the custom `betterAuth.authClient` module exists on disk — probing
  * the common module extensions since the option (an import specifier) may
- * omit one.
+ * omit one. A candidate has to be a file: a bare directory exists too, but
+ * only its `index.*` (probed separately) is importable.
  */
 function authClientModuleExists(authClient: string, rootDir: string): boolean {
   const base = isAbsolute(authClient) ? authClient : join(rootDir, authClient)
-  return ['', '.ts', '.js', '.mts', '.mjs', '/index.ts', '/index.js'].some(
-    suffix => existsSync(`${base}${suffix}`),
-  )
+  return ['', '.ts', '.js', '.mts', '.mjs', '/index.ts', '/index.js'].some((suffix) => {
+    const candidate = `${base}${suffix}`
+    return existsSync(candidate) && statSync(candidate).isFile()
+  })
 }
 
 /**

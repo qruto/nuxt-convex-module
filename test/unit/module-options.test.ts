@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
@@ -91,6 +91,14 @@ describe('validateModuleOptions', () => {
     writeFileSync(join(rootDir, 'auth-client.ts'), 'export const authClient = {}\n')
     expect(validateModuleOptions({ ...base, authClient: './auth-client' }).errors).toEqual([])
     expect(validateModuleOptions({ ...base, authClient: './auth-client.ts' }).errors).toEqual([])
+  })
+
+  it('rejects a bare directory as authClient, but accepts one with an index file', () => {
+    mkdirSync(join(rootDir, 'auth-dir'))
+    expect(validateModuleOptions({ ...base, authClient: './auth-dir' }).errors).toHaveLength(1)
+
+    writeFileSync(join(rootDir, 'auth-dir', 'index.ts'), 'export const authClient = {}\n')
+    expect(validateModuleOptions({ ...base, authClient: './auth-dir' }).errors).toEqual([])
   })
 })
 
