@@ -1,7 +1,7 @@
 // PARITY: A-12
 import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp, useRequestEvent, useRuntimeConfig } from '#app'
 import { watch } from 'vue'
-import { useAuth } from '../vue/use-auth'
+import { useBetterAuth } from '../vue/use-better-auth'
 import { convexAuth } from './server'
 
 /**
@@ -69,7 +69,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return serverGuard(to, loginPath)
   }
 
-  const { session } = useAuth()
+  const { session } = useBetterAuth()
   if (session.value.isPending) {
     await waitForSession(() => session.value.isPending)
   }

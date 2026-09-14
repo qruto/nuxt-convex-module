@@ -1,7 +1,7 @@
 import { defineNuxtPlugin, useRuntimeConfig, useState } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { ConvexAuthStateKey, createScopedConvexAuthState } from '../../vue/auth/index'
-import { useAuth } from './use-auth'
+import { useBetterAuth } from './use-better-auth'
 import { consumeCrossDomainOneTimeToken } from './cross-domain'
 
 type ConvexNuxtInjection = {
@@ -33,7 +33,7 @@ export default defineNuxtPlugin<ConvexNuxtInjection>({
 
     const { state, scope } = createScopedConvexAuthState({
       client,
-      useAuth: () => useAuth(initialToken.value),
+      useAuth: () => useBetterAuth(initialToken.value),
     })
     nuxtApp.vueApp.provide(ConvexAuthStateKey, state)
 

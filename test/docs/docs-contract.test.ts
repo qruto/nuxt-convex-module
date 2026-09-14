@@ -7,7 +7,7 @@ import { at, backticked, interfaceKeys, messagesIn, read, tableFirstCells, walk 
 // something, it has it; if the module has something, the docs say so. This
 // file makes drift fail CI, in both directions, for every surface a user can
 // write against: module options, runtime config, auto-imports and components,
-// subpath exports, the messages the module prints, the shape `useAuth()`
+// subpath exports, the messages the module prints, the shape `useBetterAuth()`
 // returns, and the experimental tier. Each failure message says what to edit.
 //
 // It runs in the `static` CI job on every pull request. The `test` job is
@@ -161,19 +161,19 @@ describe('troubleshooting', () => {
   })
 })
 
-describe('useAuth() and useConvexAuth() destructuring', () => {
-  const authKeys = new Set(interfaceKeys(at('src/runtime/better-auth/vue/use-auth.ts'), 'UseAuthService'))
+describe('useBetterAuth() and useConvexAuth() destructuring', () => {
+  const authKeys = new Set(interfaceKeys(at('src/runtime/better-auth/vue/use-better-auth.ts'), 'UseBetterAuthReturn'))
   const convexAuthKeys = new Set(['isLoading', 'isAuthenticated', 'isRefreshing'])
-  // The Clerk and Auth0 adapters destructure the *provider's* useAuth, not ours.
+  // The Clerk and Auth0 adapters destructure the *provider's* `useAuth`, not `useBetterAuth`.
   const files = ['README.md', ...contentPages, ...walk('src', ['.ts'], path => /\/(?:clerk|auth0)\//.test(path))]
-  const uses = files.flatMap(file => [...read(file).matchAll(/const \{([^}]+)\} = (useAuth|useConvexAuth)\(/g)].map(m => ({ file, keys: m[1]!.split(',').map(k => k.trim().split(':')[0]!.trim()).filter(Boolean), fn: m[2]! })))
+  const uses = files.flatMap(file => [...read(file).matchAll(/const \{([^}]+)\} = (useBetterAuth|useConvexAuth)\(/g)].map(m => ({ file, keys: m[1]!.split(',').map(k => k.trim().split(':')[0]!.trim()).filter(Boolean), fn: m[2]! })))
 
   it('finds the idiom', () => {
     expect(uses.length).toBeGreaterThan(3)
   })
 
   it.each(uses.map(u => [`${u.file.replace(`${process.cwd()}/`, '')} ${u.fn}`, u] as const))('%s destructures real fields', (_where, use) => {
-    const real = use.fn === 'useAuth' ? authKeys : convexAuthKeys
+    const real = use.fn === 'useBetterAuth' ? authKeys : convexAuthKeys
     for (const key of use.keys) {
       expect(real.has(key), `${_where} destructures \`${key}\`, which ${use.fn}() does not return — the fields are ${[...real].join(', ')}`).toBe(true)
     }

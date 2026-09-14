@@ -127,7 +127,7 @@ source.
 | Upstream | Ported |
 |---|---|
 | better-auth `react/index.tsx` — export surface | `better-auth/vue/index.ts` |
-| better-auth `react/index.tsx` — `AuthBoundary`, provider's `useUseAuthFromBetterAuth` | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,use-auth}.ts` |
+| better-auth `react/index.tsx` — `AuthBoundary`, provider's `useUseAuthFromBetterAuth` | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,use-better-auth}.ts` |
 | better-auth `react/index.tsx` — provider's `?ott=` `useEffect` | `better-auth/vue/cross-domain.ts` |
 | better-auth `nextjs/index.ts` — `convexBetterAuthNextJs` | `better-auth/nuxt/server.ts` — `convexAuth` |
 | better-auth `nextjs/client.tsx` — `usePreloadedAuthQuery` | `better-auth/vue/hydration.ts` |
@@ -252,7 +252,7 @@ because that is what decides how to treat one on a sync.
 | <a id="n-07"></a>**N-07** | `NextjsOptions`, `convexBetterAuthNextJs` | `NuxtOptions`, `convexBetterAuthNuxt` | *Framework-qualified names* + *Ambient per-request context*. `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }` pair |
 | <a id="n-08"></a>**N-08** | Polar `polarApi`, `productIds` props | Same names; `polarApi` optional | [§2.1](#21-the-contract) — a required prop may become optional with an auto-provided default (`api.billing`). Names stay verbatim |
 | <a id="n-09"></a>**N-09** | better-auth `convexSiteUrl`, required | Optional; falls back to runtime config / `NUXT_PUBLIC_CONVEX_SITE_URL` | [§2.1](#21-the-contract), same rule as N-08. An upstream call site passing it behaves identically, and a missing value still throws. Its sibling `convexUrl` is accepted and ignored — upstream requires but never reads it either. Pinned by `test/unit/auth/nuxt/server.test.ts` |
-| <a id="n-10"></a>**N-10** | `useAuthFromBetterAuth` | `useAuth` | The provider prop it fed does not exist here; the service is consumed directly |
+| <a id="n-10"></a>**N-10** | `useAuthFromBetterAuth` | `useBetterAuth` | The provider prop it fed does not exist here; the service is consumed directly |
 | <a id="n-11"></a>**N-11** | `use_paginated_query.ts` + `use_paginated_query2.ts` | one `use-paginated-query.ts` | Both files' exports form one composable surface; splitting them in Vue would duplicate the state machine |
 | <a id="n-12"></a>**N-12** | Hooks declared in `react/client.ts` | `vue/composables/{use-query,use-mutation,use-action,use-connection-state}.ts` | *Hook `useX()`*. `vue/index.ts` re-exports them in upstream's order; `vue/client.ts` carries a header naming the split |
 | <a id="n-13"></a>**N-13** | New `fetchAccessToken` identity between renders re-triggers auth | Pass the fetcher as a `Ref`/`ComputedRef`, or bump the additive `authVersion` key | *`fetchAccessToken` identity change between renders* |
@@ -294,8 +294,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · no re-render between a session settling and the cache-clearing effect
 - **Upstream** · `@convex-dev/better-auth@0.12.5` `react/index.tsx` — `Boolean(session?.session) || cachedToken !== null`
-- **Port** · [`better-auth/vue/use-auth.ts`](./src/runtime/better-auth/vue/use-auth.ts)
-- **Pinned by** · `test/unit/auth/vue/use-auth.test.ts` — "treats a settled missing session as
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "treats a settled missing session as
   unauthenticated even with a stale cached token"
 - **On sync** · keep the predicate; port changes to the *inputs*, not the shape
 - **Why** · a settled signed-out session must read unauthenticated immediately, so
@@ -486,13 +486,13 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   counterpart to import: `PaginatedWatch` (what `watchPaginatedQuery` returns), `ConvexLogger`
   (the type behind `ConvexVueClientOptions.logger`) and `VueMutationOptions` (N-02).
 
-##### A-06 — `useAuth` service extensions
+##### A-06 — `useBetterAuth` service extensions
 
-- **Port** · [`better-auth/vue/use-auth.ts`](./src/runtime/better-auth/vue/use-auth.ts)
-- **Pinned by** · `test/unit/auth/vue/use-auth.test.ts`
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts`
 - **Why** · beyond upstream's `{ isLoading, isAuthenticated, fetchAccessToken }`, the service
   exposes the raw `client`, the `session` ref, a `user` computed and an `authVersion` computed,
-  plus the `AuthUser` / `UseAuthService` / `AuthSession` types. Auth *flows* (sign-in/out, OTP,
+  plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
   passkeys, …) are deliberately **not** wrapped — like upstream, they are called on the app's
   own `authClient` (exposed as `client`), typed by whatever plugins that client installs.
 

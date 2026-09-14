@@ -60,7 +60,7 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'usePaginatedQuery_experimental', from: composable('use-paginated-query') },
   ],
   betterAuth: [
-    { name: 'useAuth', from: 'runtime/better-auth/vue/use-auth' },
+    { name: 'useBetterAuth', from: 'runtime/better-auth/vue/use-better-auth' },
     { name: 'usePreloadedAuthQuery', from: 'runtime/better-auth/vue/hydration' },
     { name: 'resolveAuthRedirect', from: 'runtime/better-auth/vue/redirect' },
   ],

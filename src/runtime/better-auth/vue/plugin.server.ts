@@ -47,7 +47,7 @@ export async function prefetchAuthToken(
  * server layout and passes it as `initialToken` to `ConvexBetterAuthProvider`.
  *
  * The token is stashed into a Nuxt `useState('convex:initialToken')` so the
- * client plugin can hand it to `useAuth(initialToken)` before the first
+ * client plugin can hand it to `useBetterAuth(initialToken)` before the first
  * Convex `setAuth` call — avoiding an extra Better Auth round-trip on first
  * paint.
  */

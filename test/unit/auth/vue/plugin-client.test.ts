@@ -28,9 +28,9 @@ vi.mock('../../../../src/runtime/better-auth/vue/cross-domain', () => ({
   consumeCrossDomainOneTimeToken: (...args: unknown[]) => consumeCrossDomainOneTimeToken(...args),
 }))
 
-const useAuth = vi.fn()
-vi.mock('../../../../src/runtime/better-auth/vue/use-auth', () => ({
-  useAuth: (...args: unknown[]) => useAuth(...args),
+const useBetterAuth = vi.fn()
+vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
+  useBetterAuth: (...args: unknown[]) => useBetterAuth(...args),
 }))
 
 const createScopedConvexAuthState = vi.fn(() => ({

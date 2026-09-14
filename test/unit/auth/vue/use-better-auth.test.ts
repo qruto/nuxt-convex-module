@@ -11,7 +11,7 @@ const tokenMock = vi.fn<
   (opts: { fetchOptions: { throw: boolean } }) => Promise<{ data?: { token?: string | null } | null }>
 >()
 
-// `useAuth` only consumes the session and the Convex token plugin — auth
+// `useBetterAuth` only consumes the session and the Convex token plugin — auth
 // flows (sign-in/out, plugins) live on the exposed `client`, untouched here.
 const mockAuthClient = {
   useSession: () => sessionRef,
@@ -25,31 +25,31 @@ vi.mock('#convex/auth-client', () => ({
 }))
 
 async function loadUseAuth() {
-  const mod = await import('../../../../src/runtime/better-auth/vue/use-auth')
-  mod.__resetUseAuthForTests()
+  const mod = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+  mod.__resetUseBetterAuthForTests()
   return mod
 }
 
-describe('useAuth (Better Auth + Convex)', () => {
+describe('useBetterAuth (Better Auth + Convex)', () => {
   beforeEach(() => {
     sessionRef.value = { data: null, isPending: true }
     tokenMock.mockReset()
   })
 
   it('exposes the Better Auth client and session from one service', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
 
-    const auth = useAuth()
+    const auth = useBetterAuth()
 
     expect(auth.client).toBe(mockAuthClient)
     expect(auth.session).toBe(sessionRef)
   })
 
   it('caches tokens across calls and dedups concurrent fetches', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     tokenMock.mockResolvedValue({ data: { token: 'jwt-1' } })
 
-    const { fetchAccessToken, isAuthenticated } = useAuth()
+    const { fetchAccessToken, isAuthenticated } = useBetterAuth()
 
     const [a, b] = await Promise.all([
       fetchAccessToken({ forceRefreshToken: false }),
@@ -65,11 +65,11 @@ describe('useAuth (Better Auth + Convex)', () => {
   })
 
   it('refetches when forceRefreshToken is true', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-1' } })
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-2' } })
 
-    const { fetchAccessToken } = useAuth()
+    const { fetchAccessToken } = useBetterAuth()
 
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-1')
     expect(await fetchAccessToken({ forceRefreshToken: true })).toBe('jwt-2')
@@ -77,19 +77,19 @@ describe('useAuth (Better Auth + Convex)', () => {
   })
 
   it('returns null and resets cache when the token fetch fails', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     tokenMock.mockRejectedValue(new Error('boom'))
 
-    const { fetchAccessToken, isAuthenticated } = useAuth()
+    const { fetchAccessToken, isAuthenticated } = useBetterAuth()
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBeNull()
     expect(isAuthenticated.value).toBe(false)
   })
 
   it('reflects session state for isAuthenticated / isLoading', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     sessionRef.value = { data: { user: { id: '1' } }, isPending: false }
 
-    const { isAuthenticated, isLoading } = useAuth()
+    const { isAuthenticated, isLoading } = useBetterAuth()
     expect(isAuthenticated.value).toBe(true)
     expect(isLoading.value).toBe(false)
 
@@ -99,27 +99,27 @@ describe('useAuth (Better Auth + Convex)', () => {
   })
 
   it('accepts an initialToken and uses it exactly once across the app lifetime', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
 
-    const first = useAuth('preloaded-token')
+    const first = useBetterAuth('preloaded-token')
     expect(first.isAuthenticated.value).toBe(true)
     expect(await first.fetchAccessToken({ forceRefreshToken: false })).toBe('preloaded-token')
     expect(tokenMock).not.toHaveBeenCalled()
 
     tokenMock.mockResolvedValue({ data: { token: 'fresh' } })
-    const second = useAuth('ignored')
+    const second = useBetterAuth('ignored')
     expect(await second.fetchAccessToken({ forceRefreshToken: true })).toBe('fresh')
   })
 
   it('treats a settled missing session as unauthenticated even with a stale cached token', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     sessionRef.value = {
       data: { session: { id: 'session-1' }, user: { id: 'user-1' } },
       isPending: false,
     }
     tokenMock.mockResolvedValue({ data: { token: 'jwt-1' } })
 
-    const { fetchAccessToken, isAuthenticated } = useAuth()
+    const { fetchAccessToken, isAuthenticated } = useBetterAuth()
 
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-1')
     expect(isAuthenticated.value).toBe(true)
@@ -133,11 +133,11 @@ describe('useAuth (Better Auth + Convex)', () => {
   })
 
   it('exposes the session user and returns null when signed out', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     const sessionUser = { id: 'user-1', email: 'user@example.com', name: 'User One' }
     sessionRef.value = { data: { user: sessionUser }, isPending: false }
 
-    const { user } = useAuth()
+    const { user } = useBetterAuth()
     expect(user.value).toEqual(sessionUser)
 
     sessionRef.value = { data: null, isPending: false }
@@ -145,7 +145,7 @@ describe('useAuth (Better Auth + Convex)', () => {
   })
 
   it('invalidates the cached token when the Better Auth session changes', async () => {
-    const { useAuth } = await loadUseAuth()
+    const { useBetterAuth } = await loadUseAuth()
     sessionRef.value = {
       data: { session: { id: 'session-1' }, user: { id: 'user-1' } },
       isPending: false,
@@ -153,7 +153,7 @@ describe('useAuth (Better Auth + Convex)', () => {
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-1' } })
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-2' } })
 
-    const { fetchAccessToken } = useAuth()
+    const { fetchAccessToken } = useBetterAuth()
 
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-1')
 

@@ -26,8 +26,8 @@ vi.mock('#app', () => ({
   useRuntimeConfig: mockUseRuntimeConfig,
 }))
 
-vi.mock('../../../../src/runtime/better-auth/vue/use-auth', () => ({
-  useAuth: mockUseAuth,
+vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
+  useBetterAuth: mockUseAuth,
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({

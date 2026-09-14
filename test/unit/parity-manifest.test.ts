@@ -33,7 +33,7 @@ const GLOB_COVERED = [/^src\/runtime\/devtools\//]
 
 /**
  * Every `src/runtime/…` path PARITY.md names, with sibling brace groups
- * expanded: `` `better-auth/vue/{auth-boundary,use-auth}.ts` `` contributes both
+ * expanded: `` `better-auth/vue/{auth-boundary,use-better-auth}.ts` `` contributes both
  * files. Upstream paths (`react/client.ts`) and test paths are excluded by the
  * leading-segment filter, so only the port's own tree is compared.
  */

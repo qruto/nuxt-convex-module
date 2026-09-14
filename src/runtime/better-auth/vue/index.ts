@@ -5,7 +5,7 @@
  * @module better-auth/client
  */
 
-export { useAuth, type UseAuthService, type AuthSession, type AuthUser } from './use-auth'
+export { useBetterAuth, type UseBetterAuthReturn, type BetterAuthSession, type BetterAuthUser } from './use-better-auth'
 // Resolves to your app's client (`convex.betterAuth.authClient`) or the bundled
 // default — see `#convex/auth-client` in the module. Routing the public export
 // through the same alias keeps a single client instance across the app.

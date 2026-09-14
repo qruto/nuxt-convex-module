@@ -370,7 +370,7 @@ function registerConvexAliases(nuxt: Nuxt): void {
 
 /**
  * Register the `#convex/auth-client` alias used by the Better Auth runtime
- * (`use-auth`, `auth-boundary`, `cross-domain`) to resolve the app's Better Auth
+ * (`use-better-auth`, `auth-boundary`, `cross-domain`) to resolve the app's Better Auth
  * client. This is the Vue/Nuxt analog of `convex/react` taking the `authClient`
  * as a prop: point `convex.betterAuth.authClient` at your own client module to
  * choose your plugins (e.g. add `crossDomainClient()` for cross-domain auth),
@@ -519,7 +519,7 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
  * `${authRoute}/**` same-origin proxy, the opt-in `auth` route middleware, the
- * `useAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
+ * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
  * server helper.
  */
 function registerBetterAuth(resolver: Resolver, authRoute: string): void {
