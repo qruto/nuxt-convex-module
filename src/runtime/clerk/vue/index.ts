@@ -43,16 +43,16 @@ export type UseAuth = () => {
  * Options for {@link provideConvexAuthFromClerk} / `<ConvexProviderWithClerk>`.
  */
 export interface ConvexProviderWithClerkOptions {
-  /** Convex client to authenticate. Defaults to the provided {@link useConvex} client. */
+  /** Convex client to authenticate. Defaults to the client `useConvex()` returns. */
   client?: IConvexVueClient
   /** Clerk's `useAuth` composable. Defaults to `useAuth` from `@clerk/vue`. */
   useAuth?: UseAuth
 }
 
 /**
- * A composable which provides a {@link ConvexVueClient}
+ * A composable which provides a {@link client!ConvexVueClient | ConvexVueClient}
  * authenticated with Clerk, exposing the reactive auth state to descendants
- * via {@link useConvexAuth} — the Vue translation of wrapping the app in
+ * via {@link client!useConvexAuth | useConvexAuth} — the Vue translation of wrapping the app in
  * `convex/react-clerk`'s `<ConvexProviderWithClerk>`.
  *
  * Call it in a top-level component's `setup`. The app must be wrapped by a
@@ -84,7 +84,7 @@ export function provideConvexAuthFromClerk(
 }
 
 /**
- * A wrapper Vue component which provides a {@link ConvexVueClient}
+ * A wrapper Vue component which provides a {@link client!ConvexVueClient | ConvexVueClient}
  * authenticated with Clerk — the component form of
  * {@link provideConvexAuthFromClerk}, kept as a drop-in parity port of
  * `convex/react-clerk`'s `<ConvexProviderWithClerk>`. Renders its default

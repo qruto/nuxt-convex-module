@@ -27,7 +27,7 @@ Options for [provideConvexAuthFromClerk](#provideconvexauthfromclerk) / `<Convex
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/client#iconvexvueclient) | Convex client to authenticate. Defaults to the provided useConvex client. | [src/runtime/clerk/vue/index.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L47) |
+| <a id="client"></a> `client?` | [`IConvexVueClient`](/api-reference/reference/client#iconvexvueclient) | Convex client to authenticate. Defaults to the client `useConvex()` returns. | [src/runtime/clerk/vue/index.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L47) |
 | <a id="useauth-1"></a> `useAuth?` | [`UseAuth`](#useauth) | Clerk's `useAuth` composable. Defaults to `useAuth` from `@clerk/vue`. | [src/runtime/clerk/vue/index.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L49) |
 
 ## Type Aliases
@@ -116,7 +116,7 @@ const ConvexProviderWithClerk: DefineComponent<ExtractPropTypes<{
 
 Defined in: [src/runtime/clerk/vue/index.ts:95](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L95)
 
-A wrapper Vue component which provides a ConvexVueClient
+A wrapper Vue component which provides a [ConvexVueClient](/api-reference/reference/client#convexvueclient)
 authenticated with Clerk — the component form of
 [provideConvexAuthFromClerk](#provideconvexauthfromclerk), kept as a drop-in parity port of
 `convex/react-clerk`'s `<ConvexProviderWithClerk>`. Renders its default
@@ -132,9 +132,9 @@ function provideConvexAuthFromClerk(options?): ConvexAuthState;
 
 Defined in: [src/runtime/clerk/vue/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L76)
 
-A composable which provides a ConvexVueClient
+A composable which provides a [ConvexVueClient](/api-reference/reference/client#convexvueclient)
 authenticated with Clerk, exposing the reactive auth state to descendants
-via useConvexAuth — the Vue translation of wrapping the app in
+via [useConvexAuth](/api-reference/reference/client#useconvexauth) — the Vue translation of wrapping the app in
 `convex/react-clerk`'s `<ConvexProviderWithClerk>`.
 
 Call it in a top-level component's `setup`. The app must be wrapped by a

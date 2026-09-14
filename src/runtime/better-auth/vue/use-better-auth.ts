@@ -62,6 +62,17 @@ export interface UseBetterAuthReturn {
  *
  * @param initialToken - Optional preloaded token, used once per app lifetime
  *   to avoid a round-trip on initial load (e.g. from SSR).
+ *
+ * @example
+ * ```vue
+ * <script setup lang="ts">
+ * const { user, client, isAuthenticated } = useBetterAuth()
+ *
+ * const signOut = () => client.signOut()
+ * </script>
+ * ```
+ *
+ * @public
  */
 export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn {
   if (!initialTokenUsed && initialToken) {
@@ -146,7 +157,7 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   }
 }
 
-/** Reset module-level token cache — intended for tests only. */
+/** Reset module-level token cache — intended for tests only. @internal */
 export function __resetUseBetterAuthForTests() {
   cachedToken.value = null
   cachedTokenVersion = null

@@ -116,7 +116,7 @@ export interface ConvexAuthProviderOptions {
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { useAuth } from '~/composables/useAuth'  // your auth provider
+ * import { useAuth } from '~/composables/useMyAuthProvider'  // your auth provider
  *
  * const client = useConvex()
  * const authState = provideConvexAuth({ client, useAuth })
@@ -144,7 +144,7 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
  * (`nuxtApp.vueApp.provide`) rather than from a component's setup function.
  *
  * When `scope` is provided, all watchers are created inside that
- * {@link EffectScope} so callers can dispose them later.
+ * `EffectScope` so callers can dispose them later.
  */
 export function createConvexAuthState(
   options: ConvexAuthProviderOptions,
@@ -294,7 +294,7 @@ export function createConvexAuthState(
 }
 
 /**
- * Create a fresh {@link EffectScope} and build a Convex auth state inside it.
+ * Create a fresh `EffectScope` and build a Convex auth state inside it.
  * The scope is returned so the caller can `.stop()` it on teardown.
  */
 // PARITY: A-08
