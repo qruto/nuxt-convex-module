@@ -28,13 +28,16 @@ export function walk(dir: string, exts: string[], skip: (path: string) => boolea
 /** Backticked tokens in a markdown string, in order. */
 export const backticked = (markdown: string) => [...markdown.matchAll(/`([^`\n]+)`/g)].map(m => m[1]!)
 
-/** The first-cell tokens of every row of the markdown table under `heading`. */
+/**
+ * The option names documented under `heading`: the first cell of every
+ * markdown-table row, and the `name` of every `::field{name="…"}` block.
+ */
 export function tableFirstCells(markdown: string, heading: string): string[] {
   const start = markdown.indexOf(heading)
   if (start === -1) return []
   const next = markdown.indexOf('\n## ', start + heading.length)
   const section = markdown.slice(start, next === -1 ? undefined : next)
-  return [...section.matchAll(/^\| `([^`]+)`/gm)].map(m => m[1]!)
+  return [...section.matchAll(/^\| `([^`]+)`|^:{2,}field\{name="([^"]+)"/gm)].map(m => (m[1] ?? m[2])!)
 }
 
 /** Property names of an exported interface in a TypeScript file. */

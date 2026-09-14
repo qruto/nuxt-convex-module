@@ -836,9 +836,31 @@
   text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
 }
 @utility convex-text {
+  /* Both layers hard, and HALF a pixel off (2026-09-14: "less blurry",
+     twice). A blurred cast under 13px letters read as soft focus; a hard
+     one at 1px still did, because a 13px stroke is ~1px thick and its
+     bottom edge is anti-aliased — the cast sat below that edge as a
+     separate grey line, and the eye summed the two into a smear. At
+     0.5px the offset is one exact device pixel on a retina screen, so
+     the rim and the cast land as single crisp rows, and on a 1x screen
+     it folds INTO the glyph's own edge pixel instead of drawing a second
+     one. Measured both ways against the 1px version before choosing. */
   text-shadow:
-    0 -1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)),
-    0 1px 1px light-dark(rgb(0 0 0 / 0.22), rgb(0 0 0 / 0.6));
+    0 -0.5px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)),
+    0 0.5px 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
+}
+@utility convex-icon {
+  /* The raised counterpart for a neutral glyph — the same half-pixel
+     rim-and-cast as convex-text, as a filter so it follows the icon's
+     mask. Independent passes, never chained. */
+  &.iconify {
+    filter:
+      drop-shadow(0 -0.5px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)))
+      drop-shadow(0 0.5px 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6)));
+    @media (forced-colors: active) {
+      filter: none;
+    }
+  }
 }
 @utility concave-icon {
   &.iconify {
@@ -864,6 +886,24 @@
       filter: none;
     }
   }
+}
+
+/* Frosted dish — a recess that lets the page grain through. For the
+   floating panels (the TOC) that sit ON the page rather than in it:
+   the ground shows through the blur, the lip and the inset cast say
+   the panel is sunk half a step. */
+@utility panel-glass {
+  --depth: concave;
+  background: color-mix(in oklab, var(--ui-bg) 36%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  /* A hairline rim (shade below, catch above) and a soft floor — no hard
+     ring, so the glass reads as sitting IN the grain, not framed on it. */
+  box-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.45)),
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.035), rgb(255 255 255 / 0.03)),
+    0 12px 28px -18px light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.7));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
 /* -- Finishes ----------------------------------------------------

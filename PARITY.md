@@ -4,7 +4,7 @@
 **diffable against upstream** so each release can be tracked file-for-file. This file is the
 contract and the ledger: what is ported, the rules it is held to, every place it deliberately
 bends, and what moves on a sync. The sync procedure itself is the
-[`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md); repository conventions
+[`upstream-parity` skill](./website/skills/upstream-parity/SKILL.md); repository conventions
 are in [AGENTS.md](./AGENTS.md).
 
 ---
@@ -654,9 +654,25 @@ reintroduce the bug. **Do not re-litigate.**
 
 The procedure — locating the upstream repository, diffing the mapped paths between two tags,
 classifying each hunk, applying [§2.2](#22-translation-rules) — is the
-[`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md). It covers three jobs:
+[`upstream-parity` skill](./website/skills/upstream-parity/SKILL.md). It covers three jobs:
 syncing a release, adding a ported symbol or a Vue-only extension, and recording a divergence.
 What follows is the part that has to be *right* rather than merely followed.
+
+### What an upstream release means here
+
+Upstream's version numbers are not this module's ([STABILITY.md](./STABILITY.md) states the
+promise; this is the mapping):
+
+| Upstream ships | This module ships |
+| --- | --- |
+| a patch or minor with no public-API change | a patch or minor, with the baseline bumped below |
+| a public addition | a minor |
+| a breaking change — even inside an upstream minor, as the upstream `@convex-dev/*` components, still 0.x, and the `_experimental` shapes allow | a **major** |
+| a new major that raises a peer floor | a **major** |
+
+One such change is already known: upstream `convex/nextjs` warns today that passing
+`url: undefined` to the server helpers "will throw an error in the future". When upstream makes
+it throw, this module ships that in a major.
 
 ### On every baseline bump
 

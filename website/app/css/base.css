@@ -27,7 +27,48 @@ html {
      navigating from a short page to a long one doesn't shift the layout
      sideways. No-op wherever scrollbars overlay (macOS, touch). */
   scrollbar-gutter: stable;
+  /* The page never rubber-bands into the browser chrome. */
+  overscroll-behavior-y: none;
 }
+
+/* Inner scrollers — the docs sidebar, the TOC, code wells, tables. The
+   thumb is only there while the pointer is over the scroller; the rest
+   of the time the rail is invisible, and the reserved gutter keeps the
+   content from shifting when it appears. */
+:where(aside, [data-slot="content"], pre, .overflow-x-auto, .overflow-y-auto) {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
+  transition: scrollbar-color 200ms;
+  &:hover, &:focus-within {
+    scrollbar-color: var(--ui-border-accented) transparent;
+  }
+}
+@media (hover: none) {
+  :where(aside, [data-slot="content"], pre, .overflow-x-auto, .overflow-y-auto) {
+    scrollbar-color: var(--ui-border-accented) transparent;
+  }
+}
+
+/* -- Marks the browser paints ------------------------------------
+   Selection, the find-in-page / text-fragment hit, spell-check, list
+   markers: all in the signal orange or the plate's rail grey, never the
+   platform blue. */
+::selection {
+  background: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  color: inherit;
+}
+::target-text {
+  background: color-mix(in oklab, var(--ui-primary) 30%, transparent);
+  color: inherit;
+}
+::spelling-error { text-decoration: var(--ui-error) wavy underline; }
+::grammar-error { text-decoration: var(--ui-warning) wavy underline; }
+::marker { color: var(--ui-border-accented); }
+::placeholder { color: var(--ui-text-dimmed); opacity: 1; }
+::file-selector-button { font: inherit; }
+:focus-visible { outline-color: var(--ui-primary); }
+a { text-decoration-skip-ink: all; text-underline-offset: 0.15em; }
 @supports not (scrollbar-color: auto) {
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }

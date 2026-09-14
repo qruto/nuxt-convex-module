@@ -137,7 +137,7 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 ### Auto-imported composables · `addImports`
 
 **Data**
-- `useQuery` / `useConvexQuery` — reactive live query (plus `useQuery_experimental`, the convex 1.37 result/error split)
+- `useQuery` / `useConvexQuery` — reactive live query (plus `useQuery_experimental`, Convex's result/error split)
 - `useAsyncQuery` / `useConvexAsyncQuery` — SSR-fetched, payload-hydrated live query with Nuxt's `{ data, error, status, refresh }` shape
 - `useQueries` / `useConvexQueries` — several live queries over one subscription
 - `useMutation` / `useConvexMutation` — call a Convex mutation
@@ -151,9 +151,10 @@ Listing `nuxt-convex-module` in your `modules` array wires Convex into every lay
 - `useUploadQueue` / `useConvexUploadQueue` — multi-file upload queue
 - `useStorageUrl` / `useConvexStorageUrl` — resolve a stored file's URL
 
+- `usePreloadedQuery` — hydrate an SSR-preloaded query on the client
+
 **Auth (provider-agnostic)**
 - `useConvexAuth` / `provideConvexAuth` — Convex auth state
-- `usePreloadedQuery` — hydrate an SSR-preloaded query on the client
 
 **App API wiring**
 - `provideConvexApi` / `useConvexApi` / `useConvexNamespace` — provide and consume the generated `api`
@@ -205,7 +206,7 @@ Everything above is auto-imported in Nuxt, but each surface is also a real **sub
 
 ## Integrations (auto-detected)
 
-You only ever add **one** module. Better Auth, Polar, and nuxt-security light up automatically when their packages are dependencies of your app — no extra `modules` entries, no config:
+You only ever add **one** module. Better Auth, Clerk, Auth0, Polar and nuxt-security light up automatically when their packages are dependencies of your app — no extra `modules` entries, no config:
 
 ```bash
 # add auth → it's wired on next dev
@@ -256,7 +257,7 @@ This package is intentionally kept **diffable against the upstream React/Next so
 | `src/runtime/better-auth/**` | `@convex-dev/better-auth/src/{react,nextjs}/**` |
 | `src/runtime/polar/**` | `@convex-dev/polar/src/react/**` |
 
-[`PARITY.md`](./PARITY.md) is the authoritative ledger: pinned upstream baselines, the file-by-file map, a compatibility matrix per upstream entry point, and every deliberate divergence with its reason and the test that pins it. It also carries the migration contract and the React→Vue translation rules the port is held to. The sync procedure itself is packaged as the [`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md).
+[`PARITY.md`](./PARITY.md) is the authoritative ledger: pinned upstream baselines, the file-by-file map, a compatibility matrix per upstream entry point, and every deliberate divergence with its reason and the test that pins it. It also carries the migration contract and the React→Vue translation rules the port is held to. The sync procedure itself is packaged as the [`upstream-parity` skill](./website/skills/upstream-parity/SKILL.md).
 
 [`STABILITY.md`](./STABILITY.md) is the other contract: what a version number promises from 1.0.0 on — the covered surface, the experimental tier, and how an upstream release maps to a release here (an upstream breaking change is a major here, whatever upstream called it).
 

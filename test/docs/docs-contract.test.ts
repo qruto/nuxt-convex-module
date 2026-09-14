@@ -18,9 +18,9 @@ const CONFIGURATION = read('website/content/1.getting-started/3.configuration.md
 const BETTER_AUTH = read('website/content/3.components/2.better-auth.md')
 const AUTO_IMPORTS = read('website/content/4.api-reference/1.auto-imports.md')
 const SERVER_IMPORTS_PAGE = read('website/content/4.api-reference/2.server-imports.md')
-const TROUBLESHOOTING = read('website/content/1.getting-started/6.troubleshooting.md')
+const INSTALLATION = read('website/content/1.getting-started/2.installation.md')
+const TROUBLESHOOTING = read('website/content/1.getting-started/5.troubleshooting.md')
 const STABILITY = read('STABILITY.md')
-const STABILITY_PAGE = read('website/content/1.getting-started/5.stability.md')
 
 const contentPages = walk('website/content', ['.md'])
 const handWritten = contentPages.filter(p => !p.includes('/9.reference/'))
@@ -152,7 +152,7 @@ describe('troubleshooting', () => {
     for (const piece of pieces(message.text)) {
       expect(
         quoted.replace(/\s+/g, ' ').includes(piece),
-        `${message.kind} at ${_where} says "${message.text}" but 6.troubleshooting.md never quotes it — add an entry (a \`\`\`text fence with the message verbatim, \`…\` for interpolations), or add it to EXCLUDED with a reason`,
+        `${message.kind} at ${_where} says "${message.text}" but 5.troubleshooting.md never quotes it — add an entry (a \`\`\`text fence with the message verbatim, \`…\` for interpolations), or add it to EXCLUDED with a reason`,
       ).toBe(true)
     }
   })
@@ -161,7 +161,7 @@ describe('troubleshooting', () => {
     for (const piece of pieces(fence)) {
       expect(
         messages.some(m => m.text.replace(/\s+/g, ' ').includes(piece)),
-        `6.troubleshooting.md quotes "${piece}" but no message in src/ contains it — the wording changed; update the entry`,
+        `5.troubleshooting.md quotes "${piece}" but no message in src/ contains it — the wording changed; update the entry`,
       ).toBe(true)
     }
   })
@@ -192,8 +192,7 @@ describe('stability', () => {
   const listed = identifiers(STABILITY)
   const source = walk('src', ['.ts']).map(read).join('\n')
 
-  it('lists the same experimental symbols in STABILITY.md and on the stability page', () => {
-    expect(identifiers(STABILITY_PAGE)).toEqual(listed)
+  it('lists the experimental symbols', () => {
     expect(listed.size).toBeGreaterThan(5)
   })
 
@@ -206,7 +205,7 @@ describe('stability', () => {
   it.each(Object.entries(manifest.peerDependencies))('`%s` range %s is in both supported-versions tables', (pkg, range) => {
     const row = `| \`${pkg}\` | \`${range}\` |`
     expect(STABILITY, `STABILITY.md's supported-versions table has no row for ${pkg}@${range}`).toContain(row)
-    expect(STABILITY_PAGE, `the stability page's supported-versions table has no row for ${pkg}@${range}`).toContain(row)
+    expect(INSTALLATION, `the installation page's requirements table has no row for ${pkg}@${range}`).toContain(row)
   })
 })
 
@@ -236,7 +235,7 @@ describe('README', () => {
     const nuxtFloor = read('src/module.ts').match(/nuxt: '>=(\d+\.\d+)/)?.[1]
     const nodeFloor = manifest.engines.node.match(/>=(\d+\.\d+)/)?.[1]
     expect(nuxtFloor && nodeFloor).toBeTruthy()
-    for (const [file, text] of [['README.md', README], ['2.installation.md', read('website/content/1.getting-started/2.installation.md')]]) {
+    for (const [file, text] of [['README.md', README], ['2.installation.md', INSTALLATION]]) {
       expect(text, `${file} does not state Nuxt ≥ ${nuxtFloor}`).toMatch(new RegExp(`Nuxt\\s*(>=|≥)\\s*${nuxtFloor!.replace('.', '\\.')}`))
       expect(text, `${file} does not state Node ≥ ${nodeFloor}`).toMatch(new RegExp(`Node\\s*(>=|≥)\\s*${nodeFloor!.replace('.', '\\.')}`))
     }

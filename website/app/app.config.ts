@@ -35,7 +35,7 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass'],
             // `part-code-shell` only re-points the gutter's marking, so it is
             // NOT on the depth axis — it composes with part-code.
           },
@@ -149,17 +149,20 @@ export default defineAppConfig({
     //    rail-and-ink language (the pill default would fill every
     //    active row) and finally turns the depth on.
     //
-    // 2. The rails get their reflected light. An overhead lamp lights
-    //    the FAR wall of a groove, so both the grey nesting rail and
-    //    the orange active marker carry a 1px catch on their right —
-    //    --rail-catch, chrome.css. The rail itself is the theme's
-    //    `border-s` on listWithChildren; an inset shadow lands flush
-    //    against its inner face.
+    // 2. The rails are grooves. An overhead lamp shades the near wall of
+    //    a cut and lights the far one, so every rail is two pixels: a
+    //    shade outside, a catch inset, one pixel apart — --seam-y in
+    //    chrome.css, which also draws the header seam. The active marker
+    //    takes the same pair around its orange bar. Section names, page
+    //    names and their icons are raised (convex-text / convex-icon):
+    //    the marking on the plate, the rails cut into it.
     contentNavigation: {
       slots: {
-        listWithChildren: 'border-(--rail-shade) shadow-[inset_1px_0_0_var(--rail-catch)]',
-        // Section names — the only nav text heavy enough to hold a cut.
-        trigger: 'concave-text',
+        listWithChildren: 'border-0 shadow-(--seam-y)',
+        trigger: 'convex-text',
+        linkLeadingIcon: 'convex-icon',
+        // Wrap rather than clip: a narrow aside shows the whole name.
+        linkTitle: 'whitespace-normal text-clip overflow-visible',
       },
       compoundVariants: [
         {
@@ -171,12 +174,12 @@ export default defineAppConfig({
         {
           variant: 'link',
           active: true,
-          class: { link: 'before:convex' },
+          class: { link: 'before:convex', linkTitle: 'convex-text' },
         },
         {
           highlight: true,
           level: true,
-          class: { link: 'after:shadow-[1px_0_0_var(--rail-catch)]' },
+          class: { link: 'after:shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]' },
         },
       ],
     },
@@ -189,7 +192,7 @@ export default defineAppConfig({
         root: 'relative py-8 border-b-0 shadow-(--seam-x)',
         headline:
           'mb-2.5 font-mono text-xs font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
-        title: 'font-display concave-text',
+        title: 'font-display convex-text',
         // Hook for the field-group seam patch in chrome.css — the
         // divider class lives in Docus's own template.
         links: 'docs-page-links',
@@ -207,9 +210,18 @@ export default defineAppConfig({
     contentToc: {
       defaultVariants: { highlightVariant: 'straight' },
       slots: {
-        title: 'concave-text',
-        list: 'border-(--rail-shade) shadow-[inset_1px_0_0_var(--rail-catch)]',
-        indicator: 'shadow-[1px_0_0_var(--rail-catch)]',
+        // On desktop the whole panel is a frosted dish on the page
+        // (panel-glass, depth.css); the page grain shows through it.
+        // The panel goes on the container: the theme's root keeps a
+        // `backdrop-blur-sm` at every width for the mobile drawer, which
+        // on desktop painted a blurred SQUARE behind the rounded dish —
+        // hence the root override.
+        root: 'lg:bg-transparent lg:backdrop-blur-none',
+        container: 'lg:panel-glass lg:rounded-(--radius-card) lg:px-3.5 xl:px-5 lg:my-8',
+        title: 'convex-text',
+        linkText: 'whitespace-normal text-clip overflow-visible',
+        list: 'border-0 shadow-(--seam-y)',
+        indicator: 'shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]',
       },
     },
 
@@ -229,6 +241,15 @@ export default defineAppConfig({
     contentSurround: {
       slots: {
         link: 'border-0 convex hover:convex-2 transition-[box-shadow,background-color]',
+      },
+    },
+
+    // Checkboxes (the security checklist): a recessed well that fills
+    // with a raised accent cap when ticked.
+    checkbox: {
+      slots: {
+        base: 'concave ring-0 rounded-(--radius-chip)',
+        indicator: 'convex-accent',
       },
     },
 
@@ -263,19 +284,26 @@ export default defineAppConfig({
     },
 
     prose: {
-      // Headings get the 1px marking — a light catch under the glyphs,
-      // so they read as cut into the plate rather than printed on it.
-      // h1–h3 only: `concave-text` is a one-pixel shadow, and much
-      // below 18px it stops reading as a cut and starts reading as a
-      // halo. Body copy stays plain for the same reason.
-      h1: { slots: { base: 'concave-text' } },
-      h2: { slots: { base: 'concave-text' } },
-      h3: { slots: { base: 'concave-text' } },
-      // Inline code → tiny recessed chip.
+      // Headings are raised off the plate — the same half-pixel rim and
+      // cast the sidebar's names carry. h1–h3 only: below 18px the two
+      // rows fold into the glyph and read as blur, so body copy and h4+
+      // stay plain.
+      h1: { slots: { base: 'convex-text' } },
+      h2: { slots: { base: 'convex-text' } },
+      h3: { slots: { base: 'convex-text' } },
+      // Inline code → a raised chip sitting on the baseline. `inline`
+      // rather than the theme's `inline-block` so a chip at a line's end
+      // wraps with the text instead of dropping whole to the next line.
       code: {
+        base: 'inline px-1.5 py-px font-mono font-medium text-[0.875em] rounded-(--radius-chip) align-baseline',
         variants: {
-          color: { neutral: 'border-0 bg-muted shadow-(--inset-shadow-1) text-highlighted' },
+          color: { neutral: 'border-0 convex-0 text-highlighted' },
         },
+      },
+      // A link around a chip: the chip takes the link colour and lifts
+      // on hover (the theme's dashed-border affordance needs a border).
+      a: {
+        base: '[&>code]:text-primary hover:[&>code]:convex',
       },
       // Code blocks → carved wells. The one place that takes the cast
       // WITHOUT the face: Shiki paints its own background in there, and
@@ -293,6 +321,15 @@ export default defineAppConfig({
   },
 
   seo: {
+    // JSON-LD: the site is a free developer tool (read by Docus's useSeo).
+    schema: {
+      type: 'SoftwareApplication',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Any',
+      price: 0,
+      priceCurrency: 'USD',
+      sameAs: ['https://github.com/qruto/nuxt-convex-module', 'https://www.npmjs.com/package/nuxt-convex-module'],
+    },
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:

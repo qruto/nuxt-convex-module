@@ -25,6 +25,7 @@ const columns = computed(() => [
       { label: 'Pagination', to: '/guide/pagination' },
       { label: 'Server & SSR', to: '/guide/server-and-ssr' },
       { label: 'Auth state', to: '/guide/auth-state' },
+      { label: 'Recipes', to: '/recipes' },
     ],
   },
   {
@@ -49,7 +50,7 @@ const columns = computed(() => [
     children: [
       { label: 'Source', to: repo.value, target: '_blank' },
       { label: 'Issues', to: `${repo.value}/issues`, target: '_blank' },
-      { label: 'Changelog', to: `${repo.value}/blob/main/CHANGELOG.md`, target: '_blank' },
+      { label: 'Changelog', to: '/changelog' },
       { label: 'License', to: `${repo.value}/blob/main/LICENSE`, target: '_blank' },
     ],
   },
