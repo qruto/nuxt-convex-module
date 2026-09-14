@@ -529,8 +529,9 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 - **Port** · [`src/module.ts`](./src/module.ts), [`src/registry.ts`](./src/registry.ts),
   [`src/options.ts`](./src/options.ts), [`src/aliases.ts`](./src/aliases.ts),
   [`src/templates.ts`](./src/templates.ts), [`src/codegen-watch.ts`](./src/codegen-watch.ts),
-  [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
-- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`
+  [`src/functions-dir.ts`](./src/functions-dir.ts), [`src/dev-script.ts`](./src/dev-script.ts),
+  [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
+- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`, `test/unit/dev-script.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
   generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
   package is both declared in the app's own `package.json` and resolvable — resolution alone
@@ -541,7 +542,11 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
   no such step — a Next app reads `process.env.NEXT_PUBLIC_CONVEX_URL` at the call site, and the
   Convex CLI writes that name because its framework detection has a Next case. It has no Nuxt
   case, so for Nuxt the CLI writes `CONVEX_URL`; reading both is what lets a Convex user reach a
-  working app without a `convex.url` line.
+  working app without a `convex.url` line. The same gap is why `src/dev-script.ts` exists: the
+  first `nuxt dev` / `nuxt prepare` rewrites a plain `nuxt dev` script to
+  `convex dev --start 'nuxt dev'`, so the CLI starts Nuxt itself and hands it `CONVEX_URL` in the
+  environment — Convex's `create-next-app` templates ship that script; a Nuxt app has no template
+  to get it from (`convex.devScript: false` opts out).
 
 ##### A-10 — types upstream keeps private
 

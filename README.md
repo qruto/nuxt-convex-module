@@ -58,7 +58,18 @@ export default defineNuxtConfig({
 })
 ```
 
-### 3. Configure environment
+### 3. Run Convex beside Nuxt
+
+```bash
+npm run dev
+```
+
+The module rewrites a plain `nuxt dev` script to `convex dev --start 'nuxt dev'`
+the first time it runs (`convex.devScript: false` to opt out): the Convex CLI
+starts the dev deployment, starts Nuxt next to it, and hands it `CONVEX_URL` in
+the environment — nothing to put in `.env` for local development.
+
+### 4. Configure the deployment you ship
 
 ```bash
 # .env (the file Nuxt loads automatically)
@@ -66,16 +77,9 @@ NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 NUXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
 ```
 
-`npx convex dev` also writes the URL itself, as the unprefixed `CONVEX_URL` in
-`.env.local` — the module reads that too, so `nuxt dev --dotenv .env.local` is
-the other way to get there.
-
-### 4. Start the app, then Convex
-
-```bash
-npm run dev
-npx convex dev
-```
+`NUXT_PUBLIC_CONVEX_URL` is also the runtime override on a built app. Running
+`npx convex dev` on its own writes the unprefixed `CONVEX_URL` to `.env.local`
+instead; the module reads that too, with `nuxt dev --dotenv .env.local`.
 
 ## A taste
 
@@ -231,6 +235,7 @@ export default defineNuxtConfig({
     // betterAuth: { crossDomainCallbackRoute: '/auth/callback' }, // restrict ?ott= to one route, for crossDomainClient()
     // betterAuth: { loginPath: '/sign-in' }, // where the `auth` middleware sends visitors (default /login)
     // polar: false,
+    // devScript: false,
     // security: false, // leave nuxt-security's CSP alone
     // authRoute: '/api/auth',
   },

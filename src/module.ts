@@ -5,6 +5,7 @@ import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
+import { setupDevScript } from './dev-script'
 import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, type Integration, type Registration } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
@@ -108,6 +109,17 @@ export interface ModuleOptions {
    * Nuxt DevTools is; set `false` to disable just the Convex tab.
    */
   devtools?: boolean
+  /**
+   * Run Convex beside Nuxt with one command. On the first `nuxt dev` (or
+   * `nuxt prepare`) in an app whose `dev` script is still the plain
+   * `nuxt dev`, the module rewrites it to `convex dev --start 'nuxt dev'`:
+   * the Convex CLI starts the dev deployment, starts Nuxt next to it, and
+   * hands it `CONVEX_URL` / `CONVEX_SITE_URL` in the environment — no `.env`
+   * needed for local development. A `dev` script you have already changed,
+   * or one that runs `convex dev` somewhere, is left alone. Set `false` to
+   * never touch `package.json`.
+   */
+  devScript?: boolean
 }
 
 declare module '@nuxt/schema' {
@@ -141,6 +153,7 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     authRoute: '/api/auth',
     devtools: true,
+    devScript: true,
   },
   // nuxt-security is optional. When the app has it installed (and hasn't
   // switched it off), declare it as a module dependency so Nuxt's core loader
@@ -208,6 +221,15 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (nuxt.options.dev && !nuxt.options._prepare) {
       logger.info(formatStartupSummary(url, resolveFunctionsDir(nuxt.options.rootDir), integrations))
+    }
+
+    // Onboarding, not build: only a dev server or `nuxt prepare` (which
+    // `nuxi module add` runs right after installing) may touch package.json.
+    if (options.devScript !== false && (nuxt.options.dev || nuxt.options._prepare)) {
+      const result = setupDevScript(nuxt.options.rootDir)
+      if (result.changed) {
+        logger.info(`Set \`scripts.dev\` to \`${result.to}\` — one command now runs Convex beside Nuxt, no .env needed locally. Set \`convex.devScript: false\` to keep your own script.`)
+      }
     }
   },
 })
