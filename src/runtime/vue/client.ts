@@ -183,8 +183,7 @@ interface SyncClientWithInternals extends BaseConvexClient {
  * This loads reactive queries and executes mutations over a WebSocket.
  *
  * In a Nuxt app the client is provided automatically by the plugin and
- * available via the {@link useConvex} composable. The Better Auth plugins
- * additionally inject it as `useNuxtApp().$convex`.
+ * available via the {@link useConvex} composable.
  *
  * @public
  */
