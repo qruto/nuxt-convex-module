@@ -8,18 +8,13 @@ WebSocket, with a `useMutation` form — everything auto-imported by
 
 ```sh
 npm install
-
-# 1. Create/attach a Convex deployment and start codegen + sync:
-npx convex dev
-# → writes CONVEX_URL to .env.local
-
-# 2. In a second terminal:
 npm run dev
 ```
 
-`npm run dev` is `nuxt dev --dotenv .env.local`: Nuxt doesn't read `.env.local`
-by default, and that flag makes it both load *and watch* the file — so the app
-picks the deployment up on its own, with nothing to copy across.
+`npm run dev` is `convex dev --start 'nuxt dev'` — the script the module writes
+into a fresh app on its first run. The Convex CLI creates or attaches a
+deployment, starts codegen + sync, starts Nuxt beside it, and hands Nuxt the
+deployment URL in the environment; nothing to copy into `.env`.
 
 Open http://localhost:3000 — messages render on the server (view page source)
 and update live in every tab.

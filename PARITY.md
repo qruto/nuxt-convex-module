@@ -143,6 +143,8 @@ source.
 | `vue/provide.ts` | `provideConvexApi` / `useConvexApi` | A-03 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
 | `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
+| `nuxt/composables/use-async-paginated-query.ts` | `useAsyncPaginatedQuery` — the paginated `useAsyncQuery` | A-16 |
+| `vue/components/convex-image.ts` | `<ConvexImage>` over `useStorageUrl` | A-17 |
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
@@ -527,8 +529,9 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 - **Port** · [`src/module.ts`](./src/module.ts), [`src/registry.ts`](./src/registry.ts),
   [`src/options.ts`](./src/options.ts), [`src/aliases.ts`](./src/aliases.ts),
   [`src/templates.ts`](./src/templates.ts), [`src/codegen-watch.ts`](./src/codegen-watch.ts),
-  [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
-- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`
+  [`src/functions-dir.ts`](./src/functions-dir.ts), [`src/dev-script.ts`](./src/dev-script.ts),
+  [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
+- **Pinned by** · `test/module/registration.test.ts` (everything the module registers, on a real Nuxt instance), `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`, `test/unit/codegen-watch.test.ts`, `test/unit/dev-script.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
   generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
   package is both declared in the app's own `package.json` and resolvable — resolution alone
@@ -539,7 +542,11 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
   no such step — a Next app reads `process.env.NEXT_PUBLIC_CONVEX_URL` at the call site, and the
   Convex CLI writes that name because its framework detection has a Next case. It has no Nuxt
   case, so for Nuxt the CLI writes `CONVEX_URL`; reading both is what lets a Convex user reach a
-  working app without a `convex.url` line.
+  working app without a `convex.url` line. The same gap is why `src/dev-script.ts` exists: the
+  first `nuxt dev` / `nuxt prepare` rewrites a plain `nuxt dev` script to
+  `convex dev --start 'nuxt dev'`, so the CLI starts Nuxt itself and hands it `CONVEX_URL` in the
+  environment — Convex's `create-next-app` templates ship that script; a Nuxt app has no template
+  to get it from (`convex.devScript: false` opts out).
 
 ##### A-10 — types upstream keeps private
 
@@ -636,6 +643,29 @@ so none can be "restored" by syncing.
 - **On sync** · the bridge reads client internals — see [§4](#4-keeping-parity)
 - **Why** · dev-only query/mutation inspection. `runtime/devtools/bridge.ts` deliberately observes
   `ConvexVueClient` from the *outside* so `vue/client.ts` stays byte-diffable.
+
+##### A-16 — `useAsyncPaginatedQuery`
+
+- **Port** · [`nuxt/composables/use-async-paginated-query.ts`](./src/runtime/nuxt/composables/use-async-paginated-query.ts)
+  — `useAsyncPaginatedQuery` / `useConvexAsyncPaginatedQuery`, returning `usePaginatedQuery`'s
+  `{ results, status, isLoading, loadMore }` plus `{ error, refresh }`; exported from `nuxt/app.ts`
+- **Pinned by** · `test/nuxt/use-async-paginated-query.test.ts`, `test/nuxt/public-surface.test.ts`
+- **Why** · A-04 for lists: the first page is fetched with `fetchQuery` during SSR
+  (`paginationOpts: { numItems, cursor: null }`) and hydrated from the payload; on the client
+  `usePaginatedQuery` takes over and its first page replaces the server one. Client-side
+  navigation fetches nothing over HTTP — a one-shot page could not be deduplicated against the
+  subscription, whose args carry the pagination id. The query error lands in `error` rather than
+  being thrown, as in A-04.
+
+##### A-17 — `<ConvexImage>`
+
+- **Port** · [`vue/components/convex-image.ts`](./src/runtime/vue/components/convex-image.ts)
+  — `ConvexImage`, auto-registered; props `getUrl`, `storageId`; slots default (loading) and
+  `missing` (the file is gone)
+- **Pinned by** · `test/nuxt/convex-image.test.ts`
+- **Why** · the one thing every app does with A-02's `useStorageUrl` — `<img v-if="url" :src="url">`
+  with a placeholder while the URL resolves and another when the query returns `null`. Attributes
+  fall through to the `<img>`; `getUrl` is read once, like `useStorageUrl`'s argument.
 
 ### 3.4 Upstream fixes the translation already rules out
 

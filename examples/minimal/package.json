@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev --dotenv .env.local",
+    "dev": "convex dev --start 'nuxt dev'",
     "build": "nuxt build",
-    "convex": "convex dev",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

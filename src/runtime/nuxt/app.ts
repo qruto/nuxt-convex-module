@@ -2,8 +2,9 @@
  * Composables that need the Nuxt app context (`#app`) — the half of the
  * package that runs in a Nuxt app but not in plain Vue.
  *
- * This module contains {@link useAsyncQuery}: server-rendered Convex data
- * that upgrades to a live subscription after hydration.
+ * This module contains {@link useAsyncQuery} and its paginated form
+ * {@link useAsyncPaginatedQuery}: server-rendered Convex data that upgrades
+ * to a live subscription after hydration.
  *
  * ## Usage
  *
@@ -52,3 +53,10 @@ export {
   type AsyncQueryReturn,
   type AsyncQueryStatus,
 } from './composables/use-async-query'
+export {
+  useAsyncPaginatedQuery,
+  useConvexAsyncPaginatedQuery,
+  type AsyncPaginatedQueryData,
+  type AsyncPaginatedQueryOptions,
+  type AsyncPaginatedQueryReturn,
+} from './composables/use-async-paginated-query'

@@ -173,6 +173,9 @@ export default defineNuxtConfig({
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,
     siteUrl: process.env.NUXT_PUBLIC_CONVEX_SITE_URL || process.env.CONVEX_SITE_URL,
+    // The repository's root `pnpm dev` already wraps this app in
+    // `convex dev --start`; the module must not rewrite this package's script.
+    devScript: false,
   },
   // Publish the repository's own agent skill at /.well-known/skills/ (Docus
   // scans each subfolder for a SKILL.md; .agents/skills/upstream-parity links here).

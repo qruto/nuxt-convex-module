@@ -173,27 +173,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   const initialArgs = toValue(args) ?? {}
   const key = options.key ?? defaultAsyncQueryKey(queryName, initialArgs)
 
-  // The Better Auth server plugin prefetches the request's Convex JWT into
-  // this well-known state key. Reading it by key (instead of importing the
-  // integration) keeps the composable decoupled from the optional package:
-  // without the integration the state simply defaults to `null`.
-  const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
-
-  // Captured at setup — `inject` is unavailable inside the async handler.
-  // May be `undefined` (no plugin provided a client, e.g. missing URL).
-  const client = useConvex()
-
-  // Also captured at setup: the async handler runs outside the Nuxt context
-  // (its `await`s drop the async-local store), where `useRuntimeConfig()` —
-  // which `fetchQuery` falls back to — would throw.
-  const deploymentUrl = import.meta.server
-    ? useRuntimeConfig().public.convex.url
-    : ''
-
-  const resolveToken = async (): Promise<string | undefined> => {
-    const resolved = typeof token === 'function' ? await token() : token ?? initialToken.value
-    return resolved ?? undefined
-  }
+  const { client, deploymentUrl, resolveToken } = useAsyncQueryContext(token)
 
   const asyncData = useAsyncData<AsyncQueryPayload>(
     key,
@@ -294,6 +274,35 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   // initial fetch settles and resolves to the same reactive object.
   const promise = Promise.resolve(asyncData).then(() => result)
   return Object.assign(promise, result)
+}
+
+/**
+ * What an SSR-fetching composable captures at setup, shared with
+ * `useAsyncPaginatedQuery`.
+ *
+ * - The Better Auth server plugin prefetches the request's Convex JWT into a
+ *   well-known state key. Reading it by key (instead of importing the
+ *   integration) keeps the composables decoupled from the optional package:
+ *   without the integration the state simply defaults to `null`.
+ * - The client — `inject` is unavailable inside the async handler. May be
+ *   `undefined` (no plugin provided a client, e.g. missing URL).
+ * - The deployment URL — the async handler runs outside the Nuxt context
+ *   (its `await`s drop the async-local store), where `useRuntimeConfig()`,
+ *   which `fetchQuery` falls back to, would throw.
+ *
+ * @internal
+ */
+export function useAsyncQueryContext(token: AsyncQueryOptions['token']) {
+  const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
+  const client = useConvex()
+  const deploymentUrl = import.meta.server
+    ? useRuntimeConfig().public.convex.url
+    : ''
+  const resolveToken = async (): Promise<string | undefined> => {
+    const resolved = typeof token === 'function' ? await token() : token ?? initialToken.value
+    return resolved ?? undefined
+  }
+  return { client, deploymentUrl, resolveToken }
 }
 
 /** Payload key for a query + initial args. Exported for tests. @internal */
