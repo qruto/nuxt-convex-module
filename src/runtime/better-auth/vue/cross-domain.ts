@@ -94,7 +94,7 @@ export async function consumeCrossDomainOneTimeToken(
       && normalizePathname(url.pathname) !== normalizePathname(options.callbackRoute)
     ) {
       console.warn(
-        `[nuxt-convex-module] ignoring cross-domain one-time token on "${url.pathname}" — consumption is restricted to "${options.callbackRoute}" (convex.betterAuth.crossDomainCallbackRoute).`,
+        `[nuxt-convex-module] Ignoring cross-domain one-time token on "${url.pathname}" — consumption is restricted to "${options.callbackRoute}" (convex.betterAuth.crossDomainCallbackRoute).`,
       )
       return
     }
@@ -103,7 +103,7 @@ export async function consumeCrossDomainOneTimeToken(
     // happens, so the option is found before production.
     if (import.meta.dev && !options.callbackRoute) {
       console.warn(
-        `[nuxt-convex-module] exchanged a cross-domain one-time token on "${url.pathname}" with no \`convex.betterAuth.crossDomainCallbackRoute\` set — any page can complete sign-in. Restrict it to your callback route.`,
+        `[nuxt-convex-module] Exchanged a cross-domain one-time token on "${url.pathname}" with no \`convex.betterAuth.crossDomainCallbackRoute\` set — any page can complete sign-in. Restrict it to your callback route.`,
       )
     }
     // Port-only catch: this runs while the Nuxt app bootstraps (not in a
@@ -130,7 +130,7 @@ export async function consumeCrossDomainOneTimeToken(
       }
     }
     catch (error) {
-      console.warn('[nuxt-convex-module] failed to consume cross-domain one-time token', error)
+      console.warn('[nuxt-convex-module] Failed to consume cross-domain one-time token:', error)
     }
   }
 }

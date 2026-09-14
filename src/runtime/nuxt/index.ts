@@ -64,7 +64,8 @@ export type NuxtOptions = {
   token?: string
   /**
    * The URL of the Convex deployment to use for the function call.
-   * Defaults to `process.env.NUXT_PUBLIC_CONVEX_URL` if not provided.
+   * Defaults to `runtimeConfig.public.convex.url`, then to
+   * `process.env.NUXT_PUBLIC_CONVEX_URL`, if not provided.
    *
    * Explicitly passing undefined here (such as from missing ENV variables) will throw an error in the future.
    */
@@ -223,7 +224,8 @@ function getConvexUrl(
   /**
    * The URL of the Convex deployment to use for the function call.
    *
-   * Defaults to `process.env.NUXT_PUBLIC_CONVEX_URL` if not provided.
+   * Defaults to `runtimeConfig.public.convex.url`, then to
+   * `process.env.NUXT_PUBLIC_CONVEX_URL`, if not provided.
    *
    * Explicitly passing undefined here (such as in broken ENV variables) will throw an error in the future
    */
