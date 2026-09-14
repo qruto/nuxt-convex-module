@@ -72,15 +72,14 @@ const increment = useMutation(api.incrementCounter.default);
 
 ### ConvexVueClient
 
-Defined in: [src/runtime/vue/client.ts:191](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L191)
+Defined in: [src/runtime/vue/client.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L190)
 
 A Convex client for use within Vue.
 
 This loads reactive queries and executes mutations over a WebSocket.
 
 In a Nuxt app the client is provided automatically by the plugin and
-available via the [useConvex](#useconvex) composable. The Better Auth plugins
-additionally inject it as `useNuxtApp().$convex`.
+available via the [useConvex](#useconvex) composable.
 
 #### Constructors
 
@@ -90,7 +89,7 @@ additionally inject it as `useNuxtApp().$convex`.
 new ConvexVueClient(address, options?): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L212)
+Defined in: [src/runtime/vue/client.ts:211](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L211)
 
 ###### Parameters
 
@@ -113,7 +112,7 @@ Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex
 get url(): string;
 ```
 
-Defined in: [src/runtime/vue/client.ts:250](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L250)
+Defined in: [src/runtime/vue/client.ts:249](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L249)
 
 Return the address for this client, useful for creating a new client.
 
@@ -132,7 +131,7 @@ it may be canonicalized.
 get logger(): Logger;
 ```
 
-Defined in: [src/runtime/vue/client.ts:587](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L587)
+Defined in: [src/runtime/vue/client.ts:586](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L586)
 
 Get the logger for this client.
 
@@ -154,7 +153,7 @@ setAuth(
 ): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:293](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L293)
+Defined in: [src/runtime/vue/client.ts:292](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L292)
 
 Set the authentication token to be used for subsequent queries and mutations.
 `fetchToken` will be called automatically again if a token expires.
@@ -179,7 +178,7 @@ when the user's rights were permanently revoked.
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:317](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L317)
+Defined in: [src/runtime/vue/client.ts:316](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L316)
 
 Clear the current authentication token if set.
 
@@ -193,7 +192,7 @@ Clear the current authentication token if set.
 watchQuery<Query>(query, ...argsAndOptions): Watch<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:351](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L351)
+Defined in: [src/runtime/vue/client.ts:350](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L350)
 
 Construct a new [Watch](#watch) on a Convex query function.
 
@@ -227,7 +226,7 @@ The [Watch](#watch) object.
 prewarmQuery<Query>(queryOptions): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:429](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L429)
+Defined in: [src/runtime/vue/client.ts:428](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L428)
 
 Indicates likely future interest in a query subscription.
 
@@ -259,7 +258,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 mutation<Mutation>(mutation, ...argsAndOptions): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:488](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L488)
+Defined in: [src/runtime/vue/client.ts:487](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L487)
 
 Execute a mutation function.
 
@@ -288,7 +287,7 @@ A promise of the mutation's result.
 action<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:509](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L509)
+Defined in: [src/runtime/vue/client.ts:508](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L508)
 
 Execute an action function.
 
@@ -317,7 +316,7 @@ A promise of the action's result.
 query<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:529](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L529)
+Defined in: [src/runtime/vue/client.ts:528](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L528)
 
 Fetch a query result once.
 
@@ -349,7 +348,7 @@ A promise of the query's result.
 connectionState(): ConnectionState;
 ```
 
-Defined in: [src/runtime/vue/client.ts:559](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L559)
+Defined in: [src/runtime/vue/client.ts:558](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L558)
 
 **`Experimental`**
 
@@ -369,7 +368,7 @@ The [ConnectionState](#connectionstate) with the Convex deployment.
 subscribeToConnectionState(cb): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:576](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L576)
+Defined in: [src/runtime/vue/client.ts:575](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L575)
 
 **`Experimental`**
 
@@ -401,7 +400,7 @@ An unsubscribe function to stop listening.
 close(): Promise<void>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:599](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L599)
+Defined in: [src/runtime/vue/client.ts:598](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L598)
 
 Close any network handles associated with this client and stop all subscriptions.
 
@@ -1919,7 +1918,7 @@ Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-con
 const ConvexClientKey: InjectionKey<ConvexVueClient>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:630](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L630)
+Defined in: [src/runtime/vue/client.ts:629](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L629)
 
 Vue injection key for the [ConvexVueClient](#convexvueclient).
 
@@ -2556,7 +2555,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 function useConvex(): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:642](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L642)
+Defined in: [src/runtime/vue/client.ts:641](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L641)
 
 Get the [ConvexVueClient](#convexvueclient) within a Vue component.
 
