@@ -4,21 +4,6 @@ import { watch } from 'vue'
 import { useBetterAuth } from '../vue/use-better-auth'
 import { convexAuth } from './server'
 
-/**
- * Auth route middleware — protects pages from unauthenticated access.
- *
- * Unauthenticated visitors are sent to the configured login route
- * (`convex.betterAuth.loginPath`, default `/login`) with the original
- * destination in a `?redirect=` query.
- *
- * Usage in page:
- * ```vue
- * <script setup>
- * definePageMeta({ middleware: 'auth' })
- * </script>
- * ```
- */
-
 interface GuardedRoute {
   path: string
   fullPath: string
@@ -62,6 +47,20 @@ function waitForSession(isPending: () => boolean) {
   })
 }
 
+/**
+ * Auth route middleware — protects pages from unauthenticated access.
+ *
+ * Unauthenticated visitors are sent to the configured login route
+ * (`convex.betterAuth.loginPath`, default `/login`) with the original
+ * destination in a `?redirect=` query.
+ *
+ * Usage in page:
+ * ```vue
+ * <script setup>
+ * definePageMeta({ middleware: 'auth' })
+ * </script>
+ * ```
+ */
 export default defineNuxtRouteMiddleware(async (to) => {
   const loginPath = useRuntimeConfig().public.convex.loginPath || '/login'
 

@@ -159,6 +159,7 @@ export {
   type UseUploadQueueOptions,
   type UploadQueueItem,
   type UploadItemStatus,
+  type EnqueueInput,
 } from './composables/use-upload-queue'
 export {
   useStorageUrl,

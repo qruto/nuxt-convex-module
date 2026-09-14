@@ -6,7 +6,7 @@ seo:
   title: Convex composables guide for Vue and Nuxt
 ---
 
-Every page here documents a piece of the always-on core, with a live demo running against a real Convex deployment.
+Every page here documents a piece of the always-on core, most with a live demo running against a real Convex deployment.
 
 - [Queries](/guide/queries) — `useQuery` for one live subscription, `useQueries` for a set that changes at runtime.
 - [Mutations & Actions](/guide/mutations-and-actions) — writes, external calls, and optimistic updates.

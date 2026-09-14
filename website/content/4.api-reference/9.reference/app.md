@@ -11,26 +11,49 @@ Composables that need the Nuxt app context (`#app`) — the half of the
 package that runs in a Nuxt app but not in plain Vue.
 
 This module contains [useAsyncQuery](#useasyncquery): server-rendered Convex data
-that upgrades to a live subscription after hydration. It is auto-imported;
-import it from here when you need the explicit path or one of its types.
+that upgrades to a live subscription after hydration.
 
 ## Usage
 
+**Default — auto-imported.** In any page, component or composable, call it
+with no import; its types are auto-imported too:
+
 ```vue
 <script setup lang="ts">
-import { useAsyncQuery, type AsyncQueryReturn } from 'nuxt-convex-module/app'
 import { api } from '#convex/api'
-import type { Doc } from '#convex/dataModel'
 
-const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
+const { data: messages, status } = useAsyncQuery(api.messages.list, {})
+// `AsyncQueryStatus`, `AsyncQueryReturn`, … resolve without an import as well:
+const label = (s: AsyncQueryStatus) => s === 'pending' ? 'Loading…' : ''
 </script>
 ```
+
+**Explicit import — this subpath.** For a project that turns auto-imports
+off, a file outside the app's auto-import scope, or an editor that wants
+the import spelled out:
+
+```ts
+import { useAsyncQuery } from 'nuxt-convex-module/app'
+```
+
+**Types.** From `#imports` (Nuxt's auto-import barrel) or from this subpath,
+whichever your file already uses:
+
+```ts
+import type { AsyncQueryReturn } from '#imports'
+import type { AsyncQueryReturn } from 'nuxt-convex-module/app'
+
+const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
+```
+
+Before 1.0 the composable was auto-imported but reachable from no subpath,
+so neither the explicit form nor the types could be written at all.
 
 ## Interfaces
 
 ### AsyncQueryOptions
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L38)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L37)
 
 Options for [useAsyncQuery](#useasyncquery).
 
@@ -38,17 +61,17 @@ Options for [useAsyncQuery](#useasyncquery).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="key"></a> `key?` | `string` | Key for the underlying `useAsyncData` entry (payload dedup across components). Defaults to a key derived from the query name and the initial args. Provide an explicit key when two call sites must not share a payload entry. | [src/runtime/nuxt/composables/use-async-query.ts:45](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L45) |
-| <a id="server"></a> `server?` | `boolean` | Fetch the query on the server during SSR and embed the result in the Nuxt payload. Set `false` to fetch on the client only. **Default** `true` | [src/runtime/nuxt/composables/use-async-query.ts:52](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L52) |
-| <a id="lazy"></a> `lazy?` | `boolean` | Mirror `useAsyncData`'s `lazy` option: don't block client-side navigation on the initial fetch. **Default** `false` | [src/runtime/nuxt/composables/use-async-query.ts:59](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L59) |
-| <a id="live"></a> `live?` | `boolean` | Upgrade to a live WebSocket subscription on the client. Set `false` for SSR + hydration *without* realtime updates — no WebSocket is opened for this query, and [refresh](#refresh) becomes the way to get fresh data. **Default** `true` | [src/runtime/nuxt/composables/use-async-query.ts:68](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L68) |
-| <a id="token"></a> `token?` | `string` \| (() => `string` \| `Promise`\<`string` \| `null`\> \| `null`) | JWT to authenticate the SSR fetch, or a function resolving one. Defaults to the token the Better Auth server plugin prefetched for this request (when that integration is enabled); pass a value here to integrate any other server-side auth source. The client-side live subscription authenticates through the Convex client's own `setAuth` wiring. | [src/runtime/nuxt/composables/use-async-query.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L76) |
+| <a id="key"></a> `key?` | `string` | Key for the underlying `useAsyncData` entry (payload dedup across components). Defaults to a key derived from the query name and the initial args. Provide an explicit key when two call sites must not share a payload entry. | [src/runtime/nuxt/composables/use-async-query.ts:44](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L44) |
+| <a id="server"></a> `server?` | `boolean` | Fetch the query on the server during SSR and embed the result in the Nuxt payload. Set `false` to fetch on the client only. **Default** `true` | [src/runtime/nuxt/composables/use-async-query.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L51) |
+| <a id="lazy"></a> `lazy?` | `boolean` | Mirror `useAsyncData`'s `lazy` option: don't block client-side navigation on the initial fetch. **Default** `false` | [src/runtime/nuxt/composables/use-async-query.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L58) |
+| <a id="live"></a> `live?` | `boolean` | Upgrade to a live WebSocket subscription on the client. Set `false` for SSR + hydration *without* realtime updates — no WebSocket is opened for this query, and [refresh](#refresh) becomes the way to get fresh data. **Default** `true` | [src/runtime/nuxt/composables/use-async-query.ts:67](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L67) |
+| <a id="token"></a> `token?` | `string` \| (() => `string` \| `Promise`\<`string` \| `null`\> \| `null`) | JWT to authenticate the SSR fetch, or a function resolving one. Defaults to the token the Better Auth server plugin prefetched for this request (when that integration is enabled); pass a value here to integrate any other server-side auth source. The client-side live subscription authenticates through the Convex client's own `setAuth` wiring. | [src/runtime/nuxt/composables/use-async-query.ts:75](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L75) |
 
 ***
 
 ### AsyncQueryReturn
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:86](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L86)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:85](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L85)
 
 Reactive result of [useAsyncQuery](#useasyncquery). Also awaitable — `await
 useAsyncQuery(...)` blocks until the initial fetch settles, like
@@ -68,10 +91,10 @@ useAsyncQuery(...)` blocks until the initial fetch settles, like
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="data"></a> `data` | `ComputedRef`\<`T` \| `undefined`\> | The query result: the server-fetched value first, replaced by the live subscription's value once the client receives one. `undefined` while nothing has loaded (or while skipped). | [src/runtime/nuxt/composables/use-async-query.ts:92](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L92) |
-| <a id="error"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The initial-fetch or live-subscription error, `null` when none. | [src/runtime/nuxt/composables/use-async-query.ts:94](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L94) |
-| <a id="status"></a> `status` | `ComputedRef`\<[`AsyncQueryStatus`](#asyncquerystatus)\> | Initial-fetch status. Live pushes don't churn it: once data exists it stays `'success'` unless the live subscription errors. | [src/runtime/nuxt/composables/use-async-query.ts:99](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L99) |
-| <a id="refresh"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the one-shot fetch. With a live subscription (`live: true`) the server already pushes updates, so this is mainly for retrying after an error; with `live: false` it is the way to get fresh data. | [src/runtime/nuxt/composables/use-async-query.ts:105](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L105) |
+| <a id="data"></a> `data` | `ComputedRef`\<`T` \| `undefined`\> | The query result: the server-fetched value first, replaced by the live subscription's value once the client receives one. `undefined` while nothing has loaded (or while skipped). | [src/runtime/nuxt/composables/use-async-query.ts:91](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L91) |
+| <a id="error"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The initial-fetch or live-subscription error, `null` when none. | [src/runtime/nuxt/composables/use-async-query.ts:93](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L93) |
+| <a id="status"></a> `status` | `ComputedRef`\<[`AsyncQueryStatus`](#asyncquerystatus)\> | Initial-fetch status. Live pushes don't churn it: once data exists it stays `'success'` unless the live subscription errors. | [src/runtime/nuxt/composables/use-async-query.ts:98](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L98) |
+| <a id="refresh"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the one-shot fetch. With a live subscription (`live: true`) the server already pushes updates, so this is mainly for retrying after an error; with `live: false` it is the way to get fresh data. | [src/runtime/nuxt/composables/use-async-query.ts:104](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L104) |
 
 #### Methods
 
@@ -119,7 +142,7 @@ PromiseLike.then
 type AsyncQueryStatus = "idle" | "pending" | "success" | "error";
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:31](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L31)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:30](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L30)
 
 Request status of a [useAsyncQuery](#useasyncquery) call — mirrors Nuxt's
 `useAsyncData` statuses.
@@ -132,7 +155,10 @@ Request status of a [useAsyncQuery](#useasyncquery) call — mirrors Nuxt's
 type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, "data" | "error" | "status" | "refresh">;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:108](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L108)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:113](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L113)
+
+The reactive half of [AsyncQueryReturn](#asyncqueryreturn) — what `await useAsyncQuery(...)`
+resolves to, and the shape to annotate a value passed on from the call site.
 
 #### Type Parameters
 
@@ -148,7 +174,7 @@ Defined in: [src/runtime/nuxt/composables/use-async-query.ts:108](https://github
 const useConvexAsyncQuery: <Query>(query, args?, options) => AsyncQueryReturn<FunctionReturnType<Query>> = useAsyncQuery;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:303](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L303)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:308](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L308)
 
 Load a Convex query the Nuxt way: fetched on the server during SSR,
 hydrated through the Nuxt payload, then seamlessly upgraded to a live
@@ -214,7 +240,7 @@ function useAsyncQuery<Query>(
 ): AsyncQueryReturn<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:155](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L155)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:160](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L160)
 
 Load a Convex query the Nuxt way: fetched on the server during SSR,
 hydrated through the Nuxt payload, then seamlessly upgraded to a live

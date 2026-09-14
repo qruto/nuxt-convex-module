@@ -36,6 +36,15 @@ const LINK = /\]\((?!https?:\/\/|\/|#|mailto:)([^)]+)\)/g
 // markdown-escaped (`node\_modules`), so match either spelling.
 const PNPM_STORE = /node(\\?)_modules\/\.pnpm\/[^/]+\/node\\?_modules\//g
 
+// Upstream's doc-comments reference `{@link server.FunctionReference}`, the
+// `server` module of the `convex` package. Here `server` is our own Nitro entry
+// and holds no such symbol, so TypeDoc drops the braces and leaves the literal
+// `server.FunctionReference` in the prose and the parameter tables. The
+// comments are kept verbatim for the upstream diff, so the link is restored
+// here instead, pointing at the Convex reference for the type.
+const UPSTREAM_FUNCTION_REFERENCE = /\bserver\.FunctionReference\b/g
+const FUNCTION_REFERENCE_LINK = '[`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference)'
+
 // TypeDoc emits only `navigation: true` in each page's frontmatter, and Nuxt
 // Content does NOT read the H1 — it falls back to the *filename* for `title`
 // and leaves `description` empty. That gives four pages titled "Client"
@@ -90,15 +99,18 @@ for await (const file of walk(ROOT)) {
   const relDir = posix.dirname(relPath)
   const linkBase = relDir === '.' ? BASE_ROUTE : posix.join(BASE_ROUTE, relDir)
 
-  let out = src.replace(PNPM_STORE, 'node$1_modules/').replace(LINK, (_match, target) => {
-    const hash = target.indexOf('#')
-    const path = hash === -1 ? target : target.slice(0, hash)
-    const anchor = hash === -1 ? '' : target.slice(hash)
-    const clean = path.replace(/\.md$/, '')
-    if (!clean) return `](${anchor})` // safety: anchor-only
-    const abs = posix.normalize(posix.join(linkBase, clean))
-    return `](${abs}${anchor})`
-  })
+  let out = src
+    .replace(PNPM_STORE, 'node$1_modules/')
+    .replace(UPSTREAM_FUNCTION_REFERENCE, FUNCTION_REFERENCE_LINK)
+    .replace(LINK, (_match, target) => {
+      const hash = target.indexOf('#')
+      const path = hash === -1 ? target : target.slice(0, hash)
+      const anchor = hash === -1 ? '' : target.slice(hash)
+      const clean = path.replace(/\.md$/, '')
+      if (!clean) return `](${anchor})` // safety: anchor-only
+      const abs = posix.normalize(posix.join(linkBase, clean))
+      return `](${abs}${anchor})`
+    })
 
   // `index.md` gets its own (hand-written) meta below.
   if (relPath !== 'index.md') {

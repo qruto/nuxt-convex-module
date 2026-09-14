@@ -42,10 +42,11 @@ no URL line at all.
 
 **2. Give that deployment this app's functions.** They are `convex/schema.ts` and
 `convex/messages.ts` — a `messages` table, a `list` query and a `send` mutation,
-about twenty lines together. Push them from wherever you already run Convex:
+about twenty lines together. `npm run convex` pushes them to your dev deployment
+and writes its URL into `.env.local` in one go:
 
 ```sh
-npx convex deploy
+npm run convex
 ```
 
 If you would rather use functions your deployment already has, edit

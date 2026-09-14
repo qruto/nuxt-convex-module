@@ -500,7 +500,7 @@ function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_retur
 
 Defined in: [src/runtime/better-auth/vue/hydration.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L65)
 
-Auth-aware version of usePreloadedQuery for payloads returned by
+Auth-aware version of [usePreloadedQuery](/api-reference/reference/client#usepreloadedquery) for payloads returned by
 `convexAuth(event).preloadAuthQuery(...)`.
 
 A Vue/Nuxt port of `@convex-dev/better-auth`'s `usePreloadedAuthQuery`
@@ -537,7 +537,7 @@ compiling.
 function resolveAuthRedirect(value, fallback?): string;
 ```
 
-Defined in: [src/runtime/better-auth/vue/redirect.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L56)
+Defined in: [src/runtime/better-auth/vue/redirect.ts:53](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/redirect.ts#L53)
 
 Validate a post-sign-in redirect destination, returning `fallback` unless it
 is a same-origin path.
@@ -581,7 +581,7 @@ async function onSubmit() {
 function useBetterAuth(initialToken?): UseBetterAuthReturn;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-better-auth.ts:66](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/use-better-auth.ts#L66)
+Defined in: [src/runtime/better-auth/vue/use-better-auth.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/use-better-auth.ts#L77)
 
 The Better Auth service for the Vue/Nuxt runtime.
 
@@ -597,3 +597,13 @@ Convex-compatible auth state used by the packaged auth plugin.
 #### Returns
 
 [`UseBetterAuthReturn`](#usebetterauthreturn)
+
+#### Example
+
+```vue
+<script setup lang="ts">
+const { user, client, isAuthenticated } = useBetterAuth()
+
+const signOut = () => client.signOut()
+</script>
+```

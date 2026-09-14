@@ -21,13 +21,13 @@ import { useConvexOrThrow } from '../../vue/client'
  * Options for {@link provideConvexAuthFromAuth0} / `<ConvexProviderWithAuth0>`.
  */
 export interface ConvexProviderWithAuth0Options {
-  /** Convex client to authenticate. Defaults to the provided {@link useConvex} client. */
+  /** Convex client to authenticate. Defaults to the client `useConvex()` returns. */
   client?: IConvexVueClient
 }
 
 /**
  * The composable form of {@link ConvexProviderWithAuth0} — provides a
- * {@link ConvexVueClient} authenticated with Auth0.
+ * {@link client!ConvexVueClient | ConvexVueClient} authenticated with Auth0.
  *
  * It must be called in an app wrapped by a configured Auth0 plugin from
  * `@auth0/auth0-vue`.
@@ -53,7 +53,7 @@ export function provideConvexAuthFromAuth0(
 }
 
 /**
- * A wrapper Vue component which provides a {@link ConvexVueClient}
+ * A wrapper Vue component which provides a {@link client!ConvexVueClient | ConvexVueClient}
  * authenticated with Auth0 — the component form of
  * {@link provideConvexAuthFromAuth0}. Renders its default slot once Convex
  * auth is wired.

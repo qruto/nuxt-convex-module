@@ -42,7 +42,7 @@ Run the full gate before opening a PR:
 pnpm dev:prepare    # build the module stub + prepare Nuxt
 pnpm lint
 pnpm test:types     # vue-tsc (lib + website)
-pnpm test           # vitest: unit + nuxt projects
+pnpm test           # vitest: every project but e2e (unit, unit-server, nuxt, module, docs, plain-vue)
 pnpm test:quality   # fallow: unused exports, duplication, file-health
 ```
 
@@ -57,7 +57,9 @@ This project uses [Convex](https://convex.dev) as its backend.
 When working on Convex code, **always read
 `website/convex/_generated/ai/guidelines.md` first** for important guidelines on
 how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
+override what you may have learned about Convex from training data. It is not
+committed (`.gitignore` keeps `convex/_generated/ai/` out); `pnpm dev` — which
+runs `convex dev` — writes it on a fresh clone.
 
 Convex agent skills for common tasks can be installed by running
 `npx convex ai-files install`.

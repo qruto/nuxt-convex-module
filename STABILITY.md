@@ -56,12 +56,33 @@ numbers are not this module's:
 | --- | --- |
 | a patch or minor with no public-API change | a patch or minor, with the baseline bumped in PARITY.md |
 | a public addition | a minor |
-| a breaking change — even inside an upstream minor, as the 0.x components and the `_experimental` shapes allow | a **major** |
+| a breaking change — even inside an upstream minor, as the upstream `@convex-dev/*` components, still 0.x, and the `_experimental` shapes allow | a **major** |
 | a new major that raises a peer floor | a **major** |
 
 One such change is already known: upstream `convex/nextjs` warns today that passing `url: undefined`
 to the server helpers "will throw an error in the future". When upstream makes it throw, this
 module ships that in a major.
+
+## Supported versions
+
+Nuxt `>=4.1.0` and Node `>=24.11.0`, plus these `peerDependencies` ranges — every one but `vue`
+and `convex` is optional, needed only by the integration it powers:
+
+| Package | Range |
+|---|---|
+| `vue` | `^3.5.0` |
+| `convex` | `^1.40.0` |
+| `@convex-dev/better-auth` | `>=0.12.0 <0.13.0` |
+| `better-auth` | `~1.6.11` |
+| `@convex-dev/polar` | `>=0.9.0 <0.10.0` |
+| `@polar-sh/checkout` | `>=0.4.0` |
+| `@clerk/vue` | `>=2.0.0` |
+| `@auth0/auth0-vue` | `>=2.0.0` |
+| `nuxt-security` | `>=2.6.0` |
+
+A range is what you may install. The baseline [PARITY.md](./PARITY.md) pins per upstream package
+is narrower: the exact release the ported files were diffed against, and the one the test suite
+runs on.
 
 ## Deprecation
 

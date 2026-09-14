@@ -1,11 +1,9 @@
 /**
  * Server-side Better Auth + Convex integration for Nuxt.
  *
- * Provides {@link convexAuth} for Nuxt server handlers.
- *
- * It accepts the H3
- * {@link H3Event} that is available in every Nuxt server route, API handler
- * and server middleware.
+ * Provides {@link convexAuth} for Nuxt server handlers: it takes the H3
+ * `H3Event` every Nuxt server route, API handler and server middleware
+ * receives, and returns a request-scoped, authenticated Convex client.
  *
  * @module better-auth/server
  */

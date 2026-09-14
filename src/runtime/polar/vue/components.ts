@@ -47,10 +47,15 @@ export interface PolarComponentApi {
 }
 
 /**
+ * Renders a link to the Polar customer portal for the signed-in user, where
+ * they manage their subscription.
+ *
  * @example
  * ```vue
  * <CustomerPortalLink>Manage subscription</CustomerPortalLink>
  * ```
+ *
+ * @public
  */
 export const CustomerPortalLink = defineComponent({
   name: 'CustomerPortalLink',
@@ -104,6 +109,8 @@ export const CustomerPortalLink = defineComponent({
  *   Start free trial
  * </CheckoutLink>
  * ```
+ *
+ * @public
  */
 export const CheckoutLink = defineComponent({
   name: 'CheckoutLink',

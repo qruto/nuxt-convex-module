@@ -24,7 +24,7 @@ export default defineNuxtPlugin({
 
     if (!url) {
       if (import.meta.client) {
-        console.warn('[nuxt-convex-module] No Convex deployment URL configured — client not created. Set NUXT_PUBLIC_CONVEX_URL, or `convex.url` in nuxt.config.')
+        console.warn('[nuxt-convex-module] No Convex deployment URL configured — client not created. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.')
       }
       return
     }

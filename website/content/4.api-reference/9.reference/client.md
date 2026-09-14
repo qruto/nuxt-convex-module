@@ -211,7 +211,7 @@ The act of creating a watch does nothing, a Watch is stateless.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | A server.FunctionReference for the public query to run. |
+| `query` | `Query` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public query to run. |
 | ...`argsAndOptions` | [`ArgsAndOptions`](#argsandoptions)\<`Query`, [`WatchQueryOptions`](#watchqueryoptions)\> | - |
 
 ###### Returns
@@ -272,7 +272,7 @@ Execute a mutation function.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `mutation` | `Mutation` | A server.FunctionReference for the public mutation to run. |
+| `mutation` | `Mutation` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public mutation to run. |
 | ...`argsAndOptions` | [`ArgsAndOptions`](#argsandoptions)\<`Mutation`, [`MutationOptions`](#mutationoptions)\<[`FunctionArgs`](#functionargs)\<`Mutation`\>\>\> | - |
 
 ###### Returns
@@ -301,7 +301,7 @@ Execute an action function.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `action` | `Action` | A server.FunctionReference for the public action to run. |
+| `action` | `Action` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public action to run. |
 | ...`args` | [`OptionalRestArgs`](#optionalrestargs)\<`Action`\> | An arguments object for the action. If this is omitted, the arguments will be `{}`. |
 
 ###### Returns
@@ -333,7 +333,7 @@ the [useQuery](#usequery) composable.**
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | A server.FunctionReference for the public query to run. |
+| `query` | `Query` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public query to run. |
 | ...`args` | [`OptionalRestArgs`](#optionalrestargs)\<`Query`\> | An arguments object for the query. If this is omitted, the arguments will be `{}`. |
 
 ###### Returns
@@ -1061,7 +1061,7 @@ type PaginatedQueryReference = FunctionReference<"query", "public", {
 
 Defined in: node\_modules/convex/dist/esm-types/react/use\_paginated\_query.d.ts:16
 
-A server.FunctionReference that is usable with [usePaginatedQuery](#usepaginatedquery).
+A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) that is usable with [usePaginatedQuery](#usepaginatedquery).
 
 This function reference must:
 - Refer to a public query
@@ -1673,6 +1673,18 @@ Lifecycle status of a single item in an upload queue.
 
 ***
 
+### EnqueueInput
+
+```ts
+type EnqueueInput = Blob | Blob[] | FileList | null | undefined;
+```
+
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L49)
+
+Accepted inputs to [VueUploadQueue.enqueue](#enqueue).
+
+***
+
 ### GenerateUploadUrl
 
 ```ts
@@ -1959,7 +1971,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `action` | `Action` | A server.FunctionReference for the public action to run like `api.dir1.dir2.filename.func`. |
+| `action` | `Action` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public action to run like `api.dir1.dir2.filename.func`. |
 
 #### Returns
 
@@ -2019,7 +2031,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `mutation` | `Mutation` | A server.FunctionReference for the public mutation to run like `api.dir1.dir2.filename.func`. |
+| `mutation` | `Mutation` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public mutation to run like `api.dir1.dir2.filename.func`. |
 
 #### Returns
 
@@ -2189,7 +2201,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | a server.FunctionReference for the public query to run like `api.dir1.dir2.filename.func`. |
+| `query` | `Query` | a [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public query to run like `api.dir1.dir2.filename.func`. |
 | ...`args` | [`OptionalRestArgsOrSkip`](#optionalrestargsorskip)\<`Query`\> | The arguments to the query function or the string `"skip"` if the query should not be loaded. Accepts a ref, computed, or getter for reactive args. |
 
 #### Returns
@@ -2473,7 +2485,7 @@ The reactive auth state.
 
 ```vue
 <script setup lang="ts">
-import { useAuth } from '~/composables/useAuth'  // your auth provider
+import { useAuth } from '~/composables/useMyAuthProvider'  // your auth provider
 
 const client = useConvex()
 const authState = provideConvexAuth({ client, useAuth })
@@ -2498,7 +2510,7 @@ Use this when you need to install the state at the Nuxt app level
 (`nuxtApp.vueApp.provide`) rather than from a component's setup function.
 
 When `scope` is provided, all watchers are created inside that
-EffectScope so callers can dispose them later.
+`EffectScope` so callers can dispose them later.
 
 #### Parameters
 
@@ -2524,7 +2536,7 @@ function createScopedConvexAuthState(options): {
 
 Defined in: [src/runtime/vue/auth/index.ts:301](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L301)
 
-Create a fresh EffectScope and build a Convex auth state inside it.
+Create a fresh `EffectScope` and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
 
 #### Parameters
@@ -2605,7 +2617,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `action` | `Action` | A server.FunctionReference for the public action to run like `api.dir1.dir2.filename.func`. |
+| `action` | `Action` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public action to run like `api.dir1.dir2.filename.func`. |
 
 #### Returns
 
@@ -2708,7 +2720,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `mutation` | `Mutation` | A server.FunctionReference for the public mutation to run like `api.dir1.dir2.filename.func`. |
+| `mutation` | `Mutation` | A [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public mutation to run like `api.dir1.dir2.filename.func`. |
 
 #### Returns
 
@@ -3142,7 +3154,7 @@ Throws an error if no Convex client has been provided.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | a server.FunctionReference for the public query to run like `api.dir1.dir2.filename.func`. |
+| `query` | `Query` | a [`FunctionReference`](https://docs.convex.dev/api/modules/server#functionreference) for the public query to run like `api.dir1.dir2.filename.func`. |
 | ...`args` | [`OptionalRestArgsOrSkip`](#optionalrestargsorskip)\<`Query`\> | The arguments to the query function or the string `"skip"` if the query should not be loaded. Accepts a ref, computed, or getter for reactive args. |
 
 #### Returns
@@ -3437,10 +3449,10 @@ function usePreloadedQuery<Query>(preloadedQuery): ComputedRef<Query["_returnTyp
 Defined in: [src/runtime/vue/hydration.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L51)
 
 Load a reactive query within a Vue component using a `Preloaded` payload
-from the server returned by preloadQuery.
+from the server returned by [preloadQuery](/api-reference/reference/server#preloadquery).
 
-This Vue composable contains internal state that will cause a rerender
-whenever the query result changes.
+This Vue composable returns a computed that updates whenever the query
+result changes.
 
 Throws an error if no Convex client has been provided (see [useConvex](#useconvex)).
 

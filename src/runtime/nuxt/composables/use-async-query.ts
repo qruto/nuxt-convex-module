@@ -1,16 +1,14 @@
 // PARITY: A-04
-/**
- * Nuxt-idiomatic data fetching for Convex queries.
- *
- * {@link useAsyncQuery} is a Vue/Nuxt-only addition (no `convex/react`
- * counterpart — see PARITY.md): it marries Nuxt's `useAsyncData` model with
- * Convex's live queries. During SSR the query runs over HTTP and the result is
- * embedded in the Nuxt payload; after hydration the composable upgrades to the
- * WebSocket subscription, so the page paints with server data and stays live —
- * no loading flash, no client refetch.
- *
- * @module
- */
+//
+// Nuxt-idiomatic data fetching for Convex queries.
+//
+// `useAsyncQuery` is a Vue/Nuxt-only addition (no `convex/react` counterpart —
+// see PARITY.md): it marries Nuxt's `useAsyncData` model with Convex's live
+// queries. During SSR the query runs over HTTP and the result is embedded in
+// the Nuxt payload; after hydration the composable upgrades to the WebSocket
+// subscription, so the page paints with server data and stays live — no
+// loading flash, no client refetch. The `app` entry (`../app.ts`) carries the
+// user-facing module doc.
 
 import { useAsyncData, useRuntimeConfig, useState } from '#app'
 import { computed, shallowRef, toValue, type ComputedRef, type MaybeRefOrGetter, type ShallowRef } from 'vue'
@@ -20,6 +18,7 @@ import { convexToJson, jsonToConvex } from 'convex/values'
 import type { Value } from 'convex/values'
 import { useConvex } from '../../vue/client'
 import { useConvexQueries, type RequestForQueries } from '../../vue/composables/use-queries'
+import { CONVEX_INITIAL_TOKEN_KEY } from '../config'
 import { fetchQuery } from '../index'
 
 /**
@@ -105,6 +104,12 @@ export interface AsyncQueryReturn<T> extends PromiseLike<AsyncQueryData<T>> {
   refresh: (opts?: { dedupe?: 'cancel' | 'defer' }) => Promise<void>
 }
 
+/**
+ * The reactive half of {@link AsyncQueryReturn} — what `await useAsyncQuery(...)`
+ * resolves to, and the shape to annotate a value passed on from the call site.
+ *
+ * @public
+ */
 export type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, 'data' | 'error' | 'status' | 'refresh'>
 
 // Wraps the query value so "no payload entry" (undefined/null) is
@@ -172,7 +177,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   // this well-known state key. Reading it by key (instead of importing the
   // integration) keeps the composable decoupled from the optional package:
   // without the integration the state simply defaults to `null`.
-  const initialToken = useState<string | null>('convex:initialToken', () => null)
+  const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
 
   // Captured at setup — `inject` is unavailable inside the async handler.
   // May be `undefined` (no plugin provided a client, e.g. missing URL).
@@ -201,7 +206,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
         if (!deploymentUrl) {
           throw new Error(
             '`useAsyncQuery` could not fetch during SSR: no Convex deployment URL is configured. '
-            + 'Set the `convex.url` module option or NUXT_PUBLIC_CONVEX_URL.',
+            + 'Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
           )
         }
         const value = await fetchQuery(queryReference, currentArgs as FunctionArgs<Query>, {
@@ -213,7 +218,7 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
       if (!client) {
         throw new Error(
           '`useAsyncQuery` could not fetch on the client: no Convex client is available. '
-          + 'Is the `convex.url` module option (or NUXT_PUBLIC_CONVEX_URL) configured?',
+          + 'Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
         )
       }
       // One-shot read through the live client — resolved from the local

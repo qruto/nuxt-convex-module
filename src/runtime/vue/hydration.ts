@@ -20,10 +20,10 @@ export type Preloaded<Query extends FunctionReference<'query'>> = {
 
 /**
  * Load a reactive query within a Vue component using a `Preloaded` payload
- * from the server returned by {@link preloadQuery}.
+ * from the server returned by {@link server!preloadQuery | preloadQuery}.
  *
- * This Vue composable contains internal state that will cause a rerender
- * whenever the query result changes.
+ * This Vue composable returns a computed that updates whenever the query
+ * result changes.
  *
  * Throws an error if no Convex client has been provided (see {@link useConvex}).
  *

@@ -3,8 +3,8 @@ import { assertMethod, createError, defineEventHandler, toWebRequest } from 'h3'
 import { convexAuth } from './server'
 
 /**
- * Proxy all /api/auth/* requests to the Convex site URL.
- * This keeps auth cookies on the same origin (no CORS issues).
+ * Proxy all `${convex.authRoute}/**` requests (default `/api/auth/**`) to the
+ * Convex site URL. This keeps auth cookies on the same origin (no CORS issues).
  *
  * The site URL is `convexAuth`'s to resolve: the private `runtimeConfig.convex.siteUrl`,
  * then the public one, then the environment — so a container built without it and

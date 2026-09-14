@@ -60,7 +60,7 @@ describe('base Convex client plugin', () => {
     runPlugin(app)
 
     expect(warnSpy).toHaveBeenCalledWith(
-      '[nuxt-convex-module] No Convex deployment URL configured — client not created. Set NUXT_PUBLIC_CONVEX_URL, or `convex.url` in nuxt.config.',
+      '[nuxt-convex-module] No Convex deployment URL configured — client not created. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
     )
     expect(provided.size).toBe(0)
     warnSpy.mockRestore()

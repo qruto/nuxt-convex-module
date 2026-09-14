@@ -151,7 +151,7 @@ describe('auth/vue/cross-domain', () => {
 
     expect(mockVerify).toHaveBeenCalledWith({ token: 'bad-token' })
     expect(warnSpy).toHaveBeenCalledWith(
-      '[nuxt-convex-module] failed to consume cross-domain one-time token',
+      '[nuxt-convex-module] Failed to consume cross-domain one-time token:',
       failure,
     )
     expect(mockGetSession).not.toHaveBeenCalled()
@@ -175,7 +175,7 @@ describe('auth/vue/cross-domain', () => {
 
     expect(mockUpdateSession).toHaveBeenCalled()
     expect(warnSpy).toHaveBeenCalledWith(
-      '[nuxt-convex-module] failed to consume cross-domain one-time token',
+      '[nuxt-convex-module] Failed to consume cross-domain one-time token:',
       failure,
     )
     warnSpy.mockRestore()

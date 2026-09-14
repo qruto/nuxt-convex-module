@@ -3,10 +3,10 @@
 # pre-push; see CONTRIBUTING.md § Git Hooks for the split and for what neither
 # hook can cover.
 #
-# Skipped in CI on purpose: the release job commits through changelogen, which
-# shells out to a plain `git commit` (hooks and all), and a release must not be
-# gated on checks the pull request already ran. `CI=1` also trips pnpm's
-# `verifyDepsBeforeRun` guard, so these would fail there for the wrong reason.
+# Skipped in CI on purpose: every check here already runs as its own CI job,
+# and `CI=1` trips pnpm's `verifyDepsBeforeRun` guard, so these would fail
+# there for the wrong reason. (No CI job runs `git commit` at all — the release
+# commit is made through GitHub's API, hooks never see it.)
 #
 # Every tool runs through `pnpm exec` / `pnpm run`: each is a devDependency and
 # is on PATH only inside a pnpm script. A bare `fallow` would not resolve — the

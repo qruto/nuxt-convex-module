@@ -105,7 +105,10 @@ const CustomerPortalLink: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/polar/vue/components.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L55)
+Defined in: [src/runtime/polar/vue/components.ts:60](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L60)
+
+Renders a link to the Polar customer portal for the signed-in user, where
+they manage their subscription.
 
 #### Example
 
@@ -224,7 +227,7 @@ const CheckoutLink: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/polar/vue/components.ts:108](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L108)
+Defined in: [src/runtime/polar/vue/components.ts:115](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/polar/vue/components.ts#L115)
 
 Renders a checkout link. Supports embedded or redirect checkout, with optional lazy loading and trial configuration.
 

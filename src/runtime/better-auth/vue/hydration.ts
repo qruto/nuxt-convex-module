@@ -47,7 +47,7 @@ const useConvexPreloadedQuery = <Query extends FunctionReference<'query'>>(
 }
 
 /**
- * Auth-aware version of {@link usePreloadedQuery} for payloads returned by
+ * Auth-aware version of {@link client!usePreloadedQuery | usePreloadedQuery} for payloads returned by
  * `convexAuth(event).preloadAuthQuery(...)`.
  *
  * A Vue/Nuxt port of `@convex-dev/better-auth`'s `usePreloadedAuthQuery`

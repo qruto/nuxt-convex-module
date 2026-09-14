@@ -1,16 +1,13 @@
 // PARITY: A-12
-/**
- * Safe handling of the `?redirect=` destination the `auth` route middleware
- * attaches when it sends an unauthenticated visitor to the login page.
- *
- * The middleware only ever writes a router path there, but the query is part
- * of a URL anyone can craft: a link to `/login?redirect=https://evil.example`
- * turns a login page that navigates to `route.query.redirect` verbatim into an
- * open redirect — a phishing primitive that borrows the app's own domain, and
- * one that carries whatever the app appends to the destination.
- *
- * @module better-auth/redirect
- */
+//
+// Safe handling of the `?redirect=` destination the `auth` route middleware
+// attaches when it sends an unauthenticated visitor to the login page.
+//
+// The middleware only ever writes a router path there, but the query is part
+// of a URL anyone can craft: a link to `/login?redirect=https://evil.example`
+// turns a login page that navigates to `route.query.redirect` verbatim into an
+// open redirect — a phishing primitive that borrows the app's own domain, and
+// one that carries whatever the app appends to the destination.
 
 /**
  * A base whose only job is to be compared against. Resolving the candidate
