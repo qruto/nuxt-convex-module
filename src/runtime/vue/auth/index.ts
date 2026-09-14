@@ -118,7 +118,7 @@ export interface ConvexAuthProviderOptions {
  * <script setup lang="ts">
  * import { useAuth } from '~/composables/useAuth'  // your auth provider
  *
- * const { client } = useNuxtApp().$convex
+ * const client = useConvex()
  * const authState = provideConvexAuth({ client, useAuth })
  * </script>
  * ```

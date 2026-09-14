@@ -78,6 +78,7 @@ const UserSubscription = defineComponent({
  * @param props.isAuthError - Function to check if the error is auth related.
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export const AuthBoundary = defineComponent({
   name: 'AuthBoundary',

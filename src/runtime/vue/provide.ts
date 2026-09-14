@@ -13,8 +13,8 @@ export const ConvexApiKey: InjectionKey<ConvexApi> = Symbol('nuxt-convex-module:
 
 /**
  * Make the generated Convex `api` available to every `nuxt-convex-module` composable
- * and component, so `useBilling()`, `<CheckoutLink>`, `useEmailStatus()`, … work
- * with zero arguments.
+ * and component, so `<CheckoutLink>`, `<CustomerPortalLink>`, `useConvexNamespace()`,
+ * … work with zero arguments.
  *
  * The packaged Nuxt plugin calls this automatically with `#convex/api`. Call it
  * yourself (e.g. with a custom `api`) only to override that default — pass the
@@ -42,9 +42,9 @@ export function useConvexApi(): ConvexApi | undefined {
 }
 
 /**
- * The named function group from the generated `api` (e.g. `'billing'`,
- * `'email'`), or `undefined` when billing/email isn't scaffolded — letting the
- * feature degrade to a graceful no-op rather than throwing.
+ * The named function group from the generated `api` (e.g. `'polar'`), or
+ * `undefined` when that group isn't scaffolded — letting the feature degrade
+ * to a graceful no-op rather than throwing.
  *
  * @typeParam T - The expected shape of the namespace's function references.
  */

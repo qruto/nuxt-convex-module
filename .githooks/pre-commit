@@ -17,12 +17,12 @@
 if [ -n "$CI" ]; then exit 0; fi
 set -e
 
-# `quality` job. Scoped to the files this branch changed — fallow derives the
+# `static` job's Quality step. Scoped to the files this branch changed — fallow derives the
 # merge-base with the branch upstream itself — and its `new-only` gate fails
 # only on findings the change introduces.
 pnpm exec fallow audit --gate-marker pre-commit
 
-# `lint` job. Whole tree rather than staged files: the repo has no lint-staged,
+# `static` job's Lint step. Whole tree rather than staged files: the repo has no lint-staged,
 # and eslint over this project costs about five seconds.
 pnpm run lint
 

@@ -61,7 +61,7 @@ The Convex functions backing the demos live in [`website/convex/`](./website/con
 The docs site also wants to know its own public origin — Docus feeds it to `site.url`, `llms.domain`, canonical URLs and OG images. Deployments pick it up from the host (`VERCEL_*`/`URL`); locally, add it to the same `website/.env.local` to silence the `nuxt-llms require a domain to be set` warning:
 
 ```bash
-NUXT_SITE_URL=https://nuxt-convex-module.local  # the host `pnpm dev` serves on
+NUXT_SITE_URL=https://nuxt-convex-module.localhost  # the host `pnpm dev` serves on
 ```
 
 To work on the **Nuxt DevTools panel** (`devtools-client-app/`), also start its dev server — in-repo the panel iframe is proxied to it (the published package serves the prebuilt `dist/devtools-client` instead):
@@ -86,8 +86,9 @@ website/              # Nuxt app: product homepage · docs (Docus) with live Con
 ```
 
 Both skill directories are committed, so a fresh clone works with no setup. `npx skills add
-<owner/repo> --agent claude-code` writes both sides; the `lint` job in CI fails if they drift
-apart or a skill's file is not named exactly `SKILL.md`.
+<owner/repo> --agent claude-code` writes both sides; the `pre-commit` hook fails if they drift
+apart or a skill's file is not named exactly `SKILL.md`. Deliberately not in CI — nothing about
+it reaches a consumer.
 
 `examples/` sits outside the pnpm workspace and outside ESLint, the root
 `tsconfig.json` and fallow — each app has its own `package.json` and committed
@@ -105,11 +106,7 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload. That app also turns the
-  module's auto-detected integrations off by name in `nuxt.config.ts`: run it
-  from a clone and Node's upward `node_modules` lookup finds Better Auth and
-  friends in this repository's root, which would mount an auth proxy the app has
-  no configuration for.
+  repository root's — is what filters the upload.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
 visitor's own account. `examples/playground/.env.local` is the one env file this
@@ -164,7 +161,8 @@ docs: update contributing guide
 chore: bump dependencies
 ```
 
-Breaking changes must include `BREAKING CHANGE:` in the commit footer or use `!` after the type:
+Breaking changes — anything [STABILITY.md](./STABILITY.md) covers that is removed, renamed, or
+changes default — must include `BREAKING CHANGE:` in the commit footer or use `!` after the type:
 
 ```
 feat!: rename createClient to defineClient
@@ -196,11 +194,11 @@ register the same hook both ways — it runs twice.
 
 They mirror CI, split by how often each check can afford to run:
 
-| Hook | Runs | Mirrors | Cost |
+| Hook | Runs | Mirrors (job · step) | Cost |
 |---|---|---|---|
-| [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `quality`, `lint` | ~6s |
-| [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `commit-lint` | instant |
-| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test`, API-reference drift | `quality`, `static`, `typecheck`, `test` | ~20s |
+| [`pre-commit`](./.githooks/pre-commit) | `fallow audit`, `pnpm lint` | `static` · Quality (fallow), Lint | ~6s |
+| [`commit-msg`](./.githooks/commit-msg) | `commitlint` | `static` · Commit messages | instant |
+| [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test`, API-reference drift | `static` · Quality, Security candidates, Manifest ranges, Type check, API reference drift; `test` | ~20s |
 
 `pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
 — only findings your change *introduces*, in the files it touched. `pre-push` runs once per

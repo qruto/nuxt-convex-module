@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h, provide } from 'vue'
 import type { ConnectionState } from 'convex/browser'
-import { getFunctionName, makeFunctionReference, type FunctionReference } from 'convex/server'
+import { getFunctionName, makeFunctionReference, type FunctionReference, type PaginationOptions, type PaginationResult } from 'convex/server'
 import { ConvexClientKey, ConvexVueClient, useConvex } from '../../src/runtime/vue/client'
 import { mockAuthState, mountWithConvex } from '../helpers/vue_test_utils'
 import { silentConnectLogger } from '../helpers/silent-logger'
@@ -11,10 +11,12 @@ import { useAction } from '../../src/runtime/vue/composables/use-action'
 import { useConvexConnectionState } from '../../src/runtime/vue/composables/use-connection-state'
 import { useConvexAuth, ConvexAuthStateKey, type ConvexAuthState } from '../../src/runtime/vue/auth'
 import { useQuery, useQuery_experimental } from '../../src/runtime/vue/composables/use-query'
+import { usePaginatedQuery } from '../../src/runtime/vue/composables/use-paginated-query'
 
 const address = 'https://127.0.0.1:3001'
 const seededQueryRef = makeFunctionReference<'query'>('myQuery:default')
 const seededMutationRef = makeFunctionReference<'mutation'>('myMutation:default')
+const seededPaginatedRef = makeFunctionReference<'query', { paginationOpts: PaginationOptions }, PaginationResult<string>>('myList:default')
 const initialConnectionState = {
   hasInflightRequests: false,
   isWebSocketConnected: true,
@@ -71,6 +73,22 @@ describe('useConvex', () => {
         // Upstream `useConvex` returns the (possibly undefined) context value
         // silently; the per-composable error lives in `useMutation` & co.
         expect(useConvex()).toBeUndefined()
+        return () => h('div')
+      },
+    })
+
+    await mountSuspended(Wrapper)
+  })
+})
+
+describe('usePaginatedQuery', () => {
+  // PARITY: D-12 — upstream dereferences `useConvex().logger` and throws a raw TypeError here.
+  it('throws the per-composable missing-client error without a provider', async () => {
+    const Wrapper = defineComponent({
+      setup() {
+        expect(() => usePaginatedQuery(seededPaginatedRef, {}, { initialNumItems: 5 })).toThrow(
+          'Could not find Convex client! `usePaginatedQuery` must be used in the Vue component tree',
+        )
         return () => h('div')
       },
     })

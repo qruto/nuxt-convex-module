@@ -29,7 +29,7 @@ full, always part of the module, and covered by the one `convex` baseline.
 
 | Upstream entry point | Ported to | Status |
 |---|---|---|
-| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07 |
+| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07, D-12 |
 | [`convex/nextjs`](https://docs.convex.dev/client/react/nextjs/server-rendering) — `fetchQuery` / `fetchMutation` / `fetchAction`, `preloadQuery` | `src/runtime/nuxt/index.ts` | Complete + additive · D-10 |
 | [`convex/react-clerk`](https://docs.convex.dev/auth/clerk) — the official Clerk adapter | `src/runtime/clerk/vue/index.ts` | Complete |
 | [`convex/react-auth0`](https://docs.convex.dev/auth/auth0) — the official Auth0 adapter | `src/runtime/auth0/vue/index.ts` | Complete |
@@ -142,7 +142,7 @@ source.
 | `vue/composables/{use-upload,use-upload-queue,use-storage-url}.ts` | file-storage helpers | A-02 |
 | `vue/provide.ts` | `provideConvexApi` / `useConvexApi` | A-03 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
-| `nuxt/composables/use-async-query.ts` | `useAsyncQuery` | A-04 |
+| `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
@@ -182,6 +182,7 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `<ConvexProviderWithAuth useAuth>` | `provideConvexAuth({ client, useAuth })` composable |
 | `<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>` | `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0` composables (+ thin component wrappers) |
 | `useState` / `useEffect` reconciliation | `ref` + `watch` / `watchEffect` (see `vue/auth/index.ts` for the auth-state port and the comments explaining the live-sign-out edge case) |
+| `useEffect` (never runs during SSR) | `if (!import.meta.server) watch(…)` — the **negative** guard. In a plain Vue app neither `import.meta.client` nor `import.meta.server` is defined, so `import.meta.client && …` fails closed and the effect never runs; `!import.meta.server` fails open. Pinned by the `plain-vue` vitest project |
 | `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
 | Static hook arguments | `MaybeRefOrGetter` inputs, read via `toValue` |
 | Returns a plain value | Returns `ComputedRef` / `ShallowRef` (VueUse convention) |
@@ -326,7 +327,8 @@ upstream routes through that client has to land somewhere else here.
 - **Pinned by** · `test/unit/client.test.ts` — "watchPaginatedQuery"
 - **On sync** · keep the throw; port page-management changes into `use-paginated-query.ts`
 - **Why** · upstream's method only hands work to `PaginatedQueryClient`. It is retained for
-  structural parity and throws loudly rather than silently mis-subscribing.
+  structural parity and throws loudly rather than silently mis-subscribing. Like upstream's, it
+  is `@internal`: present at runtime, absent from the published types (`stripInternal`).
 
 ##### D-06 — the sync client's transition callback is wired directly
 
@@ -378,6 +380,17 @@ fixes one, drop the entry rather than reverting.
 - **Why** · unlike `<a target="_blank">`, `window.open` keeps `window.opener` live, letting the
   checkout tab navigate the opener. The forced `null` return is unused, so there is no cost.
   Not an open redirect: `url` is the app's own Convex action response.
+
+##### D-12 — `usePaginatedQuery` throws the missing-client error
+
+- **Kind** · missing guard
+- **Upstream** · `convex@1.45.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
+- **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
+- **On sync** · keep
+- **Why** · without a provider, upstream dereferences `undefined` and the user reads a raw
+  `TypeError`. Every other hook here throws the descriptive `Could not find Convex client!`
+  message; this was the one that did not.
 
 #### Type and signature refinements
 
@@ -444,11 +457,13 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 ##### A-04 — `useAsyncQuery`
 
 - **Port** · [`nuxt/composables/use-async-query.ts`](./src/runtime/nuxt/composables/use-async-query.ts)
-  — `useAsyncQuery` / `useConvexAsyncQuery`, returning `{ data, error, status, refresh }`
-- **Pinned by** · `test/nuxt/use-async-query.test.ts`
+  — `useAsyncQuery` / `useConvexAsyncQuery`, returning `{ data, error, status, refresh }`;
+  exported from [`nuxt/app.ts`](./src/runtime/nuxt/app.ts) as the `nuxt-convex-module/app` subpath
+- **Pinned by** · `test/nuxt/use-async-query.test.ts`, `test/nuxt/public-surface.test.ts`
 - **Why** · the Nuxt-idiomatic data layer: `useAsyncData`-style SSR fetch → payload hydration →
   live subscription upgrade. Lives under `runtime/nuxt/` (it imports `#app`) but deliberately
-  **not** in the ported `nuxt/index.ts`, which maps file-for-file to `nextjs/index.ts`.
+  **not** in the ported `nuxt/index.ts`, which maps file-for-file to `nextjs/index.ts` — hence
+  its own `./app` subpath: neither `./client` (plain Vue) nor `./server` (Nitro) can host it.
 
 ##### A-05 — one import path for every type an annotation needs
 
@@ -490,12 +505,14 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 - **Port** · [`vue/plugin.ts`](./src/runtime/vue/plugin.ts),
   [`better-auth/vue/plugin.client.ts`](./src/runtime/better-auth/vue/plugin.client.ts),
   [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts)
-- **Pinned by** · `test/unit/base-client-plugin.test.ts`, `test/unit/auth/vue/plugin-client.test.ts`, `test/nuxt/auth/vue/plugin-server-cache.test.ts`
+- **Pinned by** · `test/unit/base-client-plugin.test.ts`, `test/unit/auth/vue/plugin-client.test.ts`, `test/nuxt/auth/vue/plugin-server-cache.test.ts`, `test/unit-server/prerender-auth-prefetch.test.ts`
 - **Why** · the file-level counterpart of N-03 / N-04. `vue/plugin.ts` registers only when no
   auth integration owns the client. The client plugin deliberately does **not** tear down on
   `beforeunload` — that event is cancelable and fires before the user answers an
   unsaved-changes dialog, so closing there would drop in-flight mutations; upstream never
-  closes on unload either.
+  closes on unload either. The server plugin skips the token prefetch under
+  `import.meta.prerender`: a prerendered page has no visitor. Next has no analog — its
+  `getToken()` reads `next/headers`, which opts the route out of static rendering entirely.
 
 ##### A-08 — `createScopedConvexAuthState`
 
@@ -507,11 +524,15 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
 
 ##### A-09 — module wiring
 
-- **Port** · [`src/module.ts`](./src/module.ts), [`src/functions-dir.ts`](./src/functions-dir.ts),
-  [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
+- **Port** · [`src/module.ts`](./src/module.ts), [`src/options.ts`](./src/options.ts),
+  [`src/aliases.ts`](./src/aliases.ts), [`src/templates.ts`](./src/templates.ts),
+  [`src/functions-dir.ts`](./src/functions-dir.ts), [`nuxt/config.ts`](./src/runtime/nuxt/config.ts)
 - **Pinned by** · `test/unit/module-options.test.ts`, `test/unit/aliases.test.ts`, `test/unit/functions-dir.test.ts`, `test/unit/diagnostics.test.ts`, `test/unit/convex-type-fallback.test.ts`
 - **Why** · options, auto-imports, integration auto-detection, the `#convex/*` aliases and the
-  generated-types fallback. Next apps wire Convex by hand.
+  generated-types fallback. Next apps wire Convex by hand. An integration auto-enables when its
+  package is both declared in the app's own `package.json` and resolvable — resolution alone
+  walks every ancestor `node_modules`, so a sibling app's package would switch it on in a
+  monorepo; an explicit `true` needs only resolution.
 - **Also** · the module resolves the deployment URL itself (`resolveDeploymentUrls`):
   `convex.url`, then `NUXT_PUBLIC_CONVEX_URL`, then the unprefixed `CONVEX_URL`. Upstream has
   no such step — a Next app reads `process.env.NEXT_PUBLIC_CONVEX_URL` at the call site, and the
@@ -584,7 +605,7 @@ so none can be "restored" by syncing.
 - **Port** · [`better-auth/nuxt/proxy.ts`](./src/runtime/better-auth/nuxt/proxy.ts) and
   `AUTH_PROXY_SECURITY_RULES` in [`src/module.ts`](./src/module.ts); the site-URL protocol guard
   in [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
-- **Pinned by** · `test/e2e/better-auth-proxy.test.ts`
+- **Pinned by** · `test/e2e/better-auth-proxy.test.ts`, `test/unit/auth/nuxt/proxy.test.ts`
 - **On sync** · `xssValidator: false` is **load-bearing** — do not "tidy" it away
 - **Why** · the proxy delegates to `convexAuth(event).handler()`, which strips hop-by-hop
   headers and rewrites forwarded-host headers exactly as `convexBetterAuthNextJs` does; only
@@ -592,8 +613,12 @@ so none can be "restored" by syncing.
   `xssValidator: false` is a **correctness** fix, not hardening — `nuxt-security`'s validator
   HTML-escapes the JSON body and 400s when that changes anything, so a password containing `<`
   or `>` would never reach Better Auth. `allowedMethodsRestricter` pins the route to
-  GET/HEAD/POST/OPTIONS. Both apply regardless of `convex.security`, since they concern the
-  module's own route rather than the app's CSP. The site URL must parse as `http:`/`https:`
+  GET/HEAD/POST/OPTIONS, and the handler asserts the same list itself, so the route stays
+  closed without nuxt-security. Both rules apply regardless of `convex.security`, since they
+  concern the module's own route rather than the app's CSP. The handler resolves the site URL
+  through `convexAuth` (private runtime key, then public, then env) rather than reading one
+  key — a build without the URL, configured at start-up through
+  `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. The site URL must parse as `http:`/`https:`
   before any request is made, because it is the only thing pinning the proxy's destination host.
 
 #### Tooling

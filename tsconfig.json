@@ -13,7 +13,11 @@
     // A bare `import './thing'` that resolves to nothing is silent by default.
     // The runtime is full of side-effect imports — plugins, polyfills — where a
     // typo means missing behaviour at runtime and nothing else catches it.
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    // Drop every declaration tagged `@internal` from the emitted `.d.ts`, as
+    // upstream does for `convex/react`: the runtime keeps the symbols (parity),
+    // the published types do not promise them.
+    "stripInternal": true
   },
   "exclude": [
     "dist",

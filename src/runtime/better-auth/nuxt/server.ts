@@ -157,7 +157,9 @@ export type ConvexAuthOptions = GetTokenOptions & {
    */
   convexUrl?: string
   /**
-   * Override the Convex site URL. Defaults to `NUXT_PUBLIC_CONVEX_SITE_URL`.
+   * Override the Convex site URL. Defaults to `runtimeConfig.convex.siteUrl`,
+   * then `runtimeConfig.public.convex.siteUrl`, then the
+   * `NUXT_PUBLIC_CONVEX_SITE_URL` process variable.
    */
   convexSiteUrl?: string
 }

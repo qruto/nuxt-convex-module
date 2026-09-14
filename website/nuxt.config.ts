@@ -149,7 +149,6 @@ export default defineNuxtConfig({
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL,
     siteUrl: process.env.NUXT_PUBLIC_CONVEX_SITE_URL || process.env.CONVEX_SITE_URL,
-    betterAuth: false,
   },
   // Providers are pinned rather than discovered. @nuxt/fonts walks its
   // provider list per family, and Technor exists on Fontshare only — naming
@@ -180,7 +179,7 @@ export default defineNuxtConfig({
   },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
   // client-side content queries). The nuxt-security CSP (the module registers
-  // nuxt-security, a root devDependency, when it detects it) must allow
+  // nuxt-security, declared in this app's package.json, when it detects it) must allow
   // WebAssembly compilation — extend `script-src` with `'wasm-unsafe-eval'`.
   security: {
     headers: {

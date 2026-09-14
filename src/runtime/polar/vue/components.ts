@@ -68,8 +68,10 @@ export const CustomerPortalLink = defineComponent({
       : undefined
     const portalUrl = ref<string>()
 
-    // useEffect never runs during SSR, so the effect is client-guarded.
-    if (import.meta.client && generateCustomerPortalUrl) {
+    // useEffect never runs during SSR, so the effect is server-guarded. The
+    // negative form on purpose: outside Nuxt neither flag is defined, and
+    // `!import.meta.server` is then true where `import.meta.client` is not.
+    if (!import.meta.server && generateCustomerPortalUrl) {
       watch(
         () => props.returnUrl,
         (returnUrl) => {
@@ -128,8 +130,8 @@ export const CheckoutLink = defineComponent({
     const checkoutLink = ref<string>()
     const isLoading = ref(false)
 
-    // useEffect never runs during SSR, so the effect is client-guarded.
-    if (import.meta.client && generateCheckoutLink) {
+    // useEffect never runs during SSR, so the effect is server-guarded (see above).
+    if (!import.meta.server && generateCheckoutLink) {
       watch(
         () => [props.lazy, props.productIds, props.subscriptionId, props.metadata, props.embed, props.trialInterval, props.trialIntervalCount, props.locale],
         async () => {

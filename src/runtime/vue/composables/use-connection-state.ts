@@ -29,6 +29,7 @@ import { useSubscription } from './use-subscription'
  * @returns The current {@link ConnectionState} with the Convex deployment.
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export function useConvexConnectionState(): ShallowRef<ConnectionState> {
   const convex = useConvexOrThrow('useConvexConnectionState')

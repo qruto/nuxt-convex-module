@@ -11,7 +11,7 @@ import { getFunctionName } from 'convex/server'
 import type { Infer, Value } from 'convex/values'
 import { ConvexError, compareValues, convexToJson } from 'convex/values'
 import { computed, shallowRef, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
-import { useConvex } from '../client'
+import { useConvexOrThrow } from '../client'
 import { useConvexQueries } from './use-queries'
 
 // Derive public paginated types from the canonical React integration to ensure
@@ -261,7 +261,8 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
       `\`options.initialNumItems\` must be a positive number. Received \`${initialOptions?.initialNumItems}\`.`,
     )
   }
-  const convex = useConvex()
+  // PARITY: D-12
+  const convex = useConvexOrThrow('usePaginatedQuery')
   const logger = convex.logger
 
   function createInitialState(
@@ -504,7 +505,10 @@ function nextPaginationId(): number {
   return ++paginationId
 }
 
-/** @internal */
+/**
+ * Reset pagination id for tests only, so tests know what it is.
+ * @experimental May change in a minor release — see STABILITY.md.
+ */
 export function resetPaginationId(): void {
   paginationId = 0
 }
@@ -857,6 +861,7 @@ function matchesArgs(
  * identical observable results (`results`/`data`, `status`, `loadMore`).
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export function usePaginatedQuery_experimental<Query extends PaginatedQueryReference>(
   query: Query,

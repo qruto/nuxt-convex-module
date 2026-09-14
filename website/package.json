@@ -17,6 +17,7 @@
     "nuxt": "catalog:"
   },
   "devDependencies": {
-    "@nuxtjs/i18n": "^10.4.0"
+    "@nuxtjs/i18n": "^10.4.0",
+    "nuxt-security": "^2.6.0"
   }
 }

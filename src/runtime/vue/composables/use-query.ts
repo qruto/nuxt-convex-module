@@ -22,6 +22,7 @@ export type OptionalRestArgsOrSkip<FuncRef extends FunctionReference<any>>
  * Result returned by object-form {@link useQuery_experimental}.
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export type UseQueryResult<QueryResult, ThrowOnError extends boolean = false>
   = ConvexUseQueryResult<QueryResult, ThrowOnError>
@@ -140,6 +141,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
  * {@link UseQueryResult} object.
  *
  * @public
+ * @experimental May change in a minor release — see STABILITY.md.
  */
 export function useQuery_experimental<
   Query extends FunctionReference<'query'>,

@@ -192,7 +192,7 @@ export async function fetchAction<Action extends FunctionReference<'action'>>(
   return client.action(action, fnArgs || {})
 }
 
-// The published `convex` types omit the `@internal` `setFetchOptions` /
+// The published `convex` types omit the internal `setFetchOptions` /
 // `setAdminAuth` methods upstream calls directly — surface them for setupClient.
 interface ConvexHttpClientWithFetchOptions extends ConvexHttpClient {
   setFetchOptions(options: RequestInit): void

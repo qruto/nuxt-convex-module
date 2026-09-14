@@ -1,8 +1,8 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { resolveDeploymentUrls, validateModuleOptions } from '../../src/module'
+import { resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
 
 const rootDir = mkdtempSync(join(tmpdir(), 'convex-module-options-'))
 afterAll(() => rmSync(rootDir, { recursive: true, force: true }))
@@ -35,10 +35,11 @@ describe('validateModuleOptions', () => {
     expect(result.errors[0]).toContain('convex.siteUrl')
   })
 
-  it('warns when siteUrl points at the .convex.cloud domain', () => {
+  it('errors when siteUrl points at the .convex.cloud domain', () => {
     const result = validateModuleOptions({ ...base, siteUrl: 'https://example.convex.cloud' })
-    expect(result.warnings).toHaveLength(1)
-    expect(result.warnings[0]).toContain('swap')
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]).toContain('swap')
+    expect(result.warnings).toEqual([])
   })
 
   it('warns on malformed urls', () => {
@@ -67,6 +68,19 @@ describe('validateModuleOptions', () => {
     expect(trailingSlash.warnings).toEqual([])
   })
 
+  it('errors when authRoute moves but the bundled auth client cannot follow', () => {
+    const moved = validateModuleOptions({ ...base, authRoute: '/auth' })
+    expect(moved.errors).toHaveLength(1)
+    expect(moved.errors[0]).toContain('basePath: "/auth"')
+
+    // The root would also disable the xssValidator exemption site-wide.
+    expect(validateModuleOptions({ ...base, authRoute: '/' }).errors).toHaveLength(1)
+
+    writeFileSync(join(rootDir, 'auth-client.ts'), '')
+    const withClient = validateModuleOptions({ ...base, authRoute: '/auth', authClient: './auth-client' })
+    expect(withClient.errors).toEqual([])
+  })
+
   it('errors when a custom authClient path does not exist', () => {
     const result = validateModuleOptions({ ...base, authClient: './app/missing-client' })
     expect(result.errors).toHaveLength(1)
@@ -77,6 +91,14 @@ describe('validateModuleOptions', () => {
     writeFileSync(join(rootDir, 'auth-client.ts'), 'export const authClient = {}\n')
     expect(validateModuleOptions({ ...base, authClient: './auth-client' }).errors).toEqual([])
     expect(validateModuleOptions({ ...base, authClient: './auth-client.ts' }).errors).toEqual([])
+  })
+
+  it('rejects a bare directory as authClient, but accepts one with an index file', () => {
+    mkdirSync(join(rootDir, 'auth-dir'))
+    expect(validateModuleOptions({ ...base, authClient: './auth-dir' }).errors).toHaveLength(1)
+
+    writeFileSync(join(rootDir, 'auth-dir', 'index.ts'), 'export const authClient = {}\n')
+    expect(validateModuleOptions({ ...base, authClient: './auth-dir' }).errors).toEqual([])
   })
 })
 
@@ -124,6 +146,16 @@ describe('resolveDeploymentUrls', () => {
       NUXT_PUBLIC_CONVEX_URL: '',
       CONVEX_URL: 'https://cli.convex.cloud',
     }).url).toBe('https://cli.convex.cloud')
+  })
+
+  it('strips trailing slashes from every source', () => {
+    expect(resolveDeploymentUrls({ url: 'https://x.convex.cloud/' }, { NUXT_PUBLIC_CONVEX_SITE_URL: 'https://x.convex.site//' }))
+      .toEqual({ url: 'https://x.convex.cloud', siteUrl: 'https://x.convex.site' })
+  })
+
+  it('lets the swap check see through a trailing slash', () => {
+    const resolved = resolveDeploymentUrls({ url: 'https://x.convex.site/', siteUrl: 'https://x.convex.cloud/' }, {})
+    expect(validateModuleOptions({ ...base, ...resolved }).errors).toHaveLength(2)
   })
 
   it('resolves to empty strings when nothing is configured', () => {

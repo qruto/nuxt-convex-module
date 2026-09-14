@@ -1,9 +1,11 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, updateTemplates, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
-import { existsSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
+import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { getConvexAliases } from './aliases'
+import { watchConvexCodegen } from './codegen-watch'
+import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
 const logger = useLogger('nuxt-convex-module')
@@ -59,30 +61,31 @@ export interface ModuleOptions {
    */
   siteUrl?: string
   /**
-   * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is
-   * installed; set `false` to force it off, `true` to require it, or a
+   * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is a
+   * dependency of your app; set `false` to force it off, `true` to require it
+   * (a package a layer or workspace root provides counts then), or a
    * {@link BetterAuthModuleOptions} object to point at a custom auth client.
    */
   betterAuth?: boolean | BetterAuthModuleOptions
   /**
-   * Polar billing components. Auto-enabled when `@convex-dev/polar` is
-   * installed; set `false` to force it off (or `true` to require it).
+   * Polar billing components. Auto-enabled when `@convex-dev/polar` is a
+   * dependency of your app; set `false` to force it off (or `true` to require it).
    */
   polar?: boolean
   /**
    * Clerk auth adapter (`provideConvexAuthFromClerk` / `<ConvexProviderWithClerk>`).
-   * Auto-enabled when `@clerk/vue` is installed; set `false` to force it off.
+   * Auto-enabled when `@clerk/vue` is a dependency of your app; set `false` to force it off.
    */
   clerk?: boolean
   /**
    * Auth0 auth adapter (`provideConvexAuthFromAuth0` / `<ConvexProviderWithAuth0>`).
-   * Auto-enabled when `@auth0/auth0-vue` is installed; set `false` to force it off.
+   * Auto-enabled when `@auth0/auth0-vue` is a dependency of your app; set `false` to force it off.
    */
   auth0?: boolean
   /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
-   * Auto-enabled when `nuxt-security` is installed — the module registers it
-   * as a module dependency (no `modules` entry needed) and extends its
+   * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
+   * `modules`) — the module registers it as a module dependency and extends its
    * Content Security Policy with your deployment's origins at runtime. Set
    * `false` to leave nuxt-security's CSP alone, or `true` to require the
    * package. Disabling nuxt-security itself (`security: false` in
@@ -207,162 +210,8 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
 }
 
 /**
- * Which opt-in integrations ended up enabled — returned by
- * {@link registerIntegrations} for the dev startup summary (and the DevTools
- * panel, which reports the active adapter).
- */
-export interface IntegrationFlags {
-  betterAuth: boolean
-  clerk: boolean
-  auth0: boolean
-  polar: boolean
-  /** nuxt-security registered and its CSP extended with the Convex origins. */
-  security: boolean
-}
-
-/**
- * Decide whether an opt-in integration is enabled, distinguishing the
- * misconfiguration case: explicitly enabled but the backing package is not
- * installed (`missingPackage`), where silently registering the runtime would
- * surface as an opaque Vite import error instead of an actionable message.
- * Auto-detection (option unset) treats package absence as the normal case.
- */
-export function resolveIntegrationState(
-  explicit: boolean | object | undefined,
-  installed: boolean,
-): { enabled: boolean, missingPackage: boolean } {
-  if (explicit === false) return { enabled: false, missingPackage: false }
-  if (explicit === undefined) return { enabled: installed, missingPackage: false }
-  return installed
-    ? { enabled: true, missingPackage: false }
-    : { enabled: false, missingPackage: true }
-}
-
-/** Result of {@link validateModuleOptions}: findings plus normalized values. */
-export interface ModuleOptionDiagnostics {
-  errors: string[]
-  warnings: string[]
-  /** `authRoute` with a leading slash ensured and any trailing slash stripped. */
-  authRoute: string
-}
-
-/**
- * Drop every trailing `/`. Scanned character by character rather than with
- * `/\/+$/`: that pattern is unanchored at the start, so the engine retries from
- * every position and the cost is quadratic in the length of the slash run —
- * 6.5s on a 60,000-slash input against 0.04ms here (CodeQL js/polynomial-redos).
- */
-function stripTrailingSlashes(value: string): string {
-  let end = value.length
-  while (end > 0 && value[end - 1] === '/') end--
-  return value.slice(0, end)
-}
-
-/**
- * Validate the resolved module configuration, turning silent misconfiguration
- * (swapped `.convex.cloud`/`.convex.site` URLs, malformed URLs, an `authRoute`
- * that would produce a broken server-handler route, a `betterAuth.authClient`
- * path that doesn't exist) into actionable messages. Pure — the caller logs
- * the findings and applies the normalized `authRoute`. Exported for tests.
- */
-export function validateModuleOptions(input: {
-  url: string
-  siteUrl: string
-  authRoute: string
-  authClient?: string
-  rootDir: string
-}): ModuleOptionDiagnostics {
-  const errors: string[] = []
-  const warnings: string[] = []
-
-  if (input.url && input.url.endsWith('.convex.site')) {
-    errors.push(
-      `\`convex.url\` ("${input.url}") ends with .convex.site, which is the HTTP Actions domain — deployment URLs end with .convex.cloud. Did you mean to set \`convex.siteUrl\`?`,
-    )
-  }
-  else if (input.url && !isHttpUrl(input.url)) {
-    warnings.push(
-      `\`convex.url\` ("${input.url}") does not look like a valid http(s) URL — Convex clients will fail to connect.`,
-    )
-  }
-
-  if (input.siteUrl && input.siteUrl.endsWith('.convex.cloud')) {
-    warnings.push(
-      `\`convex.siteUrl\` ("${input.siteUrl}") ends with .convex.cloud, which is the deployment domain — site URLs (HTTP Actions) end with .convex.site. Did you swap it with \`convex.url\`?`,
-    )
-  }
-  else if (input.siteUrl && !isHttpUrl(input.siteUrl)) {
-    warnings.push(
-      `\`convex.siteUrl\` ("${input.siteUrl}") does not look like a valid http(s) URL.`,
-    )
-  }
-
-  let authRoute = input.authRoute
-  if (!authRoute.startsWith('/')) {
-    authRoute = `/${authRoute}`
-    warnings.push(
-      `\`convex.authRoute\` ("${input.authRoute}") must start with "/" — using "${authRoute}".`,
-    )
-  }
-  if (authRoute.length > 1 && authRoute.endsWith('/')) {
-    authRoute = stripTrailingSlashes(authRoute)
-  }
-
-  if (input.authClient && !authClientModuleExists(input.authClient, input.rootDir)) {
-    errors.push(
-      `\`convex.betterAuth.authClient\` points at "${input.authClient}", which does not exist (resolved against \`${input.rootDir}\`). The build would fail with an opaque import error — fix the path or remove the option to use the bundled client.`,
-    )
-  }
-
-  return { errors, warnings, authRoute }
-}
-
-function isHttpUrl(value: string): boolean {
-  if (!value.startsWith('http://') && !value.startsWith('https://')) {
-    return false
-  }
-  try {
-    new URL(value)
-    return true
-  }
-  catch {
-    return false
-  }
-}
-
-/**
- * Whether the custom `betterAuth.authClient` module exists on disk — probing
- * the common module extensions since the option (an import specifier) may
- * omit one.
- */
-function authClientModuleExists(authClient: string, rootDir: string): boolean {
-  const base = isAbsolute(authClient) ? authClient : join(rootDir, authClient)
-  return ['', '.ts', '.js', '.mts', '.mjs', '/index.ts', '/index.js'].some(
-    suffix => existsSync(`${base}${suffix}`),
-  )
-}
-
-/**
- * The dev-mode one-line startup summary: resolved deployment URL, functions
- * directory, and which opt-in integrations are active.
- */
-export function formatStartupSummary(url: string, functionsDir: string, integrations: IntegrationFlags): string {
-  const names: Record<keyof IntegrationFlags, string> = {
-    betterAuth: 'better-auth',
-    clerk: 'clerk',
-    auth0: 'auth0',
-    polar: 'polar',
-    security: 'nuxt-security',
-  }
-  const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)
-    .filter(key => integrations[key])
-    .map(key => names[key])
-  return `Convex ${url || '(no URL)'} · functions: ${functionsDir}/ · integrations: ${enabled.join(', ') || 'none'}`
-}
-
-/**
- * Enable the opt-in integrations, auto-detected when their package is installed
- * (the explicit option wins when set). Mirrors how `@convex-dev/better-auth` and
+ * Enable the opt-in integrations, auto-detected when their package is a
+ * dependency of the app and resolvable (the explicit option wins when set). Mirrors how `@convex-dev/better-auth` and
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
@@ -374,8 +223,9 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     }
     return state.enabled
   }
+  const rootDir = nuxt.options.rootDir
   const resolve = (key: Key, pkg: string): boolean =>
-    report(key, pkg, resolveIntegrationState(options[key], isPackageInstalled(pkg, nuxt.options.rootDir)))
+    report(key, pkg, resolveIntegrationState(options[key], isPackageInstalled(pkg, rootDir), isDeclaredDependency(pkg, rootDir)))
 
   const betterAuth = resolve('betterAuth', '@convex-dev/better-auth')
   if (betterAuth) {
@@ -409,7 +259,9 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerSecurity(resolver)
   }
 
-  return { betterAuth, clerk, auth0, polar, security }
+  const flags = { betterAuth, clerk, auth0, polar, security }
+  for (const message of integrationWarnings(flags, pkg => isPackageInstalled(pkg, rootDir))) logger.warn(message)
+  return flags
 }
 
 /** The raw `convex.security` option — read before module options are resolved. */
@@ -429,8 +281,11 @@ function readSecurityOption(nuxt: Nuxt): boolean | undefined {
 function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): ReturnType<typeof resolveIntegrationState> {
   const opts = nuxt.options as unknown as Record<string, unknown>
   if (opts.security === false) return { enabled: false, missingPackage: false }
-  const installed = hasNuxtModule('nuxt-security', nuxt) || isPackageInstalled('nuxt-security', nuxt.options.rootDir)
-  return resolveIntegrationState(explicit, installed)
+  const registered = hasNuxtModule('nuxt-security', nuxt)
+  const installed = registered || isPackageInstalled('nuxt-security', nuxt.options.rootDir)
+  // Listing it in `modules` is as much a declaration as naming it in package.json.
+  const declared = registered || isDeclaredDependency('nuxt-security', nuxt.options.rootDir)
+  return resolveIntegrationState(explicit, installed, declared)
 }
 
 /**
@@ -444,46 +299,6 @@ function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): Return
  */
 function registerSecurity(resolver: Resolver): void {
   addServerPlugin(resolver.resolve('./runtime/nuxt/security'))
-}
-
-/**
- * Whether a package is installed for the consumer app (or, as a fallback, for
- * this module) — used to auto-enable the optional integrations (Better Auth,
- * Polar, nuxt-security, ...) without making the user list extra modules.
- *
- * Probes the package directory along Node's lookup paths rather than calling
- * `require.resolve`: that honours the package's `exports` map under CJS
- * conditions, so an ESM-only package that also withholds `./package.json`
- * (nuxt-security) reports as missing even though it is right there.
- */
-function isPackageInstalled(id: string, rootDir: string): boolean {
-  for (const base of [join(rootDir, 'package.json'), import.meta.url]) {
-    const lookupPaths = createRequire(base).resolve.paths(id) ?? []
-    if (lookupPaths.some(dir => existsSync(join(dir, id, 'package.json')))) return true
-  }
-  return false
-}
-
-/**
- * Resolve the deployment and site URLs from module options, then environment.
- *
- * The `NUXT_PUBLIC_*` names come first: they are the Nuxt-shaped ones, and the
- * only ones Nitro will also apply as a runtime override on a built app. The
- * unprefixed names are read after them because that is what `npx convex dev`
- * writes — the Convex CLI picks its variable name per framework and has no Nuxt
- * case, so it falls back to `CONVEX_URL`. Reading both means someone who has
- * only ever run the CLI needs no `convex.url` in `nuxt.config` at all.
- *
- * Exported for tests.
- */
-export function resolveDeploymentUrls(
-  options: Pick<ModuleOptions, 'url' | 'siteUrl'>,
-  env: Record<string, string | undefined>,
-): { url: string, siteUrl: string } {
-  return {
-    url: options.url || env.NUXT_PUBLIC_CONVEX_URL || env.CONVEX_URL || '',
-    siteUrl: options.siteUrl || env.NUXT_PUBLIC_CONVEX_SITE_URL || env.CONVEX_SITE_URL || '',
-  }
 }
 
 /**
@@ -534,38 +349,6 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
   runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
   return { url, siteUrl }
-}
-
-/**
- * Build the ordered import-alias map for the Convex functions folder and its
- * generated modules, so user code and server routes can `import from
- * '#convex/...'` without spelling out `_generated`.
- *
- * - `#convex/api`        -> _generated/api        (`api`, `internal`, `components`)
- * - `#convex/server`     -> _generated/server     (`query`, `mutation`, `action`, `*Ctx`, ...)
- * - `#convex/dataModel`  -> _generated/dataModel  (`DataModel`, `Doc`, `Id`, `TableNames`)
- * - `#convex/_generated` -> _generated            (long form, covers every generated file)
- * - `#convex`            -> <rootDir>/<functionsDir>
- *
- * Order is significant: both Vite and Nitro resolve aliases with
- * `@rollup/plugin-alias`, which is first-match-wins and treats `#convex` as a
- * prefix of `#convex/api`. The specific generated-module aliases must come
- * before the catch-all `#convex`, otherwise `#convex/api` would resolve to
- * `<functionsDir>/api` instead of `<functionsDir>/_generated/api` (and would
- * shadow any user function file literally named `api.ts` / `server.ts`).
- */
-export function getConvexAliases(rootDir: string): Record<string, string> {
-  const functionsDir = resolveFunctionsDir(rootDir)
-  const convexDir = join(rootDir, functionsDir)
-  const generatedDir = join(convexDir, '_generated')
-
-  return {
-    '#convex/api': join(generatedDir, 'api'),
-    '#convex/server': join(generatedDir, 'server'),
-    '#convex/dataModel': join(generatedDir, 'dataModel'),
-    '#convex/_generated': generatedDir,
-    '#convex': convexDir,
-  }
 }
 
 /**
@@ -655,51 +438,6 @@ function registerConvexApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
 }
 
 /**
- * Contents of the fallback type template: placeholder (`any`-typed) ambient
- * declarations for the generated `#convex/*` modules while `convex dev`
- * hasn't emitted codegen yet, so a fresh project typechecks instead of failing
- * on every `#convex/api` import. Once codegen exists the template goes empty
- * and the real generated types win via the tsconfig `paths` the aliases
- * already produce.
- */
-export function convexTypeFallbackContents(hasApi: boolean, functionsDir: string): string {
-  if (hasApi) {
-    // Real codegen resolves through the tsconfig paths — declare nothing so
-    // the generated types are the only source of truth.
-    return 'export {}\n'
-  }
-  return [
-    `// Placeholder until \`npx convex dev\` generates ${functionsDir}/_generated.`,
-    'declare module \'#convex/api\' {',
-    '  export const api: any',
-    '  export const internal: any',
-    '  export const components: any',
-    '}',
-    'declare module \'#convex/server\' {',
-    '  export const query: any',
-    '  export const internalQuery: any',
-    '  export const mutation: any',
-    '  export const internalMutation: any',
-    '  export const action: any',
-    '  export const internalAction: any',
-    '  export const httpAction: any',
-    '  export type QueryCtx = any',
-    '  export type MutationCtx = any',
-    '  export type ActionCtx = any',
-    '  export type DatabaseReader = any',
-    '  export type DatabaseWriter = any',
-    '}',
-    'declare module \'#convex/dataModel\' {',
-    '  export type Doc<TableName extends string = string> = any',
-    '  export type Id<TableName extends string = string> = string',
-    '  export type DataModel = any',
-    '  export type TableNames = string',
-    '}',
-    '',
-  ].join('\n')
-}
-
-/**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
  * server routes import `#convex/api` too). Symmetric to
  * {@link registerConvexApiPlugin}'s runtime no-op guard, and re-rendered by
@@ -713,25 +451,6 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
   }, { nuxt: true, nitro: true })
 }
 
-/** Templates that must re-render when `convex dev` emits `_generated/api`. */
-const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-api-fallback.d.ts']
-
-/**
- * In dev, re-render the codegen-guarded templates the instant `convex dev`
- * emits `_generated/api`, so the generated `api` is wired app-wide (and the
- * placeholder types retire) without a dev-server restart — the fs-guarded
- * templates otherwise only re-evaluate on a full rebuild. Uses Nuxt's existing
- * file watcher via the `builder:watch` hook — no watcher of our own to tear
- * down.
- */
-function watchConvexCodegen(nuxt: Nuxt): void {
-  if (!nuxt.options.dev) return
-  nuxt.hook('builder:watch', async (_event, path) => {
-    if (!path.replace(/\\/g, '/').includes('_generated/api')) return
-    await updateTemplates({ filter: template => CODEGEN_GUARDED_TEMPLATES.includes(template.filename) })
-  })
-}
-
 /**
  * Expose the core Vue composables (`useQuery`, `useMutation`, `useAction`,
  * pagination, file storage, generic auth state, preloaded-query helpers, ...)
@@ -739,7 +458,7 @@ function watchConvexCodegen(nuxt: Nuxt): void {
  * (Polar) are registered by their auto-enabled integrations below.
  */
 function registerVueComposables(resolver: Resolver): void {
-  const composables: Array<{ name: string, from: string }> = [
+  const composables: Array<{ name: string, from: string, type?: boolean }> = [
     { name: 'useConvex', from: resolver.resolve('./runtime/vue/client') },
     { name: 'useQuery', from: resolver.resolve('./runtime/vue/composables/use-query') },
     { name: 'useQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-query') },
@@ -767,6 +486,12 @@ function registerVueComposables(resolver: Resolver): void {
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
     { name: 'useAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
     { name: 'useConvexAsyncQuery', from: resolver.resolve('./runtime/nuxt/composables/use-async-query') },
+    // Its types too, so `import type { AsyncQueryReturn } from '#imports'` works
+    // without spelling out the `nuxt-convex-module/app` subpath.
+    { name: 'AsyncQueryData', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryOptions', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryReturn', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
+    { name: 'AsyncQueryStatus', from: resolver.resolve('./runtime/nuxt/composables/use-async-query'), type: true },
     { name: 'usePaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'useConvexPaginatedQuery', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
     { name: 'usePaginatedQuery_experimental', from: resolver.resolve('./runtime/vue/composables/use-paginated-query') },
