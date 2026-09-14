@@ -42,7 +42,9 @@ export interface AsyncPaginatedQueryOptions extends Pick<AsyncQueryOptions, 'key
 export interface AsyncPaginatedQueryData<Item> {
   /**
    * The rows: the server-rendered first page until the live subscription
-   * delivers its own, then every loaded page, live.
+   * delivers its own, then every loaded page, live. The server page is
+   * shown for the initial args only — after an args change the list is
+   * empty until the new first page arrives.
    */
   results: ComputedRef<Item[]>
   /**
@@ -171,17 +173,43 @@ export function useAsyncPaginatedQuery<Query extends PaginatedQueryReference>(
   })
   const liveHasPage = computed(() => liveState.value !== undefined && liveState.value.status !== 'LoadingFirstPage')
 
-  const results = computed<Item[]>(() =>
-    liveHasPage.value ? liveState.value!.results : payloadPage.value ?? [],
-  )
+  // A client without a Convex client (no deployment URL — the plugin warned
+  // and provided nothing) has no live half; say so through `error` rather
+  // than rendering the hydrated page as if it were live.
+  const clientError = computed<Error | null>(() => {
+    if (import.meta.server || client || toValue(args) === 'skip') return null
+    return new Error(
+      '`useAsyncPaginatedQuery` could not start on the client: no Convex client is available. '
+      + 'Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
+    )
+  })
+
+  // The server page belongs to the initial args only. Once the live query
+  // has delivered a page — or the args have moved on — it is retired for
+  // good: a query reset to `LoadingFirstPage` by an args change must not
+  // show the previous args' rows while its own load.
+  const initialArgsJson = argsJson(initialArgs)
+  let payloadRetired = false
+  const payloadApplies = computed(() => {
+    // Both retiring conditions are reactive reads, so the flag flips inside
+    // the very recompute they trigger and needs no watcher of its own.
+    if (liveHasPage.value || argsJson(toValue(args)) !== initialArgsJson) payloadRetired = true
+    return !payloadRetired && payloadPage.value !== undefined
+  })
+
+  const results = computed<Item[]>(() => {
+    if (liveHasPage.value) return liveState.value!.results
+    return payloadApplies.value ? payloadPage.value! : []
+  })
   const status = computed<PaginationStatus>(() => {
     if (liveHasPage.value) return liveState.value!.status
-    const entry = asyncData.data.value
-    if (entry) return entry.isDone ? 'Exhausted' : 'CanLoadMore'
+    if (payloadApplies.value) return asyncData.data.value!.isDone ? 'Exhausted' : 'CanLoadMore'
     return 'LoadingFirstPage'
   })
   const isLoading = computed(() => status.value === 'LoadingFirstPage' || status.value === 'LoadingMore')
-  const error = computed<Error | null>(() => liveState.value?.error ?? asyncData.error.value ?? null)
+  const error = computed<Error | null>(
+    () => liveState.value?.error ?? clientError.value ?? asyncData.error.value ?? null,
+  )
 
   const loadMore = (numItems: number) => {
     live?.loadMore(numItems)
@@ -193,12 +221,14 @@ export function useAsyncPaginatedQuery<Query extends PaginatedQueryReference>(
   return Object.assign(promise, result)
 }
 
+/** Stable JSON for a set of query args (or the skip sentinel). */
+function argsJson(args: unknown): string {
+  return args === 'skip' ? '"skip"' : JSON.stringify(convexToJson((args ?? {}) as Value))
+}
+
 /** Payload key for a paginated query + initial args + page size. Exported for tests. @internal */
 export function defaultAsyncPaginatedQueryKey(queryName: string, initialArgs: unknown, initialNumItems: number): string {
-  const argsJson = initialArgs === 'skip'
-    ? '"skip"'
-    : JSON.stringify(convexToJson((initialArgs ?? {}) as Value))
-  return `convex:paginated:${queryName}:${argsJson}:${initialNumItems}`
+  return `convex:paginated:${queryName}:${argsJson(initialArgs)}:${initialNumItems}`
 }
 
 /** @public */

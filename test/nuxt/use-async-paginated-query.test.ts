@@ -1,7 +1,7 @@
 // PARITY: A-16
 import { describe, expect, it, vi } from 'vitest'
 import { anyApi, type FunctionArgs, type FunctionReference } from 'convex/server'
-import { defineComponent, h, nextTick, provide } from 'vue'
+import { defineComponent, h, nextTick, provide, ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { useNuxtApp } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../src/runtime/vue/client'
@@ -154,6 +154,56 @@ describe('useAsyncPaginatedQuery', () => {
 
     mounted.unmount()
     await client.close()
+  })
+
+  it('retires the server page when the args move on', async () => {
+    const client = testClient()
+    const watchQuery = vi.spyOn(client, 'watchQuery')
+    const key = 'async-paginated:args'
+    const channel = ref('a')
+
+    const { mounted, result } = await mount(
+      client,
+      () => useAsyncPaginatedQuery(queryRef, () => ({ channel: channel.value }), { initialNumItems: 2, key }),
+      { key, page: [{ _id: '1', body: 'server page for a' }], isDone: true },
+    )
+    await result
+    await nextTick()
+    expect(result.results.value.map(r => r.body)).toStrictEqual(['server page for a'])
+    expect(result.status.value).toBe('Exhausted')
+
+    // New args: the live query restarts from its first page, and the server
+    // page — which belongs to `a` — must not stand in for `b`.
+    channel.value = 'b'
+    await nextTick()
+    expect(result.results.value).toStrictEqual([])
+    expect(result.status.value).toBe('LoadingFirstPage')
+    expect(result.isLoading.value).toBe(true)
+
+    const args = subscribedArgs({ mock: { calls: watchQuery.mock.calls.filter(([, a]) => (a as { channel?: string }).channel === 'b') } })
+    seedPage(client, args, [{ _id: '2', body: 'live page for b' }], true)
+    await nextTick()
+    expect(result.results.value.map(r => r.body)).toStrictEqual(['live page for b'])
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('reports a missing client through `error` and keeps the hydrated page', async () => {
+    const key = 'async-paginated:no-client'
+    const { mounted, result } = await mount(
+      undefined,
+      () => useAsyncPaginatedQuery(queryRef, {}, { initialNumItems: 2, key }),
+      { key, page: [{ _id: '1', body: 'from the server' }], isDone: false },
+    )
+    await result
+
+    expect(result.results.value.map(r => r.body)).toStrictEqual(['from the server'])
+    expect(result.status.value).toBe('CanLoadMore')
+    expect(result.error.value?.message).toMatch(/no Convex client is available/)
+    expect(() => result.loadMore(5)).not.toThrow()
+
+    mounted.unmount()
   })
 
   it('keys the payload on the query, the initial args and the page size', () => {
