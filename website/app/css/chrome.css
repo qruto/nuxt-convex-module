@@ -172,6 +172,69 @@ body {
   --docs-toc-width: 18rem;
 }
 
+/* -- THE PAGE TURN -------------------------------------------------
+   A page change is a view transition (nuxt.config
+   `experimental.viewTransition`; the direction comes from
+   app/plugins/page-turn.client.ts, which also keeps the landing from
+   being snapshotted — the one page whose paint is too heavy for it).
+   The shell stays put: the header,
+   the sidebar and the TOC each get a name, so the browser cuts them
+   out of the page and morphs each in place — the sidebar's mark slides
+   to the next entry, the TOC swaps its list — while the page itself
+   turns: the old one dissolves and the next rises into place along the
+   site's curve, 12px from below going forward and from above coming
+   back, the same landing the fade-up entrance gives a row.
+
+   The names go on the columns' STICKY CONTAINERS, not the columns: a
+   column is as tall as the article beside it, so its box would animate
+   between two lengths and drag the list with it. The containers are
+   their content's own height, and the fixed column widths keep the
+   snapshots at scale, so two lists of different lengths just cross-
+   fade from the top. The right column is matched inside <main> because
+   the header and footer carry a `right` slot of their own.
+
+   The TOC's name goes one level lower still, on the frosted dish
+   itself, not on the sticky <nav> around it: a named element is a
+   BACKDROP ROOT, so a `backdrop-filter` inside one can only blur what
+   that element paints — and the nav paints nothing of its own. Named
+   on the nav, the dish's blur had an empty backdrop, the page grain
+   showed through crisp, and the glass read as a flat tint. Named on
+   the dish, the blur still reaches the page.
+
+   Reduced motion needs no branch: the option is `true`, not 'always',
+   so Nuxt does not start the transition at all and the page changes
+   in one step. */
+header[data-slot="root"] { view-transition-name: header; }
+main aside[data-slot="left"] > [data-slot="container"] { view-transition-name: docs-nav; }
+main [data-slot="right"] > nav > [data-slot="container"] { view-transition-name: docs-toc; }
+
+@keyframes page-turn-out {
+  to { opacity: 0; }
+}
+@keyframes page-turn-in {
+  from { opacity: 0; translate: 0 12px; }
+}
+@keyframes page-turn-in-back {
+  from { opacity: 0; translate: 0 -12px; }
+}
+::view-transition-old(root) {
+  animation: page-turn-out 0.2s ease-in both;
+}
+::view-transition-new(root) {
+  animation: page-turn-in 0.42s var(--ease-out) both;
+}
+html:active-view-transition-type(back)::view-transition-new(root) {
+  animation-name: page-turn-in-back;
+}
+/* The pinned groups keep the page's clock and curve, so nothing in the
+   shell settles before the page has. */
+::view-transition-group(header),
+::view-transition-group(docs-nav),
+::view-transition-group(docs-toc) {
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease-out);
+}
+
 /* -- THE HEADER RAIL ---------------------------------------------
    The bar used to be bg-default/75 — the SAME tone as the page —
    over a shadow with more negative spread (-14px) than blur (16px),

@@ -911,6 +911,19 @@
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
+/* Frosted sheet — the same glass, but matte: a panel that slides OVER
+   the page (the TOC drawer) rather than sitting in it. Mostly opaque,
+   so the list on it reads as on a page of its own, sheer enough that
+   the article behind still moves under the blur; the page grain rides
+   on the fill so the sheet is cut from the same stock as the ground.
+   No relief of its own — the drawer keeps the raised --elevation-3 it
+   already carries. */
+@utility panel-matte {
+  background-color: color-mix(in oklab, var(--ui-bg) 82%, transparent);
+  background-image: var(--mill-grain-page);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
 /* -- Finishes ----------------------------------------------------
    Not shapes — what the surface is made of. They stack on any depth
    recipe (::before for the sheen, ::after for the noise). */

@@ -115,6 +115,12 @@ export default defineNuxtConfig({
     // experimental) and the installation page (requirements).
     '/getting-started/stability': { redirect: { to: '/getting-started/introduction#versioning', statusCode: 301 } },
   },
+  // Every page change is a view transition: Nuxt snapshots the page,
+  // swaps the route, and the browser animates between the two —
+  // drawn in app/css/chrome.css (THE PAGE TURN), given its direction
+  // by app/plugins/page-turn.client.ts. `true`, not 'always': under
+  // prefers-reduced-motion Nuxt skips it and the page just changes.
+  experimental: { viewTransition: true },
   compatibilityDate: 'latest',
   typescript: {
     // `@nuxt/content` is docus's dependency, not this app's, so under pnpm's

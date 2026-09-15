@@ -35,7 +35,7 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass', 'panel-matte'],
             // `part-code-shell` only re-points the gutter's marking, so it is
             // NOT on the depth axis — it composes with part-code.
           },

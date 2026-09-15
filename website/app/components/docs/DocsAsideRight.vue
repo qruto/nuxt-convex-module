@@ -34,6 +34,17 @@ const route = useRoute()
 watch(() => route.hash, () => {
   tabOpen.value = false
 })
+// So does leaving the band: the tab's wrapper is hidden by CSS outside
+// lg..xl, but the open drawer is portalled to the end of <body> and
+// would stay up with no tab to close it. Same query as `lg:max-xl`.
+onMounted(() => {
+  const band = window.matchMedia('(width >= 64rem) and (width < 80rem)')
+  const leaveBand = (event: MediaQueryListEvent) => {
+    if (!event.matches) tabOpen.value = false
+  }
+  band.addEventListener('change', leaveBand)
+  onBeforeUnmount(() => band.removeEventListener('change', leaveBand))
+})
 </script>
 
 <template>
@@ -77,7 +88,10 @@ watch(() => route.hash, () => {
           side="right"
           :unmount-on-hide="false"
           :ui="{
-            content: 'bg-(image:--mill-grain-page) sm:ring-0 sm:shadow-(--elevation-3) divide-y-0',
+            // `bg-transparent` drops the theme's opaque bg-default so the
+            // sheet's own frosted fill (panel-matte, depth.css) is the one
+            // that paints.
+            content: 'bg-transparent panel-matte sm:ring-0 sm:shadow-(--elevation-3) divide-y-0',
             header: 'min-h-0 pt-6 pb-0',
             title: 'text-sm convex-text',
             body: 'sm:pt-3',
