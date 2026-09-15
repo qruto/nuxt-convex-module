@@ -22,8 +22,15 @@ const props = defineProps<{
 // hour) rather than pinned in the markup — a hardcoded number is wrong from
 // the next release onward. Unresolvable → the cell is dropped and the strip
 // closes up to three: a missing figure is honest, an invented one is not.
+//
+// Client-only on purpose: the landing is prerendered, so a server fetch would
+// bake whatever the registry said at build time — and the build runs before
+// the release workflow has published (the merge deploys first), then later
+// builds reuse the cached handler answer Vercel restores with `.nuxt/`
+// (production showed 0.0.1 for hours after 0.9.0 shipped, 2026-09-15).
 const { data: npm } = await useFetch('/api/npm-version', {
   key: 'npm-version',
+  server: false,
   default: () => ({ version: null as string | null }),
 })
 const version = computed(() => npm.value?.version ?? null)
