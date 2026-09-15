@@ -5,6 +5,8 @@
   <img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero-light.svg" alt="Nuxt × Convex" width="560">
 </picture>
 
+<a href="https://www.npmjs.com/package/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/npm.svg" alt="npm" height="20" align="middle"> &nbsp;<sub><b>View package</b></sub></a>
+
 # nuxt-convex-module
 
 **The [Convex](https://convex.dev) module for [Nuxt](https://nuxt.com)**
