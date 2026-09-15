@@ -44,6 +44,9 @@ exclude = [
   # Consistently 403s automated clients while working in a browser.
   "^https?://(www\\.)?linkedin\\.com",
   "^https?://(twitter|x)\\.com",
+  # GitHub settings pages answer a logged-out client with 404, not 403, so
+  # `accept` below cannot cover them (RELEASE.md links the Actions settings).
+  "^https?://github\\.com/.*/settings(/|$)",
 ]
 
 # A link that needs a login is not a broken link.
