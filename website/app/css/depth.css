@@ -247,12 +247,17 @@
      lit line just inside the edge, where the floor of a cut meets its
      wall. The figures are the ones the concave effect had before the
      lip went opaque; only their position moved. */
+  /* THE SHADE IS HARD (2026-09-14: "less blurry, only one pixel blur for
+     the inner top shadow"). A 1px blur, so the wall of the cut is an edge
+     rather than a smudge. Every recess reads these two tokens — concave,
+     concave-2, concave-ground, the part-* cuts, and the header rail's
+     re-scoped copy in chrome.css — so the change is site-wide. */
   --inset-shadow-1:
-    inset 0 2px 2px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 2px 1px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.03)),
     inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.8), oklch(80% 0.035 65 / 0.016));
   --inset-shadow-2:
-    inset 0 3px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 3px 1px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.035)),
     inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.018));
   /* The lip of a cut, as a BORDER colour — for the recesses that want a
@@ -803,7 +808,7 @@
    inside @layer utilities. Below ~18px a deeper cut turns to mush, so
    it stays at one pixel.
 
-   `convex-text` is its inverse at the same one pixel — a lit rim on
+   `convex-text` is its inverse at half that offset — a lit rim on
    the top edge (toward the light) and the glyph's own cast on the
    surface below it, so a small readout stands PROUD of the plate
    instead of being scribed into it. ConvexText.vue is the display-size

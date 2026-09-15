@@ -1,12 +1,13 @@
 <template>
-  <!-- One auth state, whoever provides it: the session lamp flips and the
-       two components swap in the same slot, while the providers that can
-       feed that state sit on the shelf below. Reduced motion shows the
-       signed-in state. -->
+  <!-- One auth state, whoever provides it: the session lamp flips — GREEN
+       signed in, RED signed out, the two lamp colours everyone reads
+       without a legend — and the two components swap in the same slot,
+       while the providers that can feed that state sit on the shelf
+       below. Reduced motion shows the signed-in state. -->
   <div class="flex w-full flex-col gap-3 font-mono">
     <div class="part-well grid px-4 py-3 text-[0.7rem] text-highlighted">
-      <span class="state state-in inline-flex items-center gap-2.5 [grid-area:1/1]"><i class="led size-2 flex-none rounded-full" />&lt;Authenticated&gt;</span>
-      <span class="state state-out inline-flex items-center gap-2.5 text-dimmed [grid-area:1/1]"><i class="size-2 flex-none rounded-full bg-(--ui-text-dimmed)" />&lt;Unauthenticated&gt;</span>
+      <span class="state state-in inline-flex items-center gap-2.5 [grid-area:1/1]"><i class="lamp lamp-on size-2 flex-none rounded-full" />&lt;Authenticated&gt;</span>
+      <span class="state state-out inline-flex items-center gap-2.5 text-toned [grid-area:1/1]"><i class="lamp lamp-off size-2 flex-none rounded-full" />&lt;Unauthenticated&gt;</span>
     </div>
     <ul class="m-0 flex list-none items-center justify-center gap-6 p-0 text-toned">
       <li
@@ -47,9 +48,13 @@ const LOGOS: Array<{ id: string, label: string, icon?: string, color?: string }>
 </script>
 
 <style scoped>
-.led {
-  background: var(--band, var(--color-signal-500));
-  box-shadow: var(--band-glow, var(--glow-primary-soft));
+.lamp-on {
+  background: var(--ui-color-success-500);
+  box-shadow: var(--glow-success);
+}
+.lamp-off {
+  background: var(--ui-color-error-500);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--ui-color-error-400) 55%, transparent);
 }
 .state-out { opacity: 0; }
 .group:hover .mark {

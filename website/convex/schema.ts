@@ -71,4 +71,22 @@ export default defineSchema({
     }),
     v.object({ kind: v.literal('clear') }),
   )),
+
+  // THE REACTIONS (hero panel, 2026-09-15 — the canvas moved to /canvas).
+  // An append-only log of key presses: which key (an index into
+  // shared/reactions.ts's KINDS), the name the sender sends as, and the
+  // sender's city when they switched it on. Kept under a cap, oldest first
+  // out; `_creationTime` is the order the ledger prints.
+  reactions: defineTable({
+    kind: v.number(),
+    name: v.string(),
+    city: v.optional(v.string()),
+  }),
+  // Today's count per key — Convex has no count operator, so `send` keeps
+  // this tally beside the row it inserts. One row per UTC day and key.
+  reactionTally: defineTable({
+    day: v.string(),
+    kind: v.number(),
+    count: v.number(),
+  }).index('by_day_and_kind', ['day', 'kind']),
 })

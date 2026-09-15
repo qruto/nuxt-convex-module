@@ -18,7 +18,10 @@ import SpecVue from '../landing/spec/SpecVue.vue'
 //
 // The index is the story in eight lines; the stage is the detail. What the
 // hero legend already names (the composables) is not repeated here: these
-// are the qualities of the client, not its API surface.
+// are the qualities of the client, not its API surface. Parity comes LAST
+// (2026-09-14): after seven parts that each add something, the closing line
+// is that the whole upstream API is here too — the sum, not the premise.
+// The lines are not numbered; the lit one and the band say where you are.
 //
 // ON A PHONE THE STAGE FOLLOWS THE PICK (2026-09-08: "on mobile view it
 // needs to show the preview near the item"). The index and the stage are
@@ -32,6 +35,9 @@ interface TourEntry {
   id: string
   label: string
   stamp: string
+  /* A short badge beside the label for the one part with no upstream
+     counterpart. */
+  tag?: string
   title: string
   body: string
   to: string
@@ -41,17 +47,6 @@ interface TourEntry {
 }
 
 const ENTRIES: TourEntry[] = [
-  {
-    id: 'parity',
-    label: 'parity',
-    stamp: 'convex/react + nextjs',
-    title: 'The API you already know',
-    body: 'A port of Convex\'s own React and Next clients, hook for composable — same names, same arguments, same return shapes. Convex\'s docs translate line for line; only Vue\'s shape changes.',
-    to: '/getting-started/introduction',
-    cta: 'how the port works',
-    art: SpecParity,
-    band: 'light-dark(var(--color-signal-500), var(--color-signal-400))',
-  },
   {
     id: 'typed',
     label: 'typed',
@@ -66,9 +61,10 @@ const ENTRIES: TourEntry[] = [
   {
     id: 'ssr',
     label: 'ssr',
+    tag: 'special',
     stamp: 'useAsyncQuery',
     title: 'Server-rendered, then live',
-    body: '`useAsyncQuery` fetches on the server, ships the rows in the payload and upgrades to the live subscription on hydration — Nuxt\'s `{ data, status, error }` shape, no flash. `preloadQuery` and `fetchQuery` cover Nitro.',
+    body: '`useAsyncQuery` runs the query on the server, ships the rows in the payload and hands them to the live subscription on hydration — no flash, no second fetch, Nuxt\'s `{ data, status, error }` shape. Convex\'s own clients have nothing like it; this piece exists only here. `preloadQuery` and `fetchQuery` cover Nitro.',
     to: '/guide/server-and-ssr',
     cta: 'server and ssr',
     art: SpecSsr,
@@ -78,7 +74,7 @@ const ENTRIES: TourEntry[] = [
     id: 'optimistic',
     label: 'optimistic',
     stamp: '.withOptimisticUpdate',
-    title: 'Commit-speed UI',
+    title: 'Optimistic updates',
     body: '`.withOptimisticUpdate` renders the write the instant you call it and reconciles on commit — the paginated helpers like `insertAtTop` come along.',
     to: '/guide/pagination#optimistic-updates-over-pages',
     cta: 'optimistic updates',
@@ -101,7 +97,7 @@ const ENTRIES: TourEntry[] = [
     label: 'security',
     stamp: 'nuxt-security',
     title: 'Hardened by default',
-    body: 'Install `nuxt-security` and the CSP learns your deployment\'s origins at runtime. The auth proxy is pinned to its methods, authenticated SSR responses are never cached, and `resolveAuthRedirect` closes the open redirect on your login page.',
+    body: 'Install `nuxt-security` and the CSP learns your deployment\'s origins at runtime — `connect-src`, `img-src` and `media-src`, the `.site` origin included. The auth proxy answers only its own methods and is never cached, authenticated SSR responses go out `no-store`, and `resolveAuthRedirect` closes the open redirect on your login page.',
     to: '/getting-started/security',
     cta: 'the security guide',
     art: SpecSecurity,
@@ -120,14 +116,25 @@ const ENTRIES: TourEntry[] = [
   },
   {
     id: 'vue',
-    label: 'plain vue',
+    label: 'vue',
     stamp: 'nuxt-convex-module/vue',
-    title: 'Nuxt optional',
-    body: 'The `/vue` subpath is self-contained: the same composables in any Vue app, provided with one plugin call.',
+    title: 'Any Vue app',
+    body: 'Vue is the floor and Nuxt is the extra. The `/vue` subpath is the same composables with no Nuxt in sight: provide the client with one plugin call and use them in anything that mounts Vue.',
     to: '/guide/plain-vue',
     cta: 'the plain vue guide',
     art: SpecVue,
     band: 'var(--color-spectrum-green)',
+  },
+  {
+    id: 'parity',
+    label: 'parity',
+    stamp: 'convex/react + nextjs',
+    title: 'Complete feature parity',
+    body: 'The whole of Convex\'s React and Next clients, ported hook for composable — every function, same names, same arguments, same return shapes. Convex\'s docs translate line for line; only Vue\'s shape changes.',
+    to: '/getting-started/introduction',
+    cta: 'how the port works',
+    art: SpecParity,
+    band: 'light-dark(var(--color-signal-500), var(--color-signal-400))',
   },
 ]
 
@@ -187,18 +194,23 @@ function segments(body: string) {
       type="button"
       :aria-expanded="index === active"
       aria-controls="tour-stage"
-      class="entry relative flex w-full items-center gap-3 rounded-strip px-2.5 py-2 text-left outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary"
+      class="entry relative flex w-full items-center gap-3 rounded-strip px-3.5 py-2 text-left outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary"
       :class="index === active ? 'is-active' : 'hover:bg-(--ui-bg-elevated)/40'"
       :style="{ '--band': entry.band, 'order': index * 2 }"
       @click="pick(index)"
       @keydown="onKey"
     >
-      <span class="stamp w-6 flex-none text-dimmed">0{{ index + 1 }}</span>
       <span class="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span
-          class="name truncate font-sans text-[0.95rem] leading-tight font-medium"
-          :class="index === active ? 'text-highlighted' : 'text-default'"
-        >{{ entry.title }}</span>
+        <span class="flex min-w-0 items-center gap-2">
+          <span
+            class="name truncate font-sans text-[0.95rem] leading-tight font-medium"
+            :class="index === active ? 'text-highlighted' : 'text-default'"
+          >{{ entry.title }}</span>
+          <span
+            v-if="entry.tag"
+            class="tag stamp flex-none"
+          >{{ entry.tag }}</span>
+        </span>
         <span class="stamp truncate text-dimmed">{{ entry.stamp }}</span>
       </span>
       <i
@@ -233,6 +245,10 @@ function segments(body: string) {
             class="tick h-0.75 w-2.5 flex-none rounded-full"
           />
           <span class="concave-text text-toned">{{ current.label }}</span>
+          <span
+            v-if="current.tag"
+            class="tag"
+          >{{ current.tag }}</span>
         </span>
         <span class="concave-text min-w-0 truncate text-dimmed">{{ current.stamp }}</span>
       </header>
@@ -250,7 +266,6 @@ function segments(body: string) {
             <component :is="current.art" />
           </div>
         </Transition>
-        <span class="stamp absolute right-3 bottom-2 text-dimmed opacity-70">fig. 0{{ active + 1 }}</span>
       </div>
 
       <Transition
@@ -338,6 +353,17 @@ function segments(body: string) {
 .is-active {
   background: var(--ui-bg-elevated);
   box-shadow: var(--elevation-0);
+}
+/* The one badge: a hairline chip, always gold so it reads as a mark
+   rather than as part of the entry's band. */
+.tag {
+  --band: var(--color-spectrum-gold);
+  --band-soft: color-mix(in srgb, var(--band) 15%, transparent);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  color: var(--band);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band) 55%, transparent);
+  background: var(--band-soft);
 }
 .hold {
   background: var(--band);

@@ -18,6 +18,7 @@ import type * as gate from "../gate.js";
 import type * as messages from "../messages.js";
 import type * as moderation from "../moderation.js";
 import type * as presence from "../presence.js";
+import type * as reactions from "../reactions.js";
 import type * as switches from "../switches.js";
 import type * as tasks from "../tasks.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   moderation: typeof moderation;
   presence: typeof presence;
+  reactions: typeof reactions;
   switches: typeof switches;
   tasks: typeof tasks;
 }>;

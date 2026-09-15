@@ -11,7 +11,7 @@
          be placed against those thirds. -->
     <div class="relative grid grid-cols-3">
       <i class="line absolute top-1 h-px" />
-      <i class="pulse absolute top-1 size-1.5 -translate-y-[1px] rounded-full" />
+      <i class="pulse absolute size-1.5 rounded-full" />
       <span
         v-for="(station, i) in STATIONS"
         :key="station"
@@ -53,8 +53,14 @@ const STATIONS = ['server', 'payload', 'socket']
 .led {
   background: var(--ui-text-dimmed);
 }
+/* The pulse is centred on a station by `left: <third>` plus a -50%
+   translate of its OWN size — never a rem offset: the stage zooms the
+   art and Chrome does not zoom a rem inside an animated position, which
+   left the pulse off the LED at every stop (2026-09-14). */
 .pulse {
-  left: calc(100% / 6 - 0.1875rem);
+  top: 0.25rem;
+  left: calc(100% / 6);
+  translate: -50% -50%;
   opacity: 0;
   background: var(--band, var(--color-signal-500));
   box-shadow: var(--band-glow, var(--glow-primary-soft));
@@ -69,39 +75,43 @@ const STATIONS = ['server', 'payload', 'socket']
 }
 @media (prefers-reduced-motion: no-preference) {
   .pulse { animation: ssr-pulse 5.4s ease-in-out infinite; }
-  .station .led { animation: ssr-led 5.4s ease-in-out infinite; animation-delay: calc(var(--i) * 1.2s); }
+  .station .led { animation: ssr-led 5.4s ease-in-out infinite; animation-delay: calc(var(--i) * 1.19s); }
   .bar { animation: ssr-bar 5.4s ease-in-out infinite; }
   .state-html { animation: ssr-html 5.4s ease-in-out infinite; }
   .state-live { animation: ssr-live 5.4s ease-in-out infinite; }
 }
+/* One timeline, three stops. The pulse DWELLS on each station — it
+   sits on the LED it just lit before it moves on — and the station LEDs
+   light on the same marks: server at 10%, payload at 32%, socket at 54%
+   (the delay is one stop, 22% of the cycle). */
 @keyframes ssr-pulse {
-  0%, 6% { left: calc(100% / 6 - 0.1875rem); opacity: 0; }
-  10% { opacity: 1; }
-  32% { left: calc(50% - 0.1875rem); }
-  54% { left: calc(100% * 5 / 6 - 0.1875rem); opacity: 1; }
-  60%, 100% { left: calc(100% * 5 / 6 - 0.1875rem); opacity: 0; }
+  0%, 6% { left: calc(100% / 6); opacity: 0; }
+  10%, 18% { left: calc(100% / 6); opacity: 1; }
+  30%, 40% { left: 50%; }
+  52%, 62% { left: calc(100% * 5 / 6); opacity: 1; }
+  68%, 100% { left: calc(100% * 5 / 6); opacity: 0; }
 }
 @keyframes ssr-led {
-  0%, 8% { background: var(--ui-text-dimmed); box-shadow: none; }
-  14%, 80% { background: var(--band, var(--color-signal-500)); box-shadow: var(--band-glow, var(--glow-primary-soft)); }
+  0%, 7% { background: var(--ui-text-dimmed); box-shadow: none; }
+  11%, 80% { background: var(--band, var(--color-signal-500)); box-shadow: var(--band-glow, var(--glow-primary-soft)); }
   92%, 100% { background: var(--ui-text-dimmed); box-shadow: none; }
 }
 /* The rows are drawn by the server (station one) and never blink in;
    they only tint when the socket owns them. */
 @keyframes ssr-bar {
   0%, 10% { opacity: 0; }
-  16%, 54% { opacity: 0.55; background: var(--ui-text-dimmed); }
-  60%, 84% { opacity: 0.9; background: var(--band, var(--color-signal-500)); }
+  16%, 52% { opacity: 0.55; background: var(--ui-text-dimmed); }
+  58%, 86% { opacity: 0.9; background: var(--band, var(--color-signal-500)); }
   94%, 100% { opacity: 0; }
 }
 @keyframes ssr-html {
   0%, 30% { opacity: 0; }
-  36%, 54% { opacity: 1; }
-  60%, 100% { opacity: 0; }
+  34%, 52% { opacity: 1; }
+  58%, 100% { opacity: 0; }
 }
 @keyframes ssr-live {
-  0%, 56% { opacity: 0; }
-  62%, 86% { opacity: 1; }
+  0%, 54% { opacity: 0; }
+  60%, 86% { opacity: 1; }
   94%, 100% { opacity: 0; }
 }
 </style>

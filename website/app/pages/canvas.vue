@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import LiveCanvas from '../components/landing/LiveCanvas.vue'
 
-// THE SECOND WINDOW. The hero's canvas opens this page in a small popup
-// over the landing page (utils/canvas-window.ts): the same instrument
+// THE CANVAS, KEPT (2026-09-15): it was the hero's instrument until the
+// reactions took the plate, and it lives on here whole — the same
+// component, the same table (convex/canvas.ts) — so it can come back or be
+// linked to. This was its second window: the hero opened it in a small popup
+// over the landing page (utils/second-window.ts): the same instrument
 // on the same table, so a stroke in either window lands in the other a
 // round trip later — the second window is the second person, and counts as
 // one (useVisitor mints it its own session id). No header, no footer, no

@@ -1,23 +1,26 @@
 <script setup lang="ts">
-// The spec board — a scoreboard of the four figures the module is stated
-// against, one recessed readout with a cell per figure: its own published
-// version, the two peer ranges, and the upstream Convex release the port
-// matches. Cut into the hero directly above the calls to action, so it reads
-// as the display over the controls, not as a line of the copy.
+// The spec strip — a readout cut into the hero ground carrying the five
+// figures the module is stated against: its own published version, the
+// three peer ranges, and the upstream Convex release the port matches. It
+// sits under the calls to action and runs the copy column's full width
+// (2026-09-14: "less dark, aligned with the container, concave").
 //
 // The peer ranges arrive as props from the markdown (`:landing-version-chip
-// {nuxt="≥ 4.1" vue="≥ 3.5"}`) — they are the page's copy, and a scoreboard
-// needs them as label/figure pairs rather than as one sentence to split.
+// {nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.40"}`) — they are the page's copy,
+// and the strip needs them as label/figure pairs rather than as one
+// sentence to split.
 const props = defineProps<{
   /** The Nuxt range the module supports, as the page states it. */
   nuxt: string
   /** The Vue range the module supports, as the page states it. */
   vue: string
+  /** The Convex range the module supports (its peer range), as the page states it. */
+  convex: string
 }>()
 
 // The published version comes off the npm registry (cached server-side for an
 // hour) rather than pinned in the markup — a hardcoded number is wrong from
-// the next release onward. Unresolvable → the cell is dropped and the board
+// the next release onward. Unresolvable → the cell is dropped and the strip
 // closes up to three: a missing figure is honest, an invented one is not.
 const { data: npm } = await useFetch('/api/npm-version', {
   key: 'npm-version',
@@ -28,122 +31,111 @@ const version = computed(() => npm.value?.version ?? null)
 // The Convex figure is not copy: it is the upstream release the port currently
 // matches, so it reads off the shared baseline table the component pages use,
 // and a sync bump never leaves a stale number sitting in the hero.
-const convex = upstreamBaselines.convex
+const ported = upstreamBaselines.convex
 
 const cells = computed(() => [
-  ...(version.value ? [{ label: 'version', figure: version.value }] : []),
+  ...(version.value ? [{ label: 'version', figure: version.value, lit: true }] : []),
   { label: 'nuxt', figure: props.nuxt },
   { label: 'vue', figure: props.vue },
-  { label: 'ports convex', figure: convex.version },
+  { label: 'convex', figure: props.convex },
+  { label: 'ports convex', figure: ported.version },
 ])
 </script>
 
 <template>
-  <!-- Its own size container: the fold to two columns queries the copy
-       column the board sits in, not the viewport. -->
-  <div class="spec-board">
-    <!-- A definition list is what a scoreboard IS — a name over a figure,
-         four times — so a screen reader gets "NUXT ≥ 4.1" as one pair.
+  <!-- A definition list is what a nameplate IS — a name and a figure,
+       five times — so a screen reader gets "nuxt ≥ 4.1" as one pair.
 
-         The dish is `part-dish` (depth.css: `concave-ground` at the card
-         radius): the floor is the PAGE'S own colour, not the well fill a
-         plate would take. This board sits on the hero ground with nothing
-         under it, so `concave`'s lighter tile would read as a panel laid
-         on the page rather than as a readout cut into it — and it is
-         opaque, which is what stops the hero's mill grain carrying through
-         the cut. With no tonal step to see it by, the recess is drawn
-         entirely by its walls: the lip, the deep well's shade under it,
-         and a floor catch.
-
-         The two lines of a cell are cut and raised, not big and small: the
-         LABEL is scribed into the dish (`concave-text`) because it is the
-         plate's own marking, and the FIGURE stands proud of it
-         (`convex-text`) because it is the reading — the part that changes.
-         Neither is the loudest thing in the hero: figures at
-         `text-default` and labels at `text-toned` keep the eye on the
-         headline and the primary call, which is what a nameplate is for. -->
-    <dl class="board part-dish m-0">
-      <div
-        v-for="cell in cells"
-        :key="cell.label"
-        class="cell grid justify-items-center gap-y-1 px-4 pt-2.5 pb-3 text-center"
-      >
-        <dt class="stamp text-[0.58rem] whitespace-nowrap text-toned">
-          {{ cell.label }}
-        </dt>
-        <dd class="convex-text m-0 font-mono text-base leading-tight font-semibold whitespace-nowrap text-default tabular-nums">
-          {{ cell.figure }}
-        </dd>
-      </div>
-    </dl>
-  </div>
+       The strip is a cut into the section ground (`concave-ground`: the
+       ground's own tone on the floor, the walls drawing the recess), the
+       same recess the hero's other readouts sit in. Its cells are keyed
+       by scribed seams — chrome.css's seam pair, stood on end between
+       cells and laid flat between rows — so the same markup folds to two
+       columns on a phone with every seam still drawn. The version is the
+       one figure that changes, and the one lit in the signal ink. -->
+  <dl class="spec-strip concave-ground rounded-strip m-0">
+    <div
+      v-for="cell in cells"
+      :key="cell.label"
+      class="cell"
+    >
+      <dt>{{ cell.label }}</dt>
+      <dd :class="{ lit: cell.lit }">
+        {{ cell.figure }}
+      </dd>
+    </div>
+  </dl>
 </template>
 
 <style scoped>
-.spec-board {
-  container-type: inline-size;
-}
-/* THE BOARD IS AS WIDE AS THE HEADLINE, and the headline is not as wide
-   as its column: 100% of the copy column is 720px against a headline
-   whose longest line measures 623 at the same width, so a full-width
-   board would overhang the thing it lines up with.
-
-   The figure is the headline's own measure, in ems of the headline's own
-   type: the hard-broken second line ("in a [Nuxt] application") renders
-   10.8em wide in Technor 700, so the board is 10.8 x --hero-title-size
-   and the two edges track each other through every step of the title's
-   clamp. Re-measure both if the headline's wording or its break move;
-   nothing here can derive it. */
-.board {
+.spec-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-  inline-size: min(100%, calc(10.8 * var(--hero-title-size, 4.5rem)));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, auto);
+  inline-size: 100%;
+  overflow: hidden;
 }
-/* The cells are divided by scribed seams, not by drawn boxes: chrome.css's
-   two-pixel cut stood on end. */
-.cell + .cell {
-  box-shadow: var(--seam-y);
+.cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.7rem 0.46rem;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  line-height: 1;
 }
-/* Two columns once the row can't hold four readouts — the phone case. */
-@container (width < 26rem) {
-  .board {
-    grid-template-columns: repeat(2, 1fr);
+/* The seam between two cells: chrome.css's seam pair stood on end, drawn
+   as a 2px pseudo on the cell's leading edge (a box-shadow could not be
+   stacked with the flat seam the folded layout adds below). */
+.cell {
+  position: relative;
+}
+.cell + .cell::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  background: linear-gradient(90deg, var(--seam-shade) 0 1px, var(--seam-catch) 1px 2px);
+}
+dt {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: var(--ui-text-muted);
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+dd {
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-highlighted);
+  text-shadow: 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(0 0 0 / 0.85));
+}
+dd.lit {
+  color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
+}
+/* Two by two once the copy column can't hold the row — the phone case.
+   The seams re-key: only the second column keeps the standing seam,
+   every cell above another row gets --seam-x laid under it, and a fifth
+   cell alone on the last row takes both columns. */
+@container hero-copy (width < 28rem) {
+  .spec-strip {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .cell + .cell {
-    box-shadow: none;
-  }
-  .cell:nth-child(even) {
-    box-shadow: var(--seam-y);
-  }
-  .cell:nth-child(n + 3) {
-    box-shadow:
-      0 -1px 0 var(--seam-shade),
-      inset 0 1px 0 var(--seam-catch);
-  }
-  .cell:nth-child(even):nth-child(n + 3) {
-    box-shadow:
-      var(--seam-y),
-      0 -1px 0 var(--seam-shade),
-      inset 0 1px 0 var(--seam-catch);
-  }
+  .cell + .cell::before { display: none; }
+  .cell:nth-child(even)::before { display: block; }
+  /* Not in the last row: not the last cell, and not the odd cell that
+     shares the last row with it. */
+  .cell:not(:last-child):not(:nth-last-child(2):nth-child(odd)) { box-shadow: var(--seam-x); }
+  .cell:last-child:nth-child(odd) { grid-column: span 2; }
 }
 @media (forced-colors: active) {
-  .board {
+  .spec-strip,
+  .cell {
     border: 1px solid;
-  }
-  .cell + .cell {
-    border-inline-start: 1px solid;
-  }
-  @container (width < 26rem) {
-    .cell + .cell {
-      border-inline-start: 0;
-    }
-    .cell:nth-child(even) {
-      border-inline-start: 1px solid;
-    }
-    .cell:nth-child(n + 3) {
-      border-block-start: 1px solid;
-    }
   }
 }
 </style>

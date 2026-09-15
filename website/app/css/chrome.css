@@ -309,12 +309,18 @@ body {
      alpha is this scope's to set, the colour is not, and a cold floor
      line in the one dish that sits at eye level all the way down the
      site is the last place to keep one. */
+  /* A SECOND difference from depth.css (2026-09-14: "make the search
+     bar's inner top shadow more solid"): the lip shade is one hard pixel
+     here, no blur. The search field is the one well that sits at eye
+     level on every page, and a 1px blur on it read as a smudge where the
+     page's wells read as an edge. */
   --inset-shadow-1:
-    inset 0 2px 2px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.5)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.09)),
     inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.05));
   --inset-shadow-2:
-    inset 0 3px 3px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.55)),
+    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.25)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.11)),
     inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.055));
 }

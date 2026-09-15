@@ -163,16 +163,9 @@
    a field of parallel lines is exactly how light travels along a bank
    of slats, each catching a slightly different amount of it. */
 .landing-hero-ground {
-  /* The headline's type size, shared: the spec board under it is cut to
-     the same measure (LandingVersionChip.vue) and has to move with every
-     step of this clamp.
-     TWO BANDS, because the headline is not always in the same column
-     (2026-09-08). Below `lg` it has the full container and 8vw keeps it
-     large; at `lg` the theme halves the container for the instrument
-     panel, and 4vw put the longest line (10.8em) past that half at 1024,
-     so the hand-set two-line headline came out as four. 3.8vw lands it
-     inside the half column at every width in the band. */
-  --hero-title-size: clamp(3rem, 8vw, 4.5rem);
+  /* The headline's type size — the ceiling only. The floor is the column:
+     .landing-billet caps it against the copy column's width (below). */
+  --hero-title-size: clamp(2.4rem, 8vw, 4.5rem);
   --hero-sheen: light-dark(oklch(100% 0 0 / 0.5), oklch(100% 0 0 / 0.045));
   --hero-shade: light-dark(oklch(0% 0 0 / 0.045), oklch(0% 0 0 / 0.3));
   background-color: var(--ui-bg);
@@ -196,12 +189,20 @@
 
    Reduced motion turns it off: snapping moves the page by an amount
    the reader did not ask for, which is the motion that preference is
-   about. */
+   about.
+
+   This native snap is the no-script reading. With script the settle
+   is driven by useLandingSnap (same rule, an eased glide instead of
+   the browser's hard landing), and the native one stands down so the
+   two never pull on the same scroll. */
 html:has(.landing-panel) {
   scroll-snap-type: y proximity;
 }
 html:has(.landing-panel) footer {
   scroll-snap-align: end;
+}
+html.landing-snap-driven:has(.landing-panel) {
+  scroll-snap-type: none;
 }
 @media (prefers-reduced-motion: reduce) {
   html:has(.landing-panel) {
@@ -322,23 +323,15 @@ html:has(.landing-panel) footer {
 .landing-hero-ground > [data-slot="container"] {
   padding-block: clamp(1.25rem, 5svh, 5rem);
 }
-/* THE HEADLINE IS MEASURED AGAINST ITS OWN COLUMN, and the column
-   changes twice on the way up. Below `lg` it has the whole container;
-   from `lg` the theme splits it in half for the instrument panel; from
-   `xl` index.md re-splits it as `1fr / 32rem`, which hands the copy back
-   most of the extra width. The longest line is 10.8em, so each band's vw
-   is the largest one that still fits 10.8em inside that band's narrowest
-   column — 3.7vw at 1024 (a 416px column), 3.9vw at 1280 (560px).
-   Overshoot and the hand-set two-line headline silently becomes four. */
-@media (width >= 64rem) {
-  .landing-hero-ground {
-    --hero-title-size: clamp(2.2rem, 3.7vw, 4.5rem);
-  }
-}
-@media (width >= 80rem) {
-  .landing-hero-ground {
-    --hero-title-size: clamp(2.4rem, 3.9vw, 4.5rem);
-  }
+/* THE HEADLINE IS MEASURED AGAINST ITS OWN COLUMN (2026-09-14: "two
+   lines or four lines, never three"). The copy column — UPageHero's
+   wrapper, which holds the title, the board and the keys — is a size
+   container, and the headline's type is capped to it: its longest hand-set
+   line ("in a Nuxt application") is 10.8em, so at 100cqi/11 both lines
+   always fit. The vw bands that used to chase the column through the two
+   breakpoints are gone with them; only the cap moves. */
+.landing-hero-ground [data-slot="wrapper"] {
+  container: hero-copy / inline-size;
 }
 /* Under `lg` the hero's container is a flex column, where centring is
    `justify-content`. At `lg` it becomes the two-column grid, which
@@ -355,10 +348,9 @@ html:has(.landing-panel) footer {
    relief, no split (2026-09-06): every word in the sentence is CONVEX,
    pressed up out of the page ground and lit by the one lamp. The plain
    words carry the full playground chain right down to the twelve-step
-   side wall; the two brand lockups carry the three passes of it a
-   filter chain can hold — lit rim, shaded rim, cast — over dark matte
-   graphite wordmarks and vendor-hue enamel symbols (see The badge
-   RELIEF).
+   side wall; the two brand lockups carry the SAME chain as an SVG
+   filter, over dark matte graphite wordmarks and vendor-hue enamel
+   symbols (see The badge RELIEF).
 
    The split this replaces (2026-08-24) had the marks CUT IN, engraved
    badges inlaid in the raised sentence, on the theory that two reliefs
@@ -493,7 +485,21 @@ html:has(.landing-panel) footer {
      floor below the two-column layout, where the title is full-width
      and the lines can afford to wrap again. Unlayered, so it beats the
      slot's text-5xl/sm:text-7xl utilities. */
-  font-size: var(--hero-title-size, clamp(3rem, 8vw, 4.5rem));
+  font-size: min(var(--hero-title-size), 100cqi / 11);
+}
+/* Each hand-set line is two PARTS (index.md: "Use" + "Convex backend",
+   "in a" + "Nuxt application"), and a part never breaks inside. Under 26rem
+   the two-line size would drop below 2.4rem, so the column goes to FOUR
+   lines: the type is re-capped to the widest part (8.9em) instead, which
+   is narrower than either full line — so both lines break, at their one
+   allowed point, and the headline is never three lines tall. */
+.landing-billet .billet-part {
+  white-space: nowrap;
+}
+@container hero-copy (width < 26rem) {
+  .landing-billet {
+    font-size: min(var(--hero-title-size), 100cqi / 8.9);
+  }
 }
 /* The ghostwrite band — the hero's ONLY animation, and it is hung
    DIRECTLY ON THE BAND STOPS in HeroBillet's zero-size .billet-sweeps
@@ -715,10 +721,11 @@ html:has(.landing-panel) footer {
     calc(var(--lx) * -1)   calc(var(--ly) * -1)   calc(var(--softness) * 1.2) var(--lo-surf),
     calc(var(--lx) * -2.1) calc(var(--ly) * -2.1) calc(var(--softness) * 2.8) var(--lo-cast);
 }
-/* The band gradients' host (HeroBillet) — a resource-only svg that must
-   never paint or take space: out of flow so the 0×0 box can't grow the
-   first line's strut or slide the copies out of register. */
-.hero-billet-line > .billet-sweeps {
+/* The band gradients' and relief filters' hosts (HeroBillet) —
+   resource-only svgs that must never paint or take space: out of flow
+   so the 0×0 boxes can't grow the first line's strut or slide the
+   copies out of register. */
+.hero-billet-line > :is(.billet-sweeps, .billet-relief) {
   position: absolute;
 }
 .hero-billet-line > .billet-face {
@@ -746,237 +753,116 @@ html:has(.landing-panel) footer {
   paint-order: stroke fill;
 }
 /* -- The badge RELIEF ---------------------------------------------
-   What used to be here, and why it is not (2026-08-31). Three builds
-   of the playground's embossed preset ran on these two marks: first
-   .depth-text.convex, then .depth-icon.convex chained properly, then
-   that chain crisped and shallowed pass by pass on instruction. The
-   last of those took the relief down to ~1px, and at 1px a CHAINED
-   renderer has nowhere to put itself — the four wall copies, the
-   shaded rim and the contact all land inside one pixel of the outline,
-   so instead of an extrusion they composite into a hairline tracing
-   every shape. That is the "ugly one-pixel border around colored
-   logos", and it is not tunable: fifteen stacked copies need room to
-   read as thickness, and a badge this shallow has none to give.
+   The marks stand off the page EXACTLY as the words do (2026-09-14:
+   "the same convex effect on the logos and their text"): the same
+   seventeen passes in the same order under the same lamp — lit rim
+   toward it, its soft spread, the shaded rim away, the twelve-step
+   side wall, the two-step cast pooling onto the ground.
 
-   So the chain is gone, and what replaces it is deliberately not a
-   relief renderer. The marks now carry three things:
+   A text-shadow list cannot reach an SVG path, and a chained CSS
+   drop-shadow() cannot hold the list either: each of its passes casts
+   from the RESULT of the one before, so a twelve-step wall composites
+   into a hairline tracing every shape, and a cast thrown after a rim
+   leaves from a rim-dilated silhouette and draws a dark contour on the
+   LIT side. Both were built and torn out here (2026-08-31, 2026-09-06),
+   and what stood in their place until today was a single lit rim. So
+   the chain is an SVG FILTER now — HeroBillet's .billet-relief svg,
+   one per mark, because a filter measures in the artwork's user units
+   and the two kits' boxes are 1.72× apart (THE SCALE TRAP: Convex's
+   51.5-unit box draws at 0.779em, Nuxt's 32-unit box at 0.833em, so
+   one shared em would lift one mark nearly twice as far as the other).
+   Every pass reads the untouched source and feMerge stacks them behind
+   it, which is text-shadow's own law; nothing compounds.
 
-     1. Their FILLS, which is where the depth actually lives and always
-        did most of this work — the wordmark's eight-stop matte
-        graphite descent (lit crown → baseline shade → a bounce of
-        ground light at the feet) and the enamel's five-stop domes.
-        Untouched.
-     2. ONE PASS — THE LIT RIM (2026-09-06), toward the lamp, and
-        nothing else. Same lamp, same em-scaled depth as the words:
-        --mark-relief is --depth's own figure, so the rim lands on the
-        page at the same offset the letters' does.
+   TWO FILTERS PER MARK — wordmark and symbol are separate groups in the
+   artwork (BrandConvex.vue / BrandNuxt.vue) — because the two are not
+   one material and the words' inks do not land the same way on both.
 
-        NO DARK, ON INSTRUCTION, and this is the whole shape of the
-        day's work. The marks used to carry both halves of the words'
-        relief — the lit rim toward the lamp AND a shaded rim plus a
-        cast away from it — and on a DARK badge those two halves do not
-        weigh the same. A shadow paints BEHIND its shape, so each rim
-        is the sliver of a copy peeking out past the silhouette; on the
-        light-grey letters both slivers are almost invisible, but
-        against a 0.455 graphite wordmark or a bottle-green triangle
-        the pale one reads as the mark's lit edge and the dark one
-        reads as a second, separate shadow ringing the logo. Two
-        shadows, one light and one darker, on marks set in a sentence
-        whose letters show one. The light half is the half that says
-        "raised"; it stays, and the dark half is gone.
+   THE WORDMARKS TAKE THE WORDS' OWN INKS. "convex" and "Nuxt" are
+   letters in the sentence, so their lit rim, soft spread, shaded rim
+   and wall are flooded with the very --hi / --hi-soft / --lo / --wall
+   that "backend" is cut with (the floods below), and the two reliefs
+   hold the same relation to the plate in both schemes. They were
+   derived from the graphite for a day (2026-09-14) and it read wrong
+   at the same offsets: the words' wall is their 0.83 fill at L×0.62,
+   which on the dark plate lands just ABOVE it — a faint band — while
+   anything darkened from 0.27-0.46 graphite lands below it, a black
+   band, and the marks looked twice as high. Measured to a quarter
+   pixel: identical geometry, opposite tone; so the tone moved.
 
-        Two earlier passes at the same complaint are worth not
-        repeating. The first kept the dark and only re-threw it: the
-        cast used to be a lift of its own (0.026em, blurred x1.7, at
-        30%) chained BEHIND the rims, and a chained drop-shadow casts
-        from the RESULT of the pass before it — so it left from a
-        silhouette already dilated by the lit rim and came back out
-        past the artwork's own edge on the LIT side, a dark contour
-        drawn outside a bright one. Quoting the words' own throw fixed
-        that particular ring but left the dark there. The second pass
-        deleted the wrong half — the lit rim — on the argument that a
-        pale sliver outside a dark shape can only be a glow; what that
-        actually produced was a badge with nothing but shading on it,
-        which is the opposite of the ask.
+   THE SYMBOLS SHADE IN THEIR OWN HUE. Enamel is not the sentence's
+   metal, and a grey rim on a magenta lobe is a grey line drawn on it
+   (retired today for the second time); so the symbol filter takes its
+   rim, shade and wall from the artwork's OWN PIXELS, as colour
+   matrices — lifted halfway to white, darkened to 0.68 and 0.74:
+   shallower than the words' L-0.28 / L×0.62, because a saturated hue
+   darkened that far is a different colour (gold goes brown and read as
+   dirt under the lobe), where grey merely goes darker.
+   Each lobe picks up its own dome: the crown at the lit rim, the shade
+   at the wall. The two casts are the GROUND's for every part, as the
+   words' are — the same --lo-surf / --lo-cast — so every word and mark
+   pools its shadow on the one plate; a cast tinted with the enamel's
+   hue would be a coloured lamp, and there is one lamp. The knobs —
+   depth, softness, the lamp angle, the four alphas — are quoted in
+   HeroBillet.vue (a primitive's dx/dy/stdDeviation are attributes; CSS
+   cannot set them). MOVE THEM WITH THE WORDS' KNOBS.
 
-        ONE, not seventeen, and the paragraph above the list is why. A
-        chained drop-shadow compounds — each pass casts from the result
-        of the last — so a twelve-step side wall composites into that
-        hairline border, and no amount of tuning gets it out. The
-        wall's job (thickness) is left to the fills, which is where it
-        always actually lived. A single pass compounds with nothing at
-        all, which is the other thing to like about it.
-
-        The marks therefore cast NOTHING onto the plate, while every
-        word beside them casts twice. That is a deliberate exception,
-        not an oversight: put a cast back and the badge has a dark
-        shadow again. If one is ever wanted, it is the words' own —
-        --lx x1 blurred --softness x 1.2 at --shade x 0.35%, then x2.1
-        blurred x2.8 at x 0.25%, in --surf-dark for the wordmarks and
-        each symbol's own hue for the enamel — and it goes AFTER the
-        rim in the chain, never before.
-     3. The ghostwrite band, the mark's only animation — which also
-        took the wordmark's fill off (1) and left the relief below to
-        the enamel alone. See the ghostwrite block.
-
-   NO MATERIAL RULE SURVIVES ON THE RIM, and that is the last thing
-   this block let go of (2026-09-06: "make it white"). The badge's
-   materials — the graphite mid-tone, the four vendor hues — used to
-   compute a per-symbol tint for it. Two arguments retired them. The
-   material's own LIGHT was never available: the words' --ink-light
-   formula run on the graphite returns 0.74, DARKER than the 0.922
-   plate, a shadow wearing a highlight's name. And the tint on top of a
-   fixed near-white — cream, lilac, blush, mint — is invisible at half
-   a pixel of crisp edge, which is all a rim is. So the rim is the
-   WORDS' white, unmodified, and the vendor hues live where they are
-   actually seen: in the fills.
-
-   The face copy's duplicate mark keeps its width but never paints
-   (display:none would slide the copies out of register) — except for
-   the ghostwrite band on the letterforms, which is exactly what that
-   registered duplicate is good for. */
+   THE CONTACT STROKE too (2026-09-14: "add a text stroke to the
+   marks"): the words' machined line where the wall meets the ground —
+   -webkit-text-stroke in --edge-c under the fill, so only its outer
+   half shows. Same ink, same width (--depth × 0.2 = 0.00728em, the
+   clamp's middle term), converted to each artwork's user units below
+   because stroke-width on a path measures in those: 0.00728 × 66.11
+   and × 38.4. The words' 0.5px floor is not carried — it only bites
+   below ~69px type, and there a mark's line simply thins with the
+   letters' shadows instead of holding at half a pixel.
+   The face copy's duplicate mark keeps its width but never paints,
+   except for the ghostwrite band on the letterforms (below). */
+.hero-billet-line .billet-ink [aria-label="Convex"] { --mark-edge: 0.481; }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] { --mark-edge: 0.28; }
+.hero-billet-line .billet-ink .brand-lockup :is(.brand-word, .brand-symbol) path {
+  stroke: var(--edge-c);
+  stroke-width: calc(var(--mark-edge) * 1px); /* px on a path = user units */
+  paint-order: stroke fill;
+}
 .hero-billet-line .billet-ink .brand-lockup {
-  /* ---- THE SCALE TRAP ----
-     Every length below is a fraction of the headline's em, and NONE of
-     them can be written as one, which is the trap this file paid for
-     twice. A CSS filter on an SVG element measures in USER UNITS, so
-     one shared em was scaled by each kit's own viewBox-to-render
-     factor: Convex's 51.5-unit box draws at 0.537em / 0.6893 = 0.779em
-     (one unit = 0.0151em), Nuxt's 32-unit box at 0.625em / 0.75 =
-     0.833em (one unit = 0.0260em) — 1.72x apart, one mark lifted
-     nearly twice as far as the other in the same sentence. So each
-     figure is the distance we want on the PAGE and each artwork
-     converts it with its own --mark-per-em (down by the fill swaps):
-     viewBox height x --brand-ratio / the --brand-ref coefficient. A
-     lockup with no --mark-per-em leaves every length invalid and drops
-     the filter whole — flat, rather than lifted at some other
-     artwork's scale, which is the failure you want to see. And a
-     constant in user units is a constant fraction of the ARTWORK, so
-     this scales with the mark at every type size with no em left in
-     the chain.
-
-     ---- THE LIT RIM ----
-     How far off the page the mark stands, as a fraction of the
-     headline's em. --mark-relief is a QUOTE — --depth from the block
-     above, written out as a plain number because the derivation runs
-     in the artwork's user units and there is no em left in that chain
-     to divide out. The two lockups are words in the same sentence as
-     "Use" and "backend"; a mark standing off the page by a different
-     amount than the letters touching it is the one thing that reads as
-     a sticker. MOVE IT WITH THE WORDS' KNOB.
-
-     --mark-rim-x/--mark-rim-y are the lamp read the same way the words
-     read it, only mirrored: the pair points AWAY from the light, so
-     the lit rim is that vector NEGATED — at half depth, the words' own
-     0.5. It is written this way round because the pair is also where a
-     cast would go if one is ever put back (see the demolition note),
-     and one lamp over the sentence is the point of writing it once.
-
-     --mark-highlight is the one figure that is NOT a quote. The words
-     run --highlight 75 (91.9% after the --solidness factor) and so did
-     this for a while, but the same number does not land the same way
-     on the two: the words' rim is BLURRED and mostly buried behind a
-     0.83 glyph, so what shows is a soft lift at the top-left edge,
-     while the mark's runs crisp (below) and fully exposed against a
-     dark badge, where it reads as a drawn white line. 53 puts it at
-     64.9% and lands the same EDGE, which is what "the same effect" is
-     about. Re-tune this one against the marks, not against 75. */
-  --mark-relief: 0.0364;  /* = --depth */
-  --mark-highlight: 53;   /* the words' --highlight 75, taken down */
-  --mark-relief-depth: calc(var(--mark-relief) * var(--mark-per-em) * 1px);
-  --mark-rim-x: calc(sin(var(--light-angle)) * var(--mark-relief-depth) * -0.5);
-  --mark-rim-y: calc(cos(var(--light-angle)) * var(--mark-relief-depth) * 0.5);
-
   color: light-dark(#16181d, #101215); /* plate-ink fallback under the fills */
 }
-/* Every path in both lockups runs the SAME rim — one pass, one white,
-   no per-material anything. Attribute selectors keep working after the
-   url() fill swaps further down, because they read the attribute, not
-   the computed paint. */
-.hero-billet-line .billet-ink .brand-lockup path {
-  /* THE RIM IS THE WORDS' OWN WHITE. --ink-light, inherited straight
-     off .hero-billet-line — the very colour "Use" and "backend" are
-     rimmed in — run through the words' --hi formula, --solidness
-     factor included. Not a colour of the badge's own: same lamp, same
-     white, which is what makes the marks read as words in the sentence
-     rather than as artwork sitting in it.
-
-     It is also per-scheme for free. --ink-light derives from
-     --text-color, so it is L 0.9688 on the light plate and ~0.73 on
-     the dark one without a light-dark() anywhere in this block — the
-     figure the marks used to hard-code twice.
-
-     What went with it (2026-09-06, on instruction: "make it white"):
-     the rim used to be tinted a third of each material's chroma —
-     cream on the gold lobe, pale lilac on the magenta, blush on the
-     oxblood, mint on Nuxt's triangle — on the argument that four
-     materials sharing one grey glint is the tell that a relief was
-     painted on rather than lit. True of a real lamp; at half a pixel
-     of crisp edge it is invisible, and computing it cost this block a
-     per-path material variable, a graphite mid-tone and four vendor-hue
-     rules — all deleted with it. The hues still live where they are
-     actually seen, in the FILLS (BrandConvex.vue / BrandNuxt.vue and
-     the ramp blocks below). */
-  --mark-rim-hi: color-mix(in oklab, var(--mark-light)
-      min(calc(var(--mark-highlight) * 1% * (1 + var(--solidness) * 0.005)), 98%),
-      transparent);
-  /* THE RIM IS THE MATERIAL'S OWN LIGHT AGAIN (2026-09-14: "colour the
-     shadow close to the logos' colours"). The wordmarks keep the words'
-     white — --mark-light defaults to --ink-light, so nothing changes
-     for "convex" and "Nuxt" — but on the ENAMEL the same grey read as
-     a grey sliver drawn along the lit edge of a magenta lobe or a
-     green triangle: the lit edge of a coloured dome is that colour
-     with the lamp on it, not the room's grey. So each symbol path
-     names its vendor hue below as --mark-material and the rim is the
-     words' own --ink-light formula run on THAT — the same lift, the
-     same 22% white, the mark's own hue — which lands it right on the
-     crown stop of the dome gradient it is rimming and the sliver reads
-     as the dome turning into the light. What retired the tint before
-     was that it was invisible; that was a third of the chroma laid
-     over a fixed near-white. This keeps the hue whole. */
-  --mark-light: var(--ink-light);
-  /* One pass, toward the lamp, ZERO BLUR (2026-09-06, on instruction —
-     the same call ConcaveText.vue's white passes took the same day: a
-     surface edge catching light is a hard line, and blurred it smears
-     into the ground and reads as a glow rather than an edge). The
-     words' own rim still carries --softness x 0.35 x --crisp, but
-     theirs is half-buried behind a light glyph; this one is fully
-     exposed against a dark badge, where any blur at all is the halo.
-
-     A drop-shadow paints BEHIND what it is cast from, so this is the
-     sliver of a white copy showing along the mark's lit edge — and
-     with nothing chained after it, nothing casts from a dilated
-     silhouette and no second contour can appear. See the demolition
-     note for why there is no dark half. */
-  filter:
-    drop-shadow(calc(var(--mark-rim-x) * -1) calc(var(--mark-rim-y) * -1)
-      0 var(--mark-rim-hi));
+/* On the artwork GROUPS, not the <svg>: a filter on an outermost svg
+   measures in CSS pixels (the viewBox scales its children, not the
+   element), and the offsets are written in viewBox units — on the svg
+   the Nuxt mark stood off the page by half the words' depth and neither
+   mark scaled with the type. */
+.hero-billet-line .billet-ink [aria-label="Convex"] .brand-word { filter: url(#billet-relief-convex-word); }
+.hero-billet-line .billet-ink [aria-label="Convex"] .brand-symbol { filter: url(#billet-relief-convex-symbol); }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] .brand-word { filter: url(#billet-relief-nuxt-word); }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] .brand-symbol { filter: url(#billet-relief-nuxt-symbol); }
+/* The floods — the words' own inks, inherited off .hero-billet-line
+   (the resource svg sits inside it), per scheme for free because every
+   one derives from --text-color or the ground. */
+.hero-billet-line .billet-relief [data-ink="hi"] { flood-color: var(--hi); }
+.hero-billet-line .billet-relief [data-ink="hi-soft"] { flood-color: var(--hi-soft); }
+/* Dark: the wordmarks are the LIGHTER metal there (crown 0.76, see the
+   graphite block), and the words' --ink-light lands at ~0.73 — a rim
+   the same tone as the face it is rimming, i.e. no rim. So the
+   wordmark floods take the words' --hi / --hi-soft formulas run on a
+   lighter base, 0.93, the lift the light scheme's own rim has over
+   its 0.83 words. Only the wordmark filters flood these inks (the
+   symbols tone their own pixels), so nothing else moves. */
+:root.dark .hero-billet-line {
+  --mark-word-light: oklch(0.93 0.006 255);
 }
-/* The enamel's materials — the kits' own hues, the same values the
-   fill ramps below hold at their 50% body stop. Attribute selectors,
-   like the fill swaps: they read the attribute, not the computed paint. */
-.hero-billet-line .billet-ink .brand-lockup path:not([fill="currentColor"]) {
-  /* The words' lift (+0.22 L) with the material's chroma kept WHOLE:
-     --ink-light drains 15% of it and mixes in 22% white because a grey
-     glyph's rim should be the room's white, and the enamel's should
-     not — dilute a lit orange and it is beige. Alpha comes up to the
-     words' own 75 too: the enamel's rim is fully exposed against the
-     ground, and at 65% the hue thinned to a dull tint of itself over
-     the near-black. */
-  --mark-highlight: 75;
-  --mark-light: oklch(from var(--mark-material) min(calc(l + 0.22), 0.96) c h);
+:root.dark .hero-billet-line .billet-relief [data-ink="hi"] {
+  flood-color: color-mix(in oklab, var(--mark-word-light)
+      min(calc(var(--highlight) * 1% * (1 + var(--solidness) * 0.005)), 98%), transparent);
 }
-.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#F3B01C"] { --mark-material: #f3b01c; }
-.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#8D2676"] { --mark-material: #8d2676; }
-.hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#EE342F"] { --mark-material: #ee342f; }
-.hero-billet-line .billet-ink [aria-label="Nuxt"] path[fill="#00DC82"] { --mark-material: #00dc82; }
-/* No dark override for the rim. The dark plate wants a dimmer one — a
-   mark rimmed in paper white on a dark ground stops being metal and
-   starts being a lamp, the same argument --ghost-sheen settles a few
-   blocks down — and it gets one because the rim IS --ink-light: that
-   derives from --text-color, which the dark block a few blocks up
-   already moves to 0.44, landing the rim at ~0.73. One knob, two
-   schemes, no second copy to drift. */
+:root.dark .hero-billet-line .billet-relief [data-ink="hi-soft"] {
+  flood-color: color-mix(in oklab, var(--mark-word-light) calc(var(--highlight) * 0.4%), transparent);
+}
+.hero-billet-line .billet-relief [data-ink="lo"] { flood-color: var(--lo); }
+.hero-billet-line .billet-relief [data-ink="wall"] { flood-color: var(--wall); }
+.hero-billet-line .billet-relief [data-ink="lo-surf"] { flood-color: var(--lo-surf); }
+.hero-billet-line .billet-relief [data-ink="lo-cast"] { flood-color: var(--lo-cast); }
 /* -- THE GHOSTWRITE BAND ------------------------------------------
    A soft SILVER band sweeping the two dark wordmarks — the "82
    Ghostwrite" recipe's geometry, ported off a `background-clip: text`
@@ -1048,11 +934,12 @@ html:has(.landing-panel) footer {
   --ghost-sheen: oklch(0.88 0.008 255);
 }
 :root.dark .hero-billet-line {
-  /* On the 0.205 plate the graphite runs 0.27 -> 0.46 and the plain
-     words sit at 0.44, so the sheen has further to climb before it
-     reads as polish rather than as another grey. 0.9, just short of
-     the recipe's own #fff — a specular that hits paper white on a
-     dark ground stops being metal and starts being a lamp. */
+  /* On the 0.205 plate the graphite runs 0.535 -> 0.76 (the marks are
+     the LIGHTER metal in dark, see the ramp block), so the sheen has
+     to clear a 0.76 crown to read as polish rather than as another
+     grey. 0.9, just short of the recipe's own #fff — a specular that
+     hits paper white on a dark ground stops being metal and starts
+     being a lamp. */
   --ghost-sheen: oklch(0.9 0.005 255);
 }
 .hero-billet-line .billet-face [aria-label="Convex"] path[fill="currentColor"] { fill: url(#brand-convex-ghost); }
@@ -1165,11 +1052,6 @@ html:has(.landing-panel) footer {
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(19) { --stop-at: 0.9; }
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(20) { --stop-at: 0.95; }
 :is(#brand-convex-ghost, #brand-nuxt-ghost) stop:nth-of-type(21) { --stop-at: 1; }
-/* User units per em of page type — see THE SCALE TRAP. 51.5 × 0.6893 ÷
-   0.537 and 32 × 0.75 ÷ 0.625; the second number is the artwork's
-   --brand-ratio and the third its --brand-ref's coefficient. */
-.hero-billet-line .billet-ink [aria-label="Convex"] { --mark-per-em: 66.11; }
-.hero-billet-line .billet-ink [aria-label="Nuxt"] { --mark-per-em: 38.4; }
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="currentColor"] { fill: url(#brand-convex-eng-w); }
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#F3B01C"] { fill: url(#brand-convex-eng-gold); }
 .hero-billet-line .billet-ink [aria-label="Convex"] path[fill="#8D2676"] { fill: url(#brand-convex-eng-magenta); }
@@ -1236,34 +1118,40 @@ html:has(.landing-panel) footer {
    sentence reads as pale aluminium words around a darker graphite
    badge.
 
-   The dark scheme keeps its one rule — ride ABOVE the ground's
-   0.205 L so the page can silhouette the mark — and its crown tops
-   out at 0.46, just over the plain words' 0.44 fill: on a dark
-   ground the lit face of a raised object IS the brightest thing on
-   it, and this ramp is all the letters get when nothing moves. */
+   The dark scheme is the SAME HIERARCHY, MIRRORED (2026-09-14: "make
+   the marks lighter than the title text in dark mode"). In light the
+   marks read as the priority because they are the darker metal —
+   0.56→0.335 against the words' 0.83/0.76, ~0.27 L apart. Dark used
+   to run them at 0.46→0.27 against words at 0.44/0.36 — darker than
+   the words again, i.e. the hierarchy inverted with the scheme. So
+   the dark ramp is the light ramp lifted 0.2 (a pale silver graphite,
+   0.76→0.535) and sits the same ~0.27 ABOVE the dark words: the
+   priority words are the ones that stand out from the plate in
+   either scheme, which is what a lit relief means. The ghostwrite
+   sheen (0.9) still clears the crown. */
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(1) {
-  --stop-l: 0.56; --stop-l-dark: 0.46; /* lit crown */
+  --stop-l: 0.56; --stop-l-dark: 0.76; /* lit crown */
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(2) {
-  --stop-l: 0.525; --stop-l-dark: 0.43;
+  --stop-l: 0.525; --stop-l-dark: 0.725;
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(3) {
-  --stop-l: 0.49; --stop-l-dark: 0.4;
+  --stop-l: 0.49; --stop-l-dark: 0.69;
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(4) {
-  --stop-l: 0.455; --stop-l-dark: 0.37; /* the mid face */
+  --stop-l: 0.455; --stop-l-dark: 0.655; /* the mid face */
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(5) {
-  --stop-l: 0.42; --stop-l-dark: 0.34;
+  --stop-l: 0.42; --stop-l-dark: 0.62;
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(6) {
-  --stop-l: 0.385; --stop-l-dark: 0.31;
+  --stop-l: 0.385; --stop-l-dark: 0.585;
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(7) {
-  --stop-l: 0.335; --stop-l-dark: 0.27; /* baseline shade */
+  --stop-l: 0.335; --stop-l-dark: 0.535; /* baseline shade */
 }
 :is(#brand-convex-eng-w, #brand-nuxt-eng-w) stop:nth-of-type(8) {
-  --stop-l: 0.37; --stop-l-dark: 0.3; /* ground light bounces at the feet */
+  --stop-l: 0.37; --stop-l-dark: 0.57; /* ground light bounces at the feet */
 }
 /* Forced colors: the clip + painted plate would leave invisible or
    off-palette glyphs — flatten everything back to system ink, and
@@ -1278,10 +1166,8 @@ html:has(.landing-panel) footer {
   .hero-billet-line { color: inherit; }
   .hero-billet-line > .billet-ink { color: inherit; text-shadow: none; }
   .hero-billet-line > .billet-face { display: none; }
-  .hero-billet-line .billet-ink .brand-lockup path {
-    filter: none;
-    fill: currentColor;
-  }
+  .hero-billet-line .billet-ink .brand-lockup :is(.brand-word, .brand-symbol) { filter: none; }
+  .hero-billet-line .billet-ink .brand-lockup path { fill: currentColor; stroke: none; }
 }
 
 /* Scroll-driven section-header reveal (progressive enhancement). */

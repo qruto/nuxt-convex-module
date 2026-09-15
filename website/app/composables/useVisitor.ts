@@ -13,7 +13,7 @@ function mint(length: number) {
 
 // A WINDOW OPENED BY SCRIPT STARTS WITH A COPY of its opener's
 // sessionStorage (the spec says so, and Chrome and Safari do it), which
-// would hand the hero's second window (utils/canvas-window.ts) the same
+// would hand the hero's second window (utils/second-window.ts) the same
 // session id as the page that opened it — one visitor in two windows, and
 // presence would count one. The id is stamped with the name of the window
 // that minted it; a copy arriving in a window of another name is re-minted,

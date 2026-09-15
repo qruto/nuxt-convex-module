@@ -22,9 +22,13 @@ ui:
   # not a second one; `text-pretty` so the closer's last line never
   # orphans a word.
   description: "mt-8 text-base text-pretty sm:text-lg/7"
-  # The spec board sits in #body at the theme's distance from the text;
-  # the footer closes up under it — a nameplate over the controls.
-  footer: "mt-5 sm:mt-6"
+  # The keys come first, the spec strip under them (2026-09-14). The
+  # theme renders #body above the footer, so the wrapper becomes a
+  # column and the body is ordered last; the footer keeps the theme's
+  # distance from the text and the strip closes up under the keys.
+  wrapper: "flex flex-col"
+  footer: "mt-8 sm:mt-10"
+  body: "order-last mt-10"
 links:
   - label: get started
     to: /getting-started/introduction
@@ -50,20 +54,21 @@ links:
       label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
 <!-- ONE FENCE: the code that runs the panel under it. The plate types
-     this once and is live from the first paint. -->
+     this once and is live from the first paint. `board` is one
+     subscription — the ledger's rows and today's count per key in one
+     consistent snapshot; `send` is the key press. -->
 ::landing-hero-panel
 ```ts
-const at = ref<number | null>(null)   // null reads now
-const { data: frame } = await useAsyncQuery(
-  api.canvas.at, () => ({ at: at.value }))
-const paint = useMutation(api.canvas.paint)
+const { data: board } =
+  await useAsyncQuery(api.reactions.board)
+const send = useMutation(api.reactions.send)
 ```
 ::
 
 #title
 ::hero-billet
-Use :brand-convex backend\
-in a :brand-nuxt application
+[Use]{.billet-part} [:brand-convex backend]{.billet-part}\
+[in a]{.billet-part} [:brand-nuxt application]{.billet-part}
 ::
 
 #description
@@ -76,11 +81,13 @@ in a :brand-nuxt application
 :landing-capabilities
 
 #body
-<!-- The spec board — version, the peer ranges, and the upstream Convex
-     release the port matches — a recessed readout directly above the calls
-     to action. The peer ranges are this page's copy and travel as props;
-     the version and the Convex figure the component reads for itself. -->
-:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5"}
+<!-- The spec strip — version, the three peer ranges, and the upstream
+     Convex release the port matches — cut into the ground under the
+     keys, the copy column's full width. The peer ranges are this page's
+     copy and travel as props (convex is the module's peer range, ^1.40);
+     the version and the ported Convex figure the component reads for
+     itself. -->
+:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.40"}
 
 #bottom
 :landing-services
@@ -186,11 +193,11 @@ npx nuxi module add nuxt-convex-module
 ```
 
 ```bash
-NUXT_PUBLIC_CONVEX_URL=https://…
+npm i convex
 ```
 
 ```bash
-npx convex dev
+npm run dev
 ```
 ::
 :::

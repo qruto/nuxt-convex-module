@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import type { CodeReveal } from '~/utils/code-reveal'
-import LiveCanvas from '../landing/LiveCanvas.vue'
+import LiveReactions from '../landing/LiveReactions.vue'
 
 // THE HERO'S SIGNATURE: the code that runs the plate, and under it the
-// plate running — the canvas (LiveCanvas.vue): every stroke a committed
-// row, and a scrubber that drags the query's `at` argument back through the
-// table's history.
+// plate running — the reactions (LiveReactions.vue): four keys, every
+// press a committed row printed on every screen that has this page open,
+// under the name the visitor sends as.
 //
-// THE CANVAS REPLACED THE CHAT (2026-09-12). The chat was the most-shown
-// Convex demo there is, and the six-scene recording that narrated it went
-// with it: the code well types ONE snippet, once, and the plate is live
-// from the first paint. What the canvas shows that the chat never could —
-// and shows to one visitor, alone — is that a query is a function of its
-// arguments and that every result is a consistent snapshot. The window key
-// on the canvas opens the same instrument in a small second window on the
-// same table, which is where the real-time half is felt.
+// THE REACTIONS REPLACED THE CANVAS (2026-09-15), which had replaced the
+// chat (2026-09-12). The code well still types ONE snippet, once, and the
+// plate is live from the first paint. A key press is the smallest possible
+// write, and the ledger under it is the smallest possible proof that it
+// reached everyone; the window key on the header opens the same instrument
+// in a small second window on the same table, which is where the real-time
+// half is felt. The canvas is kept whole for a return — LiveCanvas.vue,
+// convex/canvas.ts, /canvas — and comes back by swapping the component
+// here and the fence in content/index.md.
 //
 // SSR, no-JS and reduced-motion all get the plate directly: only the
 // typing arms client-side through useDemoScript. Touch anything on the
@@ -22,6 +23,10 @@ import LiveCanvas from '../landing/LiveCanvas.vue'
 const codeEl = ref<HTMLElement | null>(null)
 let reveal: CodeReveal | null = null
 const plate = ref<HTMLElement | null>(null)
+
+// The page's plate-to-plate settle (landing.css, THE PLATES) is driven
+// from here: the hero is the one plate every landing has.
+useLandingSnap()
 
 // The one fence rides in from content/index.md as the default slot and
 // renders through ProsePre. Typing is a reveal over the pre-highlighted DOM
@@ -54,11 +59,11 @@ watch(state, (value) => {
   <figure
     ref="plate"
     class="part-plate sheen noise @container relative mx-auto my-0 w-full max-w-[32rem] px-6 pt-5 pb-5 lg:end-4 lg:me-0 motion-safe:animate-fade-up [animation-delay:160ms] [animation-duration:700ms] @max-[30rem]:px-4.5"
-    aria-label="A live Convex canvas: every painted cell is a committed row, and a scrubber reads the table as it stood at any commit"
+    aria-label="A live reactions feed: every key press is a committed row, printed on every screen that has this page open"
   >
     <!-- The header is the file tab and the one key that is not a control
-         of the canvas: the second window, on the same table, which is
-         where the real-time half is felt (utils/canvas-window.ts). State
+         of the instrument: the second window, on the same table, which is
+         where the real-time half is felt (utils/second-window.ts). State
          has exactly one home, the rail at the foot. -->
     <header class="mb-3.5 flex items-center gap-4 stamp @max-[30rem]:gap-3">
       <span class="concave-text text-toned">app.vue</span>
@@ -71,8 +76,8 @@ watch(state, (value) => {
         color="neutral"
         variant="ghost"
         class="-my-1.5 stamp text-lit hover:text-lit"
-        title="open the same canvas in a second window"
-        @click="openCanvasWindow"
+        title="open the same feed in a second window"
+        @click="openSecondWindow('/reactions')"
       >
         <template #leading>
           <svg
@@ -116,7 +121,7 @@ watch(state, (value) => {
       <span class="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
     </div>
 
-    <!-- The canvas well and, under it, the status rail. -->
-    <LiveCanvas />
+    <!-- The reactions well and, under it, the status rail. -->
+    <LiveReactions />
   </figure>
 </template>

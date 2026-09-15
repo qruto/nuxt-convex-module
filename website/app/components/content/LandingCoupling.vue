@@ -1,18 +1,18 @@
 <script setup lang="ts">
 // THE TWO NAMES ON THE BOX (2026-09-14). Plate two says what Nuxt is and
 // what Convex is, for the reader who knows neither, and it says it as a
-// machine drawing rather than as two paragraphs: two turned parts set
-// straight on the section ground with the module scribed between them
-// as the coupling that joins them.
+// machine drawing rather than as two paragraphs: two struck medals set
+// straight on the section ground, and the module as the BOX between
+// them they are set into.
 //
-// The pun is the composition. Convex is a DOME — the one raised part on
-// the page that stands proud without being a plate, its mark in domed
-// enamel on the crown. Nuxt is the DISH the other part answers to: a
-// bowl cut into the ground with its mark cut into the floor, the housing
-// an app is built in. Cut in = the framework you build inside; standing
-// out = the backend that pushes. Between them the line is scribed into
-// the ground, and a pulse runs along it from the backend to the
-// framework — "your app updates the moment its data changes", drawn.
+// The composition is the pun. Both parts are MEDALS — turned titanium
+// discs standing off the ground, a rim round each and the mark in domed
+// enamel on the field, the metal taking a faint reflection of its own
+// enamel. Between them the module is a pocket CUT INTO the ground, the
+// one concave part on the plate: the two medals go into the box, and
+// the line scribed from each medal to it carries a pulse from the
+// backend to the framework — "your app updates the moment its data
+// changes", drawn.
 //
 // No plate anywhere on this section: every other plate on the landing
 // puts its instrument in a raised box, and two more boxes here would
@@ -26,8 +26,6 @@ type Hue = 'green' | 'gold' | 'magenta' | 'red'
 
 interface Part {
   id: 'nuxt' | 'convex'
-  /** How the part is turned: cut into the ground, or standing off it. */
-  face: 'cut' | 'dome'
   name: string
   role: string
   claim: string
@@ -40,7 +38,6 @@ interface Part {
 const PARTS: Part[] = [
   {
     id: 'nuxt',
-    face: 'cut',
     name: 'Nuxt',
     role: 'frontend',
     claim: 'The Vue framework for building web apps.',
@@ -53,7 +50,6 @@ const PARTS: Part[] = [
   },
   {
     id: 'convex',
-    face: 'dome',
     name: 'Convex',
     role: 'backend',
     claim: 'The reactive backend platform that keeps up with you and your agents.',
@@ -69,32 +65,28 @@ const PARTS: Part[] = [
   },
 ]
 
-// The enamel ramps, five stops each: lit crown toward the 330° lamp, a
-// lit shoulder, the vendor hue at the body, its shade, the deep shade
-// away from the light. The colours are the `.enamel-*` tokens in the
-// style block (OKLCH, with a wider-chroma pass on P3 screens); the dish
-// runs them in REVERSE (see .mark-cut below) so the same enamel reads
-// cut in rather than domed.
+// The enamel ramps, five stops each: lit crown toward the lamp, a lit
+// shoulder, the vendor hue at the body, its shade, the deep shade away
+// from the light. The colours are the `.enamel-*` tokens in the style
+// block (OKLCH, with a wider-chroma pass on P3 screens).
 const STOPS = [0, 0.2, 0.5, 0.79, 1]
 
 // One set of gradients per instance: `fill: url(#id)` resolves against
 // the document, and a second copy of this section would otherwise paint
-// with the first one's ramps. Only the (hue, face) pairs a path wears.
+// with the first one's ramps. One per hue a path wears.
 const uid = useId()
-const gradientId = (hue: Hue, face: 'dome' | 'cut') => `${uid}-${hue}-${face}`
+const gradientId = (hue: Hue) => `${uid}-${hue}`
 const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
-  id: gradientId(path.hue, part.face),
+  id: gradientId(path.hue),
   hue: path.hue,
-  stops: STOPS.map((offset, index) => ({
-    offset,
-    color: `var(--stop-${part.face === 'cut' ? STOPS.length - 1 - index : index})`,
-  })),
+  stops: STOPS.map((offset, index) => ({ offset, color: `var(--stop-${index})` })),
 })))
 </script>
 
 <template>
-  <div class="coupling-stage mx-auto w-full max-w-5xl">
-    <!-- The enamel ramps for both faces, once, ahead of every mark. -->
+  <div class="coupling-stage mx-auto w-full max-w-6xl">
+    <!-- The enamel ramps, once, ahead of every mark. Lit end up: the
+         one lamp every part on the site is lit by is overhead. -->
     <svg
       class="absolute size-0"
       aria-hidden="true"
@@ -105,10 +97,10 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
           :id="id"
           :key="id"
           :class="`enamel-${hue}`"
-          x1="0"
-          y1="0"
-          x2="0.72"
-          y2="1"
+          x1="0.5"
+          y1="-0.12"
+          x2="0.5"
+          y2="1.12"
         >
           <stop
             v-for="{ offset, color } in stops"
@@ -125,18 +117,16 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
         v-for="part in PARTS"
         :key="part.id"
         class="part m-0"
-        :class="`part-${part.face}`"
+        :class="`part-${part.id}`"
       >
-        <!-- THE TURNED PART. The dish is cut into the ground, the dome
-             stands off it; both carry the mark on the same axis. -->
+        <!-- THE MEDAL, with its own enamel reflected in the metal. -->
         <div
-          class="disc"
-          :class="[`disc-${part.face}`, { sheen: part.face === 'dome' }]"
+          class="medal"
+          :class="`medal-${part.id}`"
         >
           <svg
             :viewBox="part.viewBox"
             class="mark"
-            :class="`mark-${part.face}`"
             role="img"
             :aria-label="`${part.name} mark`"
           >
@@ -144,18 +134,24 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
               v-for="(shape, index) in part.paths"
               :key="index"
               :d="shape.d"
-              :fill="`url(#${gradientId(shape.hue, part.face)})`"
+              :fill="`url(#${gradientId(shape.hue)})`"
             />
           </svg>
         </div>
 
+        <!-- Four rows on one grid shared by both parts (see .caption):
+             the medal, the role and name, the claim, the site — so the
+             two claims start on the same line and the two links sit on
+             the same row whatever length the claims run to. -->
         <figcaption class="caption">
-          <p class="stamp m-0 concave-text text-dimmed">
-            {{ part.role }}
-          </p>
-          <h3 class="m-0 font-display text-3xl font-semibold text-highlighted sm:text-4xl">
-            {{ part.name }}
-          </h3>
+          <div class="head">
+            <p class="stamp label m-0 text-toned">
+              {{ part.role }}
+            </p>
+            <h3 class="m-0 font-display text-3xl font-semibold text-highlighted sm:text-4xl">
+              {{ part.name }}
+            </h3>
+          </div>
           <p class="m-0 text-base/7 text-pretty text-muted">
             {{ part.claim }}
           </p>
@@ -163,29 +159,29 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
             :to="part.href"
             target="_blank"
             rel="noopener"
-            class="site stamp inline-flex items-center gap-1 text-lit"
+            class="site stamp label inline-flex items-center gap-1 text-lit"
           >
             {{ part.site }}
             <UIcon
               name="i-lucide-arrow-up-right"
-              class="size-3"
+              class="size-3.5"
               aria-hidden="true"
             />
           </NuxtLink>
         </figcaption>
       </figure>
 
-      <!-- THE COUPLING. Scribed into the ground between the two parts,
-           with the module as the fitting in the middle: the one raised
-           part on the line, small, because it is the thing that JOINS
-           the two rather than a third thing. The pulse runs backend →
-           framework. -->
+      <!-- THE COUPLING. Scribed into the ground between the two medals,
+           with the module as the BOX in the middle: the one part on the
+           line that is cut in rather than standing off, small, because
+           it is the thing the two go INTO rather than a third thing.
+           The pulse runs backend → framework. -->
       <div
         class="coupling"
         aria-hidden="true"
       >
-        <span class="wire wire-frame" />
-        <span class="fitting part-card">
+        <span class="wire wire-frame enamel-green" />
+        <span class="box">
           <img
             src="/logo.svg"
             alt=""
@@ -193,7 +189,7 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
           >
           <span class="stamp concave-text text-toned">nuxt-convex-module</span>
         </span>
-        <span class="wire wire-back" />
+        <span class="wire wire-back enamel-red" />
       </div>
     </div>
   </div>
@@ -270,13 +266,12 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
 }
 
 /* -- The drawing ----------------------------------------------------
-   Three columns past lg — housing, coupling, dome — and one column
-   under it, where the coupling turns on end between the two parts.
+   Three columns past lg — Nuxt, the coupling, Convex — and one column
+   under it, where the coupling turns on end between the two medals.
    `--disc` is the one dimension everything else is cut from. */
 .coupling-stage {
   --disc: clamp(11rem, 24vw, 16rem);
   --mark: calc(var(--disc) * 0.42);
-  position: relative;
 }
 .drawing {
   display: grid;
@@ -288,15 +283,15 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
+  gap: 0.6rem;
   max-inline-size: 22rem;
   text-align: center;
 }
-.part-cut { order: 1; }
+.part-nuxt { order: 1; }
 .coupling { order: 2; }
-.part-dome { order: 3; }
+.part-convex { order: 3; }
 @media (width >= 64rem) {
-  .part-cut, .coupling, .part-dome { order: 0; }
+  .part-nuxt, .coupling, .part-convex { order: 0; }
 }
 .caption {
   display: flex;
@@ -304,23 +299,49 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
   align-items: center;
   gap: 0.6rem;
 }
-.caption h3 { margin-top: 0.15rem; }
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.15rem;
+}
 .caption .site { margin-top: 0.4rem; }
+/* The two small readouts — role above the name, site below the claim.
+   The stamp's 0.66rem is right for a figure on a dial; a label that
+   names the part reads one step larger, in the toned ink rather than
+   the dimmed. */
+.label { font-size: 0.75rem; }
 @media (width >= 64rem) {
   .drawing {
     --gap: 3rem;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
     align-items: start;
     column-gap: var(--gap);
+    row-gap: 0.6rem;
   }
-  .part-cut { grid-area: 1 / 1; }
-  .part-dome { grid-area: 1 / 2; }
-  /* The coupling is laid OVER both columns on the discs' centre line —
-     the discs are the first thing in each column, so that line is half
-     a disc down — and padded in to where each disc's edge falls: half a
+  /* Both parts span the four rows and hand them down to their caption
+     as a subgrid, so the rows are sized across BOTH columns: the claim
+     row is as tall as the taller claim, and the site row lands at the
+     same height under each. Only the gaps and margins change, the flex
+     stack under lg keeps the same spacing. */
+  .part-nuxt { grid-area: 1 / 1 / span 4; }
+  .part-convex { grid-area: 1 / 2 / span 4; }
+  .part, .caption {
+    display: grid;
+    grid-template-rows: subgrid;
+    justify-items: center;
+    align-items: start;
+    row-gap: 0.6rem;
+  }
+  .caption { grid-row: span 3; }
+  /* The coupling is laid OVER both columns on the medals' centre line —
+     the medals are the first thing in each column, so that line is half
+     a disc down — and padded in to where each medal's edge falls: half a
      column (a column is half the row less the gap) plus half a disc,
      plus a hair of clearance so the wire meets the part instead of
-     running under it. The wires then fill from part to fitting. */
+     running under it. The wires then fill from medal to box. */
   .coupling {
     grid-area: 1 / 1 / 2 / 3;
     margin-top: calc(var(--disc) / 2);
@@ -330,41 +351,53 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
   }
 }
 
-/* -- The discs ------------------------------------------------------
-   One lamp overhead, the same one every part on the site is lit by.
-   The DISH is the ground turned into a bowl: the wall under the lip is
-   in shade, the floor holds the ground's own tone (the cut has no
-   colour of its own — the ConcaveText law), and the far wall catches
-   the light at the bottom. The DOME is the plate ramp bent round: a
-   crown lit above centre, rolling into the plate's own shade at the
-   foot, on the bevel and cast every raised part carries — one rung
-   higher than a plate, because a dome stands taller than a slab. */
-.disc {
+/* -- The medals -----------------------------------------------------
+   One lamp overhead, the same one every part on the site is lit by (a
+   touch above centre, as on every plate), and the same HARD cast the
+   accent parts carry (`hard-cast` in depth.css): no blur in the steps,
+   the depth counted in 1px steps that fade as they go, so the edge
+   reads as a machined step and not a smudge.
+
+   A struck medal: the plate's raised material on the bevel every
+   raised part carries, four steps off the ground, with a RIM turned
+   round the edge — a flat lip, then a step down into the field the
+   mark sits on — and the field spun. The spin is the glare a turned
+   surface throws: two lit sectors on the lamp's axis (0° and 180° of
+   the spin) and two shaded ones across it (90°, 270°), soft, a few
+   percent. The step into the field is the ground dish's recipe in
+   miniature: a shade ring, then the near wall's 1px shade pushed down
+   the light and the far wall's 1px catch pushed up against it, so the
+   field reads cut into the medal under the same lamp. Under it all a
+   soft ground cast — a medal lies on the plate, it is not machined out
+   of it — and a fifth hard step that only shows on hover, when the
+   medal lifts and the gap under it grows.
+
+   And the metal REFLECTS its enamel: a faint wash of the mark's own
+   colours on a layer under the mark, fading well before the rim.
+   Nuxt's green in one; on the Convex medal the three hues laid round
+   the spin where the three lobes are (red upper right, gold below,
+   magenta left — the lobes' centres measured off the symbol's own
+   paths). A reflection, not a paint: it takes the light room's near-
+   white and the dark room's anodize equally, at a few percent. */
+.medal {
+  --rim: max(5px, calc(var(--disc) * 0.035));
+  --lift: 0;
+  --spun-light: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05));
+  --spun-shade: light-dark(rgb(0 0 0 / 0.045), rgb(0 0 0 / 0.32));
+  --lip: light-dark(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.05));
+  --step-shade: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.6));
+  --step-catch: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.07));
+  /* The one hairline every body shares: a scribed line at the edge, so
+     the turned part has an outline on the grain and not only a cast. */
+  --keyline: 0 0 0 1px light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.09));
+  position: relative;
+  isolation: isolate;
   inline-size: var(--disc);
   block-size: var(--disc);
   border-radius: 50%;
   display: grid;
   place-items: center;
   flex: none;
-}
-.disc-cut {
-  --floor: var(--dish-body-ground);
-  --wall: light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.5));
-  background:
-    radial-gradient(circle at 50% 44%,
-      var(--floor) 0 38%,
-      color-mix(in srgb, var(--floor), #000 2%) 62%,
-      color-mix(in srgb, var(--floor), #000 4.5%) 100%),
-    var(--floor);
-  box-shadow:
-    var(--recess-lip-ground),
-    inset 0 14px 22px -10px var(--wall),
-    inset 0 3px 3px -1px var(--wall),
-    inset 0 -12px 16px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.05)),
-    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.02)),
-    var(--dish-ground-rim);
-}
-.disc-dome {
   background:
     radial-gradient(circle at 50% 30%,
       var(--ui-bg-accented) 0,
@@ -372,40 +405,88 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
       color-mix(in srgb, var(--ui-bg-elevated), #000 6%) 100%);
   box-shadow:
     var(--bevel),
-    var(--elevation-2),
-    0 22px 30px -18px light-dark(rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.7));
-  transition: translate 200ms ease-out, box-shadow 200ms ease-out;
+    /* The rim: the lip, the step down, the near wall's shade (a ring
+       pushed down shows only at the top), the far wall's catch (pushed
+       up, only at the bottom). */
+    inset 0 0 0 var(--rim) var(--lip),
+    inset 0 0 0 calc(var(--rim) + 1px) var(--step-shade),
+    inset 0 1px 0 calc(var(--rim) + 1px) light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.35)),
+    inset 0 -1px 0 calc(var(--rim) + 1px) var(--step-catch),
+    var(--keyline),
+    0 1px 0 light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.6)),
+    0 2px 0 light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.4)),
+    0 3px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.24)),
+    0 4px 0 light-dark(rgb(0 0 0 / 0.025), rgb(0 0 0 / 0.11)),
+    0 5px 0 light-dark(rgb(0 0 0 / calc(var(--lift) * 0.02)), rgb(0 0 0 / calc(var(--lift) * 0.09))),
+    0 8px 18px -6px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  transition: translate 200ms ease-out;
+}
+/* The reflection and the spin, two layers on the field under the
+   mark. Both are conic gradients (the Convex wash, and the spun glare
+   on every medal), and a conic gradient pinches all its stops into one
+   point at its centre — a cluster of colour, or a star of spokes,
+   right where the Convex ring leaves the field bare. So both layers
+   are blurred, and the spin is masked out at the centre where its
+   sectors would meet. The masks are applied after the filter, so the
+   blur never reaches the rim. */
+.medal::before,
+.medal::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--rim) + 2px);
+  z-index: -1;
+  border-radius: 50%;
+}
+.medal::before {
+  background: var(--reflection);
+  filter: blur(calc(var(--disc) * 0.08));
+  mask-image: radial-gradient(circle at 50% 50%, #000 0 24%, transparent 70%);
+}
+.medal::after {
+  background:
+    conic-gradient(from 0deg at 50% 50%,
+      var(--spun-light) 0deg, transparent 32deg, var(--spun-shade) 90deg, transparent 148deg,
+      var(--spun-light) 180deg, transparent 212deg, var(--spun-shade) 270deg, transparent 328deg,
+      var(--spun-light) 360deg);
+  filter: blur(calc(var(--disc) * 0.02));
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0 8%, #000 22%);
+}
+.medal-nuxt {
+  --reflection: radial-gradient(circle at 50% 54%,
+    light-dark(oklch(78.6% 0.191 155.7 / 0.22), oklch(78.6% 0.191 155.7 / 0.18)) 0,
+    transparent 72%);
+}
+.medal-convex {
+  --reflection: conic-gradient(from 53deg,
+    light-dark(oklch(61.9% 0.221 27.7 / 0.16), oklch(61.9% 0.221 27.7 / 0.2)) 0deg,
+    light-dark(oklch(80% 0.16 80 / 0.22), oklch(80% 0.16 80 / 0.2)) 102deg,
+    light-dark(oklch(45.9% 0.163 338.3 / 0.14), oklch(45.9% 0.163 338.3 / 0.24)) 227deg,
+    light-dark(oklch(61.9% 0.221 27.7 / 0.16), oklch(61.9% 0.221 27.7 / 0.2)) 360deg);
 }
 @media (hover: hover) {
-  .part-dome:hover .disc-dome {
-    translate: 0 -3px;
-    box-shadow:
-      var(--bevel),
-      var(--elevation-3),
-      0 28px 36px -18px light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.72));
+  /* Hover lifts by one more step — the gap under the medal grows. */
+  .part:hover .medal {
+    --lift: 1;
+    translate: 0 -1px;
   }
+}
+@media (forced-colors: active) {
+  .medal::before,
+  .medal::after { display: none; }
 }
 
 /* -- The marks ------------------------------------------------------
-   The same enamel on both, read two ways. On the dome the ramp runs
-   lit-to-shade down the lamp's axis and the mark casts on the crown.
-   In the dish the ramp is reversed — shade at the lamp side, light at
-   the far edge — which is what a cut enamel inlay does under the same
-   lamp, and the only cast it gets is the lit lip below it. */
+   Domed enamel on the field: the ramp runs lit-to-shade down the lamp,
+   and the mark casts on the field — one lit rim, then two hard steps,
+   like the medals'. */
 .mark {
   inline-size: var(--mark);
   block-size: var(--mark);
   overflow: visible;
-}
-.mark-dome {
   filter:
     drop-shadow(0 1px 0 light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.08)))
-    drop-shadow(0 3px 4px light-dark(rgb(0 0 0 / 0.22), rgb(0 0 0 / 0.6)));
-}
-.mark-cut {
-  filter:
-    drop-shadow(0 1px 0 light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.12)))
-    drop-shadow(0 -1px 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.7)));
+    drop-shadow(0 1px 0 light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.5)))
+    drop-shadow(0 1px 0 light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.32)));
 }
 @media (forced-colors: active) {
   .mark { filter: none; }
@@ -415,27 +496,41 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
    A scribed line (chrome.css's seam pair, stood on the ground) with a
    lit segment sliding along it: the pulse, backend → framework. The
    segment is translated, not laid out, and glows a little so a 2px
-   signal reads on the grain. */
+   signal reads on the grain. Each wire's pulse is its own part's
+   enamel — the signal leaves the backend in Convex red and arrives at
+   the framework in Nuxt green — read off the same `.enamel-*` stops
+   the marks paint with. The wires have NO minimum: they take whatever
+   is left between the medals and the box, because a floor would
+   overflow the row and run the line under the parts. */
 .coupling {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   inline-size: 100%;
-  --lit: light-dark(var(--color-signal-500), var(--color-signal-400));
 }
-.fitting {
+/* THE BOX. Not a card between the two parts but the pocket they are
+   set into — the ground dish's recipe (`part-dish`: the lip, the two-
+   step wall, the floor catch, the rim outside), cut into the section
+   ground so the two wires run INTO it rather than up to it. A card by
+   shape (the well radius, squircle corners); a cut has no cast. */
+.box {
+  --depth: concave;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   flex: none;
-  padding: 0.55rem 0.9rem 0.55rem 0.65rem;
+  padding: 0.8rem 1.15rem 0.8rem 0.9rem;
   border-radius: var(--radius-well);
+  background: var(--gradient-recessed-ground);
+  box-shadow: var(--recess-lip-ground), var(--inset-shadow-2), var(--dish-ground-floor), var(--dish-ground-rim);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 .wire {
+  --lit: var(--stop-2);
   position: relative;
   flex: 1 1 auto;
-  min-inline-size: 2.5rem;
+  min-inline-size: 0;
   block-size: 2px;
   background: linear-gradient(180deg, var(--seam-shade) 0 1px, var(--seam-catch) 1px 2px);
 }
@@ -450,7 +545,7 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
   box-shadow: 0 0 6px 1px --alpha(var(--lit) / 45%);
   /* Parked at the backend's end of the wire (2.5 of its own width is
      the wire's far end), unlit. It never leaves the wire: the fade
-     does the arriving and leaving, so the glow never rides onto a disc. */
+     does the arriving and leaving, so the glow never rides onto a medal. */
   translate: 150% 0;
   opacity: 0;
 }
@@ -459,7 +554,6 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
   .wire {
     inline-size: 2px;
     block-size: 3.5rem;
-    min-inline-size: 0;
     background: linear-gradient(90deg, var(--seam-shade) 0 1px, var(--seam-catch) 1px 2px);
   }
   .wire::after {
@@ -474,7 +568,7 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
 }
 @media (prefers-reduced-motion: no-preference) {
   /* One pulse every 3.2s: along the backend's wire first, then the
-     framework's a beat later — the same signal crossing the fitting. */
+     framework's a beat later — the same signal crossing the box. */
   .wire-back::after { animation: pulse-x 3.2s ease-in-out infinite; }
   .wire-frame::after { animation: pulse-x 3.2s ease-in-out 0.5s infinite; }
   @keyframes pulse-x {

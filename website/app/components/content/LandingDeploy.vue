@@ -11,12 +11,12 @@ const steps = [
     note: 'One module. Composables, components and server helpers auto-import.',
   },
   {
-    id: 'deploy',
-    note: 'Point it at your Convex deployment from .env.',
+    id: 'convex',
+    note: 'The package your functions import from — a peer of the module.',
   },
   {
     id: 'run',
-    note: 'Run Convex beside Nuxt and read live data with useQuery.',
+    note: 'One script runs Convex beside Nuxt and hands it the deployment URL. Read live data with useQuery.',
   },
 ] as const
 
