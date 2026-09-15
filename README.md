@@ -15,6 +15,7 @@ file storage and SSR, auto-imported and typed against your deployment.
 <sub>The same [Vue](https://vuejs.org) client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub>
 
 [![Nuxt][nuxt-src]][nuxt-href]
+[![Convex][convex-src]][convex-href]
 <img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/separator.svg" alt="" height="20">
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
@@ -131,3 +132,5 @@ Found a vulnerability? Report it privately via [GitHub Security Advisories](http
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt&style=plastic
 [nuxt-href]: https://nuxt.com
+[convex-src]: https://img.shields.io/badge/Convex-020420?logo=convex&style=plastic
+[convex-href]: https://convex.dev
