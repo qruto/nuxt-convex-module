@@ -105,6 +105,10 @@ environment all have to match — and fails if it doesn't. Do a dry run after ev
 A rehearsal also works on an ordinary `main`: the "HEAD must be the release commit" check drops to
 a warning in a dry run.
 
+What a rehearsal does not cover is the attestation, and `publish` runs behind an egress allowlist.
+When GitHub moves a host that `gh attestation` or `gh release` talks to, the first real release
+after the move is what finds out — see below.
+
 ## Version numbers
 
 With `release-type: auto`, the bump comes from the
@@ -135,6 +139,11 @@ day) or run **Release** again with `re-stage: vX.Y.Z`, which skips straight to s
 `re-stage` also creates the GitHub Release if it is missing, and leaves it alone if it is not — so
 the narrower case where the tag landed and the Release step then failed repairs itself too. Its
 notes come from the tag, not from whatever `main` says by then.
+
+**`Verify the attestation` fails with `connection refused`.** The attestation was signed and
+stored; `gh attestation verify` could not fetch it back because the host it was redirected to is
+not in `publish`'s `allowed-endpoints` (v0.9.0 stopped here when GitHub began serving bundles from
+`tmaproduction.blob.core.windows.net`). Add the host from the error, merge, and `re-stage` the tag.
 
 **`CI` is red, or `HEAD` isn't the release commit.** The run refuses before writing anything.
 Nothing to undo.
