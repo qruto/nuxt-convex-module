@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.9.1
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.9.0...v0.9.1)
+
+### 🩹 Fixes
+
+#### Website
+
+- Production font and version defects, docs aside widths, hero mark relief ([#47](https://github.com/qruto/nuxt-convex-module/pull/47))
+
+### 🤖 CI
+
+- Resolve the Scorecard action-pinning and weekly link-check findings ([#46](https://github.com/qruto/nuxt-convex-module/pull/46))
+
+#### Release
+
+- Allow the attestation blob host in the publish egress list ([11f2b88](https://github.com/qruto/nuxt-convex-module/commit/11f2b88))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.9.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.0.1...v0.9.0)
