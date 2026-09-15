@@ -9,6 +9,9 @@ import { at, backticked, interfaceKeys, messagesIn, read, tableFirstCells, walk 
 // write against: module options, runtime config, auto-imports and components,
 // subpath exports, the messages the module prints, the shape `useBetterAuth()`
 // returns, and the experimental tier. Each failure message says what to edit.
+// The docs site is the single source of truth; README.md only points at it, so
+// it is held to what it does say (real subpaths, absolute image sources), not
+// to listing every surface.
 //
 // It runs in the `static` CI job on every pull request. The `test` job is
 // skipped for docs-only changes, so a docs gate there would fail only on main.
@@ -40,10 +43,9 @@ describe('module options', () => {
     expect(rows, `\`${key}\` is a ModuleOptions key (src/module.ts) with no row in website/content/1.getting-started/3.configuration.md — add the row or remove the option`).toContain(key)
   })
 
-  it.each(betterAuthOptions)('`betterAuth.%s` has a row in both configuration tables and the README snippet', (key) => {
+  it.each(betterAuthOptions)('`betterAuth.%s` has a row in both configuration tables', (key) => {
     expect(rows, `\`betterAuth.${key}\` is a BetterAuthModuleOptions key with no row in 3.configuration.md`).toContain(`betterAuth.${key}`)
     expect(tableFirstCells(BETTER_AUTH, '## Configure'), `\`betterAuth.${key}\` has no row in 3.components/2.better-auth.md's Configure table`).toContain(`betterAuth.${key}`)
-    expect(README, `\`${key}\` is not shown in README.md's \`convex: { … }\` snippet`).toContain(`betterAuth: { ${key}:`)
   })
 
   it.each(rows)('table row `%s` is a real option', (row) => {
@@ -83,19 +85,16 @@ describe('auto-imports and components', () => {
     expect(['.ts', '.vue'].some(ext => existsSync(at(`src/${from}${ext}`))), `src/${from} does not exist`).toBe(true)
   })
 
-  it.each(appImports.map(e => e.name))('`%s` is on the app auto-imports page and in the README', (name) => {
+  it.each(appImports.map(e => e.name))('`%s` is on the app auto-imports page', (name) => {
     expect(backticked(AUTO_IMPORTS).some(t => t.includes(name)), `\`${name}\` is registered by addImports (src/registry.ts) but never appears in 4.api-reference/1.auto-imports.md — add it to a table`).toBe(true)
-    expect(backticked(README).some(t => t.includes(name)), `\`${name}\` is registered by addImports but never appears in README.md`).toBe(true)
   })
 
-  it.each(components.map(e => e.name))('<%s> is on the app auto-imports page and in the README', (name) => {
+  it.each(components.map(e => e.name))('<%s> is on the app auto-imports page', (name) => {
     expect(AUTO_IMPORTS, `<${name}> is registered by addComponent (src/registry.ts) but never appears in 1.auto-imports.md`).toContain(`<${name}>`)
-    expect(README, `<${name}> is registered by addComponent but never appears in README.md`).toContain(`<${name}>`)
   })
 
-  it.each(serverImports.map(e => e.name))('`%s` is on the server auto-imports page and in the README', (name) => {
+  it.each(serverImports.map(e => e.name))('`%s` is on the server auto-imports page', (name) => {
     expect(backticked(SERVER_IMPORTS_PAGE).some(t => t.includes(name)), `\`${name}\` is registered by addServerImports (src/registry.ts) but never appears in 4.api-reference/2.server-imports.md`).toBe(true)
-    expect(backticked(README).some(t => t.includes(name)), `\`${name}\` is registered by addServerImports but never appears in README.md`).toBe(true)
   })
 })
 
@@ -113,16 +112,11 @@ describe('subpath exports', () => {
     expect(known.has(specifier), `${specifier} is imported in ${where} but is not a key of package.json exports`).toBe(true)
   })
 
-  const tables = [
-    { file: 'README.md', text: README },
-    { file: 'website/content/4.api-reference/index.md', text: read('website/content/4.api-reference/index.md') },
-  ]
-  it.each(keys)('%s is in the README and API-reference subpath tables', (key) => {
+  const table = read('website/content/4.api-reference/index.md')
+  it.each(keys)('%s is in the API-reference subpath table', (key) => {
     const specifier = key === '.' ? 'nuxt-convex-module' : `nuxt-convex-module${key.slice(1)}`
     const alias = key.endsWith('/vue') || key === './vue' ? `(alias \`${key.slice(1)}\`)` : undefined
-    for (const { file, text } of tables) {
-      expect(text.includes(`| \`${specifier}\``) || (alias !== undefined && text.includes(alias)), `${key} is a package.json export with no row (or alias mention) in ${file}'s subpath table`).toBe(true)
-    }
+    expect(table.includes(`| \`${specifier}\``) || (alias !== undefined && table.includes(alias)), `${key} is a package.json export with no row (or alias mention) in 4.api-reference/index.md's subpath table`).toBe(true)
   })
 })
 
@@ -230,15 +224,15 @@ describe('README', () => {
     expect(README).not.toContain('](./website/content/')
     for (const src of README.matchAll(/(?:srcset|src)="([^"]+)"/g)) expect(src[1], 'npm does not rewrite relative image sources').toMatch(/^https:\/\//)
   })
+})
 
+describe('installation page', () => {
   it('states the Nuxt and Node floors the module enforces', () => {
     const nuxtFloor = read('src/module.ts').match(/nuxt: '>=(\d+\.\d+)/)?.[1]
     const nodeFloor = manifest.engines.node.match(/>=(\d+\.\d+)/)?.[1]
     expect(nuxtFloor && nodeFloor).toBeTruthy()
-    for (const [file, text] of [['README.md', README], ['2.installation.md', INSTALLATION]]) {
-      expect(text, `${file} does not state Nuxt ≥ ${nuxtFloor}`).toMatch(new RegExp(`Nuxt\\s*(>=|≥)\\s*${nuxtFloor!.replace('.', '\\.')}`))
-      expect(text, `${file} does not state Node ≥ ${nodeFloor}`).toMatch(new RegExp(`Node\\s*(>=|≥)\\s*${nodeFloor!.replace('.', '\\.')}`))
-    }
+    expect(INSTALLATION, `2.installation.md does not state Nuxt ≥ ${nuxtFloor}`).toMatch(new RegExp(`Nuxt\\s*(>=|≥)\\s*${nuxtFloor!.replace('.', '\\.')}`))
+    expect(INSTALLATION, `2.installation.md does not state Node ≥ ${nodeFloor}`).toMatch(new RegExp(`Node\\s*(>=|≥)\\s*${nodeFloor!.replace('.', '\\.')}`))
   })
 })
 

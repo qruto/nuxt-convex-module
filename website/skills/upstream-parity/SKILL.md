@@ -128,12 +128,11 @@ entirely in that category.
 
 ### 5. Move the version everywhere it is stated
 
-Four places, listed in [`PARITY.md` §4](../../../PARITY.md#on-every-baseline-bump):
+Three places, listed in [`PARITY.md` §4](../../../PARITY.md#on-every-baseline-bump):
 
 1. `PARITY.md`'s pinned-baselines table — **keep the row shape**, a test parses it
-2. `README.md` prose — `` `convex@1.46.0` ``
-3. `website/app/utils/upstream-baselines.ts`
-4. `website/content/3.components/1.index.md` — last cell of each component row
+2. `website/app/utils/upstream-baselines.ts`
+3. `website/content/3.components/1.index.md` — last cell of each component row
 
 `test/unit/upstream-baselines.test.ts` fails if any drift apart.
 

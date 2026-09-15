@@ -707,15 +707,14 @@ it throw, this module ships that in a major.
 ### On every baseline bump
 
 **Move the version everywhere it is stated**, or the docs ship a confidently wrong number.
-`test/unit/upstream-baselines.test.ts` fails if any of the four drift apart; it parses this
+`test/unit/upstream-baselines.test.ts` fails if any of the three drift apart; it parses this
 file's table by row prefix, so keep [§1](#1-what-is-ported)'s row shape verbatim.
 
 | # | Where | Form |
 |---|---|---|
 | 1 | [§1](#1-what-is-ported), first table | `**1.45.0**` in a table cell |
-| 2 | [README.md](./README.md) "Supported official packages" | prose — `` `convex@1.45.0` `` |
-| 3 | [`website/app/utils/upstream-baselines.ts`](./website/app/utils/upstream-baselines.ts) | the site's machine-readable copy (hero chip, introduction, component pages) |
-| 4 | [`website/content/3.components/1.index.md`](./website/content/3.components/1.index.md) | last cell of each component row |
+| 2 | [`website/app/utils/upstream-baselines.ts`](./website/app/utils/upstream-baselines.ts) | the site's machine-readable copy (hero chip, introduction, component pages) |
+| 3 | [`website/content/3.components/1.index.md`](./website/content/3.components/1.index.md) | last cell of each component row |
 
 **Diff beyond the file map.** Code the port *re-implements* rather than mirrors has no mapped
 counterpart, yet a fix there can still imply a fix here. For `convex` that is
