@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 import { KINDS, checkName, drawName } from '#shared/reactions'
+import RailLamp from './RailLamp.vue'
 
 // THE REACTIONS — the hero's instrument, and the same instrument in the
 // small second window (/reactions, opened by the key on the hero plate's
@@ -303,17 +304,7 @@ const line = computed(() => {
        their scribes are chrome.css's .rail). Two cells: the lamp with its
        word, and one sentence (`line` above). -->
   <figcaption class="part-well mt-3.5 flex min-h-[2.15rem] items-stretch stamp">
-    <span class="rail-cell">
-      <i
-        aria-hidden="true"
-        class="lamp"
-        :class="state.lamp"
-      />
-      <span
-        class="concave-text"
-        :class="state.tone"
-      >{{ state.label }}</span>
-    </span>
+    <RailLamp :state="state" />
     <span
       v-if="line"
       class="rail-cell concave-text min-w-0 flex-1"
