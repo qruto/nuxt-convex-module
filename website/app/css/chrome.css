@@ -99,28 +99,23 @@ body {
 
    --seam-shade  the near wall. Alpha, not a colour, so one value
                  reads the same on the page ground and on a plate.
-   --seam-catch  the far wall. `--rail-catch` is the same light under
-                 the name the sidebar and TOC rails already use.
+   --seam-catch  the far wall.
    --seam-x      a cut running ACROSS the page (a rule under a page
                  header): shade on the box's own last row, catch on
                  the first row below it. Replaces `border-b`.
    --seam-y      the same cut stood on end, for the join between two
-                 butted plates: shade in the column just outside the
-                 leading edge, catch on the first column inside it.
-                 Drawn by the RIGHT-hand plate, which paints last.
-   --rail-shade  the near wall as a BORDER colour, for the two rails
-                 that are drawn with `border-s` and cannot be re-cut
-                 from here. In light this is the hairline the ground
-                 already used; in dark it has to be spelled out,
-                 because Nuxt UI's dark `--ui-border` is LIGHTER than
-                 the page and a rail built on it reads as a raised
-                 wire, not a groove — two light lines instead of a
-                 dark one and a light one. */
+                 butted plates, and for the two aside rails (the
+                 sidebar tree, the TOC): shade in the column just
+                 outside the leading edge, catch on the first column
+                 inside it. Drawn by the RIGHT-hand plate, which paints
+                 last. The rails drop the theme's `border-s` to take
+                 it: Nuxt UI's dark `--ui-border` is LIGHTER than the
+                 page, and a rail built on that border reads as a
+                 raised wire, not a groove — two light lines instead
+                 of a dark one and a light one. */
 :root {
   --seam-shade: light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.55));
   --seam-catch: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.06));
-  --rail-catch: var(--seam-catch);
-  --rail-shade: light-dark(oklch(88.5% 0 0), rgb(0 0 0 / 0.55));
 
   --seam-x:
     inset 0 -1px 0 var(--seam-shade),
@@ -161,6 +156,20 @@ body {
     block-size: auto;
     background-image: none;
   }
+}
+
+/* -- THE DOCS COLUMNS ----------------------------------------------
+   The two asides are FIXED widths, not shares of the container — see
+   `ui.page` in app.config for why the theme's tenths were dropped.
+   Both are sized from the longest name each has to hold in one line:
+   the sidebar's "Mutations & Actions" behind an icon, the TOC's nested
+   "Reactivity, the VueUse way" behind two indents and the dish's own
+   padding. The article gets what remains: 664px at lg with the
+   sidebar alone, 592px at xl with both, 800px at the container's cap.
+   Below lg neither token is read; the page folds. */
+:root {
+  --docs-aside-width: 16rem;
+  --docs-toc-width: 18rem;
 }
 
 /* -- THE HEADER RAIL ---------------------------------------------

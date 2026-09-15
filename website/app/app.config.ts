@@ -152,10 +152,17 @@ export default defineAppConfig({
     // 2. The rails are grooves. An overhead lamp shades the near wall of
     //    a cut and lights the far one, so every rail is two pixels: a
     //    shade outside, a catch inset, one pixel apart — --seam-y in
-    //    chrome.css, which also draws the header seam. The active marker
-    //    takes the same pair around its orange bar. Section names, page
-    //    names and their icons are raised (convex-text / convex-icon):
-    //    the marking on the plate, the rails cut into it.
+    //    chrome.css, which also draws the header seam. It is drawn ONCE,
+    //    on the list, and runs unbroken: the theme's per-link `after:`
+    //    marker (1px, inset 2px top and bottom, rounded) sits on the
+    //    shade column and stays transparent until the link is active,
+    //    when it turns orange and takes the shade's place — the catch
+    //    runs on beside it untouched. It used to carry its own
+    //    shade-and-catch pair as well, which stitched a second, rounded
+    //    groove over the first one link at a time: a dashed rail.
+    //    Section names, page names and their icons are raised
+    //    (convex-text / convex-icon): the marking on the plate, the
+    //    rails cut into it.
     contentNavigation: {
       slots: {
         listWithChildren: 'border-0 shadow-(--seam-y)',
@@ -176,10 +183,56 @@ export default defineAppConfig({
           active: true,
           class: { link: 'before:convex', linkTitle: 'convex-text' },
         },
+      ],
+    },
+
+    // The docs columns. Nuxt UI lays UPage out as a ten-column grid and
+    // hands each aside two of them, so both asides scale with the
+    // viewport — and Docus nests two UPages (the layout's, holding the
+    // sidebar; the page's, holding the TOC), so the TOC got two tenths
+    // of eight tenths: 16% of the container, less its own padding. That
+    // is ~150px of text at 1440 and ~100px at 1024, where every heading
+    // wrapped and the Ecosystem links truncated.
+    //
+    // The grid is traded for a flex row with FIXED asides: the sidebar
+    // and the TOC are each as wide as their content needs wherever they
+    // appear, and the article takes what is left. Below lg both fold as
+    // before (the header's menu, the TOC's collapsible strip). Between
+    // lg and xl the article has no room for a third column, so the TOC
+    // folds alone — into the pull tab on the right edge, see
+    // DocsAsideRight.vue — and is a column again from xl. The widths are
+    // the --docs-*-width tokens in chrome.css.
+    //
+    // Compound variants, one per aside combination, because the theme's
+    // own compound variants come after any slot class and one of them
+    // (left + right) re-spans the centre. `lg:flex` beats the slot's
+    // `lg:grid` on the display axis; the theme's `col-span` classes go
+    // inert outside a grid — which also keeps the `lg:col-span-10` the
+    // docs page passes while the assistant is open harmless.
+    page: {
+      compoundVariants: [
         {
-          highlight: true,
-          level: true,
-          class: { link: 'after:shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]' },
+          left: true,
+          right: false,
+          class: {
+            root: 'lg:flex lg:flex-row',
+            left: 'lg:w-(--docs-aside-width) lg:shrink-0',
+            center: 'lg:flex-1 lg:min-w-0',
+          },
+        },
+        {
+          left: false,
+          right: true,
+          class: {
+            root: 'lg:flex lg:flex-row',
+            center: 'lg:flex-1 lg:min-w-0',
+            right: 'lg:max-xl:hidden lg:w-(--docs-toc-width) lg:shrink-0',
+          },
+        },
+        {
+          left: false,
+          right: false,
+          class: { root: 'lg:flex' },
         },
       ],
     },
@@ -215,14 +268,32 @@ export default defineAppConfig({
         // The panel goes on the container: the theme's root keeps a
         // `backdrop-blur-sm` at every width for the mobile drawer, which
         // on desktop painted a blurred SQUARE behind the rounded dish —
-        // hence the root override.
-        root: 'lg:bg-transparent lg:backdrop-blur-none',
+        // hence the root override. `lg:ps-0` hands the dish the root's
+        // 24px of start padding, which the strip below lg needs (it
+        // bleeds to the container's edges) and the column does not: the
+        // dish then fills its column, with the page gap alone between it
+        // and the article.
+        root: 'lg:bg-transparent lg:backdrop-blur-none lg:ps-0',
         container: 'lg:panel-glass lg:rounded-(--radius-card) lg:px-3.5 xl:px-5 lg:my-8',
         title: 'convex-text',
         linkText: 'whitespace-normal text-clip overflow-visible',
-        list: 'border-0 shadow-(--seam-y)',
-        indicator: 'shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]',
       },
+      // The rail, as a compound variant and NOT a slot: the theme adds
+      // its `border-s` from a compound variant of its own, and compound
+      // classes land AFTER the slot's, so a `border-0` written in the
+      // slot lost — the border stayed, and the inset catch was painted
+      // one column inside it: a 1px shade and a 2px light. Extended
+      // compound variants are appended after the theme's, so this one
+      // wins. The indicator is moved one column left, onto the shade,
+      // where the sidebar's marker already sits: the orange bar takes
+      // the shade's place and the catch runs on beside it.
+      compoundVariants: [
+        {
+          highlight: true,
+          highlightVariant: 'straight',
+          class: { list: 'border-0 shadow-(--seam-y)', indicator: '-translate-x-px' },
+        },
+      ],
     },
 
     // The dashed rules in the right aside. A dashed border can only be

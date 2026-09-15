@@ -267,9 +267,9 @@
      page ground, on a plate, and over a background a code block paints
      for itself. A SHADE in both schemes: Nuxt UI's dark --ui-border is
      LIGHTER than the page, and a hole ringed in it reads as a raised
-     wire (the trap --rail-shade documents in chrome.css). Half the
-     weight of the hairline the ground uses — this is the wall of a
-     1px cut, not a rule drawing a box.
+     wire (the trap the aside rails' --seam-y note in chrome.css
+     documents). Half the weight of the hairline the ground uses —
+     this is the wall of a 1px cut, not a rule drawing a box.
 
      WHICH IS WHY DARK CAME DOWN, TWICE (0.4 -> 0.22 -> 0.1,
      2026-09-06). A shade is a fraction of what it lands on, and the
