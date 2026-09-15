@@ -676,7 +676,10 @@ html.landing-snap-driven:has(.landing-panel) {
 
   display: block;
   position: relative;
-  line-height: 1.06;
+  /* 1.06 until 2026-09-16; the lines' walls and casts had the two rows
+     of type nearly touching, so the leading opens a step. Both copies
+     share it, so they stay in register. */
+  line-height: 1.14;
   /* The break after "backend" is hand-placed in the markdown (a markdown
      hard break — both billet copies get it, so they stay in register).
      `balance` would shorten the measure and re-wrap around that break;
@@ -809,22 +812,61 @@ html.landing-snap-driven:has(.landing-panel) {
 
    THE CONTACT STROKE too (2026-09-14: "add a text stroke to the
    marks"): the words' machined line where the wall meets the ground —
-   -webkit-text-stroke in --edge-c under the fill, so only its outer
-   half shows. Same ink, same width (--depth × 0.2 = 0.00728em, the
-   clamp's middle term), converted to each artwork's user units below
-   because stroke-width on a path measures in those: 0.00728 × 66.11
+   the stroke under the fill, so only its outer half shows. It started
+   at the words' width (--depth × 0.2 = 0.00728em, the clamp's middle
+   term) and runs at 1.75× that since 2026-09-16 ("make the stroke
+   more visible"): 0.0127em, converted to each artwork's user units
+   below because stroke-width on a path measures in those: × 66.11
    and × 38.4. The words' 0.5px floor is not carried — it only bites
    below ~69px type, and there a mark's line simply thins with the
    letters' shadows instead of holding at half a pixel.
+
+   NOT THE WORDS' INK, though (2026-09-15: "a tiny stroke matching the
+   colour of the logos' text and the logos' colours themselves"). The
+   words' --edge-c is their dark ink at 18%, which on a lobe is a grey
+   line drawn on enamel, and on the wordmark disappears into the
+   graphite it is meant to bound. Each part's stroke is ITS OWN COLOUR
+   darkened instead — the lobes' vendor hexes at L×0.58 and the
+   wordmark a step under its ramp's baseline shade — so the line reads
+   as the part's own lip turning under, the embossed border. Opaque,
+   where the words' is 18%: the words' stroke sits INSIDE their fill's
+   contact wall and only tints it, this one IS the edge.
    The face copy's duplicate mark keeps its width but never paints,
    except for the ghostwrite band on the letterforms (below). */
-.hero-billet-line .billet-ink [aria-label="Convex"] { --mark-edge: 0.481; }
-.hero-billet-line .billet-ink [aria-label="Nuxt"] { --mark-edge: 0.28; }
+.hero-billet-line .billet-ink [aria-label="Convex"] { --mark-edge: 0.842; }
+.hero-billet-line .billet-ink [aria-label="Nuxt"] { --mark-edge: 0.49; }
 .hero-billet-line .billet-ink .brand-lockup :is(.brand-word, .brand-symbol) path {
-  stroke: var(--edge-c);
+  stroke: var(--mark-edge-c);
   stroke-width: calc(var(--mark-edge) * 1px); /* px on a path = user units */
   paint-order: stroke fill;
 }
+/* the wordmark: under the graphite ramp's baseline shade (0.335 light /
+   0.535 dark, the ramp block below) in the ramp's own hue — 0.1 under
+   since 2026-09-16, 0.065 before */
+.hero-billet-line .billet-ink .brand-word path {
+  --mark-edge-c: light-dark(oklch(0.235 0.008 255), oklch(0.42 0.012 255));
+}
+/* the lobes: their own hex, darkened — chroma held so the line stays
+   the lobe's colour and not a brown or a grey */
+.hero-billet-line .billet-ink path[fill="#F3B01C"] { --mark-edge-c: oklch(from #F3B01C calc(l * 0.58) c h); }
+.hero-billet-line .billet-ink path[fill="#8D2676"] { --mark-edge-c: oklch(from #8D2676 calc(l * 0.58) c h); }
+.hero-billet-line .billet-ink path[fill="#EE342F"] { --mark-edge-c: oklch(from #EE342F calc(l * 0.58) c h); }
+.hero-billet-line .billet-ink path[fill="#00DC82"] { --mark-edge-c: oklch(from #00DC82 calc(l * 0.58) c h); }
+/* THE CONVEX LOBES SIT A HAIR APART in the hero (2026-09-16: "move the
+   icon's parts apart, the shadows almost hide the gap"). The kit draws
+   the three lobes nearly touching, and once each one wears a wall and a
+   cast the gap between neighbours fills with the next lobe's shadow.
+   So each lobe slides 1.3 user units straight out from the symbol's
+   centre (74.3, 74.4 — the ink box's middle) along its own centroid's
+   bearing, which widens every gap by ~2 units (0.6 and 1 were tried first; the
+   red's two seams still closed at 1x, then read but thin) and moves nothing
+   else: the shapes, the domes and the lockup's box are as shipped.
+   Both copies, so the face duplicate stays in register. A translate
+   on an SVG path measures in user units, the same units the strokes
+   above are cut in. */
+.hero-billet-line [aria-label="Convex"] path[fill="#F3B01C"] { translate: 0.44px 1.22px; }  /* gold, below */
+.hero-billet-line [aria-label="Convex"] path[fill="#8D2676"] { translate: -1.29px -0.2px; }  /* magenta, left */
+.hero-billet-line [aria-label="Convex"] path[fill="#EE342F"] { translate: 1.01px -0.81px; }  /* red, upper right */
 .hero-billet-line .billet-ink .brand-lockup {
   color: light-dark(#16181d, #101215); /* plate-ink fallback under the fills */
 }
