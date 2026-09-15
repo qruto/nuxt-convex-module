@@ -32,7 +32,6 @@ One pass, per upstream release. Tick in order — later steps assume earlier one
 ## Record
 
 - [ ] `PARITY.md` §1 — pinned-baselines table (keep the row shape).
-- [ ] `README.md` — the `` `package@version` `` prose.
 - [ ] `website/app/utils/upstream-baselines.ts`.
 - [ ] `website/content/3.components/1.index.md` — last cell of each component row.
 - [ ] `PARITY.md` §4 *History* — a row, including "nothing needed porting" if so.

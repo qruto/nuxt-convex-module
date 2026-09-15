@@ -5,8 +5,8 @@
  * is the site's copy of it, so that every place the site *states* a version —
  * the hero chip, the introduction, each component page — reads one value rather
  * than carrying its own hardcoded number that goes stale on the next sync.
- * `test/unit/upstream-baselines.test.ts` fails if this drifts from PARITY.md,
- * the README table, or the components overview.
+ * `test/unit/upstream-baselines.test.ts` fails if this drifts from PARITY.md
+ * or the components overview.
  *
  * Bumping a baseline: port the upstream diff, then update PARITY.md and this
  * file (the test names every other spot that has to move with them).

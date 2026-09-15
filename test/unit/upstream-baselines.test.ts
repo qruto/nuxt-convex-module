@@ -7,14 +7,14 @@ import { upstreamBaselines } from '../../website/app/utils/upstream-baselines'
 // the introduction, and on every component page — all of it read off
 // `website/app/utils/upstream-baselines.ts`. PARITY.md stays the repository's
 // authority (the upstream-parity skill updates it first), so this test pins
-// the site's copy, the README's prose and the components overview to it: a
-// baseline bump that misses one of them fails here instead of shipping a
-// confidently wrong version number to readers.
+// the site's copy and the components overview to it: a baseline bump that
+// misses one of them fails here instead of shipping a confidently wrong
+// version number to readers. (The README no longer states a version — the
+// docs site is the single source of truth.)
 const read = (path: string) =>
   readFileSync(fileURLToPath(new URL(`../../${path}`, import.meta.url)), 'utf8')
 
 const PARITY = read('PARITY.md')
-const README = read('README.md')
 const COMPONENTS_OVERVIEW = read('website/content/3.components/1.index.md')
 
 /** The last cell of the markdown table row containing `token`. */
@@ -39,15 +39,6 @@ describe('upstream baselines', () => {
       )
       expect(row, `no pinned-baseline row for ${baseline.package}`).toBeDefined()
       expect(row).toContain(`**${baseline.version}**`)
-    },
-  )
-
-  // The README states each baseline in prose — "At parity with `convex@1.45.0`"
-  // — rather than in a table cell, so match the package@version it prints.
-  it.each(Object.values(upstreamBaselines))(
-    'states `$package@$version` in README.md',
-    ({ package: pkg, version }) => {
-      expect(README).toContain(`\`${pkg}@${version}\``)
     },
   )
 

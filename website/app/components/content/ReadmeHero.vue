@@ -33,7 +33,7 @@ const npm = 'https://www.npmjs.com/package/nuxt-convex-module'
         width="52"
         height="20"
       >
-      View package
+      View on npm
     </a>
   </div>
 </template>
