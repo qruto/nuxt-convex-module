@@ -6,6 +6,18 @@
 # `tag` job carries the token in a single step's environment instead — so no
 # workflow in this repo persists credentials, and the waiver is gone.
 rules:
+  self-repository:
+    ignore:
+      # The audit wants `$/.github/actions/setup` over `./...`. `$/` resolves
+      # the action from the workflow's own ref instead of the checkout, which
+      # only matters under `pull_request_target`, and no workflow here uses it —
+      # every checkout is the workflow's own ref, so both forms read the same
+      # files. `./` stays because OpenSSF Scorecard does not parse `$/` yet and
+      # reports each use as an unpinned third-party action. Drop this once
+      # Scorecard learns the syntax, and revisit if a `pull_request_target`
+      # trigger is ever added.
+      - ci.yml
+      - preview.yml
   use-trusted-publishing:
     ignore:
       # pkg.pr.new authenticates via its GitHub App, not a registry token —

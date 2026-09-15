@@ -97,7 +97,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: $/.github/actions/setup
+      - uses: ./.github/actions/setup
         with:
           prepare: lib
 
@@ -283,7 +283,7 @@ jobs:
       # from website/, which oxc resolves through
       # website/.nuxt/tsconfig.app.json — and only `nuxt prepare website`
       # generates that.
-      - uses: $/.github/actions/setup
+      - uses: ./.github/actions/setup
         with:
           runtime: node@${{ matrix.node }}
           prepare: full
@@ -328,7 +328,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: $/.github/actions/setup
+      - uses: ./.github/actions/setup
         with:
           prepare: lib
 
@@ -364,7 +364,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: $/.github/actions/setup
+      - uses: ./.github/actions/setup
         with:
           prepare: lib
 
@@ -446,7 +446,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: $/.github/actions/setup
+      - uses: ./.github/actions/setup
         with:
           prepare: lib
 
