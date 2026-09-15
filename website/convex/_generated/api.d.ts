@@ -10,10 +10,16 @@
 
 import type * as analyze from "../analyze.js";
 import type * as billing from "../billing.js";
+import type * as canvas from "../canvas.js";
+import type * as console from "../console.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
+import type * as gate from "../gate.js";
 import type * as messages from "../messages.js";
 import type * as moderation from "../moderation.js";
+import type * as presence from "../presence.js";
+import type * as reactions from "../reactions.js";
+import type * as switches from "../switches.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -25,10 +31,16 @@ import type {
 declare const fullApi: ApiFromModules<{
   analyze: typeof analyze;
   billing: typeof billing;
+  canvas: typeof canvas;
+  console: typeof console;
   crons: typeof crons;
   files: typeof files;
+  gate: typeof gate;
   messages: typeof messages;
   moderation: typeof moderation;
+  presence: typeof presence;
+  reactions: typeof reactions;
+  switches: typeof switches;
   tasks: typeof tasks;
 }>;
 

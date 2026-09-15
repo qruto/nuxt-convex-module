@@ -1,31 +1,34 @@
 <script setup lang="ts">
 // Shared chrome for playground demos: frames the live example and surfaces the
 // WebSocket connection state so a stopped local deployment reads as "offline"
-// instead of a silently empty demo. Same material language as the homepage
-// bench: a raised plate with the demo seated in a recessed well.
+// instead of a silently empty demo. Same material language as the landing
+// page's plates: a raised plate with the demo seated in a recessed well.
 withDefaults(defineProps<{ title?: string }>(), { title: 'Demo' })
 
-const connectionState = useConvexConnectionState()
+// Read in the browser only (useClientConnectionState): the server renders
+// the lamp off, and so does the client until the socket is up.
+const connectionState = useClientConnectionState()
 
-const isConnected = computed(() => connectionState.value.isWebSocketConnected)
+const isConnected = computed(() => connectionState.value?.isWebSocketConnected ?? false)
 </script>
 
 <template>
-  <div class="convex bevel sheen rounded-xl my-6">
+  <div class="part-card sheen my-6">
     <div class="flex items-center justify-between gap-4 px-4 pt-3 pb-2.5">
-      <span class="concave-text font-mono text-xs font-semibold tracking-[0.04em] text-toned">{{ title }}</span>
+      <span class="stamp text-toned">{{ title }}</span>
       <span
-        class="inline-flex flex-none items-center gap-1.5 font-mono text-[0.65rem] font-semibold tracking-[0.13em]"
+        class="inline-flex flex-none items-center gap-1.5 stamp"
         :class="isConnected ? 'text-toned' : 'text-dimmed'"
       >
-        <span
-          class="size-1.5 rounded-full"
-          :class="isConnected ? 'bg-success shadow-(--glow-success)' : 'bg-error'"
+        <i
+          aria-hidden="true"
+          class="lamp"
+          :class="{ 'lamp-live': isConnected }"
         />
-        {{ isConnected ? 'LIVE' : 'OFFLINE' }}
+        {{ isConnected ? 'live' : 'offline' }}
       </span>
     </div>
-    <div class="concave-2 rounded-[14px] mx-3 mb-3 p-4">
+    <div class="part-tray mx-3 mb-3 p-4">
       <slot />
     </div>
   </div>

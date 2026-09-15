@@ -1,7 +1,14 @@
 export default defineAppConfig({
   docus: {
     locale: 'en',
+    // Left EMPTY on purpose: 'light' / 'dark' here would force one scheme.
+    // The site follows the OS instead — the toggle is removed from the
+    // header, footer and ⌘K palette (app/components/app overrides), the
+    // `d` shortcut is off below, and nuxt.config's colorMode.storageKey
+    // keeps any preference a visitor stored while the toggle still
+    // existed from being read.
     colorMode: '',
+    shortcuts: { toggleColorMode: '' },
   },
 
   // No `navigation.sub`: the sidebar carries the WHOLE tree, every section and
@@ -28,7 +35,9 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass'],
+            // `part-code-shell` only re-points the gutter's marking, so it is
+            // NOT on the depth axis — it composes with part-code.
           },
         },
       },
@@ -96,14 +105,21 @@ export default defineAppConfig({
       ],
     },
 
-    // The header as a raised metal rail — a lighter plate with the
-    // brushed grain running along it, over a real cast. `border-b-0`
-    // is load-bearing: --elevation-header's `0 1px 0` solid layer IS the
-    // bottom edge now, and leaving the theme's border-b in place draws
-    // it twice. See chrome.css for the recipe.
+    // The header as a raised GLASS rail — a sheer plate over a real
+    // cast, carrying no finish of its own so the section's shows
+    // through it. `border-b-0` is load-bearing: --elevation-header's
+    // `0 1px 0` solid layer IS the bottom edge now, and leaving the
+    // theme's border-b in place draws it twice. See chrome.css.
+    //
+    // The theme's `backdrop-blur-sm` is switched OFF, not reduced. Any
+    // blur wide enough to matter is wider than the grain's own 3px/7px
+    // pitch, so it averages the finish under the bar into exactly the
+    // flat wash the sheer fill exists to avoid — measured, 8px and even
+    // 1px left the bar with a 2-level ripple against the ground's 13.
+    // Sheer and unblurred, the pattern comes through at ~40%.
     header: {
       slots: {
-        root: 'app-header border-b-0 bg-transparent bg-(image:--gradient-header-image) shadow-(--elevation-header)',
+        root: 'app-header border-b-0 bg-transparent bg-(image:--gradient-header-image) backdrop-blur-none shadow-(--elevation-header)',
       },
     },
 
@@ -133,17 +149,20 @@ export default defineAppConfig({
     //    rail-and-ink language (the pill default would fill every
     //    active row) and finally turns the depth on.
     //
-    // 2. The rails get their reflected light. An overhead lamp lights
-    //    the FAR wall of a groove, so both the grey nesting rail and
-    //    the orange active marker carry a 1px catch on their right —
-    //    --rail-catch, chrome.css. The rail itself is the theme's
-    //    `border-s` on listWithChildren; an inset shadow lands flush
-    //    against its inner face.
+    // 2. The rails are grooves. An overhead lamp shades the near wall of
+    //    a cut and lights the far one, so every rail is two pixels: a
+    //    shade outside, a catch inset, one pixel apart — --seam-y in
+    //    chrome.css, which also draws the header seam. The active marker
+    //    takes the same pair around its orange bar. Section names, page
+    //    names and their icons are raised (convex-text / convex-icon):
+    //    the marking on the plate, the rails cut into it.
     contentNavigation: {
       slots: {
-        listWithChildren: 'border-(--rail-shade) shadow-[inset_1px_0_0_var(--rail-catch)]',
-        // Section names — the only nav text heavy enough to hold a cut.
-        trigger: 'concave-text',
+        listWithChildren: 'border-0 shadow-(--seam-y)',
+        trigger: 'convex-text',
+        linkLeadingIcon: 'convex-icon',
+        // Wrap rather than clip: a narrow aside shows the whole name.
+        linkTitle: 'whitespace-normal text-clip overflow-visible',
       },
       compoundVariants: [
         {
@@ -155,25 +174,25 @@ export default defineAppConfig({
         {
           variant: 'link',
           active: true,
-          class: { link: 'before:convex' },
+          class: { link: 'before:convex', linkTitle: 'convex-text' },
         },
         {
           highlight: true,
           level: true,
-          class: { link: 'after:shadow-[1px_0_0_var(--rail-catch)]' },
+          class: { link: 'after:shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]' },
         },
       ],
     },
 
-    // The docs page header: the same mono eyebrow the landing sections
-    // wear, a display-font title cut into the plate, and the border-b
-    // traded for a scribed seam (shade, then catch one pixel below).
+    // The docs page header: a mono eyebrow with the glowing accent tick,
+    // a display-font title cut into the plate, and the border-b traded
+    // for a scribed seam (shade, then catch one pixel below).
     pageHeader: {
       slots: {
         root: 'relative py-8 border-b-0 shadow-(--seam-x)',
         headline:
-          'mb-2.5 font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
-        title: 'font-display concave-text',
+          'mb-2.5 font-mono text-xs font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
+        title: 'font-display convex-text',
         // Hook for the field-group seam patch in chrome.css — the
         // divider class lives in Docus's own template.
         links: 'docs-page-links',
@@ -191,9 +210,18 @@ export default defineAppConfig({
     contentToc: {
       defaultVariants: { highlightVariant: 'straight' },
       slots: {
-        title: 'concave-text',
-        list: 'border-(--rail-shade) shadow-[inset_1px_0_0_var(--rail-catch)]',
-        indicator: 'shadow-[1px_0_0_var(--rail-catch)]',
+        // On desktop the whole panel is a frosted dish on the page
+        // (panel-glass, depth.css); the page grain shows through it.
+        // The panel goes on the container: the theme's root keeps a
+        // `backdrop-blur-sm` at every width for the mobile drawer, which
+        // on desktop painted a blurred SQUARE behind the rounded dish —
+        // hence the root override.
+        root: 'lg:bg-transparent lg:backdrop-blur-none',
+        container: 'lg:panel-glass lg:rounded-(--radius-card) lg:px-3.5 xl:px-5 lg:my-8',
+        title: 'convex-text',
+        linkText: 'whitespace-normal text-clip overflow-visible',
+        list: 'border-0 shadow-(--seam-y)',
+        indicator: 'shadow-[-1px_0_0_var(--seam-shade),1px_0_0_var(--rail-catch)]',
       },
     },
 
@@ -216,9 +244,18 @@ export default defineAppConfig({
       },
     },
 
-    // Landing chrome: mono eyebrows with the glowing accent tick,
-    // display-font titles (replaces the bespoke LandingSection/
-    // LandingEyebrow components).
+    // Checkboxes (the security checklist): a recessed well that fills
+    // with a raised accent cap when ticked.
+    checkbox: {
+      slots: {
+        base: 'concave ring-0 rounded-(--radius-chip)',
+        indicator: 'convex-accent',
+      },
+    },
+
+    // Landing chrome: display-font titles, no eyebrows — the section
+    // titles carry their own meaning (replaces the bespoke
+    // LandingSection/LandingEyebrow components).
     //
     // Descriptions carry a two-step emphasis scale so the key things in them
     // scan without turning into a bullet list: `**term**` steps the ink up to
@@ -228,35 +265,45 @@ export default defineAppConfig({
     // has to be spelled out here or bold reads as plain body copy.
     pageHero: {
       slots: {
-        headline:
-          'font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
         title: 'font-display',
         description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },
     },
     pageSection: {
       slots: {
-        headline:
-          'font-mono text-xs font-semibold tracking-[0.14em] uppercase concave-text text-toned before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
+        // More air than the Nuxt UI default (py-16/24/32, gap-8/16):
+        // every section is now a screen-tall plate the page snaps to
+        // (see THE PLATES in landing.css), and a plate wants margin
+        // around its marking. The short plates take most of this from
+        // `align-content: center` in the leftover screen; the spec
+        // sheet, which is taller than the screen, takes it from here.
+        container: 'py-24 sm:py-32 lg:py-40 gap-12 sm:gap-20',
         title: 'font-display',
         description: '[&_strong]:font-semibold [&_strong]:text-highlighted',
       },
     },
 
     prose: {
-      // Headings get the 1px marking — a light catch under the glyphs,
-      // so they read as cut into the plate rather than printed on it.
-      // h1–h3 only: `concave-text` is a one-pixel shadow, and much
-      // below 18px it stops reading as a cut and starts reading as a
-      // halo. Body copy stays plain for the same reason.
-      h1: { slots: { base: 'concave-text' } },
-      h2: { slots: { base: 'concave-text' } },
-      h3: { slots: { base: 'concave-text' } },
-      // Inline code → tiny recessed chip.
+      // Headings are raised off the plate — the same half-pixel rim and
+      // cast the sidebar's names carry. h1–h3 only: below 18px the two
+      // rows fold into the glyph and read as blur, so body copy and h4+
+      // stay plain.
+      h1: { slots: { base: 'convex-text' } },
+      h2: { slots: { base: 'convex-text' } },
+      h3: { slots: { base: 'convex-text' } },
+      // Inline code → a raised chip sitting on the baseline. `inline`
+      // rather than the theme's `inline-block` so a chip at a line's end
+      // wraps with the text instead of dropping whole to the next line.
       code: {
+        base: 'inline px-1.5 py-px font-mono font-medium text-[0.875em] rounded-(--radius-chip) align-baseline',
         variants: {
-          color: { neutral: 'border-0 bg-muted shadow-(--inset-shadow-1) text-highlighted' },
+          color: { neutral: 'border-0 convex-0 text-highlighted' },
         },
+      },
+      // A link around a chip: the chip takes the link colour and lifts
+      // on hover (the theme's dashed-border affordance needs a border).
+      a: {
+        base: '[&>code]:text-primary hover:[&>code]:convex',
       },
       // Code blocks → carved wells. The one place that takes the cast
       // WITHOUT the face: Shiki paints its own background in there, and
@@ -274,6 +321,15 @@ export default defineAppConfig({
   },
 
   seo: {
+    // JSON-LD: the site is a free developer tool (read by Docus's useSeo).
+    schema: {
+      type: 'SoftwareApplication',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Any',
+      price: 0,
+      priceCurrency: 'USD',
+      sameAs: ['https://github.com/qruto/nuxt-convex-module', 'https://www.npmjs.com/package/nuxt-convex-module'],
+    },
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:

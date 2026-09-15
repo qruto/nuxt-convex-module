@@ -1,14 +1,14 @@
 import type { MutationCtx } from './_generated/server'
 import { internal } from './_generated/api'
 import { internalMutation, mutation, query } from './_generated/server'
+import { cooldown } from './gate'
 import { LIMITS, rejectMessage } from './moderation'
 import { ConvexError, v } from 'convex/values'
 
-// Live chat — powers the `useQuery` / `useMutation` playground demos AND the
-// live hero panel on the marketing homepage.
+// Live chat — powers the `useQuery` / `useMutation` playground demos.
 
 // Shared-deployment guardrails: the chat is public and unauthenticated, and
-// its rows are on the homepage, so every write goes through `rejectMessage`
+// its rows render for every visitor, so every write goes through `rejectMessage`
 // (length, links, profanity — see ./moderation) and `send` evicts the oldest
 // messages beyond the cap, keeping every full-table read below Convex's
 // per-query limits.
@@ -89,24 +89,10 @@ export const send = mutation({
 export const clear = mutation({
   args: {},
   handler: async (ctx) => {
-    // A public wipe is as good a griefing tool as spam, so it rides a global
-    // cooldown: one reset a minute, tracked in `meta`. The batched deletion
+    // One reset a minute, tracked in `meta` (gate.ts). The batched deletion
     // continues through an INTERNAL mutation — the continuation must not hit
     // this gate (or a >500-row flood could never finish clearing).
-    const gate = await ctx.db
-      .query('meta')
-      .withIndex('by_key', q => q.eq('key', 'messages.clear'))
-      .unique()
-    const now = Date.now()
-    if (gate && now - gate.at < CLEAR_COOLDOWN_MS) {
-      throw new ConvexError('The table was reset less than a minute ago — give it a moment.')
-    }
-    if (gate) {
-      await ctx.db.patch(gate._id, { at: now })
-    }
-    else {
-      await ctx.db.insert('meta', { key: 'messages.clear', at: now })
-    }
+    await cooldown(ctx, 'messages.clear', CLEAR_COOLDOWN_MS, 'The table was reset less than a minute ago — give it a moment.')
     await clearBatchHandler(ctx)
   },
 })

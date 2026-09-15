@@ -22,6 +22,13 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-convex-module',
   ],
+  // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
+  // sized for a built site. Vite serves a page as hundreds of module
+  // requests, so in dev one reload plus a couple of screenshots trips it
+  // and every page turns into a 429 for the next five minutes.
+  $development: {
+    security: { rateLimiter: false },
+  },
   devtools: { enabled: true },
   app: {
     head: {
@@ -65,13 +72,24 @@ export default defineNuxtConfig({
     name: 'Nuxt Convex',
     url: 'https://nuxt-convex-module.dev',
   },
+  // The scheme is the operating system's: no toggle on the page (the
+  // app/components/app overrides) and no `d` shortcut (app.config
+  // `docus.shortcuts`). A key of this site's own, so a light/dark
+  // preference a visitor stored while a toggle existed under
+  // @nuxtjs/color-mode's default key is never read again.
+  colorMode: { storageKey: 'nuxt-convex-module-color-mode' },
   // Use Node's built-in `node:sqlite` for Nuxt Content's local DB instead of the
   // `better-sqlite3` native addon. Requires Node >= 22.5 at build & runtime.
   content: {
     experimental: { sqliteConnector: 'native' },
     build: {
       markdown: {
+        // The generated reference documents members at h4; the default
+        // depth (2) keeps them out of "On this page".
+        toc: { depth: 3 },
         highlight: {
+          // Docus's list plus `dotenv`, for the `.env` samples.
+          langs: ['bash', 'diff', 'json', 'js', 'ts', 'html', 'css', 'vue', 'shell', 'mdc', 'md', 'yaml', 'dotenv'],
           // The site's own palette (see shiki-themes.ts). Nuxt Content hands
           // theme OBJECTS straight to shiki, keyed by these map keys — the
           // `--shiki-default` / `--shiki-light` / `--shiki-dark` CSS variables
@@ -91,6 +109,11 @@ export default defineNuxtConfig({
         },
       },
     },
+  },
+  routeRules: {
+    // The stability page was folded into the introduction (versioning +
+    // experimental) and the installation page (requirements).
+    '/getting-started/stability': { redirect: { to: '/getting-started/introduction#versioning', statusCode: 301 } },
   },
   compatibilityDate: 'latest',
   typescript: {
@@ -154,6 +177,9 @@ export default defineNuxtConfig({
     // `convex dev --start`; the module must not rewrite this package's script.
     devScript: false,
   },
+  // Publish the repository's own agent skill at /.well-known/skills/ (Docus
+  // scans each subfolder for a SKILL.md; .agents/skills/upstream-parity links here).
+  docus: { skills: { dir: 'skills' } },
   // Providers are pinned rather than discovered. @nuxt/fonts walks its
   // provider list per family, and Technor exists on Fontshare only — naming
   // the source keeps a cold cache from resolving it somewhere else (or not
@@ -181,6 +207,18 @@ export default defineNuxtConfig({
       { prefix: 'nc', dir: fileURLToPath(new URL('app/assets/icons', import.meta.url)) },
     ],
   },
+  // `llms.txt` — the section map an agent reads first. Docus fills title
+  // and description from package.json; the generated TypeDoc pages are
+  // left out, the hand-written pages are what an agent should read.
+  llms: {
+    sections: [
+      { title: 'Getting Started', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/getting-started/%' }] },
+      { title: 'Guide', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/guide/%' }] },
+      { title: 'Components', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/components/%' }] },
+      { title: 'Recipes', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/recipes/%' }] },
+      { title: 'API Reference', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/api-reference/%' }, { field: 'path', operator: 'NOT LIKE', value: '/api-reference/reference/%' }] },
+    ],
+  },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
   // client-side content queries). The nuxt-security CSP (the module registers
   // nuxt-security, declared in this app's package.json, when it detects it) must allow
@@ -188,6 +226,9 @@ export default defineNuxtConfig({
   security: {
     headers: {
       contentSecurityPolicy: {
+        // The introduction shows the README's lockup straight from the
+        // repository; nuxt-security's default is `'self' data:`.
+        'img-src': ['\'self\'', 'data:', 'https://raw.githubusercontent.com'],
         'script-src': [
           '\'self\'',
           'https:',

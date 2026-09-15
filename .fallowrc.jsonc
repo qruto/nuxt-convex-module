@@ -79,6 +79,16 @@
     "typedoc-plugin-markdown"
   ],
 
+  "duplicates": {
+    // Reviewed clones, hidden until their content changes. chrome.css's
+    // header rail restates depth.css's --inset-shadow-1/-2 layer for layer
+    // with its own figures: a custom property's var()s resolve on the
+    // element that declares it, so a scoped override has to restate the
+    // whole value (the argument is in chrome.css beside the block). The
+    // structure matches; the numbers are the point of the copy.
+    "ignoredClones": ["dup:2fa4ad82:2"]
+  },
+
   "health": {
     // CRAP needs Istanbul input to mean anything. The CI gate runs without any,
     // the website and DevTools apps have no unit tests by design, and coverage

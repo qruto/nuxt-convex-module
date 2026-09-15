@@ -1,6 +1,6 @@
 # Stability
 
-What a version number of `nuxt-convex-module` promises, from 1.0.0 on.
+`nuxt-convex-module` follows [semantic versioning](https://semver.org). This is what a version number promises.
 
 ## What is covered
 
@@ -49,19 +49,9 @@ and how `#convex/auth-client` is resolved.
 ## Upstream versions and this module's
 
 This module is a port of `convex/react`, `convex/nextjs`, `@convex-dev/better-auth` and
-`@convex-dev/polar` ([PARITY.md](./PARITY.md) pins the exact releases). Upstream's version
-numbers are not this module's:
-
-| Upstream ships | This module ships |
-| --- | --- |
-| a patch or minor with no public-API change | a patch or minor, with the baseline bumped in PARITY.md |
-| a public addition | a minor |
-| a breaking change — even inside an upstream minor, as the upstream `@convex-dev/*` components, still 0.x, and the `_experimental` shapes allow | a **major** |
-| a new major that raises a peer floor | a **major** |
-
-One such change is already known: upstream `convex/nextjs` warns today that passing `url: undefined`
-to the server helpers "will throw an error in the future". When upstream makes it throw, this
-module ships that in a major.
+`@convex-dev/polar`. Upstream's version numbers are not this module's: how an upstream release
+maps to a release here is in [PARITY.md §4](./PARITY.md#4-keeping-parity), next to the pinned
+baselines.
 
 ## Supported versions
 
@@ -93,7 +83,7 @@ major. The changelog names every deprecation.
 ## Not covered
 
 - The wording of the module's own warnings and errors — documented on
-  [Troubleshooting](https://nuxt-convex-module.dev/getting-started/troubleshooting), may be
+  [Troubleshooting](https://nuxt-convex-module.dev/getting-started/troubleshooting) — may be
   reworded in a minor. Text ported from upstream changes only with a baseline bump.
 - The DevTools panel's UI.
 - The docs site and the generated reference's formatting.

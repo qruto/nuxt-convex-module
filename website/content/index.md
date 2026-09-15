@@ -8,212 +8,183 @@ seo:
 :::u-page-hero
 ---
 orientation: horizontal
-class: "landing-hero-ground border-b border-default"
-headline: "NUXT MODULE · CONVEX INTEGRATION"
+class: "landing-hero-ground landing-panel"
 ui:
+  # Past 1280 the panel track is the plate's own width and the copy takes
+  # the rest; below it the theme's halves stand (at 1024 there is no slack
+  # to redistribute).
+  container: "xl:grid-cols-[minmax(0,1fr)_32rem] xl:gap-x-20"
   header: "motion-safe:animate-fade-up"
   title: "landing-billet"
+  # The relief headline is a physical object on the plate: it needs a
+  # margin the way a stamped part needs clearance. Two points off the
+  # theme's own scale so the copy reads as the sentence under a headline,
+  # not a second one; `text-pretty` so the closer's last line never
+  # orphans a word.
+  description: "mt-8 text-base text-pretty sm:text-lg/7"
+  # The keys come first, the spec strip under them (2026-09-14). The
+  # theme renders #body above the footer, so the wrapper becomes a
+  # column and the body is ordered last; the footer keeps the theme's
+  # distance from the text and the strip closes up under the keys.
+  wrapper: "flex flex-col"
+  footer: "mt-8 sm:mt-10"
+  body: "order-last mt-10"
 links:
   - label: get started
     to: /getting-started/introduction
-    # The destination is the docs, not a next step in a flow — an open book
-    # names it, and a noun LEADS the way the github mark does (arrows stay
-    # trailing, where they mean direction).
     icon: i-nc-book-open
     color: primary
+    # A KEY cut to a fixed 160x44: the page's one primary control, sized
+    # like a switch rather than a link. `hard-cast` trades the soft bloom
+    # for a stepped contact shade (depth.css).
+    class: h-11 min-w-40 justify-center px-5 text-lg hard-cast
     ui:
-      # size xl ships a 24px icon — oversized next to its 16px label.
       leadingIcon: size-4.5
+      # Centred on the letters, not the em box; `overflow-visible!` keeps
+      # the descender of the g from the theme's `truncate` clip.
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
   - label: github
     to: https://github.com/qruto/nuxt-convex-module
     target: _blank
     icon: i-simple-icons-github
     color: neutral
     variant: ghost
-  - label: see it run
-    to: "#operation"
-    trailingIcon: i-nc-arrow-down
-    color: neutral
-    variant: link
+    class: text-lg
     ui:
-      trailingIcon: size-4
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
+<!-- ONE FENCE: the code that runs the panel under it. The plate types
+     this once and is live from the first paint. `board` is one
+     subscription — the ledger's rows and today's count per key in one
+     consistent snapshot; `send` is the key press. -->
 ::landing-hero-panel
 ```ts
-const { data } = await useAsyncQuery(
-  api.messages.list,
-)
-```
-
-```ts
-const send =
-  useMutation(api.messages.send)
-
-await send({ body: 'hi, realtime' })
-```
-
-```ts
-const { results, loadMore } =
-  usePaginatedQuery(api.messages.list,
-    {}, { initialNumItems: 3 })
-```
-
-```ts
-const { upload, progress } =
-  useUpload(api.files.generateUploadUrl)
-
-const id = await upload(file)
-```
-
-```ts
-import { api } from '#convex/api'
-const { data } = await useAsyncQuery(api.messages.list)
-const send = useMutation(api.messages.send)
+const { data: board } =
+  await useAsyncQuery(api.reactions.board)
+const send = useMutation(api.reactions.send)
 ```
 ::
 
 #title
 ::hero-billet
-Use :brand-convex backend\
-in a :brand-nuxt application
+[Use]{.billet-part} [:brand-convex backend]{.billet-part}\
+[in a]{.billet-part} [:brand-nuxt application]{.billet-part}
 ::
 
 #description
-<!-- Three beats, two emphasis spans. The old build bolded all six capability
-     names, which is what made the block read as noise: a comma list is
-     already a list, and bolding every item in it emphasises nothing. Bold
-     now carries the CLAIM (one span, the lead), `.text-primary` the one
-     thing that is actually the module's argument, and the closer runs
-     plain — it is an aside, not a third pitch. -->
-**One install wires Convex into Nuxt.**
+<!-- THE FEATURES, and only the features. The board is the reason to
+     read on — six lines of split-flap type, each a mark, a feature and
+     every composable that IS that feature (LandingCapabilities.vue),
+     clattering in when the hero comes into view. What Nuxt is and what
+     Convex is belongs to plate two (#names below), so the hero column
+     ends on the board. -->
+:landing-capabilities
 
-Live queries, mutations, actions, cursor pagination, file storage and SSR —
-all [auto-imported and typed]{.text-primary} against your deployment.
+#body
+<!-- The spec strip — version, the three peer ranges, and the upstream
+     Convex release the port matches — cut into the ground under the
+     keys, the copy column's full width. The peer ranges are this page's
+     copy and travel as props (convex is the module's peer range, ^1.40);
+     the version and the ported Convex figure the component reads for
+     itself. -->
+:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.40"}
 
-The same client runs standalone in any Vue app.
-
-:landing-version-chip[NUXT ≥ 4.1 · VUE ≥ 3.5]
+#bottom
+:landing-services
 :::
 
-:landing-services
-
-::u-page-section
+:::u-page-section
 ---
-id: spec
-class: "landing-mill-grid landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "01 · SPEC SHEET"
+id: names
+class: "landing-mill-hatch landing-panel border-b border-default"
+---
+<!-- NO TITLE, NO DESCRIPTION: the drawing is the whole plate. Two parts,
+     the module as the fitting between them, and one line under each name
+     — anything written above it would say the same thing twice. -->
+#body
+:landing-coupling
+:::
+
+:::u-page-section
+---
+id: ships
+class: "landing-mill-grid landing-panel landing-reveal border-b border-default"
 ---
 #title
 :concave-text[Everything the module ships]
 
-#description
-The whole surface on one plate — nine numbered figures, each **color-banded**
-and working live on its own **engraved stage**. Every card links to the page
-that proves it.
-
 #body
-:landing-spec-sheet
-::
+:landing-tour
+:::
 
 :::u-page-section
 ---
-id: operation
-class: "landing-mill-rings landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "02 · LIVE OPERATION"
+id: live
+class: "landing-mill-rings landing-panel landing-reveal border-b border-default"
 ---
 #title
-:concave-text[One table, every client]
+:concave-text[One table, live in every client]
 
 #description
-The sync loop, staged: two clients, one `useQuery` subscription each, **no
-props between them** — a write from either side lands in **both panes on the
-same commit**. The recording drives itself and loops; touch anything and the
-controls are yours. Simulated in-page with zero network — the hero above
-and the [live demos in the guide](/guide/queries) run the real thing.
+<!-- The setup carries the accent, the payoff runs plain — the same order
+     the hero sets. Hard break so each lands on its own line. -->
+[Flip a switch, drag the fader, send a pulse.]{.text-primary}\
+Every instrument is a row in one table, and every browser on this page has it on the same commit.
 
 #body
-::landing-operation
+::landing-live
 ```ts
-const { data } =
-  useQuery(api.messages.list)
-```
+const { data: switches } =
+  await useAsyncQuery(api.switches.list)
 
-```ts
-const send =
-  useMutation(api.messages.send)
-
-await send({
-  author: 'client-a',
-  body: 'hello from A',
-})
-```
-
-```ts
-await send({
-  author: 'client-b',
-  body: 'hello back from B',
-})
+const flip = useMutation(api.switches.flip)
+  .withOptimisticUpdate((store, { position }) => {
+    // the knob moves before the round trip
+  })
 ```
 ::
 :::
 
 :::u-page-section
 ---
-id: bench
-class: "landing-mill-hatch landing-reveal border-b border-default scroll-mt-(--ui-header-height)"
-headline: "03 · BENCH TESTS"
+id: anywhere
+class: "landing-mill-hatch landing-panel landing-reveal border-b border-default"
 ---
 #title
-:concave-text[Three mechanisms on replay]
+:concave-text[Nuxt, or plain Vue?]
 
 #description
-**Optimistic writes**, **cursor pagination**, **file upload** — looping
-readouts, simulated in-page with zero network. The guide's
-[live demos](/guide/pagination) run them against a real deployment.
+<!-- One claim, one switch: throw it and only the setup changes. -->
+Throw the switch. The setup changes; the component does not.
 
 #body
-::landing-bench
-```ts
-const send = useMutation(api.messages.send)
-  .withOptimisticUpdate((store, { body }) => {
-    // render the write before the commit
-  })
-```
-
-```ts
-const { results, status, loadMore } =
-  usePaginatedQuery(api.messages.list, {},
-    { initialNumItems: 3 })
-```
-
-```ts
-const { upload, progress } =
-  useUpload(api.files.generateUploadUrl)
-const storageId = await upload(file)
-```
-::
+:landing-anywhere
 :::
 
 :::u-page-section
 ---
 id: deploy
-class: "landing-mill-knurl landing-reveal scroll-mt-(--ui-header-height)"
-headline: "04 · DEPLOYMENT"
+class: "landing-mill-knurl landing-panel landing-reveal border-b border-default"
 links:
-  - label: Install the kit
+  # THE SAME KEY AS THE HERO'S: one primary control, one size, one cast.
+  - label: install the kit
     to: /getting-started/installation
     trailingIcon: i-nc-arrow-right
     color: primary
+    class: h-11 min-w-40 justify-center px-5 text-lg hard-cast
     ui:
-      # size xl ships a 24px icon — oversized next to its 16px label.
       trailingIcon: size-4.5
-  - label: See it running live
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
+  - label: see it running live
     to: /guide/queries
     color: neutral
     variant: outline
+    class: h-11 px-5 text-lg
+    ui:
+      label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
 #title
-:convex-text[In your pocket in three moves]
+:convex-text[Up and running in three moves]
 
 #body
 ::landing-deploy
@@ -222,11 +193,11 @@ npx nuxi module add nuxt-convex-module
 ```
 
 ```bash
-NUXT_PUBLIC_CONVEX_URL=https://…
+npm i convex
 ```
 
 ```bash
-npx convex dev
+npm run dev
 ```
 ::
 :::

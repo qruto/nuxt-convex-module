@@ -1,19 +1,25 @@
 <template>
   <!-- One write, two frames in the same slot, each wearing its timestamp:
-       the dashed magenta LOCAL render stamped 0 MS the instant you call
-       send, then the committed row wearing the success-green round-trip
-       check. Speculative magenta -> confirmed green is the whole optimistic
-       contract in two chips. Reduced motion shows the committed row. -->
-  <div class="grid w-full max-w-48 font-mono text-[0.64rem]">
-    <div class="row-local flex min-w-0 items-center gap-2 rounded-md border border-dashed px-2 py-1.5 [grid-area:1/1]">
-      <span class="tag-local flex-none text-[0.52rem] font-bold tracking-widest">LOCAL</span>
-      <span class="min-w-0 truncate text-toned">hi, realtime</span>
-      <span class="tag-local ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">0 MS</span>
+       the call above, then the dashed magenta LOCAL render stamped 0 MS
+       the instant you make it, then the committed row wearing the
+       success-green round-trip check. Speculative magenta -> confirmed
+       green is the whole optimistic contract in two chips. Reduced motion
+       shows the committed row. -->
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <div class="truncate px-1 text-[0.58rem] text-dimmed">
+      send(<span class="text-toned">{ body: 'hi, realtime' }</span>)
     </div>
-    <div class="row-db flex min-w-0 items-center gap-2 rounded-md border border-accented px-2 py-1.5 [grid-area:1/1]">
-      <span class="flex-none text-[0.52rem] font-bold tracking-widest text-dimmed">DB</span>
-      <span class="min-w-0 truncate text-default">hi, realtime</span>
-      <span class="ms ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">✓ 42 MS</span>
+    <div class="grid w-full text-[0.7rem]">
+      <div class="row-local flex min-w-0 items-center gap-3 rounded-md border border-dashed px-4 py-3 [grid-area:1/1]">
+        <span class="tag-local flex-none text-[0.52rem] font-bold tracking-[0.08em]">local</span>
+        <span class="min-w-0 truncate text-toned">hi, realtime</span>
+        <span class="tag-local ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">0 ms</span>
+      </div>
+      <div class="row-db flex min-w-0 items-center gap-3 rounded-md border border-accented px-4 py-3 [grid-area:1/1]">
+        <span class="flex-none text-[0.52rem] font-bold tracking-[0.08em] text-dimmed">db</span>
+        <span class="min-w-0 truncate text-default">hi, realtime</span>
+        <span class="ms ml-auto flex-none text-[0.52rem] font-bold tracking-[0.08em]">✓ 42 ms</span>
+      </div>
     </div>
   </div>
 </template>

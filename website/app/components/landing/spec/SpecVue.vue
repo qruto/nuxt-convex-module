@@ -1,18 +1,19 @@
 <template>
   <!-- Nuxt optional, stated literally: the Vue chip holds steady while the
-       Nuxt layer ghosts in and out. Reduced motion keeps both visible — the
+       Nuxt layer ghosts in and out, and the one call that provides the
+       client sits in the readout beneath. Reduced motion keeps both chips visible — the
        point still reads from the dashed border and the label. -->
-  <div class="flex w-full min-w-0 flex-col items-center gap-2 font-mono">
-    <div class="flex min-w-0 flex-wrap items-center justify-center gap-2">
-      <span class="flex items-center gap-1.5 rounded-md border border-accented px-2 py-1 text-[0.62rem] text-highlighted">
+  <div class="flex w-full flex-col gap-3 font-mono">
+    <div class="flex min-w-0 flex-wrap items-center justify-center gap-3 whitespace-nowrap">
+      <span class="flex items-center gap-2 rounded-md border border-accented px-3 py-1.5 text-[0.66rem] text-highlighted">
         <UIcon
           name="i-simple-icons-vuedotjs"
-          class="vue-mark size-3.5 flex-none"
+          class="vue-mark size-4 flex-none"
         />any Vue app
       </span>
-      <span class="nuxt-chip flex items-center rounded-md border border-dashed border-accented px-2 py-1 text-[0.55rem] font-bold tracking-widest text-dimmed">NUXT · OPTIONAL</span>
+      <span class="nuxt-chip flex items-center rounded-md border border-dashed border-accented px-3 py-2 text-[0.56rem] font-bold tracking-[0.08em] text-dimmed">nuxt · optional</span>
     </div>
-    <code class="concave-text max-w-full truncate rounded-sm px-1.5 py-0.5 text-[0.58rem] text-toned">'nuxt-convex-module/vue'</code>
+    <code class="part-well block min-w-0 truncate px-4 py-3 text-center text-[0.62rem] text-dimmed">app.provide(<span class="text-toned">ConvexClientKey</span>, client)</code>
   </div>
 </template>
 

@@ -25,6 +25,7 @@ const columns = computed(() => [
       { label: 'Pagination', to: '/guide/pagination' },
       { label: 'Server & SSR', to: '/guide/server-and-ssr' },
       { label: 'Auth state', to: '/guide/auth-state' },
+      { label: 'Recipes', to: '/recipes' },
     ],
   },
   {
@@ -49,7 +50,7 @@ const columns = computed(() => [
     children: [
       { label: 'Source', to: repo.value, target: '_blank' },
       { label: 'Issues', to: `${repo.value}/issues`, target: '_blank' },
-      { label: 'Changelog', to: `${repo.value}/blob/main/CHANGELOG.md`, target: '_blank' },
+      { label: 'Changelog', to: '/changelog' },
       { label: 'License', to: `${repo.value}/blob/main/LICENSE`, target: '_blank' },
     ],
   },
@@ -62,16 +63,17 @@ const columns = computed(() => [
       <UContainer>
         <UFooterColumns
           :columns="columns"
-          :ui="{ label: 'concave-text font-mono text-[0.62rem] font-bold tracking-[0.14em] uppercase text-dimmed' }"
+          :ui="{ label: 'stamp text-dimmed' }"
         >
           <template #left>
             <p class="m-0 font-display text-base font-bold text-highlighted">
               Nuxt Convex
             </p>
             <p class="m-0 mt-2 max-w-96 text-sm leading-relaxed text-toned">
-              The Nuxt module for Convex — live queries, mutations, actions,
-              pagination, file storage and SSR, with opt-in Better Auth and
-              Polar. The same client runs standalone in any Vue app.
+              The Convex client for Nuxt and Vue — live queries, mutations,
+              actions, pagination, file storage and SSR, with auth, billing
+              and security wired in when their packages are installed. The
+              same client runs standalone in any Vue app.
             </p>
           </template>
         </UFooterColumns>

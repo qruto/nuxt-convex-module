@@ -50,6 +50,17 @@ export function createCodeReveal(container: HTMLElement): CodeReveal | null {
   }
   const text = chunks.map(c => c.text).join('')
 
+  function holdBreak(n: number) {
+    let cut = n
+    while (cut > 0 && cut < length) {
+      let k = cut
+      while (k > 0 && (text[k - 1] === ' ' || text[k - 1] === '\t')) k--
+      if (k > 0 && text[k - 1] === '\n') cut = k - 1
+      else break
+    }
+    return cut
+  }
+
   let caretHost: HTMLElement | null = null
   function setCaret(el: HTMLElement | null) {
     if (caretHost === el) return
@@ -59,6 +70,15 @@ export function createCodeReveal(container: HTMLElement): CodeReveal | null {
   }
 
   function revealTo(n: number) {
+    // A LINE BREAK LANDS WITH THE CHARACTER AFTER IT, never on its own. The
+    // newline nodes sit directly under <code> between block-level lines,
+    // and a preserved "\n" with nothing revealed after it lays out as a
+    // line of its own — so for the rest before every line the well grew a
+    // line taller, then shrank when the next character came. Holding the
+    // break (and the indent that comes with it) until that character
+    // keeps the block the same height from the first keystroke to the
+    // last. The caret waits at the end of the finished line meanwhile.
+    n = holdBreak(n)
     // The caret rides the deepest element owning the last visible character;
     // newline nodes live directly under <code>, where a caret would render at
     // the block's end, so they never host it.

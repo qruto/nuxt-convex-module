@@ -1,14 +1,13 @@
 <script setup lang="ts">
 // The compatibility plate — a slim rail under the hero listing the services
 // the module works with, grouped by what each one does for the app (three
-// interchangeable auth providers, then billing). Informational
-// only: the ADD-ONS spec card below carries the navigation, so the plate
-// stays a plate. Marks follow the SpecAddons rule — the vendors' published
-// brand colors, and only on hover; the ink-only brand (Better Auth)
-// takes full page ink instead. The hover is per-entry where the spec card
-// lights its whole shelf: here each service is its own listing, not one
-// card's cargo. Better Auth's mark is inlined from its brand SVG (no
-// iconify set carries the official one).
+// interchangeable auth providers, then billing, then email). Informational
+// only: the tour's auth entry (LandingTour.vue) carries the navigation to
+// /components, so the plate stays a plate. Marks wear the vendors'
+// published brand colors, and only on hover; ink-only brands (Better
+// Auth, Resend) take full page ink instead. The hover is per-entry: each
+// service is its own listing. Better Auth's mark is inlined from its brand
+// SVG (no iconify set carries the official one).
 interface ServiceEntry {
   id: string
   label: string
@@ -19,24 +18,28 @@ interface ServiceEntry {
 }
 
 // A `null` is a group seam — rendered as a hairline divider between the
-// auth block and billing.
+// auth block, billing, and email.
 const RAIL: Array<ServiceEntry | null> = [
-  { id: 'better-auth', label: 'BETTER AUTH', role: 'AUTH', pkg: '@convex-dev/better-auth' },
-  { id: 'clerk', label: 'CLERK', role: 'AUTH', pkg: '@clerk/vue', icon: 'i-simple-icons-clerk', color: '#6c47ff' },
-  { id: 'auth0', label: 'AUTH0', role: 'AUTH', pkg: '@auth0/auth0-vue', icon: 'i-simple-icons-auth0', color: '#eb5424' },
+  { id: 'better-auth', label: 'better auth', role: 'auth', pkg: '@convex-dev/better-auth' },
+  { id: 'clerk', label: 'clerk', role: 'auth', pkg: '@clerk/vue', icon: 'i-simple-icons-clerk', color: '#6c47ff' },
+  { id: 'auth0', label: 'auth0', role: 'auth', pkg: '@auth0/auth0-vue', icon: 'i-simple-icons-auth0', color: '#eb5424' },
   null,
-  { id: 'polar', label: 'POLAR', role: 'BILLING', pkg: '@convex-dev/polar', icon: 'i-iconoir-polar-sh', color: '#0062ff' },
+  { id: 'polar', label: 'polar', role: 'billing', pkg: '@convex-dev/polar', icon: 'i-iconoir-polar-sh', color: '#0062ff' },
+  null,
+  { id: 'resend', label: 'resend', role: 'email', pkg: '@convex-dev/resend', icon: 'i-simple-icons-resend' },
 ]
 </script>
 
 <template>
-  <!-- landing-mill: the rail is part of the same milled billet as the
-       sections around it — an untextured strip here would read as a
-       different material between two brushed plates. -->
-  <div class="landing-mill border-b border-default">
-    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 py-5 lg:justify-between">
-      <p class="concave-text m-0 font-mono text-[0.6rem] font-semibold tracking-[0.14em] text-dimmed">
-        WORKS WITH · OFFICIAL ADD-ONS
+  <!-- The rail is the ONE flat surface on the landing: no mill finish of its
+       own, and an opaque fill so the hero's grain stops at its top edge. The
+       marks it carries are other people's brands — a texture running under them
+       is noise across five logos. With the finish gone the strip needs its
+       own edges, so it takes a scribed hairline top and bottom. -->
+  <div class="landing-services border-t border-b border-default">
+    <UContainer class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-8 py-6 sm:px-12 lg:justify-between lg:px-16">
+      <p class="stamp m-0 text-dimmed">
+        works with · official add-ons
       </p>
       <ul
         aria-label="Supported services"
@@ -70,8 +73,8 @@ const RAIL: Array<ServiceEntry | null> = [
               aria-hidden="true"
             />
             <span class="flex flex-col">
-              <span class="concave-text font-mono text-[0.62rem] font-semibold tracking-[0.14em] text-toned">{{ entry.label }}</span>
-              <span class="font-mono text-[0.5rem] tracking-[0.18em] text-dimmed">{{ entry.role }}</span>
+              <span class="stamp text-toned">{{ entry.label }}</span>
+              <span class="stamp text-[0.55rem] text-dimmed">{{ entry.role }}</span>
             </span>
           </li>
         </template>
@@ -81,6 +84,12 @@ const RAIL: Array<ServiceEntry | null> = [
 </template>
 
 <style scoped>
+/* Flat ground, painted opaquely: the hero's bloom and grain wash over
+   everything above this strip and must not carry into it. */
+.landing-services {
+  background-color: var(--ui-bg);
+}
+
 /* Rest state is uniform brushed ink; hover hands a mark its vendor's own
    color (ink-only brands resolve currentColor to full page ink via the
    opacity step). Color and opacity only — the plate doesn't move. */

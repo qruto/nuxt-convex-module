@@ -116,6 +116,18 @@
   }
 }
 
+/* -- Dark-scheme text ceiling -----------------------------------
+   Nuxt UI tops the dark text ladder at bare #fff (light mode tops at
+   neutral-900, one step in from black). The mirror of that is one
+   step in from white, not white itself: on the neutral-900 ground
+   pure white glyphs bloom, and the titanium reads as backlit instead
+   of lit. Only the ceiling moves — text / toned / muted / dimmed are
+   already neutral steps. Unlayered `.dark` so it beats Nuxt UI's
+   @layer theme default, like the light ground ladder in depth.css. */
+.dark {
+  --ui-text-highlighted: var(--ui-color-neutral-100);
+}
+
 /* Type — three roles, three families. Technor (Fontshare) is the
    display face: angular, squared sci-fi lettering — the hero reads as a
    hull marking on the transmission the whole site broadcasts, and its

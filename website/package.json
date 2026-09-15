@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
   "name": "nuxt-convex-module-website",
+  "description": "Documentation for nuxt-convex-module, the Convex module for Nuxt: live queries, mutations, actions, pagination, file storage, SSR, auth and security.",
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
@@ -11,13 +12,14 @@
   "dependencies": {
     "@convex-dev/polar": "^0.9.2",
     "@polar-sh/checkout": "^0.4.1",
-    "nuxt-convex-module": "workspace:*",
     "convex": "^1.45.0",
     "docus": "^5.13.0",
-    "nuxt": "catalog:"
+    "nuxt": "catalog:",
+    "nuxt-convex-module": "workspace:*"
   },
   "devDependencies": {
-    "@nuxtjs/i18n": "^10.4.0",
+    "@nuxt/content": "^3.16.0",
+    "@nuxtjs/i18n": "^10.6.0",
     "nuxt-security": "^2.6.0"
   }
 }

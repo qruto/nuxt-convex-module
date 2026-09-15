@@ -9,7 +9,7 @@ read [PARITY.md](./PARITY.md) — it is the contract *and* the ledger:
 | What is ported, at which upstream version | [PARITY.md §1](./PARITY.md#1-what-is-ported) |
 | The rules a port is held to — the contract, the React→Vue translations | [PARITY.md §2](./PARITY.md#2-how-parity-is-held) |
 | Whether something is already a deliberate divergence | [PARITY.md §3](./PARITY.md#3-where-the-port-bends) |
-| How to run a sync, port a change, or record a divergence | the [`upstream-parity` skill](./.agents/skills/upstream-parity/SKILL.md) |
+| How to run a sync, port a change, or record a divergence | the [`upstream-parity` skill](./website/skills/upstream-parity/SKILL.md) |
 | Whether a change is breaking, and which symbols are experimental | [STABILITY.md](./STABILITY.md) |
 
 This file covers only the rest: how to treat the ported runtime, and how to verify a change.

@@ -1,35 +1,47 @@
 <template>
   <!-- The editor moment the types buy you: `api.` with the deployment's own
-       functions in the completion menu, the highlight walking the entries and
-       a ghost completion after the dot tracking whichever entry is lit —
-       TypeScript's own azure. Reduced motion parks the highlight (and ghost)
-       on the first entry. -->
-  <div class="w-full max-w-44 font-mono">
-    <div class="flex items-center text-[0.68rem] text-highlighted">
+       functions in the completion menu — each with the kind the types
+       know it to be — the highlight walking the entries and a ghost
+       completion after the dot tracking whichever entry is lit —
+       TypeScript's own azure. The menu hangs under the caret the way an
+       editor's does. Reduced motion parks the highlight (and ghost) on
+       the first entry. -->
+  <div class="mx-auto w-full max-w-64 font-mono">
+    <div class="flex items-center px-1 text-[0.72rem] text-highlighted">
       <span class="text-toned">api</span><span class="text-dimmed">.</span><i class="caret ml-px inline-block h-[1em] w-2 rounded-[1px]" /><span class="ml-1 grid min-w-0 text-dimmed">
         <span
           v-for="(item, i) in ITEMS"
-          :key="item"
+          :key="item.name"
           class="ghost truncate italic opacity-0 [grid-area:1/1]"
           :style="{ '--i': i }"
-        >{{ item }}</span>
+        >{{ item.name }}</span>
       </span>
     </div>
-    <div class="relative mt-1 overflow-hidden rounded-md border border-accented py-0.5 text-[0.6rem]">
-      <i class="hl absolute inset-x-0.5 top-0.5 h-4.5 rounded-[4px]" />
+    <!-- The highlight sits 4px inside the menu, so its corners are CONCENTRIC
+         with the menu's: rounded-lg is 16px here (--ui-radius 0.5rem),
+         16 - 4 = 12px inside. On the first and last entry the two curves
+         then run parallel instead of the highlight's corner poking into
+         the frame's. -->
+    <div class="relative mt-1.5 ml-8 overflow-hidden rounded-lg border border-accented p-1 text-[0.62rem]">
+      <i class="hl absolute inset-x-1 top-1 h-5 rounded-[12px]" />
       <div
         v-for="item in ITEMS"
-        :key="item"
-        class="relative px-2 leading-4.5 text-toned"
+        :key="item.name"
+        class="relative flex items-center justify-between gap-4 px-3 leading-5 text-toned"
       >
-        {{ item }}
+        <span class="truncate">{{ item.name }}</span>
+        <span class="flex-none text-[0.52rem] leading-5 text-dimmed">{{ item.kind }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const ITEMS = ['messages.list', 'messages.send', 'files.upload']
+const ITEMS = [
+  { name: 'messages.list', kind: 'query' },
+  { name: 'messages.send', kind: 'mutation' },
+  { name: 'files.upload', kind: 'action' },
+]
 </script>
 
 <style scoped>
@@ -38,6 +50,7 @@ const ITEMS = ['messages.list', 'messages.send', 'files.upload']
 }
 .hl {
   background: var(--band-soft, color-mix(in srgb, var(--color-signal-500) 14%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band, var(--color-signal-500)) 45%, transparent);
 }
 /* No-motion resting state: the first entry's ghost stays visible, matching
    the parked highlight. The animation overrides this while it runs. */
@@ -57,10 +70,14 @@ const ITEMS = ['messages.list', 'messages.send', 'files.upload']
     animation-delay: calc(var(--i) * 1.3s);
   }
 }
+/* The highlight is one row tall, so it steps by its OWN height — not by
+   a rem: the stage zooms the art, and Chrome scales the rows' layout
+   but not a rem inside an animated translate, which left the highlight
+   a third of a row short on every step (2026-09-12). */
 @keyframes typed-cycle {
   0%, 32.9% { translate: 0 0; }
-  33%, 65.9% { translate: 0 1.125rem; }
-  66%, 99.9% { translate: 0 2.25rem; }
+  33%, 65.9% { translate: 0 100%; }
+  66%, 99.9% { translate: 0 200%; }
   100% { translate: 0 0; }
 }
 /* Each ghost owns one third of the cycle (the delay walks the slots). */
