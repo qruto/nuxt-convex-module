@@ -5,10 +5,13 @@ import { api } from '#convex/api'
 // updates whenever any part of the connection state changes. Upstream marks
 // the shape as unstable, so the grid iterates whatever fields the client
 // reports instead of hardcoding them.
-const connection = useConvexConnectionState()
+// Read in the browser only (useClientConnectionState); the grid below is
+// client-only for the same reason, so the server's empty read never has to
+// match the browser's first one.
+const connection = useClientConnectionState()
 
 const entries = computed(() =>
-  Object.entries(connection.value).map(([key, value]) => ({
+  Object.entries(connection.value ?? {}).map(([key, value]) => ({
     key,
     value: format(value),
   })),
@@ -41,19 +44,21 @@ async function ping() {
 
 <template>
   <PlaygroundDemo title="Connection state — useConvexConnectionState">
-    <dl class="m-0 mb-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 font-mono text-xs">
-      <template
-        v-for="entry in entries"
-        :key="entry.key"
-      >
-        <dt class="text-muted">
-          {{ entry.key }}
-        </dt>
-        <dd class="m-0 font-medium text-default tabular-nums">
-          {{ entry.value }}
-        </dd>
-      </template>
-    </dl>
+    <ClientOnly>
+      <dl class="m-0 mb-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 font-mono text-xs">
+        <template
+          v-for="entry in entries"
+          :key="entry.key"
+        >
+          <dt class="text-muted">
+            {{ entry.key }}
+          </dt>
+          <dd class="m-0 font-medium text-default tabular-nums">
+            {{ entry.value }}
+          </dd>
+        </template>
+      </dl>
+    </ClientOnly>
     <UButton
       type="button"
       color="neutral"

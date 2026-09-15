@@ -6,7 +6,7 @@
 // server sent (which said live) and flickers the lamp for nothing.
 export function useDemoOnline(error: Ref<unknown> | ComputedRef<unknown>) {
   const client = useConvex()
-  const connection = client ? useConvexConnectionState() : shallowRef()
+  const connection = client ? useClientConnectionState() : shallowRef()
   const mounted = ref(false)
   onMounted(() => {
     mounted.value = true

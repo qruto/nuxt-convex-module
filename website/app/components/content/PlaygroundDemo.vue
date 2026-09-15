@@ -5,9 +5,11 @@
 // page's plates: a raised plate with the demo seated in a recessed well.
 withDefaults(defineProps<{ title?: string }>(), { title: 'Demo' })
 
-const connectionState = useConvexConnectionState()
+// Read in the browser only (useClientConnectionState): the server renders
+// the lamp off, and so does the client until the socket is up.
+const connectionState = useClientConnectionState()
 
-const isConnected = computed(() => connectionState.value.isWebSocketConnected)
+const isConnected = computed(() => connectionState.value?.isWebSocketConnected ?? false)
 </script>
 
 <template>
