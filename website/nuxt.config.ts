@@ -115,6 +115,12 @@ export default defineNuxtConfig({
     // experimental) and the installation page (requirements).
     '/getting-started/stability': { redirect: { to: '/getting-started/introduction#versioning', statusCode: 301 } },
   },
+  // Every page change is a view transition: Nuxt snapshots the page,
+  // swaps the route, and the browser animates between the two —
+  // drawn in app/css/chrome.css (THE PAGE TURN), given its direction
+  // by app/plugins/page-turn.client.ts. `true`, not 'always': under
+  // prefers-reduced-motion Nuxt skips it and the page just changes.
+  experimental: { viewTransition: true },
   compatibilityDate: 'latest',
   typescript: {
     // `@nuxt/content` is docus's dependency, not this app's, so under pnpm's
@@ -189,6 +195,16 @@ export default defineNuxtConfig({
   // Families themselves are declared in app/css/theme.css as --font-*
   // tokens, which is what this scans.
   fonts: {
+    // No `<link rel="preload" as="font">`. nuxt-security computes its SRI
+    // hashes in `nitro:build:before`, but @nuxt/fonts only writes the real
+    // font bytes into its public-asset dir in nitro's later `rollup:before`
+    // hook — until then every `_fonts/*.woff2` is an empty placeholder. So a
+    // preloaded font ships with `integrity="sha384-<hash of "">"`, the
+    // browser rejects the preloaded response, the matching `@font-face`
+    // request fails with it, and the face silently falls back (Technor 600
+    // rendered as Bai Jamjuree on production, 2026-09-15). `@font-face`
+    // URLs carry no integrity, so without the preload the fonts load again.
+    defaults: { preload: false },
     families: [
       { name: 'Technor', provider: 'fontshare', weights: [600, 700] },
       { name: 'Bai Jamjuree', provider: 'google', weights: [400, 500, 600, 700] },

@@ -197,7 +197,7 @@ npm i convex
 ```
 
 ```bash
-npm run dev
+convex dev --start 'nuxt dev'
 ```
 ::
 :::

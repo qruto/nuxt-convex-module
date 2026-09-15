@@ -61,11 +61,38 @@ const SHADE = 55
 const SIDE = 40
 const SOLIDNESS = 45
 const CRISP = 1 - SOLIDNESS * 0.009
-// The marks' lit rims blur HALF as far as the words' (2026-09-14): the
+// The marks' lit rim blurs HALF as far as the words' (2026-09-14): the
 // same softness that reads as a bevel on a letter's stroke smears to a
-// white halo on an enamel lobe. Only the two light passes — shade, wall
-// and casts keep the words' values, so the marks still sit at their depth.
+// white halo on an enamel lobe. The wall keeps the words' values, so the
+// marks still sit at their depth.
 const RIM_CRISP = 0.5
+// The rim's soft SPREAD tightens further, to 0.35, and moves IN from a
+// full depth to 0.75 of one (2026-09-15, "make the shadows less blurry,
+// more solid"): at half it still bloomed a pale fog off the lobes'
+// crowns, and crisped where it stood it painted a second pale edge with
+// a gap of plate between it and the rim — a misregistered print. Pulled
+// in it overlaps the rim and is its short falloff, an embossed lip.
+// 0.35 and not less because of the WebKit floor below: the Nuxt kit's
+// sigma at 0.3 lands under it and snaps to 0 while Convex's does not,
+// and the two marks then wear different edges.
+const SPREAD_CRISP = 0.35
+const SPREAD_K = 0.75
+// And the shade and casts blur to a FIFTH (2026-09-15; a third before,
+// same day): the words' soft underside reads as a fuzzy halo under a
+// filled mark, where a tight one reads as the mark's own edge sitting on
+// the plate — a struck emboss, solid, not floating.
+const CAST_CRISP = 0.2
+// And the marks' whole UNDERSIDE reaches less than half as far as the
+// words' (2026-09-16, "two pixels slimmer for the bottom shadow", then
+// "less offset" at the wall itself): hardened, the ground casts had
+// become a near-black slab 2.4 and 5 CSS px below every lobe at hero
+// size (depth is 2.4px there), and the wall a 1.7px lip that made the
+// marks stand taller than the letters beside them. UNDER_REACH scales
+// the shade rim and the twelve wall steps — the wall now ends at 0.8px —
+// and CAST_REACH the two ground casts, to 0.7 and 1.5px, so they stay
+// tucked under the wall instead of showing past it as a second shadow.
+const UNDER_REACH = 0.45
+const CAST_REACH = 0.3
 const marks = [
   { id: 'convex', perEm: 66.11 },
   { id: 'nuxt', perEm: 38.4 },
@@ -102,15 +129,23 @@ const alpha = {
 type Pass = { name: string, k: number, blur: number, ink: string, tone?: { scale: number, offset: number }, alpha?: number }
 const passes: Pass[] = [
   { name: 'hi', k: 0.5, blur: SOFTNESS * 0.35 * CRISP * RIM_CRISP, ink: 'hi', tone: lit, alpha: alpha.hi },
-  { name: 'hi-soft', k: 1, blur: SOFTNESS * RIM_CRISP, ink: 'hi-soft', tone: lit, alpha: alpha.hiSoft },
-  { name: 'lo', k: -0.5, blur: SOFTNESS * 0.35 * CRISP, ink: 'lo', tone: shade, alpha: alpha.lo },
+  { name: 'hi-soft', k: SPREAD_K, blur: SOFTNESS * SPREAD_CRISP, ink: 'hi-soft', tone: lit, alpha: alpha.hiSoft },
+  { name: 'lo', k: -0.5 * UNDER_REACH, blur: SOFTNESS * 0.35 * CRISP * CAST_CRISP, ink: 'lo', tone: shade, alpha: alpha.lo },
   ...Array.from({ length: 12 }, (_, i) => ({
-    name: `wall-${i + 1}`, k: -0.06 * (i + 1), blur: DEPTH * 0.12 * CRISP, ink: 'wall', tone: wall, alpha: alpha.wall,
+    name: `wall-${i + 1}`, k: -0.06 * (i + 1) * UNDER_REACH, blur: DEPTH * 0.12 * CRISP, ink: 'wall', tone: wall, alpha: alpha.wall,
   })),
-  { name: 'lo-surf', k: -1, blur: SOFTNESS * 1.2, ink: 'lo-surf' },
-  { name: 'lo-cast', k: -2.1, blur: SOFTNESS * 2.8, ink: 'lo-cast' },
+  { name: 'lo-surf', k: -1 * CAST_REACH, blur: SOFTNESS * 1.2 * CAST_CRISP, ink: 'lo-surf' },
+  { name: 'lo-cast', k: -2.1 * CAST_REACH, blur: SOFTNESS * 2.8 * CAST_CRISP, ink: 'lo-cast' },
 ]
+// WebKit cannot blur by less than about 0.7 CSS px (2026-09-15, measured
+// against Chrome on a test page: every stdDeviation under it lands at the
+// same 2px-soft edge, and only 0 is a pass-through that stays crisp). The
+// rims' and wall's sigmas are a tenth of a user unit — a fifth of a pixel
+// at hero size, which Chrome draws as good as crisp — so under this floor
+// they GO to 0 rather than let Safari smear a 2px bevel to twice its width.
+const MIN_SIGMA = 0.25
 const round = (n: number) => Number(n.toFixed(3))
+const crisp = (sigma: number) => sigma < MIN_SIGMA ? 0 : sigma
 const rad = LIGHT_ANGLE * Math.PI / 180
 const relief = marks.flatMap(mark => (['word', 'symbol'] as const).map(part => ({
   id: `${mark.id}-${part}`,
@@ -119,7 +154,7 @@ const relief = marks.flatMap(mark => (['word', 'symbol'] as const).map(part => (
     dx: round(Math.sin(rad) * DEPTH * mark.perEm * pass.k),
     dy: round(-Math.cos(rad) * DEPTH * mark.perEm * pass.k),
     // a CSS blur radius is twice the Gaussian's standard deviation
-    sigma: round(pass.blur * mark.perEm / 2),
+    sigma: crisp(round(pass.blur * mark.perEm / 2)),
     matrix: part === 'symbol' && pass.tone
       ? [
           `${pass.tone.scale} 0 0 0 ${pass.tone.offset}`,

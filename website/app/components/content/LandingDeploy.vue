@@ -4,8 +4,9 @@
 // commands ride in from content/index.md as three fenced bash blocks in the
 // default slot (order is the contract, see codeSlotParts), so they render
 // through ProsePre — same chrome and copy button as every command in the
-// docs. The section's CTA links live in content/index.md.
-const steps = [
+// docs. A step can carry a `stamp` — a mono caption under its well saying
+// where the command lands. The section's CTA links live in content/index.md.
+const steps: Array<{ id: string, note: string, stamp?: string }> = [
   {
     id: 'module',
     note: 'One module. Composables, components and server helpers auto-import.',
@@ -16,9 +17,10 @@ const steps = [
   },
   {
     id: 'run',
-    note: 'One script runs Convex beside Nuxt and hands it the deployment URL. Read live data with useQuery.',
+    stamp: 'scripts.dev · replaced automatically',
+    note: 'npm run dev stays the command you type. Convex starts Nuxt beside it and hands it the deployment URL. Read live data with useQuery.',
   },
-] as const
+]
 
 const parts = codeSlotParts(useSlots(), steps.length)
 </script>
@@ -49,6 +51,10 @@ const parts = codeSlotParts(useSlots(), steps.length)
       <div class="mb-3 [&>div]:my-0 [&>div]:relative [&_button]:top-1/2 [&_button]:-mt-3.5 [&_pre]:part-code [&_pre]:part-code-shell [&_pre]:py-2.5 [&_pre]:pr-11 [&_pre]:pl-3 [&_pre]:text-[0.85rem] [&_pre]:leading-normal [&_pre]:wrap-break-word [&_pre]:whitespace-pre-wrap lg:[&_pre]:text-[0.76rem]">
         <component :is="parts[index]" />
       </div>
+      <span
+        v-if="step.stamp"
+        class="stamp -mt-1 mb-3 block leading-normal text-dimmed"
+      >{{ step.stamp }}</span>
       <p class="m-0 text-sm leading-relaxed text-toned">
         {{ step.note }}
       </p>

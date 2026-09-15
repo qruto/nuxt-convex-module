@@ -22,7 +22,7 @@ const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name, icon: `i
 
   <div class="mb-2">
     <p class="mb-2 font-mono text-xs font-semibold tracking-[0.06em] text-toned convex-text">
-      Preferable package manager
+      preferred package manager
     </p>
     <USelect
       :model-value="pm"
@@ -32,7 +32,7 @@ const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name, icon: `i
       variant="soft"
       size="sm"
       class="w-full font-mono concave"
-      aria-label="Preferable package manager"
+      aria-label="preferred package manager"
       @update:model-value="set($event as PackageManager)"
     />
     <USeparator
