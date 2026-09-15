@@ -353,11 +353,14 @@ jobs:
       # api.github.com from GitHub's meta API. Those two are listed anyway, so
       # this job does not depend on that fetch; api.github.com also creates the
       # Release and stores the attestation, and uploads.github.com takes the
-      # Release assets. registry.npmjs.org serves pnpm/setup's download of pnpm,
-      # the OIDC exchange and the stage upload. `*.sigstore.dev` covers Fulcio,
-      # Rekor v1 and the v2 shards, the TUF CDN and the TSA, for both the npm
-      # provenance and the GitHub attestation. Nothing here needs sudo or
-      # containers.
+      # Release assets. tmaproduction.blob.core.windows.net is where
+      # api.github.com redirects `gh attestation verify` to fetch the stored
+      # bundle back (a signed Azure blob URL) — without it the verify step
+      # cannot read what the attest step just wrote. registry.npmjs.org serves
+      # pnpm/setup's download of pnpm, the OIDC exchange and the stage upload.
+      # `*.sigstore.dev` covers Fulcio, Rekor v1 and the v2 shards, the TUF CDN
+      # and the TSA, for both the npm provenance and the GitHub attestation.
+      # Nothing here needs sudo or containers.
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
@@ -367,6 +370,7 @@ jobs:
             api.github.com:443
             github.com:443
             uploads.github.com:443
+            tmaproduction.blob.core.windows.net:443
             registry.npmjs.org:443
             *.sigstore.dev:443
 
