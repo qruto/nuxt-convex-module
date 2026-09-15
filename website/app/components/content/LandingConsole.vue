@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
+import RailLamp from '../landing/RailLamp.vue'
 
 // THE CONSOLE — three instruments on one plate, every one of them a row in
 // a real Convex table read live by everyone on the page, and every one of
@@ -298,17 +299,7 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
 
     <!-- THE RAIL — the plate's one readout. -->
     <figcaption class="part-well mt-3.5 flex min-h-[2.15rem] flex-wrap items-stretch stamp">
-      <span class="rail-cell">
-        <i
-          aria-hidden="true"
-          class="lamp"
-          :class="state.lamp"
-        />
-        <span
-          class="concave-text"
-          :class="state.tone"
-        >{{ state.label }}</span>
-      </span>
+      <RailLamp :state="state" />
       <span class="rail-cell concave-text text-dimmed">{{ onCount }} of {{ switches.length }} on</span>
       <span
         v-if="rejection"

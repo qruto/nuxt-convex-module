@@ -23,7 +23,7 @@
          then run parallel instead of the highlight's corner poking into
          the frame's. -->
     <div class="relative mt-1.5 ml-8 overflow-hidden rounded-lg border border-accented p-1 text-[0.62rem]">
-      <i class="hl absolute inset-x-1 top-1 h-5 rounded-[12px]" />
+      <i class="hl band-fill absolute inset-x-1 top-1 h-5 rounded-[12px]" />
       <div
         v-for="item in ITEMS"
         :key="item.name"
@@ -47,10 +47,6 @@ const ITEMS = [
 <style scoped>
 .caret {
   background: var(--band, var(--color-signal-500));
-}
-.hl {
-  background: var(--band-soft, color-mix(in srgb, var(--color-signal-500) 14%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band, var(--color-signal-500)) 45%, transparent);
 }
 /* No-motion resting state: the first entry's ghost stays visible, matching
    the parked highlight. The animation overrides this while it runs. */

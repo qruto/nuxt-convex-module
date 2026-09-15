@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
+import RailLamp from './RailLamp.vue'
 
 // THE CANVAS — the hero's instrument, and the same instrument in the small
 // second window (/canvas, opened by the key on the hero plate's header). A
@@ -439,17 +440,7 @@ function onCellClick(cell: number, e: MouseEvent) {
        arguments verbatim, `ssr hydrated`, a bare count — and none of them
        told a visitor anything (2026-09-13). -->
   <figcaption class="part-well mt-3.5 flex min-h-[2.15rem] items-stretch stamp">
-    <span class="rail-cell">
-      <i
-        aria-hidden="true"
-        class="lamp"
-        :class="state.lamp"
-      />
-      <span
-        class="concave-text"
-        :class="state.tone"
-      >{{ state.label }}</span>
-    </span>
+    <RailLamp :state="state" />
     <!-- Not `rail-optional`: the plate's content box sits under that
          query's 30rem, and this is the cell that says anything. It
          truncates instead. -->

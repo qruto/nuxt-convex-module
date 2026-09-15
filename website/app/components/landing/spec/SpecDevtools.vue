@@ -21,7 +21,7 @@
         class="size-3 text-dimmed opacity-60"
         aria-hidden="true"
       />
-      <span class="seat grid size-5 place-items-center rounded-[4px]">
+      <span class="band-fill grid size-5 place-items-center rounded-[4px]">
         <svg
           viewBox="0 0 32 32"
           class="size-3.5"
@@ -79,10 +79,6 @@ const QUERIES = [
 </script>
 
 <style scoped>
-.seat {
-  background: var(--band-soft, color-mix(in srgb, var(--color-signal-500) 14%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band, var(--color-signal-500)) 45%, transparent);
-}
 .led {
   background: var(--band, var(--color-signal-500));
   box-shadow: var(--band-glow, var(--glow-primary-soft));
