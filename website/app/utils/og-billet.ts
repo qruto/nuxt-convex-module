@@ -3,9 +3,12 @@
 // `oklch()`, `color-mix()`, `calc(sin())` or `in oklab`, so the dark scheme's
 // chain is baked to numbers here — every value is landing.css's formula at
 // its knobs (depth 0.0364em, softness 0.0409em, the 330° lamp, highlight 75,
-// shade 55, shading 45, sheen 30, side 40, solidness 45; dark fill
-// oklch 0.44 / 0.36), converted once. Re-tune by moving the knob in
-// landing.css and re-baking, never by editing a number below.
+// shade 55, shading 45, sheen 30, side 40, solidness 45), converted once.
+// The one departure is the FILL: the hero's dark fill (oklch 0.44 / 0.36)
+// is set for a page, and on a card seen small in a feed it sank into the
+// ground, so the cards run it at 0.55 / 0.47 — every rim, wall and cast
+// below is re-derived from that fill by the same formulas. Re-tune by
+// moving a knob and re-baking, never by editing a number below.
 //
 // Same two-copy law as the hero: an element's background paints UNDER its
 // text-shadow, so the in-flow INK copy carries the shadows and an identical
@@ -17,19 +20,24 @@ const SOFTNESS = 0.0409
 const CRISP = 1 - 45 * 0.009
 
 // --hi / --hi-soft / --lo / --wall / --lo-surf / --lo-cast, as rgba.
-const HI = 'rgba(167,169,172,0.919)'
-const HI_SOFT = 'rgba(167,169,172,0.3)'
-const LO = 'rgba(8,9,12,0.505)'
-const WALL = 'rgba(33,40,48,0.64)'
+const HI = 'rgba(194,196,199,0.919)'
+const HI_SOFT = 'rgba(194,196,199,0.3)'
+const LO = 'rgba(29,31,33,0.505)'
+const WALL = 'rgba(50,57,66,0.64)'
 const LO_SURF = 'rgba(27,27,27,0.193)'
 const LO_CAST = 'rgba(27,27,27,0.138)'
 
 // --glyph-shading, --glyph-sheen and --text-fill.
 const FACE = [
-  'linear-gradient(330deg, rgba(8,9,12,0.203), rgba(8,9,12,0) 42%, rgba(167,169,172,0) 58%, rgba(167,169,172,0.248))',
-  'linear-gradient(35deg, rgba(167,169,172,0) 32%, rgba(167,169,172,0.195) 50%, rgba(167,169,172,0) 68%)',
-  'linear-gradient(165deg, #505356, #3b3d40)',
+  'linear-gradient(330deg, rgba(29,31,33,0.203), rgba(29,31,33,0) 42%, rgba(194,196,199,0) 58%, rgba(194,196,199,0.248))',
+  'linear-gradient(35deg, rgba(194,196,199,0) 32%, rgba(194,196,199,0.195) 50%, rgba(194,196,199,0) 68%)',
+  'linear-gradient(165deg, #6f7275, #595b5e)',
 ].join(', ')
+
+// A hairline stroke on the face, the fill a step darker (oklch l − 0.09),
+// so each glyph's boundary reads as the edge of a part and not a wash.
+const STROKE = '#56585b'
+const STROKE_WIDTH = 0.008
 
 const px = (n: number) => `${n.toFixed(3)}px`
 
@@ -53,6 +61,6 @@ export function ogBillet(fontSize: number) {
   ]
   return {
     ink: `color: transparent; text-shadow: ${shadows.join(', ')};`,
-    face: `color: transparent; background-image: ${FACE}; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;`,
+    face: `color: transparent; background-image: ${FACE}; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: ${px(STROKE_WIDTH * fontSize)} ${STROKE};`,
   }
 }
