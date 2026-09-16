@@ -5,7 +5,7 @@ import { sep } from 'node:path'
 import { loadNuxt } from '@nuxt/kit'
 import type { Nuxt, NuxtOptions } from '@nuxt/schema'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS } from '../../src/registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isAutoImported } from '../../src/registry'
 
 // What the module registers into a Nuxt app, observed on a real Nuxt instance
 // — `loadNuxt` with `ready: true` runs the module's setup and nothing else, in
@@ -135,7 +135,7 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
   })
 
   it('registers the non-global auth middleware', () => {
-    expect(r.middleware).toEqual([expect.objectContaining({ name: 'auth', global: false })])
+    expect(r.middleware).toEqual([expect.objectContaining({ name: 'convex-auth', global: false })])
     expect(r.middleware[0]!.path).toMatch(/runtime\/better-auth\/nuxt\/middleware$/)
   })
 
@@ -181,6 +181,43 @@ describe('with betterAuth: false', () => {
     expect([...r.imports].sort()).toEqual(names(APP_IMPORTS, ['core']).sort())
     expect(r.components.map(c => c.pascalName).sort()).toEqual(names(APP_COMPONENTS, ['core']).sort())
     expect([...r.serverImports].sort()).toEqual(names(SERVER_IMPORTS, ['core']).sort())
+  })
+})
+
+describe('with autoImports: \'prefixed\'', () => {
+  let nuxt: Nuxt
+  let r: Registered
+  beforeAll(async () => ({ nuxt, registered: r } = await load({ autoImports: 'prefixed' })), 60_000)
+  afterAll(() => nuxt.close())
+
+  const prefixed = (all: string[]) => all.filter(name => isAutoImported(name, 'prefixed')).sort()
+
+  it('registers only the Convex-marked names; bare upstream names stay importable', () => {
+    expect([...r.imports].sort()).toEqual(prefixed(names(APP_IMPORTS, ['core', 'betterAuth'])))
+    expect(r.imports).toContain('useConvexQuery')
+    expect(r.imports).not.toContain('useQuery')
+    expect(r.components.map(c => c.pascalName).sort()).toEqual(prefixed(names(APP_COMPONENTS, ['core', 'betterAuth'])))
+    expect([...r.serverImports].sort()).toEqual(prefixed(names(SERVER_IMPORTS, ['core', 'betterAuth'])))
+  })
+
+  it('leaves plugins, the proxy and the middleware in place', () => {
+    expect(r.options.plugins.some(p => (typeof p === 'string' ? p : p.src).includes('better-auth'))).toBe(true)
+    expect(r.options.serverHandlers.some(h => h.route === '/api/auth/**')).toBe(true)
+    expect(r.middleware.map(m => m.name)).toEqual(['convex-auth'])
+  })
+})
+
+describe('with autoImports: false', () => {
+  let nuxt: Nuxt
+  let r: Registered
+  beforeAll(async () => ({ nuxt, registered: r } = await load({ autoImports: false })), 60_000)
+  afterAll(() => nuxt.close())
+
+  it('auto-imports nothing and still wires the plugins', () => {
+    expect(r.imports).toEqual([])
+    expect(r.components).toEqual([])
+    expect(r.serverImports).toEqual([])
+    expect(r.options.plugins.some(p => (typeof p === 'string' ? p : p.src).includes('better-auth'))).toBe(true)
   })
 })
 

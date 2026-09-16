@@ -148,7 +148,7 @@ source.
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
-| `better-auth/nuxt/middleware.ts`, `better-auth/vue/redirect.ts` | `auth` route middleware + its redirect guard | A-12 |
+| `better-auth/nuxt/middleware.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
 | `better-auth/nuxt/proxy.ts` | the `${authRoute}/**` server handler | A-14 |
 
 ---
@@ -574,10 +574,10 @@ so none can be "restored" by syncing.
   import-free pure helpers; `security.ts` is the Nitro plugin merging them into `nuxt-security`'s
   route rules. Registered only when the app has `nuxt-security` installed.
 
-##### A-12 — `auth` route middleware and its redirect guard
+##### A-12 — `convex-auth` route middleware and its redirect guard
 
 - **Port** · [`better-auth/nuxt/middleware.ts`](./src/runtime/better-auth/nuxt/middleware.ts)
-  (`serverGuard` + the `auth` route middleware),
+  (`serverGuard` + the `convex-auth` route middleware),
   [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts) (`resolveAuthRedirect`)
 - **Pinned by** · `test/unit/auth-redirect.test.ts`, `test/unit/auth/nuxt/middleware.test.ts`
 - **On sync** · keep both, and keep the docs pointing login pages at `resolveAuthRedirect`

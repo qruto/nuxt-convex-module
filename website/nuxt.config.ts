@@ -235,6 +235,12 @@ export default defineNuxtConfig({
       { title: 'API Reference', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/api-reference/%' }, { field: 'path', operator: 'NOT LIKE', value: '/api-reference/reference/%' }] },
     ],
   },
+  // The docs MCP server Docus serves at `/mcp` (listed in the nuxt/modules
+  // registry entry). Without a name it introduces itself as an empty string.
+  mcp: {
+    name: 'nuxt-convex-module',
+    description: 'Documentation for nuxt-convex-module: guides, components, recipes and the API reference.',
+  },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
   // client-side content queries). The nuxt-security CSP (the module registers
   // nuxt-security, declared in this app's package.json, when it detects it) must allow

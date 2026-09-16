@@ -18,7 +18,7 @@ Everything a consumer can write against, whether or not it appears in `package.j
   auto-registered component. This registry lives in no manifest; it is the most-used surface.
 - **Subpath exports** — every key of `exports` in `package.json`, and every value and type
   reachable from it. `test/nuxt/public-surface.test.ts` records the full list.
-- **Wiring** — the `auth` middleware name, the `authRoute` proxy route and its method list, the
+- **Wiring** — the `convex-auth` middleware name, the `authRoute` proxy route and its method list, the
   `?redirect=` query the middleware attaches.
 - **Peer floors** — the `peerDependencies` ranges, `compatibility.nuxt`, and `engines.node`.
 
