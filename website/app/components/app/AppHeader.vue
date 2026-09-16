@@ -76,7 +76,10 @@ const links = computed(() => appConfig.github && appConfig.github.url
       />
     </template>
 
+    <!-- The mobile menu opens with the package chooser the sidebar carries
+         on wide screens; below `lg` this is the only place it can live. -->
     <template #body>
+      <DocsPackageChooser class="mb-4" />
       <AppHeaderBody />
     </template>
 

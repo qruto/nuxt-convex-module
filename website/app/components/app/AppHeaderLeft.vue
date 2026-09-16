@@ -17,6 +17,6 @@ const ariaLabel = appConfig.header?.title || site.name
     class="flex items-center gap-2.5"
   >
     <AppHeaderLogo class="h-6 w-auto shrink-0" />
-    <span class="convex-text font-mono text-[0.8125rem] font-semibold tracking-tight whitespace-nowrap text-highlighted">nuxt-convex-module</span>
+    <span class="convex-text-2 font-mono text-[0.8125rem] font-semibold tracking-tight whitespace-nowrap text-highlighted">nuxt-convex-module</span>
   </NuxtLink>
 </template>

@@ -31,7 +31,7 @@ const baseline = computed(() => upstreamBaselines[props.source])
     <!-- The same accent tick the docs page-header eyebrow wears — this is
          a spec label, so it opens the way every other one on the site does. -->
     <span
-      class="h-[3px] w-[22px] shrink-0 rounded-full bg-primary shadow-(--glow-primary-soft)"
+      class="h-[1.5px] w-[22px] shrink-0 rounded-full neon"
       aria-hidden="true"
     />
     <span class="stamp text-toned">

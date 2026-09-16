@@ -124,16 +124,23 @@ export default defineAppConfig({
     },
 
     // The search trigger reads as a FIELD (placeholder text, opens an
-    // input), so it is cut in rather than raised; hover/active deepen
-    // the dish. Docus hands it `variant="soft"`, so the convex button
-    // rule above lands on it too and these classes have to win — which
-    // they do, because they are written later and `depth` is a declared
-    // conflict axis (see `tv` at the top of this file).
+    // input), so it is cut in rather than raised — and cut THROUGH the
+    // rail to the page ground (concave-ground), not into the rail: the
+    // rail is a thin plate, and a pocket that stopped inside it was a
+    // point below its surround in dark and read flat (2026-09-16,
+    // "improve depth effects for the search bar"). The floor is the page's
+    // own tone, ten levels under the rail, and the lip and floor catch
+    // come from the eye-level field scope in chrome.css. Hover lifts the
+    // placeholder rather than deepening the cut — there is no deeper
+    // ground rung to step to. Docus hands it `variant="soft"`, so the
+    // convex button rule above lands on it too and these classes have to
+    // win — which they do, because they are written later and `depth` is
+    // a declared conflict axis (see `tv` at the top of this file).
     // The trailing wrapper becomes the single ⌘K cap (per-key <kbd>
     // bare-ing lives in skin.css — no theme key reaches nested UKbds).
     contentSearchButton: {
       slots: {
-        base: 'border-0 ring-0 concave hover:concave-2 active:concave-2 transition-[color,box-shadow]',
+        base: 'border-0 ring-0 concave-ground hover:text-highlighted transition-[color,box-shadow]',
         trailing: 'gap-0 px-1.5 rounded-[5px] convex-0',
       },
     },
@@ -160,13 +167,16 @@ export default defineAppConfig({
     //    runs on beside it untouched. It used to carry its own
     //    shade-and-catch pair as well, which stitched a second, rounded
     //    groove over the first one link at a time: a dashed rail.
-    //    Section names, page names and their icons are raised
-    //    (convex-text / convex-icon): the marking on the plate, the
-    //    rails cut into it.
+    //    Section names, page names and their icons are raised: the
+    //    marking on the plate, the rails cut into it. The section names
+    //    take the domed rung (convex-text-2 — 14px semibold is the floor
+    //    it holds at; the shallow rung's two rows say nothing for white
+    //    ink on the dark ground), page names and icons the shallow one
+    //    (convex-text / convex-icon).
     contentNavigation: {
       slots: {
         listWithChildren: 'border-0 shadow-(--seam-y)',
-        trigger: 'convex-text',
+        trigger: 'convex-text-2',
         linkLeadingIcon: 'convex-icon',
         // Wrap rather than clip: a narrow aside shows the whole name.
         linkTitle: 'whitespace-normal text-clip overflow-visible',
@@ -244,8 +254,8 @@ export default defineAppConfig({
       slots: {
         root: 'relative py-8 border-b-0 shadow-(--seam-x)',
         headline:
-          'mb-2.5 font-mono text-xs font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[3px] before:w-[22px] before:rounded-full before:bg-primary before:shadow-(--glow-primary-soft)',
-        title: 'font-display convex-text',
+          'mb-4 font-mono text-xs font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[1.5px] before:w-[22px] before:rounded-full before:neon',
+        title: 'font-display convex-text-3',
         // Hook for the field-group seam patch in chrome.css — the
         // divider class lives in Docus's own template.
         links: 'docs-page-links',
@@ -355,13 +365,43 @@ export default defineAppConfig({
     },
 
     prose: {
-      // Headings are raised off the plate — the same half-pixel rim and
-      // cast the sidebar's names carry. h1–h3 only: below 18px the two
-      // rows fold into the glyph and read as blur, so body copy and h4+
-      // stay plain.
-      h1: { slots: { base: 'convex-text' } },
-      h2: { slots: { base: 'convex-text' } },
-      h3: { slots: { base: 'convex-text' } },
+      // Headings are raised off the plate — the display rung, with the
+      // hard-turned face; the sidebar's group names take the ink-keeping
+      // dome (convex-text-2) and the labels the shallow `convex-text`.
+      // h1–h3 only: below 18px the two rows fold into the glyph and read
+      // as blur, so body copy and h4+ stay plain.
+      h1: { slots: { base: 'convex-text-3' } },
+      h2: { slots: { base: 'convex-text-3' } },
+      h3: { slots: { base: 'convex-text-3' } },
+      // Steps: the numbered plates and the rail they hang on are the
+      // same parts the sidebar is built from. The rail is the groove
+      // (--seam-y, the sidebar tree's own) in place of the theme's
+      // `border-s`; each number is a raised titanium plate with the
+      // digit stamped into it. The theme's `ring-4 ring-bg` halo — a
+      // page-coloured gap that broke the line around each circle — is
+      // gone: a plate sits ON the rail and casts onto it, so the line
+      // runs under it, as it would. The level strings are Nuxt UI's
+      // own with only those tokens swapped; re-diff on a bump.
+      steps: {
+        base: 'ms-4 border-s-0 shadow-(--seam-y) ps-8 [counter-reset:step]',
+        variants: {
+          level: {
+            2: '[&>h2]:[counter-increment:step] [&>h2]:relative [&>h2]:before:absolute [&>h2]:before:size-8 [&>h2]:before:convex [&>h2]:before:bevel [&>h2]:before:rounded-full [&>h2]:before:concave-text [&>h2]:before:text-toned [&>h2]:before:font-semibold [&>h2]:before:text-sm [&>h2]:before:tabular-nums [&>h2]:before:inline-flex [&>h2]:before:items-center [&>h2]:before:justify-center [&>h2]:before:-ms-[48.5px] [&>h2]:before:mt-0 [&>h2]:before:content-[counter(step)] [&>h2>a>span.absolute]:hidden',
+            3: '[&>h3]:[counter-increment:step] [&>h3]:relative [&>h3]:before:absolute [&>h3]:before:size-7 [&>h3]:before:inset-x-0.5 [&>h3]:before:convex [&>h3]:before:bevel [&>h3]:before:rounded-full [&>h3]:before:concave-text [&>h3]:before:text-toned [&>h3]:before:font-semibold [&>h3]:before:text-sm [&>h3]:before:tabular-nums [&>h3]:before:inline-flex [&>h3]:before:items-center [&>h3]:before:justify-center [&>h3]:before:-ms-[48.5px] [&>h3]:before:content-[counter(step)] [&>h3>a>span.absolute]:hidden',
+            4: '[&>h4]:[counter-increment:step] [&>h4]:relative [&>h4]:before:absolute [&>h4]:before:size-7 [&>h4]:before:inset-x-0.5 [&>h4]:before:convex [&>h4]:before:bevel [&>h4]:before:rounded-full [&>h4]:before:concave-text [&>h4]:before:text-toned [&>h4]:before:font-semibold [&>h4]:before:text-sm [&>h4]:before:tabular-nums [&>h4]:before:inline-flex [&>h4]:before:items-center [&>h4]:before:justify-center [&>h4]:before:-ms-[48.5px] [&>h4]:before:content-[counter(step)] [&>h4>a>span.absolute]:hidden',
+          },
+        },
+      },
+      // Every other line the prose draws is the same cut. A rule
+      // between sections is the scribe (chrome.css); a quote's bar and
+      // the dividers of a field group are the sidebar's groove and the
+      // page header's seam. The dividers move from the top of each
+      // field to the foot of the one before it, which also evens the
+      // air on both sides of the line (the theme had 40px above, 0
+      // below).
+      hr: { base: 'border-0 scribe my-12' },
+      blockquote: { base: 'border-s-0 shadow-(--seam-y) ps-4 italic' },
+      fieldGroup: { base: 'my-5 divide-y-0 *:not-last:pb-5 *:not-last:shadow-(--seam-x)' },
       // Inline code → a raised chip sitting on the baseline. `inline`
       // rather than the theme's `inline-block` so a chip at a line's end
       // wraps with the text instead of dropping whole to the next line.
@@ -376,10 +416,15 @@ export default defineAppConfig({
       a: {
         base: '[&>code]:text-primary hover:[&>code]:convex',
       },
-      // Code blocks → carved wells. The one place that takes the cast
-      // WITHOUT the face: Shiki paints its own background in there, and
-      // a dish gradient over it would fight the syntax theme.
-      pre: { slots: { base: 'rounded-lg border-default shadow-(--inset-shadow-1)' } },
+      // Code blocks → the deep tray, face and all. They used to take the
+      // cast without the face on the belief that Shiki painted its own
+      // background in there; its editor.background never reaches this
+      // pre (the computed fill was the theme's bg-muted), so the well
+      // sat on a muted tile — a step ABOVE the page in light — and read
+      // flat beside every other cut (2026-09-16, the light-room pass).
+      // `rounded-lg` keeps the radius it had; the tray's own rung would
+      // be the well's 12.
+      pre: { slots: { base: 'rounded-lg border-0 part-tray' } },
       // kbd in docs → raised key cap.
       kbd: { base: 'shadow-(--elevation-0)' },
       // MDC ::card tiles → bead-blast plates that raise on hover.
