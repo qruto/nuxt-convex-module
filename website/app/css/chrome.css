@@ -672,9 +672,12 @@ html:active-view-transition-type(back)::view-transition-new(root) {
     }
   }
 }
+/* Keyed on data-state like the animations above, so the reset carries
+   the same specificity and wins by order — a bare .package-menu lost to
+   every state rule and the drawer still travelled under reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  .package-menu,
-  .package-menu [data-slot="item"] {
+  .package-menu[data-state],
+  .package-menu[data-state] [data-slot="item"] {
     animation: none;
   }
 }
