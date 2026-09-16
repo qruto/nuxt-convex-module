@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Connects a Nuxt app to a Convex backend: live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.",
   "repository": {
     "type": "git",
