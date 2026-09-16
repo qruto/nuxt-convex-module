@@ -990,21 +990,16 @@
    with the lines, and a glyph's foot crossed into the next tile's
    crown.
 
-   DARK ROOM ONLY. Chrome draws a clipped fill with a thinner edge than
-   it draws solid ink; in the light room that hollowed every dark
-   letter and turned the white rim into an outline (tested with the
-   ramp flattened to plain ink: the clip alone did it), and dark ink on
-   a light plate is drawn by its cast anyway, so the fill is keyed on
-   the same html class the colour mode drives. Unlayered, so it beats
-   the rungs' own text-shadow — which is why the two rungs' shadow
-   channels are set here too, one after the other. */
-:root.dark :is(.convex-text-2, .convex-text-3) {
+   ONE FACE, TWO ROOMS. The clip, the tile and the ink-restore below are
+   the same in both; only the direction the ramp mixes in differs — a
+   step toward black in the dark room, a lift toward white in the light
+   one (the light block follows) — so each room sets its own
+   background-image and shares the rest here. Keyed on the html class
+   the colour mode drives, and unlayered, so it beats the rungs' own
+   text-shadow — which is why the two rungs' shadow channels are set
+   per room below too, one after the other. */
+:root :is(.convex-text-2, .convex-text-3) {
   -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(180deg,
-    color-mix(in oklab, currentColor, #000 var(--convex-face-crown)) calc(50% - 0.29em),
-    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% - 0.19em),
-    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% + 0.08em),
-    color-mix(in oklab, currentColor, #000 var(--convex-face-foot)) calc(50% + 0.33em));
   background-size: 100% 1lh;
   background-origin: content-box;
   background-clip: text;
@@ -1023,8 +1018,16 @@
   @media (forced-colors: active) {
     -webkit-text-fill-color: currentColor;
     background-image: none;
+    text-shadow: none;
     filter: none;
   }
+}
+:root.dark :is(.convex-text-2, .convex-text-3) {
+  background-image: linear-gradient(180deg,
+    color-mix(in oklab, currentColor, #000 var(--convex-face-crown)) calc(50% - 0.29em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% - 0.19em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% + 0.08em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-foot)) calc(50% + 0.33em));
 }
 /* THE LIGHT ROOM'S RELIEF (2026-09-17: "more dark gray instead of black
    with the convex effect the same as on dark mode" — the hero title is
@@ -1051,29 +1054,12 @@
    fill, and the hair the dark room needs came out as an outline round
    every 14px name. */
 :root:not(.dark) :is(.convex-text-2, .convex-text-3) {
-  -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0;
   background-image: linear-gradient(180deg,
     color-mix(in oklab, currentColor, #fff var(--convex-face-crown)) calc(50% - 0.29em),
     color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% - 0.19em),
     color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% + 0.08em),
     color-mix(in oklab, currentColor, #fff var(--convex-face-foot)) calc(50% + 0.33em));
-  background-size: 100% 1lh;
-  background-origin: content-box;
-  background-clip: text;
-  & :where(code, kbd),
-  &::before,
-  &::after,
-  &::selection,
-  & *::selection {
-    -webkit-text-fill-color: currentColor;
-  }
-  @media (forced-colors: active) {
-    -webkit-text-fill-color: currentColor;
-    background-image: none;
-    text-shadow: none;
-    filter: none;
-  }
 }
 :root:not(.dark) .convex-text-2 {
   /* A shallower crown than the display rung's: on a 13px mono the
