@@ -65,9 +65,10 @@
      alphas taken to 58 degrees are spread over three times the distance
      per pixel and vanish. These are the same two-line scribe — a shade
      with its light catch one pixel below — at the weight the tilt costs
-     back. */
-  --floor-lo: light-dark(oklch(0% 0 0 / 0.055), oklch(0% 0 0 / 0.5));
-  --floor-hi: light-dark(oklch(100% 0 0 / 0.6), oklch(100% 0 0 / 0.05));
+     back. In rgb() for the same reason the mill inks are (chrome.css):
+     Safari smears modern-syntax stops in a repeating gradient. */
+  --floor-lo: light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.5));
+  --floor-hi: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.05));
   background-image:
     repeating-linear-gradient(180deg,
       var(--floor-lo) 0 1px, var(--floor-hi) 1px 2px,
@@ -113,14 +114,19 @@
    way the grid keeps its rules: it is what makes the arcs read as a
    broadcast out of the socket rather than as texture. Its radii are
    multiples of the fine pitch (50px, 100px apart, both 5px steps) so
-   a major always lands ON a minor instead of cutting between two. */
+   a major always lands ON a minor instead of cutting between two.
+
+   The catch is --mill-rule-hi at 12%, written out as rgb() rather
+   than through --alpha(): that compiles to color-mix(), and a
+   color-mix() stop sends the ring down Safari's smearing raster path
+   (see the mill inks in chrome.css). */
 .landing-mill-rings {
   background-color: var(--ui-bg);
   background-image:
     repeating-radial-gradient(circle at 50% 0%,
       transparent 0 50px,
       var(--mill-rule-lo) 50px 51px,
-      --alpha(var(--mill-rule-hi) / 12%) 51px 52px,
+      light-dark(rgb(255 255 255 / 0.06), rgb(0 0 0 / 0.06)) 51px 52px,
       transparent 52px 100px),
     repeating-radial-gradient(circle at 50% 0%,
       var(--mill-line-hi) 0 1px, transparent 1px 5px),

@@ -217,13 +217,14 @@ function segments(body: string) {
         aria-hidden="true"
         class="tick h-0.75 w-2.5 flex-none rounded-full"
       />
-      <!-- The hold: a rule under the lit line that fills while the plate
-           waits on this part. Only while the plate turns by itself. -->
+      <!-- The hold: a rule just under the lit block, in the gap to the next
+           line, that fills while the plate waits on this part. Only while
+           the plate turns by itself. -->
       <i
         v-if="index === active && turning"
         :key="`hold-${active}-${holdRun}`"
         aria-hidden="true"
-        class="hold absolute inset-x-2.5 bottom-0 h-px origin-left"
+        class="hold absolute inset-x-(--radius-strip) top-full h-px origin-left"
         :style="{ animationDuration: `${HOLD_MS}ms` }"
       />
     </button>
@@ -359,7 +360,7 @@ function segments(body: string) {
 .tag {
   --band: var(--color-spectrum-gold);
   --band-soft: color-mix(in srgb, var(--band) 15%, transparent);
-  padding: 0.05rem 0.4rem;
+  padding: 0.15rem 0.6rem;
   border-radius: 999px;
   color: var(--band);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band) 55%, transparent);
