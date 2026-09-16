@@ -76,7 +76,14 @@ export default defineNuxtConfig({
   },
   site: {
     name: 'Nuxt Convex',
-    url: 'https://nuxt-convex-module.dev',
+    // A Vercel preview advertises its own host. Canonical URLs, JSON-LD and
+    // og:image are all built from `site.url`, and the social cards exist
+    // only in the build that made them: with the production URL here a
+    // preview's og:image pointed at a file production never had, so every
+    // card validator run against a preview failed.
+    url: process.env.VERCEL_ENV === 'preview'
+      ? `https://${process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL}`
+      : 'https://nuxt-convex-module.dev',
   },
   // The scheme is the operating system's: no toggle on the page (the
   // app/components/app overrides) and no `d` shortcut (app.config
