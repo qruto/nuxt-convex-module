@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@nuxt/content": "^3.16.0",
+    "@nuxt/fonts": "^0.14.0",
     "@nuxtjs/i18n": "^10.6.0",
     "nuxt-security": "^2.6.0"
   }

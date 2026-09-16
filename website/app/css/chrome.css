@@ -310,11 +310,15 @@ html:active-view-transition-type(back)::view-transition-new(root) {
     0 5px 8px -5px rgb(0 0 0 / 0.28);
 }
 
-/* The bar is brighter than the page, and the search trigger's dish is
-   `concave` over `bg-muted` — so untouched it would sit a single point
-   below its own surround and read flat. Re-point --ui-bg-muted INSIDE the
-   header: `bg-muted` resolves it at use time, so the dish deepens by
-   itself and nothing outside the bar moves.
+/* The bar is brighter than the page, and a `concave` dish in it — the
+   header's buttons press to one — is cut over `bg-muted`, so untouched
+   it would sit a single point below its own surround and read flat.
+   Re-point --ui-bg-muted INSIDE the header: `bg-muted` resolves it at
+   use time, so the dish deepens by itself and nothing outside the bar
+   moves. (The search field itself is cut THROUGH the rail to the page —
+   `concave-ground`, app.config — since 2026-09-16; its floor is the
+   ground's and only its lip and catch are set here, in the eye-level
+   field scope below.)
 
    How deep is set by the dish's own FLOOR, not by its mid-tone. The
    recessed ramp turns UP at the bottom (bounce off the floor of a cut)
@@ -349,60 +353,85 @@ html:active-view-transition-type(back)::view-transition-new(root) {
      inherit down here. Depth.css's definition, verbatim, re-run
      against the line above. */
   --dish-body: light-dark(
-      var(--ui-bg-muted),
+      color-mix(in srgb, var(--ui-bg-muted), #000 6%),
       color-mix(in srgb, var(--ui-bg-muted), #000 6%));
   --gradient-recessed: linear-gradient(180deg,
     color-mix(in srgb, var(--dish-body), #000 3%),
     var(--dish-body) 34%, var(--dish-body) 76%,
     color-mix(in srgb, var(--dish-body), var(--dish-floor-lift) 2%));
 
-  /* The well's shadows come along for the same reason and by the same
-     mechanism — depth.css declares these on :root too, so a scoped
-     override has to restate them. These ARE depth.css's, layer for
-     layer, with exactly one value changed: the floor's catch line, from
-     0.8 white to opaque #fff in the light scheme.
+}
+/* -- THE FIELDS AT EYE LEVEL ---------------------------------------
+   The search well in the rail and the package chooser at the top of
+   the sidebar: the two cuts a reader looks straight into on every
+   page. Both take the site's dish tokens with a harder lip and a
+   brighter floor catch than depth.css gives the page's wells — one
+   scope, two hooks, so the two fields are cut alike.
 
-     Why that one. 0.8 white over a 231 floor composites to 250 — a
-     light GREY hairline, sitting between a grey floor and a grey rail,
-     and the eye reads a light grey in that company as cool: the line
-     looked faintly blue while measuring dead neutral (247,247,247).
-     #fff is the one value that cannot do that, and it makes the floor's
-     edge the brightest pixel on the rail, which is what a lit edge
-     should be.
+   The well's shadows have to be restated here for the same reason the
+   header's ramp does — depth.css declares these on :root, so a scoped
+   override has to restate them. These ARE depth.css's, layer for
+   layer, with exactly one value changed: the floor's catch line, from
+   0.8 white to opaque #fff in the light scheme.
 
-     Dark keeps its alpha. Solid white on a 23 floor is a lit wire, not
-     a machined edge — four times the light room's contrast.
+   Why that one. 0.8 white over a 231 floor composites to 250 — a
+   light GREY hairline, sitting between a grey floor and a grey rail,
+   and the eye reads a light grey in that company as cool: the line
+   looked faintly blue while measuring dead neutral (247,247,247).
+   #fff is the one value that cannot do that, and it makes the floor's
+   edge the brightest pixel on the rail, which is what a lit edge
+   should be.
 
-     AND IT KEEPS IT NOW THAT depth.css HAS COME DOWN (2026-09-06).
-     The site's dark floor catches dropped to roughly a third there,
-     because a well cut into the 21/255 page ground was pooling at 60
-     and reading as a lamp. This scope is the exception, and the same
-     figure is what says so: a floor catch is not a fixed brightness,
-     it is a brightness ABOVE THE SURFACE THE CUT IS IN, and the rail
-     is not the page — it sits at 35. At depth.css's new alpha the
-     dish's floor came out at 31, BELOW the rail around it, which is
-     precisely the lip-and-no-bottom failure the paragraph above exists
-     to prevent. The old 0.09 puts it back at ~45: the same ~10 levels
-     over its own surround that the light scheme reads, on a plate that
-     happens to be dark. Both scopes obey one rule; only the ground
-     under them differs. It takes depth.css's WARM tone with them: the
-     alpha is this scope's to set, the colour is not, and a cold floor
-     line in the one dish that sits at eye level all the way down the
-     site is the last place to keep one. */
+   Dark keeps its alpha. Solid white on a 23 floor is a lit wire, not
+   a machined edge — four times the light room's contrast.
+
+   AND IT KEEPS IT NOW THAT depth.css HAS COME DOWN (2026-09-06).
+   The site's dark floor catches dropped to roughly a third there,
+   because a well cut into the 21/255 page ground was pooling at 60
+   and reading as a lamp. This scope is the exception, and the same
+   figure is what says so: a floor catch is not a fixed brightness,
+   it is a brightness ABOVE THE SURFACE THE CUT IS IN, and the rail
+   is not the page — it sits at 35. At depth.css's new alpha the
+   dish's floor came out at 31, BELOW the rail around it, which is
+   precisely the lip-and-no-bottom failure the paragraph above exists
+   to prevent. The old 0.09 puts it back at ~45: the same ~10 levels
+   over its own surround that the light scheme reads, on a plate that
+   happens to be dark. Both scopes obey one rule; only the ground
+   under them differs. It takes depth.css's WARM tone with them: the
+   alpha is this scope's to set, the colour is not, and a cold floor
+   line in the one dish that sits at eye level all the way down the
+   site is the last place to keep one. */
   /* A SECOND difference from depth.css (2026-09-14: "make the search
-     bar's inner top shadow more solid"): the lip shade is one hard pixel
-     here, no blur. The search field is the one well that sits at eye
-     level on every page, and a 1px blur on it read as a smudge where the
-     page's wells read as an edge. */
+   bar's inner top shadow more solid"): the lip shade is one hard pixel
+   here, no blur. The search field is the one well that sits at eye
+   level on every page, and a 1px blur on it read as a smudge where the
+   page's wells read as an edge. */
+/* THE LIGHT FLOOR CAME DOWN (2026-09-17: "make the light reflection at
+   the bottom of such inputs less white"). The solid #fff line and the
+   0.95 pool were right when the floor was the rail's own tone and the
+   catch had to do all the drawing; now the floor sits ten levels under
+   the rail (--dish-body-ground) and the same catch read as a white bar
+   lying in the pocket. Half-strength: still the brightest row in the
+   cut, no longer a second edge. The wall goes the other way — a
+   harder shade under the lip — so the recess is drawn by its wall and
+   its floor tone, as the dark room's is. */
+.app-header,
+.package-chooser {
   --inset-shadow-1:
-    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.5)),
-    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.09)),
-    inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.05));
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.13), rgb(0 0 0 / 0.5)),
+    inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.45), oklch(80% 0.035 65 / 0.09)),
+    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.5), oklch(80% 0.035 65 / 0.05));
   --inset-shadow-2:
-    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.55)),
-    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.25)),
-    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.11)),
-    inset 0 -2px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.055));
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.55)),
+    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.25)),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.45), oklch(80% 0.035 65 / 0.11)),
+    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.5), oklch(80% 0.035 65 / 0.055));
+  --dish-ground-floor: inset 0 -2px 3px -1px light-dark(rgb(255 255 255 / 0.3), oklch(80% 0.035 65 / 0.014));
+  /* The lit rim under the cut, a step brighter than the page's wells
+     carry (0.055): at eye level the lower edge is what closes the
+     pocket, and on the dark ground it was the one line missing
+     (2026-09-16, "gray on gray"). Light has nothing to close. */
+  --dish-ground-rim: 0 1px 0 light-dark(transparent, rgb(255 255 255 / 0.1));
 }
 
 /* -- THE FIELD-GROUP SEAM ----------------------------------------
@@ -429,6 +458,230 @@ html:active-view-transition-type(back)::view-transition-new(root) {
   box-shadow: var(--seam-y), var(--elevation-1);
 }
 
+/* -- THE PACKAGE CHOOSER ---------------------------------------------
+   The sidebar's package-manager menu. The well it opens from is styled
+   in DocsPackageChooser.vue in plain depth utilities; what lives here is
+   the part a theme class cannot reach — the menu is rendered in a
+   portal at the end of <body>, and Nuxt UI's own classes on it (a flat
+   fill, a ring, a scale-in) are overridden from this unlayered block
+   rather than raced in @layer utilities.
+
+   THE MENU IS A DRAWER. A plate pulled out from under the well: it
+   starts a step above its resting place, clipped to nothing at its
+   own top edge, and comes down and open along the site's curve — the
+   rows following one behind the next, 35ms apart, so the list arrives
+   as a stack of parts rather than a single fade. Closing runs the same
+   travel back, shorter, on the plain curve: a drawer pushed home.
+   Keyed on Reka's data-state, which holds `closed` for as long as an
+   animation is running, so the close plays out before the node goes.
+
+   The plate takes the floating rung (--elevation-3, the popover's — see
+   `part-plate` in depth.css for why grounded parts do not) with the
+   machined edge, and the well's own 12px shape: the drawer is cut to
+   the pocket it slides out of.
+
+   THE HIGHLIGHT IS ONE PART THAT MOVES. Nuxt UI paints a highlight on
+   each row's own pseudo, so keyboard and pointer travel is a strip
+   blinking off one row and on the next. Here the strip is a single
+   pocket belonging to the list, TETHERED to whichever row is
+   highlighted with CSS anchor positioning — the row names itself an
+   anchor, the strip takes its edges — and a transition on `inset`
+   slides it there. Not Baseline yet, so it is guarded: without anchor
+   support the rows keep their own strip, made of the same material.
+   Position, not `position-area`, because an area cannot be
+   transitioned (modern-web-guidance: anchor-positioning-tab-underline).
+   The strip is a marking printed ON the plate, so it takes the strip
+   radius, not a rung of the shape ladder. */
+/* THE SEAT AND THE CELL. The trigger is an instrument, not a field: the
+   logo sits in a round seat bored into the start of the pocket's floor
+   and the chevron sits in a cell scribed off from the name — the same
+   two-pixel cut `.rail-cell` divides a status rail with — so the pocket
+   reads as three machined parts in one cut rather than a text box with
+   an icon pasted in. Both are pseudo-elements on Nuxt UI's
+   leading/trailing wrappers: the glyph itself is nuxt-icon's
+   background, so a surface painted ON it would replace the logo.
+
+   THE SEAT IS A COUNTERBORE, NOT A COIN (2026-09-16: "the icon box isn't
+   well integrated in this concave styled input"). It was a raised chip —
+   the surface ramp with a bevel and the flush cast — and a lighter
+   plate standing in a pocket read as a sticker on the floor, not as a
+   part of the cut: the one raised thing inside a recess. It is now the
+   same recess taken one step further down, the way the site seats a
+   lamp: the floor a step darker than the pocket's, the lip's hard
+   shade under the top edge, the warm floor catch along the bottom, and
+   the pocket's own ring — the eye-level field's figures, so the seat
+   and the pocket are one machining pass. It is the POCKET'S OWN SHAPE
+   (2026-09-16: "not a circle, the same shape as the input"): a squircle
+   at the pocket's 12 less the seat's 6 inset — the shape ladder's
+   formula, so the two arcs run parallel along the row. The seat fills
+   the leading slot's own box
+   (DocsPackageChooser.vue sizes and places that box and centres the logo
+   in it — the logo once sat 6px right of a coin drawn beside it), so
+   the two cannot drift apart. The name clears the seat and the cell by
+   their own widths (40px / 36px), set here rather than through the size
+   compound so the two paddings cannot drift apart from the parts they
+   make room for. */
+.package-chooser {
+  padding-inline: 2.5rem 2.25rem;
+}
+.package-chooser [data-slot="leading"]::before,
+.package-chooser [data-slot="trailing"]::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.package-chooser [data-slot="leading"] {
+  isolation: isolate;
+}
+.package-chooser [data-slot="leading"]::before {
+  z-index: -1;
+  inset-inline: 0;
+  inset-block: 50%;
+  block-size: 1.5rem;
+  translate: 0 -50%;
+  border-radius: calc(var(--radius-well) - 0.375rem);
+  background: light-dark(
+    color-mix(in srgb, var(--dish-body-ground), #000 5%),
+    color-mix(in srgb, var(--dish-body-ground), #000 14%));
+  box-shadow:
+    inset 0 0 0 1px var(--recess-edge-ground),
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.55)),
+    inset 0 -1px 0 light-dark(#fff, oklch(80% 0.035 65 / 0.06)),
+    0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.05));
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+.package-chooser [data-slot="trailing"]::before {
+  inset-inline-start: -0.5rem;
+  inset-block: 0.45rem;
+  inline-size: 2px;
+  background-image: linear-gradient(90deg,
+    var(--seam-shade) 0 1px,
+    var(--seam-catch) 1px 2px);
+}
+
+/* THE DRAWER STANDS OFF THE PAGE (2026-09-16: "more contrast, drop
+   it"). A drawer out of the sidebar is the one part on the docs page
+   that floats over the ground rather than sitting in it, and the
+   surface ramp put it a step over the ground with the floating cast
+   ending within a few pixels — a slightly lighter box. The plate now
+   starts at the ladder's top tone (--ui-bg-accented, the crown of a
+   plate in the light) and settles toward the elevated tone, and past
+   --elevation-3 it throws a long soft cast down the page — the one
+   layer the grounded parts never get, because they are not in the
+   air. */
+.package-menu {
+  background: linear-gradient(180deg,
+    var(--ui-bg-accented),
+    color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 60%));
+  box-shadow:
+    var(--bevel),
+    var(--elevation-3),
+    0 18px 32px -10px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.75));
+  border-radius: var(--radius-well);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+.package-menu[data-state="open"] {
+  animation: package-menu-out 260ms var(--ease-out) both;
+}
+.package-menu[data-state="closed"] {
+  animation: package-menu-in 140ms ease-in both;
+}
+.package-menu[data-state="open"] [data-slot="item"] {
+  animation: package-row-in 320ms var(--ease-out) both;
+  animation-delay: calc(var(--row) * 35ms);
+}
+.package-menu [data-slot="item"]:nth-child(2) { --row: 1; }
+.package-menu [data-slot="item"]:nth-child(3) { --row: 2; }
+.package-menu [data-slot="item"]:nth-child(4) { --row: 3; }
+.package-menu [data-slot="item"]:nth-child(n + 5) { --row: 4; }
+@keyframes package-menu-out {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+    clip-path: inset(0 0 100% 0 round var(--radius-well));
+  }
+  to {
+    opacity: 1;
+    translate: 0;
+    clip-path: inset(0 round var(--radius-well));
+  }
+}
+@keyframes package-menu-in {
+  from {
+    opacity: 1;
+    translate: 0;
+    clip-path: inset(0 round var(--radius-well));
+  }
+  to {
+    opacity: 0;
+    translate: 0 -6px;
+    clip-path: inset(0 0 100% 0 round var(--radius-well));
+  }
+}
+@keyframes package-row-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+/* THE HIGHLIGHT IS A POCKET, NOT A PLATE (2026-09-16: "improve the
+   concave effect of the dropdown options"). The row under the pointer
+   is pressed into the drawer — the shallow cut, the same one a control
+   seats into — so the drawer's raised face and the pocket in it read as
+   one part with a hollow in it, not a plate with a second plate on it.
+   The row's own pocket is the fallback, and the material the moving one
+   is made of. */
+.package-menu [data-slot="item"][data-highlighted]::before {
+  background: var(--gradient-recessed);
+  box-shadow: var(--recess-lip), var(--inset-shadow-1);
+  border-radius: var(--radius-strip);
+}
+@supports (anchor-name: --row) {
+  .package-menu [data-slot="item"]::before {
+    display: none;
+  }
+  .package-menu [data-slot="item"][data-highlighted] {
+    anchor-name: --package-row;
+  }
+  .package-menu-list {
+    position: relative;
+    isolation: isolate;
+  }
+  .package-menu-list::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    position-anchor: --package-row;
+    inset: anchor(top) anchor(right) anchor(bottom) anchor(left);
+    margin: 1px;
+    border-radius: var(--radius-strip);
+    background: var(--gradient-recessed);
+    box-shadow: var(--recess-lip), var(--inset-shadow-1);
+    pointer-events: none;
+    @supports (corner-shape: squircle) { corner-shape: squircle; }
+  }
+  /* No row highlighted — the pointer has left the list — and the
+     strip has nowhere to be: it fades where it is rather than jumping
+     to the static position an unresolved anchor would give it. */
+  .package-menu-list:not(:has([data-highlighted]))::before {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .package-menu-list::before {
+      transition: inset 180ms var(--ease-out), opacity 120ms ease-out;
+    }
+  }
+}
+/* Keyed on data-state like the animations above, so the reset carries
+   the same specificity and wins by order — a bare .package-menu lost to
+   every state rule and the drawer still travelled under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .package-menu[data-state],
+  .package-menu[data-state] [data-slot="item"] {
+    animation: none;
+  }
+}
+
 /* -- THE LAMPS AND THE SCRIBE ---------------------------------------
    The two instrument marks every demo on the site shares, written
    once here rather than in each component's scoped block.
@@ -443,7 +696,20 @@ html:active-view-transition-type(back)::view-transition-new(root) {
    A SCRIBE is the seam stood on its own: a shade line with its catch
    one pixel below, run across a plate as a rule — the same two-pixel
    cut the mill finishes and --seam-x draw, as a standalone element.
-   Stood on end it divides the cells of a rail (.rail-cell below). */
+   Stood on end it divides the cells of a rail (.rail-cell below).
+
+   A NEON is a lit tube: the accent tick that opens a spec label — the
+   docs page header's eyebrow, the upstream-baseline plate. A utility,
+   because the eyebrow's tick is a `before:` pseudo hung from a theme
+   string and only a utility takes the variant. It was a 3px dash in
+   flat accent with a soft glow; what makes a line read as a lamp is
+   the light coming OUT of it, so the tube is two pixels and its light
+   is three layers: a core a step hotter than the accent, a tight halo
+   at the accent's own tone, and a wide soft one fading into the plate.
+   The light room keeps the accent as the core (a hot core on a white
+   plate reads as a faded dash) and halos at half the strength — a lit
+   tube in a lit room. Geometry stays on the element:
+   h-[1.5px] w-[22px] rounded-full. */
 .lamp {
   --lamp-bore: 0 0 0 2px light-dark(oklch(0% 0 0 / 0.07), oklch(0% 0 0 / 0.55));
   flex: none;
@@ -481,6 +747,19 @@ html:active-view-transition-type(back)::view-transition-new(root) {
     }
   }
 }
+@utility neon {
+  background: light-dark(var(--ui-primary), color-mix(in oklab, var(--ui-primary), #fff 22%));
+  box-shadow:
+    0 0 1px 0 light-dark(
+      color-mix(in srgb, var(--ui-primary) 60%, transparent),
+      color-mix(in oklab, var(--ui-primary), #fff 30%)),
+    0 0 4px 0 light-dark(
+      color-mix(in srgb, var(--ui-primary) 40%, transparent),
+      color-mix(in srgb, var(--ui-primary) 70%, transparent)),
+    0 0 12px 1px light-dark(
+      color-mix(in srgb, var(--ui-primary) 18%, transparent),
+      color-mix(in srgb, var(--ui-primary) 45%, transparent));
+}
 .scribe {
   display: block;
   block-size: 2px;
@@ -491,6 +770,7 @@ html:active-view-transition-type(back)::view-transition-new(root) {
 @media (forced-colors: active) {
   .scribe { background-image: none; border: 1px solid; }
   .lamp { border: 1px solid; box-shadow: none; }
+  .neon { box-shadow: none; }
 }
 
 /* -- THE FADER --------------------------------------------------------

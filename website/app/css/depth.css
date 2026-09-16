@@ -12,7 +12,8 @@
      convex-accent                               a raised accent part
      hard-cast                                   + an unblurred cast
      concave-text                                glyphs cut in
-     convex-text                                 glyphs raised
+     convex-text . convex-text-2 . convex-text-3  glyphs raised
+     convex-stamp                                a mono marking milled
      concave-icon                                mask icons cut in
 
    The numbers are one ladder of depth, not four vocabularies: 0 is
@@ -176,12 +177,16 @@
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.06)),
     0 0 0 1px light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.05)),
     0 1px 1px light-dark(rgb(0 0 0 / 0.05), transparent);
+  /* The light casts came up a third (2026-09-16, the light-room pass):
+     a plate whose crown catch is white on a 98% face has only its cast
+     to say it stands off the page, and at 0.05 the step badges and the
+     chooser's drawer read flat beside their dark-room selves. */
   --elevation-1:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.07)),
-    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
-    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
-    0 1px 1px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4)),
-    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4));
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.4)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.3)),
+    0 1px 1px light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.4)),
+    0 2px 4px -1px light-dark(rgb(0 0 0 / 0.09), rgb(0 0 0 / 0.4));
   --elevation-2:
     inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.08)),
     inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.42)),
@@ -313,7 +318,11 @@
      concave box lighter"). 90.5% sits between the old ring and the 93.8%
      ground: still a line, no longer a drawn frame. Dark is unchanged; the
      request was made looking at light. */
-  --recess-edge: light-dark(oklch(90.5% 0 0), oklch(34% 0 0));
+  /* AND A STEP BELOW THE NEW FLOOR (2026-09-16). With the light floor at
+     ~91% the 90.5% ring vanished into it; the wall of a cut is in shade,
+     so the lip sits a hair under the floor — still ten levels under a
+     plate, the weight it had before. */
+  --recess-edge: light-dark(oklch(88% 0 0), oklch(34% 0 0));
   /* THE LIP IS PART OF THE CUT (2026-09-07). Every concave recipe used
      to be cut without its edge, and each component then decided for
      itself whether to draw one with `border border-(--recess-edge)` —
@@ -414,15 +423,22 @@
      nothing. Light passes both tokens straight through unchanged —
      `light-dark()` takes two colours and a color-mix() is a colour,
      which is the whole trick here. */
+  /* THE LIGHT ROOM'S CUTS ARE DARKER TOO (2026-09-16: "adapt everything
+     for the light mode, it should look the same"). The light floor sat
+     at --ui-bg-muted, a step ABOVE the 93.8% ground — so a well cut into
+     the page was a lighter panel laid on it, and the same recess that
+     reads as a hole in dark read as a tile in light. Same model in both
+     rooms now: less light reaches the bottom of a hole. 6% under muted
+     puts the floor ~3 levels under the ground and ~7 under a plate. */
   --dish-body: light-dark(
-      var(--ui-bg-muted),
+      color-mix(in srgb, var(--ui-bg-muted), #000 6%),
       color-mix(in srgb, var(--ui-bg-muted), #000 20%));
   /* The same step for the tray cut into the PAGE. Shallower (12%):
      the ground is already the darkest surface the site has, and a
      hole in it has correspondingly less room to go down before the
      floor stops being a tone and starts being an absence. */
   --dish-body-ground: light-dark(
-      var(--ui-bg),
+      color-mix(in srgb, var(--ui-bg), #000 4%),
       color-mix(in srgb, var(--ui-bg), #000 12%));
   /* The dish holds its mid-tone; it only turns at the lip and floor.
      That mid-tone is --dish-body, which IS --ui-bg-muted in light and
@@ -468,7 +484,7 @@
      the plate and card parts bake it in. */
   --bevel:
     inset 0 1px 0 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
-    inset 0 -1px 0 0 light-dark(rgb(0 0 0 / 0.11), rgb(0 0 0 / 0.45)),
+    inset 0 -1px 0 0 light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.45)),
     inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035));
 }
 
@@ -808,7 +824,7 @@
    inside @layer utilities. Below ~18px a deeper cut turns to mush, so
    it stays at one pixel.
 
-   `convex-text` is its inverse at half that offset — a lit rim on
+   `convex-text` is its inverse, lifted by a fraction of the em — a lit rim on
    the top edge (toward the light) and the glyph's own cast on the
    surface below it, so a small readout stands PROUD of the plate
    instead of being scribed into it. ConvexText.vue is the display-size
@@ -849,10 +865,277 @@
      0.5px the offset is one exact device pixel on a retina screen, so
      the rim and the cast land as single crisp rows, and on a 1x screen
      it folds INTO the glyph's own edge pixel instead of drawing a second
-     one. Measured both ways against the 1px version before choosing. */
+     one. Measured both ways against the 1px version before choosing.
+
+     THE LIFT SCALES WITH THE TYPE (2026-09-16: "add a tiny convex effect
+     to such headers" — the page titles and the sidebar's group names,
+     which already carried this class and showed nothing). Half a pixel
+     is the right lift for a 13px readout and no lift at all for a 36px
+     title: the rim and the cast sat inside the anti-aliased edge of a
+     stroke four times as thick. So the cast is a fraction of the em —
+     0.04em is 0.52px at 13px, where the measured figure stays, and
+     1.4px at 36px — floored at the half pixel so nothing below 13px
+     goes sub-pixel and blurs. The rim climbs slower (0.025em, 0.9px at
+     36px): a catch is a hairline wherever it lands, and scaled with the
+     cast it drew a white outline over the top of every letter of a
+     light-room title.
+
+     The dark rim is a fifth of white, not the 0.11 it was: on a dark
+     plate the cast lands on nothing, so the catch is the whole of what
+     this rung can say there, and at 0.11 it said nothing. This is the
+     SHALLOW rung — readouts, labels, the sidebar's names, the brand in
+     the header — and it draws nothing inside the glyph. The domed face
+     is `convex-text-2` below, and it is kept off small type on purpose. */
+  /* SNAPPED TO THE DEVICE PIXEL (2026-09-17: "remove the blurry, spread
+     shadow — it should be more solid", on the 13px brand). 0.04em at 13px
+     is 0.52px: on a retina screen that is 1.04 device rows, and the
+     extra 4% is a second, faint row under the first — the smear. Every
+     offset now rounds to the half pixel, so the rim and the cast each
+     land as exactly one crisp row at 2x. */
+  --convex-text-lift: round(nearest, max(0.5px, 0.04em), 0.5px);
+  --convex-text-rim: round(nearest, max(0.5px, 0.025em), 0.5px);
   text-shadow:
-    0 -0.5px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)),
-    0 0.5px 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
+    0 calc(-1 * var(--convex-text-rim)) 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.2)),
+    0 var(--convex-text-lift) 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
+  @media (forced-colors: active) {
+    text-shadow: none;
+  }
+}
+@utility convex-text-2 {
+  /* The domed rungs: the same rim and cast as `convex-text`, and in
+     the dark room a DOMED FACE — one recipe, below, that both rungs
+     share; each rung only sets how far its face turns. The two rows
+     outside the glyph are all a shadow can draw, and on a dark plate
+     they are nearly nothing: a white rim on near-white letters and a
+     black cast on a near-black ground. What says "raised" for light
+     type on a dark plate is the glyph's own face turning away from the
+     lamp — a crown catching it, the body below, the foot in shade —
+     which is what ConvexText.vue paints at display size with a second
+     copy of the words.
+
+     `convex-text-2` keeps the ink: the crown IS the ink, the body a
+     step under it. For the 14px semibold names in the sidebar, which
+     have to stay as bright as the icons beside them. */
+  --convex-text-lift: round(nearest, max(0.5px, 0.04em), 0.5px);
+  --convex-text-rim: round(nearest, max(0.5px, 0.025em), 0.5px);
+  --convex-face-crown: 0%;
+  --convex-face-body: 8%;
+  --convex-face-foot: 20%;
+  text-shadow:
+    0 calc(-1 * var(--convex-text-rim)) 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.2)),
+    0 var(--convex-text-lift) 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
+  /* A HAIR OF STROKE (2026-09-16: "try to add tiny text stroke for those
+     headers"). Chrome draws a clipped fill with a thinner edge than solid
+     ink (the note under the domed face below), so in the dark room the
+     14px names came out a shade lighter in weight than the icons beside
+     them. The stroke is the ink itself, 0.02em — a quarter of a pixel at
+     14px, one device pixel on a retina screen — painted UNDER the fill so
+     only its outer half shows: the letter gets its edge back and the face
+     ramp is untouched. In light the fill is solid and the same hair just
+     firms the outline. A STEP DARKER than the ink (2026-09-16, "the text
+     stroke should be a bit darker than the letter colour"): the edge of a
+     raised letter is the wall turning away from the lamp, so it is in
+     shade whichever room it stands in, and a stroke in the ink itself
+     only made the letter fatter. */
+  -webkit-text-stroke: 0.02em color-mix(in oklab, currentColor, #000 25%);
+  paint-order: stroke fill;
+  @media (forced-colors: active) {
+    text-shadow: none;
+    -webkit-text-stroke: 0;
+  }
+}
+@utility convex-text-3 {
+  /* The display rung, for h1–h3: an EMBOSS. Every glyph's top edge is
+     lit — a thin strip of the ink itself — and the whole face under it
+     sits in half-shade, with the cast below. This is the look the first
+     pass had by accident (2026-09-16: the 0.6 black cast painted over
+     the transparent ink and shaded every letter but its top 1.4px, and
+     "I like the convex effect on those titles, just polish them"), and
+     it is drawn here the same way ON PURPOSE: the face shade is a
+     text-shadow, which paints over a clipped fill, offset down by the
+     strip's thickness. One layer, three jobs — the lit edge is where
+     it does not reach, the body is where it does, the cast is where it
+     lands outside the glyph — and it works per glyph, so a lowercase
+     letter is lit at its own top edge, not only the caps at the cap
+     line (the gradient rung above cannot do that: it lights a line,
+     not a letter). The polish: the strip is 0.03em instead of 0.04em,
+     the face under the shade starts 12% under the ink and the rim over
+     it is 0.08 white instead of 0.2, so the lit edge is a step below
+     the ink rather than a white line ("a bit less light", the second
+     time), and the shade is 0.5 instead of 0.6. The foot still turns a
+     quarter down the face so a tall letter domes. */
+  --convex-text-lift: round(nearest, max(0.5px, 0.01em), 0.5px);
+  --convex-text-rim: round(nearest, max(0.5px, 0.025em), 0.5px);
+  --convex-face-crown: 12%;
+  --convex-face-body: 12%;
+  --convex-face-foot: 25%;
+  text-shadow:
+    0 calc(-1 * var(--convex-text-rim)) 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.2)),
+    0 var(--convex-text-lift) 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
+  @media (forced-colors: active) {
+    text-shadow: none;
+  }
+}
+/* THE DOMED FACE, shared by both rungs above. The ink is made
+   transparent and the face is a gradient of the SAME ink clipped to
+   the letters, each stop the ink mixed down by the rung's figure, so
+   every text-* colour still works.
+
+   THE STOPS ARE IN EM off the middle of the line box — Technor's cap
+   height is 0.667em and the box is centred on it — so the crown is the
+   top 0.04em of the caps whatever the size, and lowercase, which never
+   reaches it, takes the body tone. The ramp repeats every line box
+   (1lh) and counts from the CONTENT box: on a padded element (the
+   sidebar's group buttons) tiles from the border box sat out of phase
+   with the lines, and a glyph's foot crossed into the next tile's
+   crown.
+
+   ONE FACE, TWO ROOMS. The clip, the tile and the ink-restore below are
+   the same in both; only the direction the ramp mixes in differs — a
+   step toward black in the dark room, a lift toward white in the light
+   one (the light block follows) — so each room sets its own
+   background-image and shares the rest here. Keyed on the html class
+   the colour mode drives, and unlayered, so it beats the rungs' own
+   text-shadow — which is why the two rungs' shadow channels are set
+   per room below too, one after the other. */
+:root :is(.convex-text-2, .convex-text-3) {
+  -webkit-text-fill-color: transparent;
+  background-size: 100% 1lh;
+  background-origin: content-box;
+  background-clip: text;
+  /* The transparent ink INHERITS. Anything inside that paints its own
+     surface — a code chip in a heading, a step number's plate drawn as
+     a pseudo — would show that surface with no letters on it, so those
+     take their ink back. A selection highlight paints over the fill,
+     so the selected letters keep their ink too. */
+  & :where(code, kbd),
+  &::before,
+  &::after,
+  &::selection,
+  & *::selection {
+    -webkit-text-fill-color: currentColor;
+  }
+  @media (forced-colors: active) {
+    -webkit-text-fill-color: currentColor;
+    background-image: none;
+    text-shadow: none;
+    filter: none;
+  }
+}
+:root.dark :is(.convex-text-2, .convex-text-3) {
+  background-image: linear-gradient(180deg,
+    color-mix(in oklab, currentColor, #000 var(--convex-face-crown)) calc(50% - 0.29em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% - 0.19em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-body)) calc(50% + 0.08em),
+    color-mix(in oklab, currentColor, #000 var(--convex-face-foot)) calc(50% + 0.33em));
+}
+/* THE LIGHT ROOM'S RELIEF (2026-09-17: "more dark gray instead of black
+   with the convex effect the same as on dark mode" — the hero title is
+   the reference). The dark room lights a raised letter by shading it:
+   the face is the ink stepped toward black and a black shade painted
+   over it, and the strip the shade misses is the lit edge. The same
+   letter in a lit room is the ink LIFTED — a raised face catches the
+   room's light, so the face is the ink mixed toward white, crown to
+   foot, which is also what turns the near-black ink into the dark grey
+   the hero's aluminium reads as. The knobs are the rungs' own
+   (--convex-face-*), read here as a lift toward white instead of a step
+   toward black, so each rung sets its light figures below.
+
+   The display rung keeps the per-glyph emboss: the shade over the face,
+   offset by the lift, misses the top strip of every letter — a lowercase
+   letter is lit at its own top edge, exactly as in the dark room — and
+   lands as the wall under each glyph. The lift is snapped to the half
+   pixel (one device pixel on a retina screen) so the wall is one crisp
+   row, not a smear across two. The ink-keeping rung takes its rim and
+   cast as a FILTER, for the reason the dark rung does: at 14px a shade
+   painted over the face thins the letter to a thread.
+
+   NO STROKE. Safari paints a text-stroke on both sides of a transparent
+   fill, and the hair the dark room needs came out as an outline round
+   every 14px name. */
+:root:not(.dark) :is(.convex-text-2, .convex-text-3) {
+  -webkit-text-stroke: 0;
+  background-image: linear-gradient(180deg,
+    color-mix(in oklab, currentColor, #fff var(--convex-face-crown)) calc(50% - 0.29em),
+    color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% - 0.19em),
+    color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% + 0.08em),
+    color-mix(in oklab, currentColor, #fff var(--convex-face-foot)) calc(50% + 0.33em));
+}
+:root:not(.dark) .convex-text-2 {
+  /* A shallower crown than the display rung's: on a 13px mono the
+     crown band lands across the x-height and a 46% lift read as two
+     tones of letter, not a lit edge. */
+  --convex-face-crown: 38%;
+  --convex-face-body: 29%;
+  --convex-face-foot: 23%;
+  text-shadow: none;
+  filter:
+    drop-shadow(0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.9))
+    drop-shadow(0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.32));
+}
+:root:not(.dark) .convex-text-3 {
+  --convex-text-lift: round(nearest, max(0.5px, 0.03em), 0.5px);
+  --convex-face-crown: 62%;
+  --convex-face-body: 46%;
+  --convex-face-foot: 38%;
+  /* Shade first — text-shadows paint first-on-top — so the rim shows
+     only where the shade does not reach: the top strip of every glyph
+     and the row above it. Then the ground cast, soft and short, the
+     hero's own reach at this size. */
+  text-shadow:
+    0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.36),
+    0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.3);
+  filter: drop-shadow(0 0.03em 0.05em rgb(0 0 0 / 0.2));
+}
+/* The ink-keeping rung's shadows are a FILTER. A text-shadow paints
+   between the background and the ink, and with the ink transparent it
+   paints ON the face — at 14px a shade one device pixel down covers
+   all but the top row of every stroke and thins the letter to a
+   thread. A drop-shadow casts from the rendered glyphs, so the rim and
+   the cast land outside them and the face is what the gradient says. */
+:root.dark .convex-text-2 {
+  text-shadow: none;
+  filter:
+    drop-shadow(0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.2))
+    drop-shadow(0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.6));
+}
+/* The display rung's shadows stay a TEXT-SHADOW, for the reason its
+   recipe gives: painted over the face they ARE the emboss. Listed
+   shade first — text-shadows paint first-on-top — so the rim shows only
+   where the shade does not reach: the strip at the top of every glyph,
+   and the row above it. */
+:root.dark .convex-text-3 {
+  text-shadow:
+    0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.5),
+    0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.08);
+}
+/* `convex-stamp` is the raised form of the mono marking — the label
+   over the sidebar's package chooser (2026-09-16: "make a more
+   interesting convex effect for the preferred package label"). The
+   shallow rung's two rows say nothing for a 12px lowercase label:
+   the rim folds into the top of the x-height and the cast into the
+   baseline. So this one has WALLS — two hard rows of falling shade
+   under the glyph, the way `hard-cast` stacks a part against the
+   plate it stands on, so the letter has a thickness and not a drop
+   shadow — and a rim a step brighter than the shallow rung's in dark
+   (0.3), the crown of that wall.
+
+   SOLID INK, NOTHING ELSE (2026-09-16, same day: "too ugly, not
+   readable"). The first cut also clipped a lit-crown-to-shaded-foot
+   ramp into the letters and ran a hair of stroke round them, and at
+   12px the three together drew an outline, not a relief — every edge
+   of every glyph had something happening on it and the word stopped
+   reading as a word. A marking this small carries one rim and its
+   walls; the face stays the ink. Texture only — pair with a text-*
+   colour, as every rung is. */
+@utility convex-stamp {
+  text-shadow:
+    0 -0.5px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.3)),
+    0 0.5px 0 light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.7)),
+    0 1px 0 light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.4));
+  @media (forced-colors: active) {
+    text-shadow: none;
+  }
 }
 @utility convex-icon {
   /* The raised counterpart for a neutral glyph — the same half-pixel
@@ -899,15 +1182,22 @@
    the panel is sunk half a step. */
 @utility panel-glass {
   --depth: concave;
-  background: color-mix(in oklab, var(--ui-bg) 36%, transparent);
-  backdrop-filter: blur(18px) saturate(1.2);
+  /* A FROST, NOT THE GROUND'S OWN TONE (2026-09-17: "it should be with
+     opacity, with a blurry effect — on dark too"). At the page's colour
+     the pane was invisible and only its ring showed, a box drawn on the
+     plate. It is the header rail's material now: a sheer white in the
+     light room, a sheer lift in the dark one, over the blur — a pane
+     of glass laid on the grain, its own tone and the ground's showing
+     through it. */
+  background: light-dark(rgb(255 255 255 / 0.42), rgb(255 255 255 / 0.045));
+  backdrop-filter: blur(14px) saturate(1.2);
   /* A hairline rim (shade below, catch above) and a soft floor — no hard
      ring, so the glass reads as sitting IN the grain, not framed on it. */
   box-shadow:
-    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)),
-    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.45)),
-    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.035), rgb(255 255 255 / 0.03)),
-    0 12px 28px -18px light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.7));
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.06)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.45)),
+    inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.035)),
+    0 12px 28px -18px light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.7));
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
 
