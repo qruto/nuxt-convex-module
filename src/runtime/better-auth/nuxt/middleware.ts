@@ -57,7 +57,7 @@ function waitForSession(isPending: () => boolean) {
  * Usage in page:
  * ```vue
  * <script setup>
- * definePageMeta({ middleware: 'auth' })
+ * definePageMeta({ middleware: 'convex-auth' })
  * </script>
  * ```
  */

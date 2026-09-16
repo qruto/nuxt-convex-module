@@ -41,24 +41,32 @@
    an overhead light lands on a groove's lower wall). Alphas are
    whisper-level on purpose — a finish is what a surface feels like,
    never a figure competing with the content on it. The landing's
-   four section finishes (landing.css) are built out of these. */
+   four section finishes (landing.css) are built out of these.
+
+   The inks are rgb(), not oklch(). A repeating gradient whose stops are
+   written in a modern colour syntax takes a different raster path in
+   Safari: it samples the run through a coarse lookup, and 1px lines at
+   a 3–13px pitch alias into wide bands. In dev the stops stay wrapped
+   in light-dark() and Safari takes the plain path; the production
+   build resolves light-dark() to bare oklch() and the grain smears.
+   White and black are the same colour in either syntax. */
 :root {
-  --mill-line-hi-page: light-dark(oklch(100% 0 0 / 0.12), oklch(100% 0 0 / 0.012));
-  --mill-line-lo-page: light-dark(oklch(0% 0 0 / 0.018), oklch(0% 0 0 / 0.16));
+  --mill-line-hi-page: light-dark(rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.012));
+  --mill-line-lo-page: light-dark(rgb(0 0 0 / 0.018), rgb(0 0 0 / 0.16));
   --mill-grain-page:
     repeating-linear-gradient(180deg, var(--mill-line-hi-page) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(180deg, var(--mill-line-lo-page) 0 1px, transparent 1px 7px);
 
-  --mill-line-hi: light-dark(oklch(100% 0 0 / 0.2), oklch(100% 0 0 / 0.017));
-  --mill-line-lo: light-dark(oklch(0% 0 0 / 0.032), oklch(0% 0 0 / 0.28));
+  --mill-line-hi: light-dark(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.017));
+  --mill-line-lo: light-dark(rgb(0 0 0 / 0.032), rgb(0 0 0 / 0.28));
   --mill-grain:
     repeating-linear-gradient(180deg, var(--mill-line-hi) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(180deg, var(--mill-line-lo) 0 1px, transparent 1px 7px);
   --mill-ray: radial-gradient(120% 55% at 50% 0%,
-      light-dark(oklch(100% 0 0 / 0.3), oklch(100% 0 0 / 0.04)),
+      light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.04)),
       transparent 68%);
-  --mill-rule-lo: light-dark(oklch(0% 0 0 / 0.05), oklch(100% 0 0 / 0.03));
-  --mill-rule-hi: light-dark(oklch(100% 0 0 / 0.5), oklch(0% 0 0 / 0.5));
+  --mill-rule-lo: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.03));
+  --mill-rule-hi: light-dark(rgb(255 255 255 / 0.5), rgb(0 0 0 / 0.5));
 }
 /* Nuxt UI paints `body` with bg-default (= --ui-bg); the grain rides
    on that fill. Every landing finish class carries an opaque

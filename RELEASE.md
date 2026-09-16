@@ -337,21 +337,3 @@ by hand first.
    until then: <https://github.com/organizations/qruto/settings/actions>, then
    <https://github.com/qruto/nuxt-convex-module/settings/actions>. `weekly.yml` can't watch this
    one: reading it needs an admin scope `GITHUB_TOKEN` never gets.
-
-## After the first publish
-
-- **Submit to the [nuxt/modules](https://github.com/nuxt/modules) registry** (needs the package on
-  npm). In a clone of that repo run `pnpm sync nuxt-convex-module qruto/nuxt-convex-module`, add
-  an SVG icon under `icons/`, set `category` (Database) and `type: 3rd-party` in the generated
-  `modules/nuxt-convex-module.yml`, point `website` at the docs site, and open a PR. npm stats,
-  description and maintainers sync themselves afterwards.
-- **Add repo topics** for discoverability: `nuxt`, `nuxt-module`, `convex`, `vue`, `realtime`.
-- **Join [nuxt/ecosystem-ci](https://github.com/nuxt/ecosystem-ci).** This is where testing against
-  Nuxt nightlies belongs. Doing it here meant turning off `minimumReleaseAge`, `trustPolicy` and
-  the frozen lockfile for a job that could never fail anything, so that job was deleted.
-  ecosystem-ci runs this suite against Nuxt's `main` on Nuxt's runners instead: no supply-chain
-  check is relaxed here, and a regression reaches you before the Nuxt release rather than after.
-- **The README's StackBlitz links** (`examples/minimal`, `examples/playground`) start working as
-  soon as the package is installable — they import from GitHub and resolve `nuxt-convex-module`
-  from npm. The per-PR StackBlitz link is different and already works: pkg.pr.new rewrites that
-  dependency to the commit's preview tarball, so it needs no npm release.

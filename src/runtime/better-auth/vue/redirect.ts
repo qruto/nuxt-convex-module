@@ -1,6 +1,6 @@
 // PARITY: A-12
 //
-// Safe handling of the `?redirect=` destination the `auth` route middleware
+// Safe handling of the `?redirect=` destination the `convex-auth` route middleware
 // attaches when it sends an unauthenticated visitor to the login page.
 //
 // The middleware only ever writes a router path there, but the query is part

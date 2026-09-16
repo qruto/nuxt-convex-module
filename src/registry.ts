@@ -15,6 +15,14 @@ export interface Registration {
 
 export type Integration = 'core' | 'betterAuth' | 'clerk' | 'auth0' | 'polar'
 
+/** The `convex.autoImports` option: every name, only the `Convex`-marked ones, or none. */
+export type AutoImports = boolean | 'prefixed'
+
+/** Whether `name` is auto-imported under `mode`: every name under `true`, only names carrying `Convex` under `'prefixed'`, none under `false`. */
+export function isAutoImported(name: string, mode: AutoImports): boolean {
+  return mode === true || (mode === 'prefixed' && /convex/i.test(name))
+}
+
 const vue = (file: string) => `runtime/vue/${file}`
 const composable = (file: string) => vue(`composables/${file}`)
 const asyncQuery = 'runtime/nuxt/composables/use-async-query'

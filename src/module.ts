@@ -6,7 +6,7 @@ import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPack
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, type Integration, type Registration } from './registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isAutoImported, type AutoImports, type Integration, type Registration } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -43,7 +43,7 @@ export interface BetterAuthModuleOptions {
    */
   crossDomainCallbackRoute?: string
   /**
-   * Route the `auth` middleware sends unauthenticated visitors to (and never
+   * Route the `convex-auth` middleware sends unauthenticated visitors to (and never
    * redirects away from, to avoid a self-redirect loop). The original
    * destination is appended as a `?redirect=` query so the login page can
    * return the visitor after sign-in. Defaults to `/login`.
@@ -101,6 +101,16 @@ export interface ModuleOptions {
    * `nuxt.config`) turns this off too.
    */
   security?: boolean
+  /**
+   * Which names are auto-imported. `true` registers every composable, component
+   * and Nitro helper under its upstream name (`useQuery`, `<Authenticated>`,
+   * `fetchQuery`) and, where one exists, its prefixed twin (`useConvexQuery`).
+   * `'prefixed'` registers only names carrying `Convex` (`useConvexQuery`,
+   * `<ConvexImage>`, `provideConvexAuth`, `convexAuth`, …) so a bare name never
+   * collides with another module's; the rest stay importable from the subpath
+   * exports. `false` auto-imports nothing.
+   */
+  autoImports?: AutoImports
   /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
   authRoute?: string
   /**
@@ -151,6 +161,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
+    autoImports: true,
     authRoute: '/api/auth',
     devtools: true,
     devScript: true,
@@ -200,9 +211,10 @@ export default defineNuxtModule<ModuleOptions>({
 
     registerConvexApiPlugin(resolver, nuxt)
     registerConvexTypeFallback(nuxt)
-    registerVueComposables(resolver)
-    registerAuthComponents(resolver)
-    const integrations = registerIntegrations(resolver, nuxt, options)
+    const autoImports = options.autoImports ?? true
+    registerVueComposables(resolver, autoImports)
+    registerAuthComponents(resolver, autoImports)
+    const integrations = registerIntegrations(resolver, nuxt, options, autoImports)
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
@@ -246,7 +258,7 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
-function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): IntegrationFlags {
+function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports): IntegrationFlags {
   type Key = keyof IntegrationFlags & keyof ModuleOptions
   const report = (key: Key, pkg: string, state: ReturnType<typeof resolveIntegrationState>): boolean => {
     if (state.missingPackage) {
@@ -262,7 +274,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
-    registerBetterAuth(resolver, options.authRoute || '/api/auth')
+    registerBetterAuth(resolver, options.authRoute || '/api/auth', autoImports)
   }
   else {
     // No auth integration manages the client — provide a base one so the data
@@ -272,17 +284,17 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
 
   const clerk = resolve('clerk', '@clerk/vue')
   if (clerk) {
-    registerClerk(resolver)
+    registerClerk(resolver, autoImports)
   }
 
   const auth0 = resolve('auth0', '@auth0/auth0-vue')
   if (auth0) {
-    registerAuth0(resolver)
+    registerAuth0(resolver, autoImports)
   }
 
   const polar = resolve('polar', '@convex-dev/polar')
   if (polar) {
-    registerPolarComponents(resolver)
+    registerPolarComponents(resolver, autoImports)
   }
 
   const security = report('security', 'nuxt-security', resolveSecurityState(nuxt, options.security))
@@ -490,8 +502,8 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
  * registered by their auto-enabled integrations below. The lists are data in
  * `src/registry.ts`, where the docs gate reads them too.
  */
-function registerVueComposables(resolver: Resolver): void {
-  registerIntegrationImports(resolver, 'core')
+function registerVueComposables(resolver: Resolver, autoImports: AutoImports): void {
+  registerIntegrationImports(resolver, 'core', autoImports)
 }
 
 /**
@@ -500,20 +512,25 @@ function registerVueComposables(resolver: Resolver): void {
  * `<AuthRefreshing>` straight into templates — mirroring the React
  * integration's exports.
  */
-function registerAuthComponents(resolver: Resolver): void {
-  registerComponents(resolver, 'core')
+function registerAuthComponents(resolver: Resolver, autoImports: AutoImports): void {
+  registerComponents(resolver, 'core', autoImports)
 }
 
-/** `addImports` + `addServerImports` for everything an integration registers. */
-function registerIntegrationImports(resolver: Resolver, integration: Integration): void {
-  const resolve = (entry: Registration) => ({ ...entry, from: resolver.resolve(`./${entry.from}`) })
-  if (APP_IMPORTS[integration].length > 0) addImports(APP_IMPORTS[integration].map(resolve))
-  if (SERVER_IMPORTS[integration].length > 0) addServerImports(SERVER_IMPORTS[integration].map(resolve))
+/** `addImports` + `addServerImports` for everything an integration registers that `autoImports` keeps. */
+function registerIntegrationImports(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
+  const kept = (entries: Registration[]) => entries
+    .filter(entry => isAutoImported(entry.name, autoImports))
+    .map(entry => ({ ...entry, from: resolver.resolve(`./${entry.from}`) }))
+  const app = kept(APP_IMPORTS[integration])
+  const server = kept(SERVER_IMPORTS[integration])
+  if (app.length > 0) addImports(app)
+  if (server.length > 0) addServerImports(server)
 }
 
-/** `addComponent` for everything an integration registers; the name is the export. */
-function registerComponents(resolver: Resolver, integration: Integration): void {
+/** `addComponent` for everything an integration registers that `autoImports` keeps; the name is the export. */
+function registerComponents(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
   for (const { name, from } of APP_COMPONENTS[integration]) {
+    if (!isAutoImported(name, autoImports)) continue
     addComponent({ name, filePath: resolver.resolve(`./${from}`), export: name })
   }
 }
@@ -549,16 +566,16 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
 /**
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
- * `${authRoute}/**` same-origin proxy, the opt-in `auth` route middleware, the
+ * `${authRoute}/**` same-origin proxy, the opt-in `convex-auth` route middleware, the
  * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
  * server helper.
  */
-function registerBetterAuth(resolver: Resolver, authRoute: string): void {
+function registerBetterAuth(resolver: Resolver, authRoute: string, autoImports: AutoImports): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
 
-  registerIntegrationImports(resolver, 'betterAuth')
-  registerComponents(resolver, 'betterAuth')
+  registerIntegrationImports(resolver, 'betterAuth', autoImports)
+  registerComponents(resolver, 'betterAuth', autoImports)
 
   addServerHandler({
     route: `${authRoute}/**`,
@@ -573,7 +590,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string): void {
     security: AUTH_PROXY_SECURITY_RULES,
   })
   addRouteMiddleware({
-    name: 'auth',
+    name: 'convex-auth',
     path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
     global: false,
   })
@@ -593,9 +610,9 @@ function registerBaseConvexClient(resolver: Resolver): void {
  * `provideConvexAuthFromClerk` composable and the `<ConvexProviderWithClerk>`
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
-function registerClerk(resolver: Resolver): void {
-  registerIntegrationImports(resolver, 'clerk')
-  registerComponents(resolver, 'clerk')
+function registerClerk(resolver: Resolver, autoImports: AutoImports): void {
+  registerIntegrationImports(resolver, 'clerk', autoImports)
+  registerComponents(resolver, 'clerk', autoImports)
 }
 
 /**
@@ -603,15 +620,15 @@ function registerClerk(resolver: Resolver): void {
  * `provideConvexAuthFromAuth0` composable and the `<ConvexProviderWithAuth0>`
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
-function registerAuth0(resolver: Resolver): void {
-  registerIntegrationImports(resolver, 'auth0')
-  registerComponents(resolver, 'auth0')
+function registerAuth0(resolver: Resolver, autoImports: AutoImports): void {
+  registerIntegrationImports(resolver, 'auth0', autoImports)
+  registerComponents(resolver, 'auth0', autoImports)
 }
 
 /**
  * Register the Polar billing components (`<CheckoutLink>` / `<CustomerPortalLink>`,
  * Vue ports of `@convex-dev/polar/react`) as global components.
  */
-function registerPolarComponents(resolver: Resolver): void {
-  registerComponents(resolver, 'polar')
+function registerPolarComponents(resolver: Resolver, autoImports: AutoImports): void {
+  registerComponents(resolver, 'polar', autoImports)
 }

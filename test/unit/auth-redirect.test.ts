@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { resolveAuthRedirect } from '../../src/runtime/better-auth/vue/redirect'
 
-// The `auth` middleware sends unauthenticated visitors to `?redirect=<path>`.
+// The `convex-auth` middleware sends unauthenticated visitors to `?redirect=<path>`.
 // The query is attacker-controllable, so a login page that navigates to it
 // verbatim is an open redirect — this is the guard that consumes it safely.
 
