@@ -21,6 +21,12 @@ export default defineNuxtConfig({
   extends: ['docus'],
   modules: [
     'nuxt-convex-module',
+    // Named here, ahead of Docus's modules, so nuxt-og-image finds it at
+    // setup: Nuxt UI pulls @nuxt/fonts in as a dependency, but dependencies
+    // install after every listed module, and og-image checks for the fonts
+    // module once, in its own setup — unlisted, it never reads the site's
+    // fonts and sets the social cards in its bundled Inter.
+    '@nuxt/fonts',
   ],
   // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
   // sized for a built site. Vite serves a page as hundreds of module
@@ -205,10 +211,14 @@ export default defineNuxtConfig({
     // rendered as Bai Jamjuree on production, 2026-09-15). `@font-face`
     // URLs carry no integrity, so without the preload the fonts load again.
     defaults: { preload: false },
+    // `global: true` on all three: nuxt-og-image reads font faces only from
+    // @nuxt/fonts' global sheet, and the social cards (app/components/OgImage)
+    // are set in the same three families as the page. Every page uses all
+    // three anyway, so the global sheet costs nothing.
     families: [
-      { name: 'Technor', provider: 'fontshare', weights: [600, 700] },
-      { name: 'Bai Jamjuree', provider: 'google', weights: [400, 500, 600, 700] },
-      { name: 'Kode Mono', provider: 'google', weights: [400, 600, 700] },
+      { name: 'Technor', provider: 'fontshare', weights: [600, 700], global: true },
+      { name: 'Bai Jamjuree', provider: 'google', weights: [400, 500, 600, 700], global: true },
+      { name: 'Kode Mono', provider: 'google', weights: [400, 600, 700], global: true },
     ],
   },
   // A two-icon house collection (`i-nc-*`) for the CTA arrows. Lucide — the
@@ -240,6 +250,13 @@ export default defineNuxtConfig({
   mcp: {
     name: 'nuxt-convex-module',
     description: 'Documentation for nuxt-convex-module: guides, components, recipes and the API reference.',
+  },
+  // Social cards (app/components/OgImage) at the 1.91:1 that Facebook,
+  // LinkedIn and Slack size their previews for; X crops 15px off the top
+  // and bottom of it, inside the cards' margins. Docus's own default is
+  // 1200x600 and it keeps `zeroRuntime` (cards render at build only).
+  ogImage: {
+    defaults: { width: 1200, height: 630 },
   },
   // Docus / Nuxt Content compile a SQLite WASM module in the browser (search +
   // client-side content queries). The nuxt-security CSP (the module registers
