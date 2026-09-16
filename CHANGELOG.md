@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.9.1...v0.10.0)
+
+### 🚀 Enhancements
+
+- ⚠️  Add the autoImports option and rename the auth middleware to convex-auth ([#49](https://github.com/qruto/nuxt-convex-module/pull/49))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Add the autoImports option and rename the auth middleware to convex-auth ([#49](https://github.com/qruto/nuxt-convex-module/pull/49))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.9.1
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.9.0...v0.9.1)
