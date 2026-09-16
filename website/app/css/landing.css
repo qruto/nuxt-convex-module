@@ -846,18 +846,30 @@ html.landing-snap-driven:has(.landing-panel) {
   stroke-width: calc(var(--mark-edge) * 1px); /* px on a path = user units */
   paint-order: stroke fill;
 }
+/* LIGHT WEARS THE MARKS' UNDERSIDE AT HALF STRENGTH (2026-09-16, "less
+   aggressive, less dirty on the light mode"). The words' shade, wall
+   and casts are cut for letters, and on the marks they are blurred to
+   a fifth of the words' softness (HeroBillet's CAST_CRISP): on the
+   light plate that hardened underside read as a dark smear tucked
+   under every lobe, and the opaque stroke at L×0.58 closed the ring.
+   Dark is untouched — there the same inks sit a step off the plate.
+   --mark-under scales the four underside floods' alpha, --mark-edge-l
+   is how far the lobes' stroke darkens their own hex. */
+.hero-billet-line { --mark-under: 0.5; --mark-edge-l: 0.74; }
+:root.dark .hero-billet-line { --mark-under: 1; --mark-edge-l: 0.58; }
 /* the wordmark: under the graphite ramp's baseline shade (0.335 light /
-   0.535 dark, the ramp block below) in the ramp's own hue — 0.1 under
-   since 2026-09-16, 0.065 before */
+   0.535 dark, the ramp block below) in the ramp's own hue — 0.035
+   under on the light plate since 2026-09-16 (0.1 before, and 0.065
+   before that), 0.115 under on dark, where the fill is lighter */
 .hero-billet-line .billet-ink .brand-word path {
-  --mark-edge-c: light-dark(oklch(0.235 0.008 255), oklch(0.42 0.012 255));
+  --mark-edge-c: light-dark(oklch(0.3 0.008 255), oklch(0.42 0.012 255));
 }
 /* the lobes: their own hex, darkened — chroma held so the line stays
    the lobe's colour and not a brown or a grey */
-.hero-billet-line .billet-ink path[fill="#F3B01C"] { --mark-edge-c: oklch(from #F3B01C calc(l * 0.58) c h); }
-.hero-billet-line .billet-ink path[fill="#8D2676"] { --mark-edge-c: oklch(from #8D2676 calc(l * 0.58) c h); }
-.hero-billet-line .billet-ink path[fill="#EE342F"] { --mark-edge-c: oklch(from #EE342F calc(l * 0.58) c h); }
-.hero-billet-line .billet-ink path[fill="#00DC82"] { --mark-edge-c: oklch(from #00DC82 calc(l * 0.58) c h); }
+.hero-billet-line .billet-ink path[fill="#F3B01C"] { --mark-edge-c: oklch(from #F3B01C calc(l * var(--mark-edge-l)) c h); }
+.hero-billet-line .billet-ink path[fill="#8D2676"] { --mark-edge-c: oklch(from #8D2676 calc(l * var(--mark-edge-l)) c h); }
+.hero-billet-line .billet-ink path[fill="#EE342F"] { --mark-edge-c: oklch(from #EE342F calc(l * var(--mark-edge-l)) c h); }
+.hero-billet-line .billet-ink path[fill="#00DC82"] { --mark-edge-c: oklch(from #00DC82 calc(l * var(--mark-edge-l)) c h); }
 /* THE CONVEX LOBES SIT A HAIR APART in the hero (2026-09-16: "move the
    icon's parts apart, the shadows almost hide the gap"). The kit draws
    the three lobes nearly touching, and once each one wears a wall and a
@@ -907,10 +919,11 @@ html.landing-snap-driven:has(.landing-panel) {
 :root.dark .hero-billet-line .billet-relief [data-ink="hi-soft"] {
   flood-color: color-mix(in oklab, var(--mark-word-light) calc(var(--highlight) * 0.4%), transparent);
 }
-.hero-billet-line .billet-relief [data-ink="lo"] { flood-color: var(--lo); }
-.hero-billet-line .billet-relief [data-ink="wall"] { flood-color: var(--wall); }
-.hero-billet-line .billet-relief [data-ink="lo-surf"] { flood-color: var(--lo-surf); }
-.hero-billet-line .billet-relief [data-ink="lo-cast"] { flood-color: var(--lo-cast); }
+/* the underside, scaled by --mark-under (the stroke block above) */
+.hero-billet-line .billet-relief [data-ink="lo"] { flood-color: color-mix(in oklab, var(--lo) calc(var(--mark-under) * 100%), transparent); }
+.hero-billet-line .billet-relief [data-ink="wall"] { flood-color: color-mix(in oklab, var(--wall) calc(var(--mark-under) * 100%), transparent); }
+.hero-billet-line .billet-relief [data-ink="lo-surf"] { flood-color: color-mix(in oklab, var(--lo-surf) calc(var(--mark-under) * 100%), transparent); }
+.hero-billet-line .billet-relief [data-ink="lo-cast"] { flood-color: color-mix(in oklab, var(--lo-cast) calc(var(--mark-under) * 100%), transparent); }
 /* -- THE GHOSTWRITE BAND ------------------------------------------
    A soft SILVER band sweeping the two dark wordmarks — the "82
    Ghostwrite" recipe's geometry, ported off a `background-clip: text`
