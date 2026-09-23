@@ -18,7 +18,7 @@ To run it locally instead, create a project from this directory and follow the
 two steps below inside it:
 
 ```sh
-pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/playground --packageManager pnpm --gitInit
+pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/playground
 ```
 
 ## Point it at your deployment

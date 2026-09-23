@@ -86,7 +86,7 @@ For something you can click around in, [`examples/playground`](examples/playgrou
 To start a new app from an example, run this command. Swap `minimal` for `playground` to start from the message board instead:
 
 ```bash
-pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/minimal --packageManager pnpm --gitInit
+pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/minimal
 ```
 
 ## Relationship to upstream

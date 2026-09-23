@@ -9,7 +9,7 @@ WebSocket, with a `useMutation` form — everything auto-imported by
 Create a project from this directory, then start it:
 
 ```sh
-pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/minimal --packageManager pnpm --gitInit
+pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/minimal
 cd my-app
 pnpm dev
 ```
