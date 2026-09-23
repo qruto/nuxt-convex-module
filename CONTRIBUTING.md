@@ -106,7 +106,11 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload.
+  repository root's — is what filters the upload. Each example also keeps its
+  own `pnpm-workspace.yaml` with `allowBuilds.esbuild: true`. pnpm 11+ fails
+  the install (`ERR_PNPM_IGNORED_BUILDS`) without that approval, and `nuxi init`
+  treats the failed install as a canceled scaffold. The root workspace file
+  does not travel with a subdirectory template.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
 visitor's own account. `examples/playground/.env.local` is the one env file this

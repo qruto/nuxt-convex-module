@@ -14,6 +14,13 @@ the npm release.
 The backend is yours. Nothing is hosted for you, and nothing needs to run Convex
 in the sandbox.
 
+To run it locally instead, create a project from this directory and follow the
+two steps below inside it:
+
+```sh
+pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/playground --packageManager pnpm --gitInit
+```
+
 ## Point it at your deployment
 
 **1. Add your deployment URL.** `.env.local` is already here, holding the one
