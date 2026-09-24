@@ -1,7 +1,7 @@
 // One `dev` script for both processes. `convex dev --start '<cmd>'` runs the
-// Convex dev deployment and starts `<cmd>` beside it, with `CONVEX_URL` /
-// `CONVEX_SITE_URL` in the child's environment — so `nuxt dev` started this
-// way finds the deployment with no `.env` at all. The module makes that the
+// Convex dev deployment, writes its URL to `.env.local`, and starts `<cmd>`
+// beside it — so `nuxt dev` started this way finds the deployment with no
+// `.env` at all (see `deploymentEnv` in options.ts). The module makes that the
 // default the first time it sees an app whose `dev` script is still the plain
 // Nuxt one; a script the app has already shaped is left alone. Off the module
 // entry for the same reason as options.ts: this is onboarding, not API.

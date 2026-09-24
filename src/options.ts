@@ -5,6 +5,7 @@
 import { isAbsolute, join } from 'node:path'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { parseEnv } from 'node:util'
 
 /**
  * Which opt-in integrations ended up enabled — returned by
@@ -274,4 +275,33 @@ export function resolveDeploymentUrls(
     url: stripTrailingSlashes(options.url || env.NUXT_PUBLIC_CONVEX_URL || env.CONVEX_URL || ''),
     siteUrl: stripTrailingSlashes(options.siteUrl || env.NUXT_PUBLIC_CONVEX_SITE_URL || env.CONVEX_SITE_URL || ''),
   }
+}
+
+/**
+ * The environment {@link resolveDeploymentUrls} reads: `env` itself, and in
+ * development the app's `.env.local` beneath it, so a variable already set
+ * wins. `npx convex dev` writes the deployment URL to `.env.local`, and Nuxt
+ * loads only `.env`. Vite and Next read `.env.local` on their own, which is how
+ * Convex's templates for them find the URL; this is that step for Nuxt.
+ *
+ * It matters most on the first `convex dev --start 'nuxt dev'`: the CLI passes
+ * Nuxt the environment it loaded from `.env.local` at startup, and on that
+ * first run the file did not exist yet. The CLI has written it by the time it
+ * starts Nuxt. A build reads only `env`, so the URL it bakes in is never one
+ * left over from local development.
+ */
+export function deploymentEnv(
+  rootDir: string,
+  env: Record<string, string | undefined>,
+  dev: boolean,
+): Record<string, string | undefined> {
+  if (!dev) return env
+  let local: Record<string, string | undefined>
+  try {
+    local = parseEnv(readFileSync(join(rootDir, '.env.local'), 'utf8'))
+  }
+  catch {
+    return env
+  }
+  return { ...local, ...env }
 }
