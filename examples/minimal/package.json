@@ -4,13 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "convex dev --start 'nuxt dev'",
     "build": "nuxt build",
+    "dev": "convex dev --start 'nuxt dev'",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "convex": "^1.45.0",
     "nuxt": "^4.5.2",
-    "nuxt-convex-module": "latest"
+    "nuxt-convex-module": "latest",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
   }
 }

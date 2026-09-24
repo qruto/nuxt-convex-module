@@ -32,7 +32,7 @@
 
     <p class="alt">
       Already have an app on that deployment? Point
-      <code>components/MessageBoard.vue</code> at your own functions instead —
+      <code>app/components/MessageBoard.vue</code> at your own functions instead —
       <code>api</code> is typed from <code>convex/_generated</code>, so your editor will
       autocomplete them.
     </p>
