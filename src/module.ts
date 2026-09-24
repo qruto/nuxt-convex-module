@@ -2,7 +2,7 @@ import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHa
 import { isAbsolute, join } from 'node:path'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { deploymentEnv, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
@@ -123,11 +123,11 @@ export interface ModuleOptions {
    * Run Convex beside Nuxt with one command. On the first `nuxt dev` (or
    * `nuxt prepare`) in an app whose `dev` script is still the plain
    * `nuxt dev`, the module rewrites it to `convex dev --start 'nuxt dev'`:
-   * the Convex CLI starts the dev deployment, starts Nuxt next to it, and
-   * hands it `CONVEX_URL` / `CONVEX_SITE_URL` in the environment — no `.env`
-   * needed for local development. A `dev` script you have already changed,
-   * or one that runs `convex dev` somewhere, is left alone. Set `false` to
-   * never touch `package.json`.
+   * the Convex CLI starts the dev deployment, writes its URL to `.env.local`
+   * and starts Nuxt next to it, and the module reads that file in
+   * development — no `.env` needed for local development. A `dev` script you
+   * have already changed, or one that runs `convex dev` somewhere, is left
+   * alone. Set `false` to never touch `package.json`.
    */
   devScript?: boolean
 }
@@ -349,14 +349,13 @@ function registerSecurity(resolver: Resolver): void {
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
 function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string } {
-  const resolved = resolveDeploymentUrls(options, process.env)
+  const resolved = resolveDeploymentUrls(options, deploymentEnv(nuxt.options.rootDir, process.env, nuxt.options.dev))
   const url = nuxt.options._prepare ? '' : resolved.url
 
   if (!url && !nuxt.options._prepare) {
     logger.warn(
-      'No Convex deployment URL configured. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config. '
-      + 'Note: `npx convex dev` writes CONVEX_URL to .env.local, which Nuxt does not read without '
-      + '`nuxt dev --dotenv .env.local`.',
+      'No Convex deployment URL configured. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config, '
+      + 'or run `npx convex dev`: it writes CONVEX_URL to .env.local, which the module reads in development.',
     )
   }
 
