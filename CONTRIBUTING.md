@@ -109,8 +109,10 @@ have a job beyond being documentation:
   repository root's — is what filters the upload. Each example also keeps its
   own `pnpm-workspace.yaml` with `allowBuilds.esbuild: true`. pnpm 11+ fails
   the install (`ERR_PNPM_IGNORED_BUILDS`) without that approval, and `nuxi init`
-  treats the failed install as a canceled scaffold. The root workspace file
-  does not travel with a subdirectory template.
+  treats the failed install as a canceled scaffold. The file also lists
+  `packages: ['.']`: StackBlitz runs a pnpm older than 10, which rejects a
+  workspace file without it. The root workspace file does not travel with a subdirectory
+  template.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
 visitor's own account, in Convex's cloud. Both `dev` scripts are the

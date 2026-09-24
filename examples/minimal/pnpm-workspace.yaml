@@ -8,6 +8,12 @@
 # and its module picker fails too — @nuxt/eslint pulls in unrs-resolver.
 # With the flag off, pnpm skips those scripts and lists them instead;
 # approve one with `pnpm approve-builds` when a package needs it.
+#
+# `packages` lists only this app. pnpm before 10, which StackBlitz runs,
+# refuses a workspace file without it (ERR_PNPM_INVALID_WORKSPACE_CONFIGURATION);
+# newer pnpm is unaffected.
+packages:
+  - .
 allowBuilds:
   esbuild: true
 strictDepBuilds: false
