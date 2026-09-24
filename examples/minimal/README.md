@@ -48,9 +48,13 @@ yarn dev
 bun run dev
 ```
 
-`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI creates or attaches
-your dev deployment, pushes the functions in `convex/`, saves the deployment URL
-to `.env.local` and starts Nuxt beside it.
+`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI logs you in, creates
+or attaches your dev deployment, pushes the functions in `convex/`, saves the
+deployment URL to `.env.local` and starts Nuxt beside it.
+
+The deployment runs in Convex's cloud. `CONVEX_ALLOW_ANONYMOUS=false` in the
+script turns off the CLI's *Start without an account* option, which would run
+the Convex backend as a program on your machine.
 
 Open the page in two tabs: the messages are in the server-rendered HTML and
 update live in both.

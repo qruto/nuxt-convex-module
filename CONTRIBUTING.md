@@ -113,11 +113,12 @@ have a job beyond being documentation:
   does not travel with a subdirectory template.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
-visitor's own account. Both `dev` scripts are the `convex dev --start 'nuxt dev'`
-the module writes into a new app, and that runs in StackBlitz too: the Convex CLI
-asks the visitor to log in and paste a token. The playground's `.stackblitzrc`
-sets `CONVEX_ALLOW_ANONYMOUS=false`, because the CLI's no-account option runs
-Convex's backend as a native program, which a WebContainer cannot run.
+visitor's own account, in Convex's cloud. Both `dev` scripts are the
+`convex dev --start 'nuxt dev'` the module writes into a new app, prefixed with
+`CONVEX_ALLOW_ANONYMOUS=false`: that turns off the CLI's no-account option, which
+runs the Convex backend as a native program on the visitor's machine. The same
+script runs in StackBlitz, where the CLI asks the visitor to log in and paste a
+token.
 
 ## Submitting Changes
 
