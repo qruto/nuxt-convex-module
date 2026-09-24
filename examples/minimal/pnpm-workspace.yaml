@@ -1,0 +1,10 @@
+# Settings for this app when it is installed on its own — `nuxi init` clones
+# this directory, and the repository root's pnpm-workspace.yaml does not
+# come along.
+#
+# pnpm 11+ exits non-zero when a dependency has a lifecycle script that is
+# not listed here (`strictDepBuilds`, on by default). esbuild is the one
+# this Nuxt tree needs; without the approval, `pnpm install` fails and
+# `nuxi init` cancels the scaffold.
+allowBuilds:
+  esbuild: true
