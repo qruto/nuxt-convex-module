@@ -57,7 +57,7 @@ npm run convex
 ```
 
 If you would rather use functions your deployment already has, edit
-`components/MessageBoard.vue` to call them instead. `api` is typed from
+`app/components/MessageBoard.vue` to call them instead. `api` is typed from
 `convex/_generated`, so your editor autocompletes whatever is there — `nuxt
 prepare` runs on install, so that works straight away.
 

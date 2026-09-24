@@ -2,10 +2,29 @@
 # (only `node_modules` and `.git` are excluded unconditionally), so anything
 # that must not ship to the sandbox has to be listed here, not just in the
 # repository root .gitignore.
-node_modules
-.nuxt
+
+# Nuxt dev/build outputs
 .output
 .data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# The Convex CLI's local deployment state. It ignores itself with a
+# .gitignore inside, which pkg.pr.new does not read.
 .convex
 
 # Every env file except the `.env.local` this app ships with. That one is
