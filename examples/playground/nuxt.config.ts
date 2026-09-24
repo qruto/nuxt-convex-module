@@ -1,3 +1,5 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+
 // The dependency range for the module, read straight off this app's
 // package.json. On a preview build pkg.pr.new rewrites it to
 // `https://pkg.pr.new/qruto/nuxt-convex-module@<sha>` before publishing the
@@ -6,9 +8,8 @@
 import { dependencies } from './package.json'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
   modules: ['nuxt-convex-module'],
+  devtools: { enabled: true },
 
   // No `convex` block on purpose: the module reads `NUXT_PUBLIC_CONVEX_URL` and
   // the `CONVEX_URL` that `npx convex dev` writes, so pointing this app at a
@@ -27,4 +28,6 @@ export default defineNuxtConfig({
       moduleSpec: dependencies['nuxt-convex-module'],
     },
   },
+
+  compatibilityDate: '2025-07-15',
 })
