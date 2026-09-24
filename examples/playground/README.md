@@ -55,10 +55,15 @@ yarn dev
 bun run dev
 ```
 
-`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI creates or attaches
-your dev deployment, pushes this app's functions, saves the deployment URL to
-`.env.local` and starts Nuxt beside it. The functions are `convex/schema.ts` and
-`convex/messages.ts`: a `messages` table, a `list` query and a `send` mutation.
+`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI logs you in, creates
+or attaches your dev deployment, pushes this app's functions, saves the
+deployment URL to `.env.local` and starts Nuxt beside it. The functions are
+`convex/schema.ts` and `convex/messages.ts`: a `messages` table, a `list` query
+and a `send` mutation.
+
+The deployment runs in Convex's cloud. `CONVEX_ALLOW_ANONYMOUS=false` in the
+script turns off the CLI's *Start without an account* option, which would run
+the Convex backend as a program on your machine.
 
 ### In StackBlitz
 
@@ -67,11 +72,6 @@ link it prints, log in, and paste the token back into the terminal. It keeps the
 token in `~/.convex` inside the sandbox, outside the project files. Then create a
 new project for the playground: `convex dev` replaces every function on the
 deployment it pushes to, so an existing project would lose its own.
-
-`.stackblitzrc` sets `CONVEX_ALLOW_ANONYMOUS=false`, which removes the CLI's
-*Start without an account* option in the sandbox. That option runs Convex's
-backend as a native program, and a StackBlitz sandbox runs only JavaScript and
-WebAssembly.
 
 ## Production
 
