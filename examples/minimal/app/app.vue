@@ -1,14 +1,11 @@
 <template>
   <NuxtRouteAnnouncer />
-  <main style="max-width: 40rem; margin: 2rem auto; font-family: sans-serif">
+  <main style="max-width: 40rem; margin: 2rem auto; padding: 0 1rem">
+    <img src="/logo.svg" alt="Nuxt Convex" width="48" height="40">
     <h1>Nuxt ✕ Convex</h1>
 
     <form style="display: flex; gap: 0.5rem" @submit.prevent="submit">
-      <input
-        v-model="draft"
-        placeholder="Say something…"
-        style="flex: 1; padding: 0.5rem"
-      >
+      <input v-model="draft" placeholder="Say something…" style="flex: 1">
       <button type="submit">Send</button>
     </form>
 

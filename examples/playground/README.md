@@ -1,9 +1,21 @@
 # Nuxt Convex Playground
 
-A small live message board built with [`nuxt-convex-module`](https://nuxt-convex-module.dev).
-It is rendered on the server with `useAsyncQuery`, updates over a WebSocket,
-writes through `useMutation`, and shows a connection pill driven by
-`useConvexConnectionState`. Everything is auto-imported.
+One page that runs every core feature of
+[`nuxt-convex-module`](https://nuxt-convex-module.dev), one click each, in the
+website's design:
+
+| Card | Composables | Try |
+|---|---|---|
+| live queries | `useQueries` | Totals from the other cards update as you click. |
+| mutations | `useMutation`, `.withOptimisticUpdate`, `useQuery` | Click +1 with *optimistic* on and off. |
+| cursor pagination | `usePaginatedQuery`, `insertAtTop` | Tap an emoji to post; reload, then *Load 4 more*. |
+| file storage | `useUpload`, `<ConvexImage>` | Upload an image drawn in the browser, or pick one. |
+| actions | `useAction` | Roll a die on the server; the roll lands in the feed. |
+| server & ssr | `useAsyncQuery`, `fetchQuery` | View source for the rendered number; call a Nitro route. |
+
+The bar above the cards shows `useConvexConnectionState`: whether the socket is
+open and how many mutations and actions are waiting. *Reset data* clears
+everything. Everything is auto-imported.
 
 This is also the app behind the **Open in StackBlitz** link on every pull
 request. It wires that pull request's build of the module into a real Nuxt app,
@@ -58,9 +70,9 @@ bun run dev
 
 `dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI logs you in, creates
 or attaches your dev deployment, pushes this app's functions, saves the
-deployment URL to `.env.local` and starts Nuxt beside it. The functions are
-`convex/schema.ts` and `convex/messages.ts`: a `messages` table, a `list` query
-and a `send` mutation.
+deployment URL to `.env.local` and starts Nuxt beside it. Each card's functions
+have their own file in `convex/`, and `server/api/totals.get.ts` is the Nitro
+route.
 
 The deployment runs in Convex's cloud. `CONVEX_ALLOW_ANONYMOUS=false` in the
 script turns off the CLI's *Start without an account* option, which would run
@@ -86,7 +98,7 @@ build of the module. To run it against a Convex deployment of your own:
 2. When the terminal asks for a development deploy key, paste yours and press
    Enter.
 3. The Convex CLI pushes the functions and starts Nuxt, and the preview shows the
-   message board.
+   playground.
 
 The key reaches only that one deployment, and it lives only in the terminal
 process: nothing is saved in the sandbox. To cut off access, delete the key in
@@ -133,16 +145,13 @@ in `NUXT_PUBLIC_CONVEX_URL`, and push the functions to that deployment with
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
-## What to try
+## What else to try
 
-- Open the page in two tabs and send a message: both update without a refresh.
-- View source: the messages are in the server-rendered HTML, not fetched after
-  hydration.
-- Take the deployment offline; the pill drops to `connecting` and recovers on its
-  own. Send a message while it is down: the button holds at *Sending…* because
-  the mutation is still outstanding, and it lands once the socket is back.
-- Add a field to `convex/schema.ts` and a function to `convex/messages.ts`: the
-  running `dev` pushes them, the codegen refreshes, and the new function is typed
+- Open the page in two tabs: every card updates in both.
+- Go offline for a moment and click +1: the bar counts the mutation in flight,
+  and it lands once the socket is back.
+- Add a field to `convex/schema.ts` or a function to a file in `convex/`: the
+  running `dev` pushes it, the codegen refreshes, and the new function is typed
   at the call site immediately.
 
 ## Relationship to the minimal starter

@@ -8,7 +8,11 @@
  * @module
  */
 
-import type * as messages from "../messages.js";
+import type * as counters from "../counters.js";
+import type * as dice from "../dice.js";
+import type * as files from "../files.js";
+import type * as playground from "../playground.js";
+import type * as posts from "../posts.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +21,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  messages: typeof messages;
+  counters: typeof counters;
+  dice: typeof dice;
+  files: typeof files;
+  playground: typeof playground;
+  posts: typeof posts;
 }>;
 
 /**

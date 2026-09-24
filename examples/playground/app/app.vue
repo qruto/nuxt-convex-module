@@ -1,90 +1,98 @@
 <script setup lang="ts">
-// Nothing Convex-flavoured runs in this component, on purpose. `useMutation`
-// and `useConvexConnectionState` throw synchronously inside `setup()` when no
-// client has been provided — and the module provides none until a deployment
-// URL is configured. So the guard has to sit on a child component that is never
-// instantiated before there is a URL, rather than on a branch inside one setup.
+// Nothing Convex-flavoured runs in this component, on purpose. The module
+// provides no client until a deployment URL is configured, and every Convex
+// composable throws inside `setup()` without one. So the demos sit in a child
+// component that is never created before there is a URL.
 const configured = computed(() => Boolean(useRuntimeConfig().public.convex.url))
-
-useHead({
-  title: 'Nuxt ✕ Convex playground',
-  htmlAttrs: { lang: 'en' },
-})
 </script>
 
 <template>
   <NuxtRouteAnnouncer />
-  <main class="app">
-    <header class="head">
-      <h1>Nuxt <span aria-hidden="true">✕</span> Convex</h1>
+  <div class="page">
+    <header class="header">
+      <a class="brand" href="https://nuxt-convex-module.dev">
+        <img src="/logo.svg" alt="" width="36" height="30">
+        <span>nuxt-convex-module</span>
+      </a>
       <BuildBadge />
     </header>
 
-    <ConvexSetup v-if="!configured" />
-    <MessageBoard v-else />
-  </main>
+    <main>
+      <section class="intro">
+        <h1>Playground</h1>
+        <p>
+          Each card runs one part of the module against your Convex deployment. Open this page in
+          a second tab: every number and list updates in both.
+        </p>
+      </section>
+
+      <DemoBoard v-if="configured" />
+      <ConvexSetup v-else />
+    </main>
+
+    <footer class="footer">
+      <a href="https://nuxt-convex-module.dev">Documentation</a>
+      <a href="https://github.com/qruto/nuxt-convex-module">GitHub</a>
+      <a href="https://dashboard.convex.dev">Convex dashboard</a>
+    </footer>
+  </div>
 </template>
 
-<style>
-:root {
-  color-scheme: light dark;
-  --ground: #fff;
-  --ink: #14171a;
-  --muted: #5c6773;
-  --line: #e3e7ec;
-  --raised: #f6f8fa;
-  --accent: #ee342f;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ground: #14171a;
-    --ink: #eef1f4;
-    --muted: #96a1ad;
-    --line: #262c33;
-    --raised: #1b2026;
-  }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--ground);
-  color: var(--ink);
-  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-code,
-kbd {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.9em;
-}
-
-.app {
-  max-width: 44rem;
+<style scoped>
+.page {
+  max-width: 64rem;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
+  padding: 1.25rem 1rem 3rem;
 }
 
-.head {
+.header {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  align-items: baseline;
+  gap: 0.75rem 1rem;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
 }
 
-.head h1 {
-  margin: 0;
-  font-size: 1.4rem;
+.brand {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--text-strong);
+  font: 600 0.95rem var(--font-mono);
+  text-decoration: none;
+}
+
+.intro {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 40rem;
+  margin: 2.5rem 0 1.75rem;
+}
+
+.intro h1 {
+  font-size: clamp(2.25rem, 7vw, 3.5rem);
+  line-height: 1;
   letter-spacing: -0.01em;
 }
 
-.head h1 span {
+.intro p {
+  color: var(--text-muted);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 3rem;
+  font: 0.8rem var(--font-mono);
+}
+
+.footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer a:hover {
   color: var(--accent);
 }
 </style>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Which build of the module this app is actually running. On a pkg.pr.new
-// preview the dependency range is a URL ending in the commit SHA, so a reviewer
-// who opened this from a pull request comment can confirm at a glance that they
-// are exercising that commit and not the published release.
+// Which build of the module this app is running. On a pkg.pr.new preview the
+// dependency range is a URL ending in the commit SHA, so a reviewer who opened
+// this from a pull request comment can confirm they are testing that commit
+// and not the published release.
 const spec = computed(() => String(useRuntimeConfig().public.moduleSpec ?? ''))
 
 const preview = computed(() => {
@@ -12,34 +12,24 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <p class="build">
-    <code>nuxt-convex-module</code>
-    <a v-if="preview" :href="preview.url" class="tag preview">preview {{ preview.sha }}</a>
-    <span v-else class="tag">{{ spec || 'unknown' }}</span>
-  </p>
+  <a v-if="preview" :href="preview.url" class="badge concave preview">preview {{ preview.sha }}</a>
+  <span v-else class="badge concave">{{ spec || 'unknown' }}</span>
 </template>
 
 <style scoped>
-.build {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.tag {
-  padding: 0.1rem 0.45rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--raised);
-  color: inherit;
+.badge {
+  max-width: min(100%, 24rem);
+  overflow: hidden;
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.5rem;
+  color: var(--text-muted);
+  font: 0.75rem var(--font-mono);
   text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preview {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
   color: var(--accent);
 }
 </style>
