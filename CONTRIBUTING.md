@@ -113,10 +113,11 @@ have a job beyond being documentation:
   does not travel with a subdirectory template.
 
 Neither connects to a shared backend; both talk to a Convex deployment on the
-visitor's own account. `examples/playground/.env.local` is the one env file this
-repository commits — it ships with the sandbox holding a single commented
-`CONVEX_URL`, so the only setup left is uncommenting it. Whatever you or the
-Convex CLI put there is yours; check `git diff` before committing it back.
+visitor's own account. Both `dev` scripts are the `convex dev --start 'nuxt dev'`
+the module writes into a new app, and that runs in StackBlitz too: the Convex CLI
+asks the visitor to log in and paste a token. The playground's `.stackblitzrc`
+sets `CONVEX_ALLOW_ANONYMOUS=false`, because the CLI's no-account option runs
+Convex's backend as a native program, which a WebContainer cannot run.
 
 ## Submitting Changes
 

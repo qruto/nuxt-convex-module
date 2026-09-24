@@ -1,40 +1,19 @@
 <template>
   <section class="setup">
-    <h2>Point this at your Convex deployment</h2>
+    <h2>Connect a Convex deployment</h2>
     <p>
-      The app above is already wired to the build being reviewed. What it doesn't have is a
-      backend — it uses <strong>yours</strong>. Nothing is hosted for you, and nothing needs
-      to run Convex in this sandbox.
+      This app has no deployment URL yet. It runs against a Convex deployment of
+      <strong>yours</strong>; nothing is hosted for you.
     </p>
-
-    <ol>
-      <li>
-        <p>
-          Open <code>.env.local</code> — already in the file tree, waiting on one value —
-          and uncomment its one line, with your deployment URL in place of the example:
-        </p>
-        <pre><code>CONVEX_URL=https://your-deployment.convex.cloud</code></pre>
-        <p class="note">
-          The dev server watches that file, so this page becomes the live demo as soon as you
-          save it — nothing to restart.
-        </p>
-      </li>
-      <li>
-        <p>
-          Make sure that deployment has this app's two functions: a <code>messages</code>
-          table with a <code>list</code> query and a <code>send</code> mutation. They are
-          <code>convex/schema.ts</code> and <code>convex/messages.ts</code> in the file tree —
-          about twenty lines together. Push them from wherever you already run Convex:
-        </p>
-        <pre><code>npx convex deploy</code></pre>
-      </li>
-    </ol>
-
+    <p>
+      Start it with <code>npm run dev</code>. That runs <code>convex dev</code>, which logs you
+      in, creates a dev deployment, pushes this app's functions from <code>convex/</code> and
+      starts Nuxt beside it.
+    </p>
+    <pre><code>npm run dev</code></pre>
     <p class="alt">
-      Already have an app on that deployment? Point
-      <code>app/components/MessageBoard.vue</code> at your own functions instead —
-      <code>api</code> is typed from <code>convex/_generated</code>, so your editor will
-      autocomplete them.
+      Serving a build? Set <code>NUXT_PUBLIC_CONVEX_URL</code> to your deployment URL where it
+      runs.
     </p>
   </section>
 </template>
@@ -52,15 +31,6 @@ h2 {
   font-size: 1.05rem;
 }
 
-ol {
-  margin: 1.25rem 0;
-  padding-left: 1.25rem;
-}
-
-li + li {
-  margin-top: 1.25rem;
-}
-
 p {
   margin: 0.5rem 0;
 }
@@ -72,11 +42,6 @@ pre {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--ground);
-}
-
-.note {
-  color: var(--muted);
-  font-size: 0.88rem;
 }
 
 .alt {
