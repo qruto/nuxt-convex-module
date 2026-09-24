@@ -9,7 +9,7 @@ This is also the app behind the **Open in StackBlitz** link on every pull
 request. It wires that pull request's build of the module into a real Nuxt app,
 and the badge in the header shows which build is installed, so you can confirm
 you are exercising that commit rather than the npm release. The backend is
-yours: nothing is hosted for you, and nothing runs Convex in the sandbox.
+yours: nothing is hosted for you.
 
 Look at the [nuxt-convex-module documentation](https://nuxt-convex-module.dev) to learn more.
 
@@ -37,40 +37,9 @@ yarn install
 bun install
 ```
 
-Then point the app at a Convex deployment of your own.
-
-**1. Add your deployment URL.** `.env.local` is already here, holding the one
-line this app needs. Uncomment it and put your URL in place of the example:
-
-```sh
-CONVEX_URL=https://your-deployment.convex.cloud
-```
-
-Two details there are deliberate. The line is *commented out* rather than left
-empty, because a variable that is defined but empty when the dev server starts
-stays empty for the life of that process: dotenv does not overwrite a variable
-that already exists. And the name is *unprefixed*, because
-`NUXT_PUBLIC_CONVEX_URL` is Nuxt's runtime override: an empty one would still be
-defined, and Nitro would blank the URL back out at request time. Given a real
-URL it wins, which is how you point a deployed build at a deployment. The module
-reads both names, so `nuxt.config.ts` has no URL line.
-
-**2. Give that deployment this app's functions.** They are `convex/schema.ts`
-and `convex/messages.ts`: a `messages` table, a `list` query and a `send`
-mutation. `npm run convex` pushes them to your dev deployment and writes its URL
-into `.env.local` in one go:
-
-```sh
-npm run convex
-```
-
-To use functions your deployment already has instead, edit
-`app/components/MessageBoard.vue` to call them. `api` is typed from
-`convex/_generated`, so your editor autocompletes whatever is there.
-
 ## Development Server
 
-Start the development server on `http://localhost:3000`:
+Start Convex and the development server on `http://localhost:3000`:
 
 ```bash
 # npm
@@ -86,9 +55,23 @@ yarn dev
 bun run dev
 ```
 
-`dev` is `nuxt dev --dotenv .env.local`, which both loads *and watches* that
-file, so the page turns from its setup panel into the live demo the moment you
-save it. Nuxt does not read `.env.local` without that flag.
+`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI creates or attaches
+your dev deployment, pushes this app's functions, saves the deployment URL to
+`.env.local` and starts Nuxt beside it. The functions are `convex/schema.ts` and
+`convex/messages.ts`: a `messages` table, a `list` query and a `send` mutation.
+
+### In StackBlitz
+
+The sandbox runs the same script. The Convex CLI asks you to log in: open the
+link it prints, log in, and paste the token back into the terminal. It keeps the
+token in `~/.convex` inside the sandbox, outside the project files. Then create a
+new project for the playground: `convex dev` replaces every function on the
+deployment it pushes to, so an existing project would lose its own.
+
+`.stackblitzrc` sets `CONVEX_ALLOW_ANONYMOUS=false`, which removes the CLI's
+*Start without an account* option in the sandbox. That option runs Convex's
+backend as a native program, and a StackBlitz sandbox runs only JavaScript and
+WebAssembly.
 
 ## Production
 
@@ -138,9 +121,9 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 - Take the deployment offline; the pill drops to `connecting` and recovers on its
   own. Send a message while it is down: the button holds at *Sending…* because
   the mutation is still outstanding, and it lands once the socket is back.
-- Add a field to `convex/schema.ts` and a function to `convex/messages.ts`, then
-  run `npm run convex` if you are running this locally: the codegen refreshes and
-  the new function is typed at the call site immediately.
+- Add a field to `convex/schema.ts` and a function to `convex/messages.ts`: the
+  running `dev` pushes them, the codegen refreshes, and the new function is typed
+  at the call site immediately.
 
 ## Relationship to the minimal starter
 

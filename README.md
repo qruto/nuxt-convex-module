@@ -81,7 +81,7 @@ const send = useMutation(api.messages.send)
 
 A runnable version lives in [`examples/minimal`](examples/minimal) — or open it directly in [StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/minimal).
 
-For something you can click around in, [`examples/playground`](examples/playground) is a live message board covering the same ground plus mutations and connection state — [open it in StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/playground). It's also what the **Open in StackBlitz** link on every pull request opens, with that commit's build already wired in, so a change can be tried in a real Nuxt app without setting one up. Both examples run against a Convex deployment of your own — add `NUXT_PUBLIC_CONVEX_URL` and you're live.
+For something you can click around in, [`examples/playground`](examples/playground) is a live message board covering the same ground plus mutations and connection state — [open it in StackBlitz](https://stackblitz.com/github/qruto/nuxt-convex-module/tree/main/examples/playground). It's also what the **Open in StackBlitz** link on every pull request opens, with that commit's build already wired in, so a change can be tried in a real Nuxt app without setting one up. Both examples run against a Convex deployment of your own: `pnpm dev` starts Convex, which logs you in and pushes the example's functions.
 
 To start a new app from an example, run this command. Swap `minimal` for `playground` to start from the message board instead:
 
