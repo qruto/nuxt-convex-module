@@ -2,9 +2,12 @@
 # this directory, and the repository root's pnpm-workspace.yaml does not
 # come along.
 #
-# pnpm 11+ exits non-zero when a dependency has a lifecycle script that is
-# not listed here (`strictDepBuilds`, on by default). esbuild is the one
-# this Nuxt tree needs; without the approval, `pnpm install` fails and
-# `nuxi init` cancels the scaffold.
+# esbuild's build script is the one this Nuxt tree needs, so it is approved.
+# pnpm 11+ fails an install on any other unapproved build script
+# (`strictDepBuilds`, on by default); `nuxi init` then cancels the scaffold,
+# and its module picker fails too — @nuxt/eslint pulls in unrs-resolver.
+# With the flag off, pnpm skips those scripts and lists them instead;
+# approve one with `pnpm approve-builds` when a package needs it.
 allowBuilds:
   esbuild: true
+strictDepBuilds: false
