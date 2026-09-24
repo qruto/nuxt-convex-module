@@ -67,11 +67,31 @@ the Convex backend as a program on your machine.
 
 ### In StackBlitz
 
-The sandbox runs the same script. The Convex CLI asks you to log in: open the
-link it prints, log in, and paste the token back into the terminal. It keeps the
-token in `~/.convex` inside the sandbox, outside the project files. Then create a
-new project for the playground: `convex dev` replaces every function on the
-deployment it pushes to, so an existing project would lose its own.
+The sandbox runs the same script, and the Convex CLI asks you to log in. A
+deploy key is safer to hand a sandbox than your login: it reaches one
+deployment, not your whole account, and you can revoke it the moment you are
+done.
+
+1. In the [Convex dashboard](https://dashboard.convex.dev), create a project for
+   the playground. `convex dev` replaces every function on the deployment it
+   pushes to, so an existing project would lose its own.
+2. On its dev deployment's settings page, generate a development deploy key.
+3. In the sandbox terminal, stop `dev` with Ctrl+C and start it with the key:
+
+   ```sh
+   export CONVEX_DEPLOY_KEY='dev:…'
+   pnpm dev
+   ```
+
+   The key stays in that terminal's memory. The CLI writes only the deployment
+   name and URLs to `.env.local`.
+4. When you are done, revoke the key in the dashboard.
+
+If you log in instead, the CLI asks you to open https://dashboard.convex.dev/auth,
+log in and paste the token it shows. It then creates a personal access token
+for your account and saves it to `~/.convex/config.json` in the sandbox. When you
+are done, run `npx convex logout` to delete that file, and revoke the token on
+your [profile page](https://dashboard.convex.dev/profile).
 
 ## Production
 
