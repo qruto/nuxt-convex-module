@@ -118,9 +118,12 @@ Neither connects to a shared backend; both talk to a Convex deployment on the
 visitor's own account, in Convex's cloud. Both `dev` scripts are the
 `convex dev --start 'nuxt dev'` the module writes into a new app, prefixed with
 `CONVEX_ALLOW_ANONYMOUS=false`: that turns off the CLI's no-account option, which
-runs the Convex backend as a native program on the visitor's machine. The same
-script runs in StackBlitz, where the CLI asks the visitor to log in and paste a
-token.
+runs the Convex backend as a native program on the visitor's machine. In
+StackBlitz, the playground's `.stackblitzrc` starts `.stackblitz/start.mjs`
+instead: it asks for a development deploy key and runs `dev` with it, so a
+reviewer never logs in to their Convex account from the sandbox. The steps are
+in the playground README, under
+[In StackBlitz](./examples/playground/README.md#in-stackblitz).
 
 ## Submitting Changes
 

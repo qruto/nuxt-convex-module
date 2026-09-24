@@ -9,7 +9,8 @@ This is also the app behind the **Open in StackBlitz** link on every pull
 request. It wires that pull request's build of the module into a real Nuxt app,
 and the badge in the header shows which build is installed, so you can confirm
 you are exercising that commit rather than the npm release. The backend is
-yours: nothing is hosted for you.
+yours: nothing is hosted for you. [In StackBlitz](#in-stackblitz) shows how to
+connect it.
 
 Look at the [nuxt-convex-module documentation](https://nuxt-convex-module.dev) to learn more.
 
@@ -67,31 +68,30 @@ the Convex backend as a program on your machine.
 
 ### In StackBlitz
 
-The sandbox runs the same script, and the Convex CLI asks you to log in. A
-deploy key is safer to hand a sandbox than your login: it reaches one
-deployment, not your whole account, and you can revoke it the moment you are
-done.
+Every pull request's pkg.pr.new comment links this app with that pull request's
+build of the module. To run it against a Convex deployment of your own:
+
+**Once: create a deploy key**
 
 1. In the [Convex dashboard](https://dashboard.convex.dev), create a project for
-   the playground. `convex dev` replaces every function on the deployment it
-   pushes to, so an existing project would lose its own.
-2. On its dev deployment's settings page, generate a development deploy key.
-3. In the sandbox terminal, stop `dev` with Ctrl+C and start it with the key:
+   this playground only. Each run pushes the playground's functions to it and
+   replaces the functions already there.
+2. Open the project's dev deployment settings, find **Deploy keys** and click
+   **Generate a deploy key**. The key starts with `dev:`. Keep it, for example
+   in your password manager, and reuse it on every pull request.
 
-   ```sh
-   export CONVEX_DEPLOY_KEY='dev:…'
-   pnpm dev
-   ```
+**On each pull request**
 
-   The key stays in that terminal's memory. The CLI writes only the deployment
-   name and URLs to `.env.local`.
-4. When you are done, revoke the key in the dashboard.
+1. Click **Open in StackBlitz** in the pull request's pkg.pr.new comment.
+2. When the terminal asks for a development deploy key, paste yours and press
+   Enter.
+3. The Convex CLI pushes the functions and starts Nuxt, and the preview shows the
+   message board.
 
-If you log in instead, the CLI asks you to open https://dashboard.convex.dev/auth,
-log in and paste the token it shows. It then creates a personal access token
-for your account and saves it to `~/.convex/config.json` in the sandbox. When you
-are done, run `npx convex logout` to delete that file, and revoke the token on
-your [profile page](https://dashboard.convex.dev/profile).
+The key reaches only that one deployment, and it lives only in the terminal
+process: nothing is saved in the sandbox. To cut off access, delete the key in
+the dashboard. If the key is wrong, run `node .stackblitz/start.mjs` to paste
+another.
 
 ## Production
 
