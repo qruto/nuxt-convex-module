@@ -1,4 +1,5 @@
 <template>
+  <NuxtRouteAnnouncer />
   <main style="max-width: 40rem; margin: 2rem auto; font-family: sans-serif">
     <h1>Nuxt ✕ Convex</h1>
 

@@ -1,8 +1,7 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module-playground",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --dotenv .env.local",

@@ -13,6 +13,7 @@ useHead({
 </script>
 
 <template>
+  <NuxtRouteAnnouncer />
   <main class="app">
     <header class="head">
       <h1>Nuxt <span aria-hidden="true">✕</span> Convex</h1>
