@@ -77,8 +77,9 @@ Then open the website, launch Nuxt DevTools in the browser, and pick the Convex 
 ```
 src/                  # Module source (Nuxt module + Convex component)
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
-examples/             # Standalone consumer apps — the only code here that
-                      # installs the published package instead of using src/
+templates/starter/    # The starter `create nuxt` copies — with examples/,
+examples/             # the only code here that installs the published
+                      # package instead of using src/
 test/                 # Vitest unit & integration tests
 website/              # Nuxt app: product homepage · docs (Docus) with live Convex demos
 .agents/skills/       # Agent skills — one committed copy, read by most agents directly
@@ -90,15 +91,17 @@ Both skill directories are committed, so a fresh clone works with no setup. `npx
 apart or a skill's file is not named exactly `SKILL.md`. Deliberately not in CI — nothing about
 it reaches a consumer.
 
-`examples/` sits outside the pnpm workspace and outside ESLint, the root
-`tsconfig.json` and fallow — each app has its own `package.json` and committed
-`convex/_generated`, so treating them as workspace source would be wrong. Both
-have a job beyond being documentation:
+`templates/` and `examples/` sit outside the pnpm workspace and outside ESLint,
+the root `tsconfig.json` and fallow — each app has its own `package.json` and
+committed `convex/_generated`, so treating them as workspace source would be
+wrong. Both apps have a job beyond being documentation:
 
-- **[`examples/minimal/`](./examples/minimal)** — the smallest thing that works.
-  The `pack` CI job copies it, installs the packed tarball with plain `npm`, and
-  builds it: the only place a registry-shaped install (lifecycle scripts,
-  engines, export maps) is exercised at all.
+- **[`templates/starter/`](./templates/starter)** — the unbranded app a new user
+  creates with `create nuxt`: the official Nuxt starter plus the module and one
+  table. Keep it that small and free of this repository's concerns. The `pack`
+  CI job copies it, installs the packed tarball with plain `npm`, and builds it:
+  the only place a registry-shaped install (lifecycle scripts, engines, export
+  maps) is exercised at all.
 - **[`examples/playground/`](./examples/playground)** — the app behind the
   **Open in StackBlitz** link on every pull request. `preview.yml` hands it to
   pkg.pr.new as `--template`, and pkg.pr.new rewrites its `nuxt-convex-module`
@@ -106,24 +109,24 @@ have a job beyond being documentation:
   real Nuxt app from the PR comment. StackBlitz receives the directory
   standalone, so it must stay self-contained: no `catalog:` or `workspace:`
   ranges, no committed lockfile, and `examples/playground/.gitignore` — not the
-  repository root's — is what filters the upload. Each example also keeps its
-  own `pnpm-workspace.yaml` with `allowBuilds.esbuild: true`. pnpm 11+ fails
-  the install (`ERR_PNPM_IGNORED_BUILDS`) without that approval, and `nuxi init`
-  treats the failed install as a canceled scaffold. The file also lists
-  `packages: ['.']`: StackBlitz runs a pnpm older than 10, which rejects a
-  workspace file without it. The root workspace file does not travel with a subdirectory
-  template.
+  repository root's — is what filters the upload. The root workspace file does
+  not travel with a subdirectory template.
 
-Neither connects to a shared backend; both talk to a Convex deployment on the
-visitor's own account, in Convex's cloud. Both `dev` scripts are the
-`convex dev --start 'nuxt dev'` the module writes into a new app, prefixed with
-`CONVEX_ALLOW_ANONYMOUS=false`: that turns off the CLI's no-account option, which
-runs the Convex backend as a native program on the visitor's machine. In
-StackBlitz, the playground's `.stackblitzrc` starts `.stackblitz/start.mjs`
-instead: it asks for a development deploy key and runs `dev` with it, so a
-reviewer never logs in to their Convex account from the sandbox. The steps are
-in the playground README, under
-[In StackBlitz](./examples/playground/README.md#in-stackblitz).
+Both apps talk to a Convex deployment on the visitor's own account, never a
+shared backend, and both `dev` scripts are the `convex dev --start "nuxt dev"`
+the module writes into a new app. In StackBlitz, the playground's
+`.stackblitzrc` starts `.stackblitz/start.mjs` instead: it asks for a
+development deploy key and runs `dev` with it, so a reviewer never logs in to
+their Convex account from the sandbox. The steps are in the playground README,
+under [In StackBlitz](./examples/playground/README.md#in-stackblitz).
+
+Neither app ships pnpm settings. A `pnpm-workspace.yaml` makes `create nuxt`
+treat the template as pnpm-only, so npm, Yarn and Bun users would get pnpm, and
+a `.pnpmfile.cjs` is code that runs on every install and overrides the user's
+own settings. So pnpm 11+ asks the user to approve esbuild's build script once
+(`pnpm approve-builds`), as it does for Nuxt's own starter; create-nuxt 3.x
+reports that first stop as a canceled scaffold (fixed upstream in nuxt/cli#1386,
+create-nuxt 4).
 
 ## Submitting Changes
 

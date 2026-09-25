@@ -284,7 +284,7 @@ export function resolveDeploymentUrls(
  * loads only `.env`. Vite and Next read `.env.local` on their own, which is how
  * Convex's templates for them find the URL; this is that step for Nuxt.
  *
- * It matters most on the first `convex dev --start 'nuxt dev'`: the CLI passes
+ * It matters most on the first `convex dev --start "nuxt dev"`: the CLI passes
  * Nuxt the environment it loaded from `.env.local` at startup, and on that
  * first run the file did not exist yet. The CLI has written it by the time it
  * starts Nuxt. A build reads only `env`, so the URL it bakes in is never one

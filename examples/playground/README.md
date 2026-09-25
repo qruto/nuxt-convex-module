@@ -29,8 +29,21 @@ Look at the [nuxt-convex-module documentation](https://nuxt-convex-module.dev) t
 ## Quick Start
 
 ```bash
+# npm
+npm create nuxt@latest my-app -- -t gh:qruto/nuxt-convex-module/examples/playground
+
+# pnpm
 pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/examples/playground
+
+# yarn
+yarn create nuxt my-app -t gh:qruto/nuxt-convex-module/examples/playground
+
+# bun
+bun create nuxt@latest my-app --template=gh:qruto/nuxt-convex-module/examples/playground
 ```
+
+Each line is written the way that package manager passes the template on to
+`create-nuxt`: npm drops `-t` without the `--`, and Bun rejects `-t`.
 
 ## Setup
 
@@ -68,15 +81,11 @@ yarn dev
 bun run dev
 ```
 
-`dev` runs `convex dev --start 'nuxt dev'`. The Convex CLI logs you in, creates
+`dev` runs `convex dev --start "nuxt dev"`. The Convex CLI logs you in, creates
 or attaches your dev deployment, pushes this app's functions, saves the
 deployment URL to `.env.local` and starts Nuxt beside it. Each card's functions
 have their own file in `convex/`, and `server/api/totals.get.ts` is the Nitro
 route.
-
-The deployment runs in Convex's cloud. `CONVEX_ALLOW_ANONYMOUS=false` in the
-script turns off the CLI's *Start without an account* option, which would run
-the Convex backend as a program on your machine.
 
 ### In StackBlitz
 
@@ -154,9 +163,9 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
   running `dev` pushes it, the codegen refreshes, and the new function is typed
   at the call site immediately.
 
-## Relationship to the minimal starter
+## Relationship to the starter
 
-[`examples/minimal`](https://github.com/qruto/nuxt-convex-module/tree/main/examples/minimal)
-is the smallest thing that works, kept short enough to read in one screen. This
-app is deliberately larger: it has to be useful for checking that a change
-actually behaves in a real Nuxt app.
+[`templates/starter`](https://github.com/qruto/nuxt-convex-module/tree/main/templates/starter)
+is the unbranded app to start a project from: one table, one page. This example
+is deliberately larger: it shows every core feature, and it has to be useful for
+checking that a change actually behaves in a real Nuxt app.

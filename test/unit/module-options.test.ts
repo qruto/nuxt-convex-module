@@ -188,7 +188,7 @@ describe('deploymentEnv', () => {
   ].join('\n'))
   afterAll(() => rmSync(appDir, { recursive: true, force: true }))
 
-  // The first `convex dev --start 'nuxt dev'` run: the CLI had no .env.local to
+  // The first `convex dev --start "nuxt dev"` run: the CLI had no .env.local to
   // load when it started, so Nuxt inherits no CONVEX_URL, yet the file exists.
   it('reads the URLs from .env.local in development', () => {
     expect(resolveDeploymentUrls({}, deploymentEnv(appDir, {}, true))).toEqual({

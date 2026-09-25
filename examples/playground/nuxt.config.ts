@@ -27,7 +27,7 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  // No `convex` block: `dev` runs `convex dev --start 'nuxt dev'`, and the
+  // No `convex` block: `dev` runs `convex dev --start "nuxt dev"`, and the
   // module reads the deployment URL the Convex CLI writes to `.env.local`.
   // Integrations switch on only for packages this package.json declares — none
   // — so a clone of the module repository, where Better Auth and friends resolve

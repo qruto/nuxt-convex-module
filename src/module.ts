@@ -122,7 +122,7 @@ export interface ModuleOptions {
   /**
    * Run Convex beside Nuxt with one command. On the first `nuxt dev` (or
    * `nuxt prepare`) in an app whose `dev` script is still the plain
-   * `nuxt dev`, the module rewrites it to `convex dev --start 'nuxt dev'`:
+   * `nuxt dev`, the module rewrites it to `convex dev --start "nuxt dev"`:
    * the Convex CLI starts the dev deployment, writes its URL to `.env.local`
    * and starts Nuxt next to it, and the module reads that file in
    * development — no `.env` needed for local development. A `dev` script you

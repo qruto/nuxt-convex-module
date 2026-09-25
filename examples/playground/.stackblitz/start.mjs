@@ -1,7 +1,8 @@
-// StackBlitz runs this instead of `pnpm dev` (see .stackblitzrc). It asks for
-// a Convex development deploy key and starts `pnpm dev` with it, so the sandbox
-// reaches your own cloud deployment without logging in to your account. The
-// key lives only in this process's environment; nothing is written to disk.
+// StackBlitz runs this instead of `npm run dev` (see .stackblitzrc). It asks
+// for a Convex development deploy key and starts `npm run dev` with it, so the
+// sandbox reaches your own cloud deployment without logging in to your
+// account. The key lives only in this process's environment; nothing is
+// written to disk.
 import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline/promises'
 
@@ -19,7 +20,7 @@ for (;;) {
 }
 prompt.close()
 
-spawn('pnpm dev', { stdio: 'inherit', shell: true, env: { ...process.env, CONVEX_DEPLOY_KEY: key } })
+spawn('npm run dev', { stdio: 'inherit', shell: true, env: { ...process.env, CONVEX_DEPLOY_KEY: key } })
   .on('exit', (code) => {
     if (code) console.log('\nRun `node .stackblitz/start.mjs` to try another key.')
     process.exit(code ?? 0)

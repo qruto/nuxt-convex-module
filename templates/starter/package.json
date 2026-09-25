@@ -1,10 +1,10 @@
 {
-  "name": "nuxt-convex-minimal-example",
+  "name": "nuxt-convex-starter",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "CONVEX_ALLOW_ANONYMOUS=false convex dev --start 'nuxt dev'",
+    "dev": "convex dev --start \"nuxt dev\"",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

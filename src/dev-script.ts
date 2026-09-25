@@ -1,10 +1,13 @@
-// One `dev` script for both processes. `convex dev --start '<cmd>'` runs the
+// One `dev` script for both processes. `convex dev --start "<cmd>"` runs the
 // Convex dev deployment, writes its URL to `.env.local`, and starts `<cmd>`
 // beside it — so `nuxt dev` started this way finds the deployment with no
 // `.env` at all (see `deploymentEnv` in options.ts). The module makes that the
 // default the first time it sees an app whose `dev` script is still the plain
 // Nuxt one; a script the app has already shaped is left alone. Off the module
 // entry for the same reason as options.ts: this is onboarding, not API.
+//
+// Double quotes, because npm and pnpm run scripts with cmd.exe on Windows,
+// and cmd.exe does not treat single quotes as quotes.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { isDeclaredDependency } from './options'
@@ -19,12 +22,15 @@ export interface DevScriptResult {
   to?: string
 }
 
-/** The plain Nuxt dev script, with or without flags: `nuxt dev`, `nuxi dev --host`, … */
-const PLAIN_NUXT_DEV = /^(?:npx )?(?:nuxt|nuxi) dev(?: [^&|;]*)?$/
+/**
+ * The plain Nuxt dev script, with or without flags: `nuxt dev`, `nuxi dev --host`, …
+ * Without quotes, since {@link combinedDevScript} wraps it in them.
+ */
+const PLAIN_NUXT_DEV = /^(?:npx )?(?:nuxt|nuxi) dev(?: [^&|;"']*)?$/
 
 /** The combined script for a given Nuxt command. */
 export function combinedDevScript(nuxtCommand: string): string {
-  return `convex dev --start '${nuxtCommand}'`
+  return `convex dev --start "${nuxtCommand}"`
 }
 
 /**
