@@ -77,6 +77,7 @@ jobs:
               - 'test/**'
               - 'scripts/**'
               - 'examples/**'
+              - 'templates/**'
               - 'tsconfig*.json'
               - 'vitest.config.ts'
               - 'build.config.ts'
@@ -344,7 +345,7 @@ jobs:
 
   # Checks the package a consumer would actually get. Builds the real tarball
   # (`pnpm pack` rewrites `catalog:` ranges exactly like `pnpm publish` does),
-  # checks its shape, then installs it into the minimal example with plain npm.
+  # checks its shape, then installs it into the starter template with plain npm.
   # That last part — a registry-style install, lifecycle scripts, engines — is
   # what no other job here exercises.
   pack:
@@ -396,12 +397,13 @@ jobs:
         # Pinning also keeps this job reproducible when the runner image moves.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
-          # Both examples: `minimal` is what the README's first link opens,
-          # `playground` is the StackBlitz template pkg.pr.new ships — and
-          # nothing else ever builds it (pkg.pr.new only uploads the directory).
-          for example in minimal playground; do
-            SMOKE="$RUNNER_TEMP/smoke-$example"
-            cp -R "examples/$example" "$SMOKE"
+          # Both apps: `templates/starter` is what `create nuxt` hands a new
+          # user, `examples/playground` is the StackBlitz template pkg.pr.new
+          # ships — and nothing else ever builds it (pkg.pr.new only uploads
+          # the directory).
+          for app in templates/starter examples/playground; do
+            SMOKE="$RUNNER_TEMP/smoke-$(basename "$app")"
+            cp -R "$app" "$SMOKE"
             (cd "$SMOKE" \
               && npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL" \
               && npx --yes npm@11.17.0 run build)
@@ -413,7 +415,7 @@ jobs:
       # and this package's product is its types.
       - name: Consumer type check (built package)
         if: ${{ !cancelled() }}
-        run: pnpm run check:consumer-types "$RUNNER_TEMP/smoke-minimal"
+        run: pnpm run check:consumer-types "$RUNNER_TEMP/smoke-starter"
 
       # Checks the registry signature and provenance of every dependency the
       # install above pulled in. pnpm's `trustPolicy: no-downgrade` refuses a
@@ -421,7 +423,7 @@ jobs:
       # the evidence is valid at all, on the npm path a consumer uses.
       - name: Verify dependency signatures
         if: ${{ !cancelled() }}
-        working-directory: ${{ runner.temp }}/smoke-minimal
+        working-directory: ${{ runner.temp }}/smoke-starter
         run: npx --yes npm@11.17.0 audit signatures # zizmor: ignore[adhoc-packages]
 
   # The docs site is the only place in this repository that calls the public

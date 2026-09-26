@@ -544,9 +544,11 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
   case, so for Nuxt the CLI writes `CONVEX_URL`; reading both is what lets a Convex user reach a
   working app without a `convex.url` line. The same gap is why `src/dev-script.ts` exists: the
   first `nuxt dev` / `nuxt prepare` rewrites a plain `nuxt dev` script to
-  `convex dev --start 'nuxt dev'`, so the CLI starts Nuxt itself and hands it `CONVEX_URL` in the
-  environment — Convex's `create-next-app` templates ship that script; a Nuxt app has no template
-  to get it from (`convex.devScript: false` opts out).
+  `convex dev --start "nuxt dev"`, so the CLI starts Nuxt itself — Convex's own demos ship that
+  script; a Nuxt app has no template to get it from (`convex.devScript: false` opts out). And in
+  development the module reads `.env.local` beneath the environment (`deploymentEnv`): Vite and
+  Next load that file themselves, Nuxt does not, and on the first `--start` run the CLI has
+  written it but has not loaded it into the environment it hands Nuxt.
 
 ##### A-10 — types upstream keeps private
 

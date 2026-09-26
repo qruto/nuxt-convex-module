@@ -21,6 +21,7 @@ triggerPaths:
   - 'website/package.json'
   - 'devtools-client-app/package.json'
   - 'examples/*/package.json'
+  - 'templates/*/package.json'
 
 projectIgnorePaths:
   # The deepsec scanner workspace: its own package.json and lockfile, gitignored,

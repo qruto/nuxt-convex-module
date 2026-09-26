@@ -29,10 +29,11 @@ export default createConfigForNuxt({
     // `.deepsec/` is the deepsec security-scanner workspace (its own
     // package.json/lockfile) — not package source either.
     {
-      // `examples/` are standalone consumer apps (own package.json, import the
-      // published package and Convex codegen output that only exists after
-      // `npx convex dev`) — not lintable as part of this workspace.
-      ignores: ['.agents/**', '.claude/**', '.deepsec/**', 'examples/**'],
+      // `examples/` and `templates/` are standalone consumer apps (own
+      // package.json, import the published package and Convex codegen output
+      // that only exists after `npx convex dev`) — not lintable as part of
+      // this workspace.
+      ignores: ['.agents/**', '.claude/**', '.deepsec/**', 'examples/**', 'templates/**'],
     },
     // Playground demo components and DevTools panel pages use short,
     // single-word names by design.

@@ -16,7 +16,7 @@ reviews:
     # TypeDoc output. `pnpm docs:api` writes it and CI fails on drift, so a
     # comment on this tree is really a comment on the generator.
     - '!website/content/4.api-reference/9.reference/**'
-    # Convex codegen, committed so the examples and the website build before
+    # Convex codegen, committed so the starter, the example and the website build before
     # `convex dev` has ever run — see CONTRIBUTING.md.
     - '!**/convex/_generated/**'
     # Machine-written, and Dependabot is what opens them.
@@ -56,7 +56,7 @@ reviews:
         and after the change under review is noise here — say so rather than
         asking for coverage as a matter of course.
 
-    - path: 'examples/**'
+    - path: '{examples,templates}/**'
       instructions: >-
         Standalone consumer apps, outside the pnpm workspace, ESLint and the
         root tsconfig; they install the published package rather than `src/`,
