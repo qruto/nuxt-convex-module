@@ -32,9 +32,13 @@ async function rollDie() {
 </template>
 
 <style scoped>
+/* The readout takes whatever height the card is given, its line centred. */
 .result {
   display: flex;
+  flex: 1;
+  flex-wrap: wrap;
   gap: 0.8rem;
+  align-content: center;
   align-items: baseline;
   padding: 0.7rem 1rem;
   border-radius: var(--radius-recess);

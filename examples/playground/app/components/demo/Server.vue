@@ -60,6 +60,10 @@ output {
   font: 0.8rem var(--font-mono);
 }
 
+.button {
+  align-self: flex-start;
+}
+
 pre {
   margin: 0;
   padding: 0.7rem 1rem;

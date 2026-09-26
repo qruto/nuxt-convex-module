@@ -112,9 +112,20 @@ input[type="file"] {
 }
 
 .gallery li {
+  position: relative;
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: var(--radius-recess);
+}
+
+/* An image covers the cut's own shading, so the walls are laid over it. */
+.gallery li:has(img)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--concave-shadow);
+  pointer-events: none;
 }
 
 .gallery img {

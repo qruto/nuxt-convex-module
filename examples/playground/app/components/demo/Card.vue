@@ -21,12 +21,14 @@ const icons: Record<string, string> = {
 <template>
   <article class="card convex">
     <header>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="icons[icon]" /></svg>
-      <h2>{{ title }}</h2>
+      <span class="socket concave">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="icons[icon]" /></svg>
+      </span>
+      <h2><ConcaveText>{{ title }}</ConcaveText></h2>
+      <p class="apis">
+        <code v-for="name in apis" :key="name">{{ name }}</code>
+      </p>
     </header>
-    <p class="apis">
-      <code v-for="name in apis" :key="name">{{ name }}</code>
-    </p>
     <slot />
     <p v-if="error" class="error" role="alert">{{ error }}</p>
   </article>
@@ -42,17 +44,28 @@ const icons: Record<string, string> = {
   border-radius: var(--radius-card);
 }
 
+/* The icon sits in a socket cut beside the title and the composables. */
 header {
-  display: flex;
-  gap: 0.6rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.85rem;
   align-items: center;
-  padding: 0.35rem 0.5rem 0;
+  padding: 0.25rem 0.25rem 0.15rem;
+}
+
+.socket {
+  display: grid;
+  grid-row: span 2;
+  align-self: start;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
 }
 
 svg {
-  flex: none;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.2rem;
+  height: 1.2rem;
   fill: none;
   stroke: var(--accent);
   stroke-width: 2;
@@ -61,16 +74,14 @@ svg {
 }
 
 h2 {
-  font-size: 1.2rem;
-  line-height: 1.2;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .apis {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.9rem;
-  margin-top: -0.5rem;
-  padding: 0 0.5rem;
+  gap: 0.1rem 0.9rem;
   color: var(--text-muted);
   font-size: 0.8rem;
 }

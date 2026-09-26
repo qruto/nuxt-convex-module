@@ -10,32 +10,38 @@ const { pending, error, run } = useCall()
 </script>
 
 <template>
-  <div class="toolbar">
-    <p class="status concave" role="status">
-      <span class="dot" :class="{ live: connection.isWebSocketConnected }" />
-      {{ connection.isWebSocketConnected ? 'live' : 'connecting' }}
-      <span class="detail">
-        · {{ connection.inflightMutations }} mutations · {{ connection.inflightActions }} actions in flight
-      </span>
-      <code class="detail">useConvexConnectionState()</code>
-    </p>
-    <button type="button" class="button" :disabled="pending" @click="run(() => reset({}))">
-      Reset data
-    </button>
-  </div>
-  <p v-if="error" class="error" role="alert">{{ error }}</p>
+  <div class="board">
+    <div class="toolbar">
+      <p class="status concave" role="status">
+        <span class="dot" :class="{ live: connection.isWebSocketConnected }" />
+        {{ connection.isWebSocketConnected ? 'live' : 'connecting' }}
+        <span class="detail">
+          · {{ connection.inflightMutations }} mutations · {{ connection.inflightActions }} actions in flight
+        </span>
+        <code class="detail">useConvexConnectionState()</code>
+      </p>
+      <button type="button" class="button" :disabled="pending" @click="run(() => reset({}))">
+        Reset data
+      </button>
+    </div>
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-  <div class="grid">
-    <DemoLiveQueries />
-    <DemoMutations />
-    <DemoPagination />
-    <DemoFileStorage />
-    <DemoActions />
-    <DemoServer />
+    <div class="grid">
+      <DemoLiveQueries class="live" />
+      <DemoMutations class="mutations" />
+      <DemoPagination class="pagination" />
+      <DemoFileStorage class="files" />
+      <DemoActions class="actions" />
+      <DemoServer class="server" />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.board {
+  container-type: inline-size;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -83,9 +89,40 @@ code.detail {
   color: var(--error);
 }
 
+/* The feed runs tall and two cards run wide around it, so the board
+   interlocks instead of stacking in even rows. Every layout reads in the
+   source order. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  grid-template-areas: "live" "mutations" "pagination" "files" "actions" "server";
   gap: 1rem;
 }
+
+@container (width >= 40rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "live mutations"
+      "pagination files"
+      "pagination actions"
+      "server server";
+  }
+}
+
+@container (width >= 60rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "live mutations mutations"
+      "pagination files actions"
+      "pagination server server";
+  }
+}
+
+.grid > .live { grid-area: live; }
+.grid > .mutations { grid-area: mutations; }
+.grid > .pagination { grid-area: pagination; }
+.grid > .files { grid-area: files; }
+.grid > .actions { grid-area: actions; }
+.grid > .server { grid-area: server; }
 </style>

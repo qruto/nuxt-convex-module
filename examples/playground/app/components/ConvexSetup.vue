@@ -1,6 +1,6 @@
 <template>
   <section class="setup convex">
-    <h2>Connect a Convex deployment</h2>
+    <h2><ConcaveText>Connect a Convex deployment</ConcaveText></h2>
     <p>
       This app has no deployment URL yet. It runs against a Convex deployment of
       <strong>yours</strong>; nothing is hosted for you.
@@ -28,7 +28,7 @@
 }
 
 h2 {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
 }
 
 pre {

@@ -19,7 +19,7 @@ const configured = computed(() => Boolean(useRuntimeConfig().public.convex.url))
 
     <main>
       <section class="intro">
-        <h1>Playground</h1>
+        <h1><ConcaveText>Playground</ConcaveText></h1>
         <p>
           Each card runs one part of the module against your Convex deployment. Open this page in
           a second tab: every number and list updates in both.
@@ -40,7 +40,7 @@ const configured = computed(() => Boolean(useRuntimeConfig().public.convex.url))
 
 <style scoped>
 .page {
-  max-width: 64rem;
+  max-width: 76rem;
   margin: 0 auto;
   padding: 1.25rem 1rem 3rem;
 }

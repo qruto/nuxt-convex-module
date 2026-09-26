@@ -37,14 +37,20 @@ function show(value: unknown) {
 </template>
 
 <style scoped>
+/* A readout per total. They share whatever height the card is given. */
 .totals {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
   margin: 0;
 }
 
 .totals div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  justify-content: space-between;
   padding: 0.7rem 0.8rem;
   border-radius: var(--radius-recess);
 }
@@ -55,9 +61,9 @@ dt {
 }
 
 dd {
-  margin: 0.2rem 0 0;
+  margin: 0;
   color: var(--text-strong);
-  font: 600 1.6rem/1.1 var(--font-mono);
+  font: 600 2rem/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 

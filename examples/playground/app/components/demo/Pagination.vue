@@ -80,8 +80,12 @@ function formatTime(ms: number) {
   font-size: 1.1rem;
 }
 
+/* Takes the height the card is given; its own rows never stretch the card. */
 .feed {
-  max-height: 14rem;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 12rem;
   overflow-y: auto;
   border-radius: var(--radius-recess);
 }
@@ -117,6 +121,7 @@ time {
 }
 
 .empty {
+  margin: auto;
   padding: 1.2rem;
   color: var(--text-muted);
   text-align: center;
