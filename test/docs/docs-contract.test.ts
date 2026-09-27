@@ -17,12 +17,12 @@ import { at, backticked, interfaceKeys, messagesIn, read, tableFirstCells, walk 
 // skipped for docs-only changes, so a docs gate there would fail only on main.
 
 const README = read('README.md')
-const CONFIGURATION = read('website/content/1.getting-started/3.configuration.md')
+const CONFIGURATION = read('website/content/1.getting-started/4.configuration.md')
 const BETTER_AUTH = read('website/content/3.components/2.better-auth.md')
 const AUTO_IMPORTS = read('website/content/4.api-reference/1.auto-imports.md')
 const SERVER_IMPORTS_PAGE = read('website/content/4.api-reference/2.server-imports.md')
 const INSTALLATION = read('website/content/1.getting-started/2.installation.md')
-const TROUBLESHOOTING = read('website/content/1.getting-started/5.troubleshooting.md')
+const TROUBLESHOOTING = read('website/content/1.getting-started/6.troubleshooting.md')
 const STABILITY = read('STABILITY.md')
 
 const contentPages = walk('website/content', ['.md'])
@@ -40,17 +40,17 @@ describe('module options', () => {
   })
 
   it.each(options)('`%s` has a row in the configuration table', (key) => {
-    expect(rows, `\`${key}\` is a ModuleOptions key (src/module.ts) with no row in website/content/1.getting-started/3.configuration.md — add the row or remove the option`).toContain(key)
+    expect(rows, `\`${key}\` is a ModuleOptions key (src/module.ts) with no row in website/content/1.getting-started/4.configuration.md — add the row or remove the option`).toContain(key)
   })
 
   it.each(betterAuthOptions)('`betterAuth.%s` has a row in both configuration tables', (key) => {
-    expect(rows, `\`betterAuth.${key}\` is a BetterAuthModuleOptions key with no row in 3.configuration.md`).toContain(`betterAuth.${key}`)
+    expect(rows, `\`betterAuth.${key}\` is a BetterAuthModuleOptions key with no row in 4.configuration.md`).toContain(`betterAuth.${key}`)
     expect(tableFirstCells(BETTER_AUTH, '## Configure'), `\`betterAuth.${key}\` has no row in 3.components/2.better-auth.md's Configure table`).toContain(`betterAuth.${key}`)
   })
 
   it.each(rows)('table row `%s` is a real option', (row) => {
     const real = options.includes(row) || (row.startsWith('betterAuth.') && betterAuthOptions.includes(row.slice('betterAuth.'.length)))
-    expect(real, `3.configuration.md documents \`${row}\`, which is not a ModuleOptions key — remove the row or add the option`).toBe(true)
+    expect(real, `4.configuration.md documents \`${row}\`, which is not a ModuleOptions key — remove the row or add the option`).toBe(true)
   })
 })
 
@@ -146,7 +146,7 @@ describe('troubleshooting', () => {
     for (const piece of pieces(message.text)) {
       expect(
         quoted.replace(/\s+/g, ' ').includes(piece),
-        `${message.kind} at ${_where} says "${message.text}" but 5.troubleshooting.md never quotes it — add an entry (a \`\`\`text fence with the message verbatim, \`…\` for interpolations), or add it to EXCLUDED with a reason`,
+        `${message.kind} at ${_where} says "${message.text}" but 6.troubleshooting.md never quotes it — add an entry (a \`\`\`text fence with the message verbatim, \`…\` for interpolations), or add it to EXCLUDED with a reason`,
       ).toBe(true)
     }
   })
@@ -155,7 +155,7 @@ describe('troubleshooting', () => {
     for (const piece of pieces(fence)) {
       expect(
         messages.some(m => m.text.replace(/\s+/g, ' ').includes(piece)),
-        `5.troubleshooting.md quotes "${piece}" but no message in src/ contains it — the wording changed; update the entry`,
+        `6.troubleshooting.md quotes "${piece}" but no message in src/ contains it — the wording changed; update the entry`,
       ).toBe(true)
     }
   })

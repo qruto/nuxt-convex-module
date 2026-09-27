@@ -49,7 +49,7 @@ Each PR gets two, and they answer different questions.
 | Preview | What it shows | Convex |
 | --- | --- | --- |
 | **Vercel** — `nuxt-convex-module-git-<branch>-razum.vercel.app` | The website as that branch would ship it: docs, landing, API reference | none — the embedded playground renders its offline state |
-| **StackBlitz** — from the pkg.pr.new comment | `examples/playground`, a real Nuxt app running the PR's *package build* | **yours** — you supply a deployment URL |
+| **StackBlitz** — from the pkg.pr.new comment | `examples/playground`, a real Nuxt app running the PR's *package build* | **yours** — you paste a development deploy key |
 
 To test a pull request's package you bring your own Convex credentials. Nothing enforces that by
 convention — it's enforced by absence. No `CONVEX_DEPLOY_KEY` exists in any preview environment,

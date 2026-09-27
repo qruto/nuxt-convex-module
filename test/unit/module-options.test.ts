@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
+import { deploymentEnv, resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
 
 const rootDir = mkdtempSync(join(tmpdir(), 'convex-module-options-'))
 afterAll(() => rmSync(rootDir, { recursive: true, force: true }))
@@ -172,5 +172,42 @@ describe('resolveDeploymentUrls', () => {
 
   it('resolves to empty strings when nothing is configured', () => {
     expect(resolveDeploymentUrls({}, {})).toEqual({ url: '', siteUrl: '' })
+  })
+})
+
+describe('deploymentEnv', () => {
+  // What `npx convex dev` leaves behind: the file it wrote before starting Nuxt.
+  const appDir = mkdtempSync(join(tmpdir(), 'convex-module-env-local-'))
+  writeFileSync(join(appDir, '.env.local'), [
+    '# Deployment used by `npx convex dev`',
+    'CONVEX_DEPLOYMENT=anonymous:anonymous-app',
+    '',
+    'CONVEX_URL=http://127.0.0.1:3210',
+    '',
+    'CONVEX_SITE_URL=http://127.0.0.1:3211',
+  ].join('\n'))
+  afterAll(() => rmSync(appDir, { recursive: true, force: true }))
+
+  // The first `convex dev --start "nuxt dev"` run: the CLI had no .env.local to
+  // load when it started, so Nuxt inherits no CONVEX_URL, yet the file exists.
+  it('reads the URLs from .env.local in development', () => {
+    expect(resolveDeploymentUrls({}, deploymentEnv(appDir, {}, true))).toEqual({
+      url: 'http://127.0.0.1:3210',
+      siteUrl: 'http://127.0.0.1:3211',
+    })
+  })
+
+  it('lets a variable already in the environment win over the file', () => {
+    expect(deploymentEnv(appDir, { CONVEX_URL: 'https://env.convex.cloud' }, true).CONVEX_URL)
+      .toBe('https://env.convex.cloud')
+  })
+
+  it('leaves a build to the environment alone', () => {
+    expect(resolveDeploymentUrls({}, deploymentEnv(appDir, {}, false))).toEqual({ url: '', siteUrl: '' })
+  })
+
+  it('passes the environment through when there is no .env.local', () => {
+    const env = { CONVEX_URL: 'https://env.convex.cloud' }
+    expect(deploymentEnv(rootDir, env, true)).toBe(env)
   })
 })

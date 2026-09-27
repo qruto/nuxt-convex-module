@@ -13,6 +13,7 @@ const columns = computed(() => [
     children: [
       { label: 'Introduction', to: '/getting-started/introduction' },
       { label: 'Installation', to: '/getting-started/installation' },
+      { label: 'Templates', to: '/getting-started/templates' },
       { label: 'Configuration', to: '/getting-started/configuration' },
       { label: 'Security', to: '/getting-started/security' },
     ],
