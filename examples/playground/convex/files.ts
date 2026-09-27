@@ -27,17 +27,24 @@ export const generateUploadUrl = mutation({
 export const clearUnsaved = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // A newer blob may still be on its way to `save`.
-    const cutoff = Date.now() - 60 * 1000
+    // An upload can still be on its way to `save`: the client queues the call
+    // while offline. So give each one as long as an upload URL lives.
+    const cutoff = Date.now() - UPLOAD_URL_LIFETIME
+    const blobs = await ctx.db.system.query('_storage').take(BATCH)
     let deleted = 0
-    for (const blob of await ctx.db.system.query('_storage').take(BATCH)) {
-      if (blob._creationTime > cutoff) break
+    for (const blob of blobs) {
       const kept = await ctx.db.query('files').withIndex('by_storageId', q => q.eq('storageId', blob._id)).first()
       if (kept) continue
+      if (blob._creationTime > cutoff) {
+        // Blobs come in upload order: check again once this one is old enough.
+        await ctx.scheduler.runAfter(blob._creationTime - cutoff, internal.files.clearUnsaved, {})
+        return
+      }
       await ctx.storage.delete(blob._id)
       deleted++
     }
-    if (deleted > 0) await ctx.scheduler.runAfter(0, internal.files.clearUnsaved, {})
+    // A full batch may have more behind it.
+    if (deleted > 0 && blobs.length === BATCH) await ctx.scheduler.runAfter(0, internal.files.clearUnsaved, {})
   },
 })
 

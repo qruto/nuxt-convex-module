@@ -11,7 +11,8 @@ async function submit() {
   const text = body.value.trim()
   if (!text) return
   await send({ body: text })
-  body.value = ''
+  // Keep anything typed while the message was sending.
+  if (body.value.trim() === text) body.value = ''
 }
 </script>
 
