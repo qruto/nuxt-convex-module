@@ -127,6 +127,18 @@ export default defineNuxtConfig({
     // The stability page was folded into the introduction (versioning +
     // experimental) and the installation page (requirements).
     '/getting-started/stability': { redirect: { to: '/getting-started/introduction#versioning', statusCode: 301 } },
+    // Docus's AI assistant answers here with no login, spending the team's
+    // AI Gateway credits. Its own bucket (the key is address + route), roomy
+    // enough for a real conversation: the client re-posts the whole thread,
+    // page reads included, on every turn. The counter lives in memory per
+    // server instance, so the hard cap is the AI Gateway budget
+    // (website/README.md).
+    '/__docus__/assistant': {
+      security: {
+        rateLimiter: { tokensPerInterval: 30, interval: 3_600_000 },
+        requestSizeLimiter: { maxRequestSizeInBytes: 512_000 },
+      },
+    },
   },
   // Every page change is a view transition: Nuxt snapshots the page,
   // swaps the route, and the browser animates between the two —
