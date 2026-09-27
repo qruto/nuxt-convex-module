@@ -6,8 +6,9 @@ import FilesSingleUpload from '../playground/files/FilesSingleUpload.vue'
 // File storage, in the three shapes the client offers: `useUpload` for a
 // single file, `useUploadQueue` for batches, `useStorageUrl` to resolve a
 // served URL from a (possibly null) storage id. Each demo owns its own
-// composables so it reads end to end on its own; they share one table, so the
-// gallery below picks up whatever either uploader lands.
+// composables so it reads end to end on its own; they share one table, and
+// the gallery below picks up whatever either uploader lands in this browser
+// (uploads are private to it — composables/useFilesOwner.ts).
 </script>
 
 <template>

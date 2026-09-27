@@ -56,7 +56,7 @@ async function submit() {
   }
   catch (e) {
     text.value = value
-    error.value = e instanceof Error ? e.message : String(e)
+    error.value = demoRejectionReason(e)
   }
 }
 
@@ -66,7 +66,7 @@ async function toggle(id: Id<'tasks'>) {
     await toggleTask({ id })
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
+    error.value = demoRejectionReason(e)
   }
 }
 
@@ -77,7 +77,7 @@ async function seed() {
     await seedTasks({})
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
+    error.value = demoRejectionReason(e)
   }
   finally {
     seeding.value = false

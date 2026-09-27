@@ -5,6 +5,7 @@ import { api } from '#convex/api'
 // Many files at once: the queue runs two uploads in parallel and reports each
 // one's own progress, saving every file as it lands rather than waiting for
 // the batch.
+const owner = useFilesOwner()
 const save = useMutation(api.files.save)
 
 const {
@@ -16,7 +17,7 @@ const {
 } = useUploadQueue(api.files.generateUploadUrl, {
   concurrency: 2,
   onItemSuccess: async (id, item) => {
-    await save({ storageId: id, ...fileMeta(item.file) })
+    await save({ owner: owner.value ?? '', storageId: id, ...fileMeta(item.file) })
   },
 })
 
@@ -79,7 +80,7 @@ function statusLabel(item: UploadQueueItem) {
       <li
         v-for="item in items"
         :key="item.id"
-        class="flex justify-between gap-3"
+        class="flex flex-wrap justify-between gap-x-3"
       >
         <span class="truncate text-default">{{ fileMeta(item.file).name }}</span>
         <span
@@ -88,6 +89,10 @@ function statusLabel(item: UploadQueueItem) {
         >
           {{ statusLabel(item) }}
         </span>
+        <span
+          v-if="item.error"
+          class="basis-full text-error"
+        >{{ demoRejectionReason(item.error, 'Upload failed.') }}</span>
       </li>
     </ul>
   </section>

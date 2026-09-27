@@ -1,7 +1,7 @@
 import type { MutationCtx } from './_generated/server'
 import { internal } from './_generated/api'
 import { internalMutation, mutation, query } from './_generated/server'
-import { cooldown } from './gate'
+import { admit, cooldown } from './gate'
 import { LIMITS, rejectMessage } from './moderation'
 import { ConvexError, v } from 'convex/values'
 
@@ -19,11 +19,12 @@ const CLEAR_BATCH = 500
 // than content. The bounded newest-slice read that `send` already does for
 // eviction doubles as the rate window (`_creationTime` is on every row), so
 // there is no limiter table, no component, and no extra index. Convex
-// serializes mutations, so the checks are race-free. The GLOBAL ceiling is
-// the real defense (a scripted client can mint fresh author names at will);
-// the per-name limits are fairness for honest visitors, and some playground
-// demos share a fixed name (`ssr-demo`, blank → `anonymous`), so their
-// wording must read naturally for a shared name.
+// serializes mutations, so the checks are race-free. A scripted client can
+// mint fresh author names at will, so the per-visitor bucket (gate.ts, keyed
+// on the address) and the GLOBAL ceiling are the real defense; the per-name
+// limits are fairness for honest visitors, and some playground demos share a
+// fixed name (`ssr-demo`, blank → `anonymous`), so their wording must read
+// naturally for a shared name.
 const WINDOW_MS = 60_000
 const GLOBAL_PER_WINDOW = 20
 const AUTHOR_PER_WINDOW = 6
@@ -59,6 +60,8 @@ export const send = mutation({
       throw new ConvexError(rejection)
     }
 
+    await admit(ctx, 'posts')
+
     const trimmedAuthor = author.trim().slice(0, LIMITS.author) || 'Anonymous'
     const trimmedBody = body.trim()
 
@@ -89,9 +92,11 @@ export const send = mutation({
 export const clear = mutation({
   args: {},
   handler: async (ctx) => {
-    // One reset a minute, tracked in `meta` (gate.ts). The batched deletion
-    // continues through an INTERNAL mutation — the continuation must not hit
-    // this gate (or a >500-row flood could never finish clearing).
+    // A few resets per visitor and one a minute overall (gate.ts). The
+    // batched deletion continues through an INTERNAL mutation — the
+    // continuation must not hit these gates (or a >500-row flood could never
+    // finish clearing).
+    await admit(ctx, 'wipes')
     await cooldown(ctx, 'messages.clear', CLEAR_COOLDOWN_MS, 'The table was reset less than a minute ago — give it a moment.')
     await clearBatchHandler(ctx)
   },

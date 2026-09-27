@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 
-// The stored result, live: one `useQuery` over the files table, each row
-// already carrying the URL its storage id resolves to (the query does that
-// server-side, so the gallery renders in one pass).
-const files = useQuery(api.files.list, {})
+// The stored result, live: one `useQuery` over this browser's uploads, each
+// row already carrying the URL its storage id resolves to (the query does
+// that server-side, so the gallery renders in one pass). Skipped until the
+// browser's id lands after mount.
+const owner = useFilesOwner()
+const files = useQuery(api.files.list, () => owner.value ? { owner: owner.value } : 'skip')
 const removeFile = useMutation(api.files.remove)
 
 function formatSize(size: number) {
@@ -27,7 +29,7 @@ function formatSize(size: number) {
       v-else-if="files.length === 0"
       class="m-0 text-xs text-muted"
     >
-      Nothing stored yet — upload a small image above.
+      Nothing stored yet — upload a small image above. Uploads stay in this browser and are deleted after an hour.
     </p>
     <ul
       v-else
@@ -61,7 +63,7 @@ function formatSize(size: number) {
           square
           class="absolute top-1 right-1"
           :aria-label="`Remove ${file.name}`"
-          @click="removeFile({ id: file._id })"
+          @click="removeFile({ id: file._id, owner: owner ?? '' })"
         />
       </li>
     </ul>

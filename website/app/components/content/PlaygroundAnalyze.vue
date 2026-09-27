@@ -27,7 +27,7 @@ async function submit() {
   }
   catch (e) {
     result.value = undefined
-    error.value = e instanceof Error ? e.message : String(e)
+    error.value = demoRejectionReason(e)
   }
   finally {
     analyzing.value = false
@@ -42,6 +42,7 @@ async function submit() {
         v-model="input"
         :rows="3"
         placeholder="Paste or type some text to analyze…"
+        :maxlength="2000"
         aria-label="Text to analyze"
         class="w-full"
       />

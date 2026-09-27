@@ -1,15 +1,15 @@
 import type { MutationCtx } from './_generated/server'
 import { mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
-import { spend } from './gate'
+import { admit, spend } from './gate'
 
 // The console's two other instruments, beside the switch bank: a level
 // fader whose value is one shared number, and a pulse counter every visitor
 // adds to. Both are a row in `console`, patched in place, read live.
 //
 // Shared-deployment guardrails: values are clamped, and both mutations ride
-// the same global per-minute budget the switches use (a `meta` row holding
-// the window's start and its count).
+// the visitor's `clicks` bucket and a global per-minute budget (a `meta`
+// row holding the window's start and its count — gate.ts).
 const KEYS = ['level', 'pulses'] as const
 type Key = typeof KEYS[number]
 const WINDOW_MS = 60_000
@@ -24,7 +24,8 @@ export const read = query({
   },
 })
 
-function spendTouch(ctx: MutationCtx) {
+async function spendTouch(ctx: MutationCtx) {
+  await admit(ctx, 'clicks')
   return spend(ctx, 'console.writes', GLOBAL_PER_WINDOW, WINDOW_MS,
     'The console is cooling down — a lot of hands on it this minute. Try again in a moment.')
 }

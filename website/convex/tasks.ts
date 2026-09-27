@@ -1,15 +1,22 @@
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 import { paginationOptsValidator } from 'convex/server'
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
+import { admit, spend } from './gate'
+import { rejectText } from './moderation'
 
 // Task list — powers the `usePaginatedQuery`, `useQueries`, and optimistic
 // update playground demos.
 
-// Shared-deployment guardrails: `add` is public and unauthenticated, so task
-// text is length-capped and the table has a hard cap, keeping `stats`' read
-// below Convex's per-query limits.
+// Shared-deployment guardrails: `add` is public and unauthenticated, and
+// every visitor reads the same list, so task text is length-capped and
+// filtered (./moderation), writes ride a per-visitor bucket and a global
+// per-minute budget (gate.ts), and `add` evicts the oldest tasks beyond the
+// cap — `stats`' read stays below Convex's per-query limits, and a full list
+// never locks the demo.
 const MAX_TASKS = 200
 const MAX_TEXT_LENGTH = 200
+const WINDOW_MS = 60_000
+const GLOBAL_PER_WINDOW = 30
 
 export const listPaginated = query({
   args: { paginationOpts: paginationOptsValidator },
@@ -35,16 +42,25 @@ export const add = mutation({
   handler: async (ctx, { text }) => {
     const trimmed = text.trim()
     if (trimmed === '') {
-      throw new Error('Task text must not be empty.')
+      throw new ConvexError('Task text must not be empty.')
     }
     if (trimmed.length > MAX_TEXT_LENGTH) {
-      throw new Error(`Task text must be at most ${MAX_TEXT_LENGTH} characters.`)
+      throw new ConvexError(`Task text must be at most ${MAX_TEXT_LENGTH} characters.`)
     }
-    const existing = await ctx.db.query('tasks').take(MAX_TASKS)
-    if (existing.length >= MAX_TASKS) {
-      throw new Error('The playground task list is full — remove some tasks first.')
+    const rejection = rejectText(trimmed)
+    if (rejection) {
+      throw new ConvexError(rejection)
     }
+    await admit(ctx, 'posts')
+    await spend(ctx, 'tasks.writes', GLOBAL_PER_WINDOW, WINDOW_MS,
+      'The list is cooling down — a lot of new tasks this minute. Try again in a moment.')
+    const newest = await ctx.db.query('tasks').order('desc').take(MAX_TASKS + 25)
     await ctx.db.insert('tasks', { text: trimmed, completed: false })
+    // The new task takes one slot, so everything from index MAX-1 of the
+    // pre-insert list is beyond the cap.
+    for (const task of newest.slice(MAX_TASKS - 1)) {
+      await ctx.db.delete(task._id)
+    }
   },
 })
 
@@ -53,13 +69,17 @@ export const toggle = mutation({
   handler: async (ctx, { id }) => {
     const task = await ctx.db.get(id)
     if (task === null) {
-      throw new Error('Task not found.')
+      throw new ConvexError('Task not found.')
     }
+    await admit(ctx, 'clicks')
     await ctx.db.patch(id, { completed: !task.completed })
   },
 })
 
-export const remove = mutation({
+// Internal: no demo removes tasks (eviction in `add` keeps the list bounded),
+// and a public "delete any task" is a griefing tool. Run it from the
+// dashboard or `npx convex run` to clean up by hand.
+export const remove = internalMutation({
   args: { id: v.id('tasks') },
   handler: async (ctx, { id }) => {
     await ctx.db.delete(id)

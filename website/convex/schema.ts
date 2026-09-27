@@ -21,7 +21,13 @@ export default defineSchema({
     name: v.string(),
     type: v.string(),
     size: v.number(),
-  }),
+    // The browser that uploaded it — a random id in its localStorage; each
+    // browser lists only its own uploads. Optional: rows saved before owners
+    // existed carry none, and the one-hour expiry clears them.
+    owner: v.optional(v.string()),
+  })
+    .index('by_owner', ['owner'])
+    .index('by_storage_id', ['storageId']),
   // One row per guarded operation (e.g. `messages.clear`) — the timestamp
   // gate that keeps destructive public mutations from being spammed.
   meta: defineTable({
