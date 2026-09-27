@@ -12,14 +12,16 @@ export const generateUploadUrl = mutation({
   },
 })
 
+/** Keeps an uploaded image. Returns why a file was rejected, or `null` once saved. */
 export const save = mutation({
   args: { storageId: v.id('_storage') },
   handler: async (ctx, { storageId }) => {
     // Check the stored blob itself: the client's `accept="image/*"` is only a hint.
     const metadata = await ctx.db.system.get('_storage', storageId)
     if (!metadata?.contentType?.startsWith('image/')) {
+      // Return rather than throw: a throw would roll the deletion back.
       if (metadata) await ctx.storage.delete(storageId)
-      throw new Error('Only images are kept in the playground.')
+      return 'Only images are kept in the playground.'
     }
     await ctx.db.insert('files', { storageId })
     await bump(ctx, 'files', 1)
@@ -29,6 +31,7 @@ export const save = mutation({
       await ctx.storage.delete(file.storageId)
       await ctx.db.delete('files', file._id)
     }
+    return null
   },
 })
 

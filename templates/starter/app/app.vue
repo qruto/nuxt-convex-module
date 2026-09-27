@@ -10,8 +10,8 @@ const body = ref('')
 async function submit() {
   const text = body.value.trim()
   if (!text) return
-  body.value = ''
   await send({ body: text })
+  body.value = ''
 }
 </script>
 

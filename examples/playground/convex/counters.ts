@@ -31,6 +31,8 @@ export const get = query({
 export const add = mutation({
   args: { amount: v.number() },
   handler: async (ctx, { amount }) => {
+    // `v.number()` also accepts NaN and Infinity, which would stick in the shared total.
+    if (!Number.isFinite(amount)) throw new Error('`amount` must be a finite number.')
     await bump(ctx, 'clicks', amount)
   },
 })

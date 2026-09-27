@@ -8,7 +8,8 @@ const save = useMutation(api.files.save)
 // hands the new storage id to `onSuccess`.
 const { upload, isUploading, progress, error } = useUpload(api.files.generateUploadUrl, {
   onSuccess: async (storageId) => {
-    await save({ storageId })
+    const rejected = await save({ storageId })
+    if (rejected) throw new Error(rejected)
   },
 })
 
