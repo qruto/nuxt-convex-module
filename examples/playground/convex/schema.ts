@@ -15,5 +15,5 @@ export default defineSchema({
 
   files: defineTable({
     storageId: v.id('_storage'),
-  }),
+  }).index('by_storageId', ['storageId']),
 })
