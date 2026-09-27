@@ -409,6 +409,26 @@ jobs:
               && npx --yes npm@11.17.0 run build)
           done
 
+      # pnpm 11 and later stop an install at the first build script nobody has
+      # approved or denied, and `create nuxt` 3.x reports that stop as a
+      # canceled scaffold. Each app's `.pnpmfile.mjs` answers for the scripts
+      # the app and Nuxt's official modules bring; this fails when a new
+      # dependency brings another. No lockfile, as above.
+      - name: Consumer smoke test (pnpm install)
+        if: ${{ !cancelled() }}
+        run: | # zizmor: ignore[adhoc-packages]
+          TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
+          for app in templates/starter examples/playground; do
+            SMOKE="$RUNNER_TEMP/smoke-pnpm-$(basename "$app")"
+            cp -R "$app" "$SMOKE"
+            (cd "$SMOKE" && pnpm add "$TARBALL")
+          done
+          # The official modules `create nuxt` offers, and the better-sqlite3
+          # that @nuxt/content installs on its first run.
+          (cd "$RUNNER_TEMP/smoke-pnpm-starter" && pnpm add @nuxt/a11y \
+            @nuxt/content @nuxt/eslint @nuxt/fonts @nuxt/hints @nuxt/icon \
+            @nuxt/image @nuxt/scripts @nuxt/test-utils @nuxt/ui better-sqlite3)
+
       # The step above proves the tarball installs and builds. This one proves
       # its type declarations compile inside an app. `vue-tsc` checks the
       # sources and `attw` checks that the types resolve; neither answers this,

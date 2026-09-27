@@ -120,13 +120,21 @@ development deploy key and runs `dev` with it, so a reviewer never logs in to
 their Convex account from the sandbox. The steps are in the playground README,
 under [In StackBlitz](./examples/playground/README.md#in-stackblitz).
 
-Neither app ships pnpm settings. A `pnpm-workspace.yaml` makes `create nuxt`
-treat the template as pnpm-only, so npm, Yarn and Bun users would get pnpm, and
-a `.pnpmfile.cjs` is code that runs on every install and overrides the user's
-own settings. So pnpm 11+ asks the user to approve esbuild's build script once
-(`pnpm approve-builds`), as it does for Nuxt's own starter; create-nuxt 3.x
-reports that first stop as a canceled scaffold (fixed upstream in nuxt/cli#1386,
-create-nuxt 4).
+Both apps ship a `.pnpmfile.mjs` and no other pnpm settings. pnpm 11+ stops
+an install at a build script nobody has approved or denied, and create-nuxt 3.x
+reports that stop as a canceled scaffold. The hook denies the scripts the app
+and Nuxt's official modules bring, the ones `create nuxt` offers to add:
+esbuild, better-sqlite3 (installed by `@nuxt/content` on first run),
+unrs-resolver (`@nuxt/eslint`) and vue-demi (`@nuxt/ui`). None is needed: each
+package already ships what its script builds or checks, so no dependency code
+runs at install. A user's own `allowBuilds` entry wins, and any other build
+script still stops the install. `strictDepBuilds: false` would cover every
+module, but it turns the stop into a warning for the app's whole life. The
+answers can't go in a `pnpm-workspace.yaml`: `create nuxt` treats a template
+that ships one as pnpm-only, so npm, Yarn and Bun users would get pnpm. pnpm
+11+ ignores build settings in `.npmrc` and in `package.json`. The `pack` job
+installs both apps and the official modules with pnpm, so a new build script
+fails there first.
 
 ## Submitting Changes
 
