@@ -3,7 +3,7 @@ import type { MutationCtx } from './_generated/server'
 import { internal } from './_generated/api'
 import { httpAction, internalMutation, mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
-import { admit, paused, spend } from './gate'
+import { admit, paused, PAUSED_MESSAGE, spend } from './gate'
 import { rejectText } from './moderation'
 
 // File storage — powers the `useUpload` / `useUploadQueue` / `useStorageUrl`
@@ -103,6 +103,8 @@ export const redeem = internalMutation({
 /** Where the URLs from `generateUploadUrl` point (routed in http.ts). */
 export const upload = httpAction(async (ctx, request) => {
   const refuse = (status: number, reason: string) => new Response(reason, { status, headers: CORS })
+  // A ticket issued before the pause still can't store anything during it.
+  if (paused()) return refuse(503, PAUSED_MESSAGE)
   if (Number(request.headers.get('Content-Length')) > MAX_FILE_BYTES) return refuse(413, REFUSED)
   const ticket = new URL(request.url).searchParams.get('ticket') ?? ''
   if (!(await ctx.runMutation(internal.files.redeem, { ticket }))) {

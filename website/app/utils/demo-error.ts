@@ -11,6 +11,6 @@
 export function demoRejectionReason(error: unknown, fallback = 'Message rejected.'): string {
   const data = (error as { data?: unknown } | null)?.data
   if (typeof data === 'string') return data
-  const refusal = /with status 4\d\d: ([^{<].{0,160})$/.exec(error instanceof Error ? error.message : '')
+  const refusal = /with status [45]\d\d: ([^{<].{0,160})$/.exec(error instanceof Error ? error.message : '')
   return refusal?.[1] ?? fallback
 }

@@ -100,6 +100,9 @@ export async function canAdmit(ctx: MutationCtx | ActionCtx, bucket: Bucket) {
  */
 export const paused = () => process.env.DEMOS_PAUSED === '1'
 
+/** What a paused demo answers. */
+export const PAUSED_MESSAGE = 'The live demos are paused for a moment — reading still works.'
+
 /**
  * The gate in front of every public demo write: the pause switch, then the
  * visitor's `bucket` when one is named. Throws a `ConvexError` with a plain
@@ -107,7 +110,7 @@ export const paused = () => process.env.DEMOS_PAUSED === '1'
  */
 export async function admit(ctx: MutationCtx | ActionCtx, bucket?: Bucket) {
   if (paused()) {
-    throw new ConvexError('The live demos are paused for a moment — reading still works.')
+    throw new ConvexError(PAUSED_MESSAGE)
   }
   if (bucket && !(await canAdmit(ctx, bucket))) {
     throw new ConvexError('You’re going fast — this demo is shared, so try again in a moment.')
