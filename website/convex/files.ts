@@ -47,6 +47,28 @@ function imageType(bytes: Uint8Array): string | null {
   return null
 }
 
+/**
+ * The request body's chunks, read no further than `limit` bytes — `null`
+ * once it runs past, whatever `Content-Length` claimed.
+ */
+async function readBody(request: Request, limit: number): Promise<Uint8Array<ArrayBuffer>[] | null> {
+  const chunks: Uint8Array<ArrayBuffer>[] = []
+  let size = 0
+  const reader = request.body?.getReader()
+  while (reader) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > limit) {
+      await reader.cancel()
+      return null
+    }
+    // A copy: a stream's chunk may sit on a shared buffer, which a Blob won't take.
+    chunks.push(value.slice())
+  }
+  return chunks
+}
+
 /** Drop a file row and, if it is still there, its blob. */
 async function discard(ctx: MutationCtx, file: Doc<'files'>) {
   if (await ctx.db.system.get(file.storageId)) {
@@ -86,10 +108,11 @@ export const upload = httpAction(async (ctx, request) => {
   if (!(await ctx.runMutation(internal.files.redeem, { ticket }))) {
     return refuse(403, 'That upload link was used or has expired — pick the file again.')
   }
-  const bytes = new Uint8Array(await request.arrayBuffer())
-  const type = imageType(bytes)
-  if (bytes.byteLength > MAX_FILE_BYTES || type === null) return refuse(415, REFUSED)
-  const storageId = await ctx.storage.store(new Blob([bytes], { type }))
+  const chunks = await readBody(request, MAX_FILE_BYTES)
+  if (chunks === null) return refuse(413, REFUSED)
+  const type = imageType(new Uint8Array(await new Blob(chunks).slice(0, 12).arrayBuffer()))
+  if (type === null) return refuse(415, REFUSED)
+  const storageId = await ctx.storage.store(new Blob(chunks, { type }))
   return new Response(JSON.stringify({ storageId }), { headers: { ...CORS, 'Content-Type': 'application/json' } })
 })
 
