@@ -39,17 +39,18 @@ Verified from a clean state: `rm -rf .nuxt dist`, then the command above.
 | Include source files outside the Root Directory | **on** | The module is imported from the repo root |
 | `ENABLE_EXPERIMENTAL_COREPACK` | `1` | Uses the `packageManager` pin instead of Vercel's own pnpm |
 | Production env | `CONVEX_DEPLOY_KEY`, `NUXT_PUBLIC_CONVEX_SITE_URL` | The live deployment's Convex project |
-| Preview env | **nothing Convex-related** | See below |
-| Deployment Protection → Vercel Authentication | **off** | A preview nobody can open isn't a preview. Vercel's scopes are *all*, *previews only*, or *production URLs + previews* — there is no "production only" — so keeping previews open means turning it off. Only the `*.vercel.app` URLs become public; the production domain was already exempt, and this is a public docs site |
+| Preview env | **nothing Convex-related** | Previews are off; see below |
+| Deployment Protection → Vercel Authentication | **off** | Turned off while previews were public (Vercel's scopes are *all*, *previews only*, or *production URLs + previews* — there is no "production only"). With previews off it only exposes production's own `*.vercel.app` URLs; the production domain is exempt anyway, and this is a public docs site |
 
-## The two previews on a pull request
+## Previews on a pull request
 
-Each PR gets two, and they answer different questions.
+Vercel builds `main` only. `git.deploymentEnabled` in `vercel.json` turns every branch off
+(`"**": false`) and `main` back on (`"main": true`): a branch deploys when any rule that matches
+it is `true`. The pattern is `**`, not `*`, so branch names with a slash match too.
 
-| Preview | What it shows | Convex |
-| --- | --- | --- |
-| **Vercel** — `nuxt-convex-module-git-<branch>-razum.vercel.app` | The website as that branch would ship it: docs, landing, API reference | none — the embedded playground renders its offline state |
-| **StackBlitz** — from the pkg.pr.new comment | `examples/playground`, a real Nuxt app running the PR's *package build* | **yours** — you paste a development deploy key |
+A pull request gets one preview: the **StackBlitz** link from the pkg.pr.new comment. It runs
+`examples/playground`, a real Nuxt app on the PR's *package build*, against a development deploy
+key you paste. To see the website as a branch would ship it, run it locally (below).
 
 To test a pull request's package you bring your own Convex credentials. Nothing enforces that by
 convention — it's enforced by absence. No `CONVEX_DEPLOY_KEY` exists in any preview environment,
