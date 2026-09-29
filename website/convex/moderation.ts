@@ -9,7 +9,8 @@
 //
 //   A. WORDS — ordinary abusive text. Matched per token, so `document` can't
 //      trip a `cum` rule and `manuscript` can't trip an `anus` rule. Handles
-//      casing, punctuation, leetspeak (`sh1t`) and stretching (`shiiiit`).
+//      casing, punctuation, leetspeak (`sh1t`), stretching (`shiiiit`) and a
+//      word spelled out one letter at a time (`n.a.z.i`).
 //   B. EVASION — the same words with separators wedged in (`f-u-c-k`,
 //      `f u c k`, `f.....k`). Matched against the text with every non-letter
 //      removed, so a small, carefully chosen set of patterns only. Anything
@@ -117,10 +118,15 @@ export const LIMITS = {
   author: 24,
 } as const
 
-/** PASS A — any whole token, as written or de-stretched, is a blocked word. */
+/**
+ * PASS A — any whole token, as written or de-stretched, is a blocked word. A
+ * run of single letters between separators (`n.a.z.i`, `h i t l e r`) is
+ * joined back into one token first; ordinary text almost never has one, and
+ * the whole run must spell a blocked word, so `on a zip` stays clean.
+ */
 function hasBlockedWord(folded: string): boolean {
-  return folded
-    .split(/[^a-z]+/)
+  const spelled = folded.match(/(?<![a-z])[a-z](?:[^a-z]+[a-z](?![a-z]))+/g) ?? []
+  return [...folded.split(/[^a-z]+/), ...spelled.map(run => run.replace(/[^a-z]/g, ''))]
     .some(token => token !== '' && (BLOCKED_WORDS.has(token) || BLOCKED_WORDS.has(collapse(token))))
 }
 

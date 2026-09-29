@@ -1,6 +1,6 @@
-// The id the file-storage demo files this browser's uploads under. Uploads
-// are private to the browser that made them (convex/files.ts), so the id
-// lives in localStorage: every window of this browser shares it, which keeps
+// The id the file-storage demo files this browser's uploads under. Each
+// browser lists only its own uploads (convex/files.ts), so the id lives in
+// localStorage: every window of this browser shares it, which keeps
 // "open a second window" live, and no other browser can list what it
 // uploaded. Client-only: the server sees `null`, and the demo waits for the
 // real id after mount.

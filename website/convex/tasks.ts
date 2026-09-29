@@ -93,6 +93,7 @@ export const seed = mutation({
     if (existing.length > 0) {
       return
     }
+    await admit(ctx, 'posts')
     const samples = [
       'Review the pagination docs',
       'Wire up the checkout flow',

@@ -27,7 +27,7 @@ async function submit() {
   }
   catch (e) {
     result.value = undefined
-    error.value = demoRejectionReason(e)
+    error.value = demoRejectionReason(e, 'Analysis failed.')
   }
   finally {
     analyzing.value = false

@@ -56,7 +56,7 @@ const buckets = {
   canvas: { kind: 'token bucket', rate: 120, period: MINUTE, capacity: 60 },
   posts: { kind: 'token bucket', rate: 6, period: MINUTE, capacity: 4 },
   wipes: { kind: 'token bucket', rate: 6, period: HOUR, capacity: 3 },
-  sessions: { kind: 'token bucket', rate: 10, period: MINUTE, capacity: 10 },
+  presence: { kind: 'token bucket', rate: 40, period: MINUTE, capacity: 20 },
   uploads: { kind: 'token bucket', rate: 20, period: HOUR, capacity: 10 },
   analyze: { kind: 'token bucket', rate: 12, period: MINUTE, capacity: 4 },
 } as const
@@ -94,16 +94,22 @@ export async function canAdmit(ctx: MutationCtx | ActionCtx, bucket: Bucket) {
 }
 
 /**
- * The per-visitor gate in front of every public demo write. Setting the
- * `DEMOS_PAUSED` environment variable on the deployment stops them all at
- * once while reads keep working (website/README.md says when). Throws a
- * `ConvexError` with a plain string — the only payload the demo panels print.
+ * `DEMOS_PAUSED=1` on the deployment stops every demo write at once while
+ * reads keep working (website/README.md says when). Any other value, or
+ * none, leaves the demos open.
  */
-export async function admit(ctx: MutationCtx | ActionCtx, bucket: Bucket) {
-  if (process.env.DEMOS_PAUSED) {
+export const paused = () => process.env.DEMOS_PAUSED === '1'
+
+/**
+ * The gate in front of every public demo write: the pause switch, then the
+ * visitor's `bucket` when one is named. Throws a `ConvexError` with a plain
+ * string — the only payload the demo panels print.
+ */
+export async function admit(ctx: MutationCtx | ActionCtx, bucket?: Bucket) {
+  if (paused()) {
     throw new ConvexError('The live demos are paused for a moment — reading still works.')
   }
-  if (!(await canAdmit(ctx, bucket))) {
+  if (bucket && !(await canAdmit(ctx, bucket))) {
     throw new ConvexError('You’re going fast — this demo is shared, so try again in a moment.')
   }
 }

@@ -29,7 +29,7 @@ function formatSize(size: number) {
       v-else-if="files.length === 0"
       class="m-0 text-xs text-muted"
     >
-      Nothing stored yet — upload a small image above. Uploads stay in this browser and are deleted after an hour.
+      Nothing stored yet — upload a small image above. Only this browser lists your uploads, and each is deleted after an hour.
     </p>
     <ul
       v-else

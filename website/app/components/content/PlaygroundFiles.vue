@@ -8,7 +8,7 @@ import FilesSingleUpload from '../playground/files/FilesSingleUpload.vue'
 // served URL from a (possibly null) storage id. Each demo owns its own
 // composables so it reads end to end on its own; they share one table, and
 // the gallery below picks up whatever either uploader lands in this browser
-// (uploads are private to it — composables/useFilesOwner.ts).
+// (each browser lists only its own — composables/useFilesOwner.ts).
 </script>
 
 <template>

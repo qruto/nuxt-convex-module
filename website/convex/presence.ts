@@ -1,7 +1,7 @@
 import { internal } from './_generated/api'
 import { internalMutation, mutation, query } from './_generated/server'
 import { v } from 'convex/values'
-import { canAdmit } from './gate'
+import { canAdmit, paused } from './gate'
 
 // Who is on the landing page right now. A session heartbeats while the page
 // is visible; `count` reads the rows fresher than the window; a cron sweeps
@@ -11,8 +11,10 @@ import { canAdmit } from './gate'
 // twice), a short window so the table stays a few rows deep, and an
 // alphanumeric session id so nothing arbitrary lands in the table. A row is
 // restamped at most every few seconds — every write re-runs `count` for
-// everyone on the page — and new sessions ride a per-visitor bucket
-// (gate.ts), dropped silently: presence is a courtesy, never an error.
+// everyone on the page — and every write, a new session or a restamp, spends
+// from the address's `presence` bucket (gate.ts), so one address can keep
+// only a handful of sessions alive. Refusals and the pause are silent:
+// presence is a courtesy, never an error.
 //
 // The window is short (2026-09-13: the canvas rail says who is here, and
 // "you and 1 other" must go back to "only you" soon after the second
@@ -26,14 +28,16 @@ const RESTAMP_MS = 5_000
 export const heartbeat = mutation({
   args: { sid: v.string() },
   handler: async (ctx, { sid }) => {
-    if (!SID.test(sid)) return
+    if (!SID.test(sid) || paused()) return
     const now = Date.now()
     const existing = await ctx.db.query('presence').withIndex('by_sid', q => q.eq('sid', sid)).unique()
     if (existing) {
-      if (now - existing.at >= RESTAMP_MS) await ctx.db.patch(existing._id, { at: now })
+      if (now - existing.at >= RESTAMP_MS && await canAdmit(ctx, 'presence')) {
+        await ctx.db.patch(existing._id, { at: now })
+      }
       return
     }
-    if (!(await canAdmit(ctx, 'sessions'))) return
+    if (!(await canAdmit(ctx, 'presence'))) return
     // A hard cap so a scripted client cannot grow the table without bound;
     // the sweep frees rows again within minutes.
     const live = await ctx.db.query('presence').withIndex('by_at', q => q.gt('at', now - WINDOW_MS)).take(MAX_ROWS)

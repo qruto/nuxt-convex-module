@@ -56,7 +56,7 @@ async function submit() {
   }
   catch (e) {
     text.value = value
-    error.value = demoRejectionReason(e)
+    error.value = demoRejectionReason(e, 'Could not add the task.')
   }
 }
 
@@ -66,7 +66,7 @@ async function toggle(id: Id<'tasks'>) {
     await toggleTask({ id })
   }
   catch (e) {
-    error.value = demoRejectionReason(e)
+    error.value = demoRejectionReason(e, 'Could not update the task.')
   }
 }
 
@@ -77,7 +77,7 @@ async function seed() {
     await seedTasks({})
   }
   catch (e) {
-    error.value = demoRejectionReason(e)
+    error.value = demoRejectionReason(e, 'Could not add the sample tasks.')
   }
   finally {
     seeding.value = false
