@@ -15,6 +15,7 @@ import type * as console from "../console.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as gate from "../gate.js";
+import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as moderation from "../moderation.js";
 import type * as presence from "../presence.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   files: typeof files;
   gate: typeof gate;
+  http: typeof http;
   messages: typeof messages;
   moderation: typeof moderation;
   presence: typeof presence;

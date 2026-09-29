@@ -28,6 +28,9 @@ export default defineSchema({
   })
     .index('by_owner', ['owner'])
     .index('by_storage_id', ['storageId']),
+  // Single-use upload URLs (files.generateUploadUrl → files.upload): the id
+  // is the ticket, the creation time its age. Swept with the uploads.
+  uploadTickets: defineTable({}),
   // One row per guarded operation (e.g. `messages.clear`) — the timestamp
   // gate that keeps destructive public mutations from being spammed.
   meta: defineTable({

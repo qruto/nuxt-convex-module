@@ -4,9 +4,8 @@ import { internalMutation } from './_generated/server'
 
 const crons = cronJobs()
 
-// Playground uploads live for an hour, saved or not, and blobs `files.save`
-// would refuse go at the next pass — sweep them often.
-crons.interval('expire uploads', { minutes: 5 }, internal.files.expire, {})
+// Playground uploads live for an hour, saved or not — sweep them regularly.
+crons.interval('expire uploads', { minutes: 15 }, internal.files.expire, {})
 
 // Landing-page presence rows outlive the sessions that wrote them; drop
 // anything that stopped heartbeating.

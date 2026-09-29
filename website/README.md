@@ -72,8 +72,10 @@ Vercel.
 The demos write to the production Convex deployment without a sign-up, and its URL is public, so
 anyone can call the functions directly. Every public write passes a per-visitor rate limit (keyed
 on the caller's IP address, IPv6 by its /64) and a global budget per demo, both in
-`convex/gate.ts`. Free text passes the word filter in `convex/moderation.ts`. Uploads are listed
-only in the browser that made them and are deleted after an hour.
+`convex/gate.ts`. Free text passes the word filter in `convex/moderation.ts`. Uploads go through
+the site's own endpoint (`convex/http.ts`), which stores only a PNG, JPEG, GIF, WebP or AVIF image
+up to 5 MB, judged by its bytes. Each browser lists only its own uploads, and they are deleted
+after an hour.
 
 If something still gets through:
 
