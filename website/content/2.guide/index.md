@@ -8,6 +8,8 @@ seo:
 
 Every page here documents a piece of the always-on core, most with a live demo running against a real Convex deployment.
 
+The demos share one public backend. What you type is visible to other visitors and passes a word filter and a per-visitor rate limit. Uploads are listed only in your browser and are deleted after an hour.
+
 - [Queries](/guide/queries) — `useQuery` for one live subscription, `useQueries` for a set that changes at runtime.
 - [Mutations & Actions](/guide/mutations-and-actions) — writes, external calls, and optimistic updates.
 - [Pagination](/guide/pagination) — `usePaginatedQuery` and optimistic writes across loaded pages.

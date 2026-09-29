@@ -1,15 +1,16 @@
-// Guardrails for the public demo table.
+// Guardrails for the public demo tables.
 //
-// `messages` is written straight from the marketing homepage by anyone who
-// loads it, and every visitor reads the same rows — so a single defacement is
-// visible to everyone until someone clears the table. This module is the
-// filter that stands in front of that.
+// The chat, the task list and the reactions are written by anyone who loads
+// the site, and every visitor reads the same rows — so a single defacement is
+// visible to everyone until someone clears it. This module is the filter
+// that stands in front of that.
 //
 // Two passes, because the two threats are different shapes:
 //
 //   A. WORDS — ordinary abusive text. Matched per token, so `document` can't
 //      trip a `cum` rule and `manuscript` can't trip an `anus` rule. Handles
-//      casing, punctuation, leetspeak (`sh1t`) and stretching (`shiiiit`).
+//      casing, punctuation, leetspeak (`sh1t`), stretching (`shiiiit`) and a
+//      word spelled out one letter at a time (`n.a.z.i`).
 //   B. EVASION — the same words with separators wedged in (`f-u-c-k`,
 //      `f u c k`, `f.....k`). Matched against the text with every non-letter
 //      removed, so a small, carefully chosen set of patterns only. Anything
@@ -19,13 +20,21 @@
 // Blunt on purpose. A false positive costs one rejected demo message; a false
 // negative puts a slur in the hero panel.
 
-/** Case, accents and leetspeak folded away; everything else left in place. */
+// Cyrillic, Greek and small-capital letters drawn like Latin ones, and the
+// Latin letter each passes for: `fuсk` with a Cyrillic `с` reads as `fuck`.
+const LOOKALIKE = 'авгеѕіјкмнопрстухьԁԛԝһӏүαβγεηικμνορτυχωᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ'
+const LATIN = 'abresijkmhonpctyxbdqwhlyabyenikuvoptuxwabcdefghijklmnoprstuvwyz'
+
+/** Case, accents, lookalikes and leetspeak folded away; everything else left in place. */
 function fold(input: string): string {
   return input
     .toLowerCase()
     .normalize('NFKD')
-    // Combining diacritical marks, left behind by NFKD: `ｆùçk` → `fuck`.
-    .replace(/[\u0300-\u036F]/g, '')
+    // Combining diacritical marks, left behind by NFKD: `ｆùçk` → `fuck` —
+    // and the characters that split a word without showing: soft hyphen,
+    // zero-width space and joiners, word joiner, byte-order mark.
+    .replace(/[\u0300-\u036F\u00AD\u200B-\u200F\u2060-\u2064\uFEFF]/g, '')
+    .replace(/\P{ASCII}/gu, char => LATIN[LOOKALIKE.indexOf(char)] ?? char)
     .replace(/[4@]/g, 'a')
     .replace(/[3€]/g, 'e')
     .replace(/[1!|]/g, 'i')
@@ -57,6 +66,8 @@ const BLOCKED_WORDS = new Set([
   'bastard', 'bollocks',
   'nigger', 'nigga', 'faggot', 'fag', 'kike', 'chink',
   'spic', 'wetback', 'trannies', 'tranny', 'retard', 'retarded', 'spastic',
+  'coon', 'gook', 'paki', 'dyke',
+  'nazi', 'nazis', 'hitler', 'heil', 'kkk', 'swastika',
   'rape', 'rapist', 'kys',
   'porn', 'pornhub', 'nsfw', 'onlyfans', 'nude', 'nudes',
   'viagra', 'cialis', 'casino', 'backlink', 'backlinks',
@@ -86,6 +97,8 @@ const EVASION_PATTERNS: RegExp[] = [
   /w+h+o+r+e+/,
   /b+i+t+c+h+/,
   /k+y+s+(?:e+l+f+)?$/,
+  // De-stretching folds `kkkk` down to `k`, past the `kkk` entry in pass A.
+  /k{3,}/,
 ]
 
 /**
@@ -105,10 +118,15 @@ export const LIMITS = {
   author: 24,
 } as const
 
-/** PASS A — any whole token, as written or de-stretched, is a blocked word. */
+/**
+ * PASS A — any whole token, as written or de-stretched, is a blocked word. A
+ * run of single letters between separators (`n.a.z.i`, `h i t l e r`) is
+ * joined back into one token first; ordinary text almost never has one, and
+ * the whole run must spell a blocked word, so `on a zip` stays clean.
+ */
 function hasBlockedWord(folded: string): boolean {
-  return folded
-    .split(/[^a-z]+/)
+  const spelled = folded.match(/(?<![a-z])[a-z](?:[^a-z]+[a-z](?![a-z]))+/g) ?? []
+  return [...folded.split(/[^a-z]+/), ...spelled.map(run => run.replace(/[^a-z]/g, ''))]
     .some(token => token !== '' && (BLOCKED_WORDS.has(token) || BLOCKED_WORDS.has(collapse(token))))
 }
 
@@ -119,6 +137,34 @@ function hasEvasion(folded: string): boolean {
 }
 
 const looksLikeLink = (text: string) => LINKISH.some(pattern => pattern.test(text))
+
+/**
+ * The checks every public text goes through, whatever its length rules:
+ * a human-readable reason to reject, or `null` to accept.
+ */
+export function rejectText(text: string): string | null {
+  // A direction override reorders what the next visitor reads, and a stack
+  // of combining marks draws over the lines around it.
+  if (/[\u202A-\u202E\u2066-\u2069]/.test(text) || /\p{M}{3,}/u.test(text)) {
+    return 'Message looks like spam.'
+  }
+
+  // A wall of one repeated character reads as vandalism, not a demo message.
+  if (/(.)\1{9,}/.test(text)) {
+    return 'Message looks like spam.'
+  }
+
+  if (looksLikeLink(text)) {
+    return 'Links and addresses are not allowed in the public demo.'
+  }
+
+  const folded = fold(text)
+  if (hasBlockedWord(folded) || hasEvasion(folded)) {
+    return 'Message was rejected by the public demo filter.'
+  }
+
+  return null
+}
 
 /**
  * Returns a human-readable reason to reject, or `null` to accept.
@@ -135,19 +181,5 @@ export function rejectMessage(author: string, body: string): string | null {
     return `Author must be at most ${LIMITS.author} characters.`
   }
 
-  // A wall of one repeated character reads as vandalism, not a demo message.
-  if (/(.)\1{9,}/.test(trimmedBody)) {
-    return 'Message looks like spam.'
-  }
-
-  if (looksLikeLink(trimmedBody) || looksLikeLink(author)) {
-    return 'Links and addresses are not allowed in the public demo.'
-  }
-
-  const folded = fold(`${author} ${trimmedBody}`)
-  if (hasBlockedWord(folded) || hasEvasion(folded)) {
-    return 'Message was rejected by the public demo filter.'
-  }
-
-  return null
+  return rejectText(`${author} ${trimmedBody}`)
 }

@@ -2,7 +2,7 @@ import type { MutationCtx } from './_generated/server'
 import { mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
 import { CITY, KINDS, checkName } from '../shared/reactions'
-import { spend } from './gate'
+import { admit, spend } from './gate'
 import { rejectMessage } from './moderation'
 
 // THE REACTIONS — the hero panel's instrument (2026-09-15, replacing the
@@ -16,8 +16,9 @@ import { rejectMessage } from './moderation'
 // The only free text is the name, and it is a short lowercase word checked
 // here against the same rule the client uses (shared/reactions.ts) plus the
 // console's word filter; the city is a short place name. Writes ride a
-// global per-minute budget, and every read is bounded because `send` keeps
-// the table under a cap — the oldest rows go first.
+// per-visitor bucket and a global per-minute budget (gate.ts), and every
+// read is bounded because `send` keeps the table under a cap — the oldest
+// rows go first.
 const RECENT = 8
 const MAX_ROWS = 400
 const WINDOW_MS = 60_000
@@ -61,6 +62,7 @@ export const send = mutation({
     const reason = checkName(name) ?? rejectMessage(name, name)
     if (reason) throw new ConvexError(reason)
     if (city !== undefined && (!CITY.test(city) || rejectMessage(city, city))) throw new ConvexError('That city did not pass.')
+    await admit(ctx, 'reactions')
     await spend(ctx, 'reactions.writes', GLOBAL_PER_WINDOW, WINDOW_MS,
       'The keys are cooling down — a lot of presses this minute. Try again in a moment.')
     await makeRoom(ctx)

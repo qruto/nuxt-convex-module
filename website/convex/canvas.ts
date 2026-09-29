@@ -1,7 +1,7 @@
 import type { MutationCtx } from './_generated/server'
 import { internalMutation, mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
-import { cooldown, spend } from './gate'
+import { admit, cooldown, spend } from './gate'
 
 // THE CANVAS — the hero panel's instrument (2026-09-12, replacing the chat).
 // A 21 × 11 grid every visitor paints on (odd both ways, so it has a
@@ -13,7 +13,8 @@ import { cooldown, spend } from './gate'
 //
 // Shared-deployment guardrails: the table is public and unauthenticated. No
 // free text lands in it (a cell index and one of three inks), writes ride a
-// global per-minute budget, a clear rides a short cooldown, and every read
+// per-visitor bucket and a global per-minute budget, a clear rides a short
+// cooldown and a small per-visitor allowance of its own, and every read
 // is bounded because `paint` keeps the table under a cap — rows before the
 // latest clear no longer touch the frame, so they are the first to go.
 export const COLUMNS = 21
@@ -89,6 +90,7 @@ export const paint = mutation({
     if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS) {
       throw new ConvexError('No such cell.')
     }
+    await admit(ctx, 'canvas')
     await spendStroke(ctx)
     await makeRoom(ctx, false)
     await ctx.db.insert('strokes', { kind: 'paint', cell, ink })
@@ -98,6 +100,7 @@ export const paint = mutation({
 export const clear = mutation({
   args: {},
   handler: async (ctx) => {
+    await admit(ctx, 'wipes')
     // One sweep every few seconds, tracked in `meta` like the chat's reset.
     await cooldown(ctx, 'canvas.clear', CLEAR_COOLDOWN_MS, 'The canvas was swept a moment ago — give it a few seconds.')
     await spendStroke(ctx)

@@ -5,13 +5,14 @@ import { api } from '#convex/api'
 // error state, then `useStorageUrl` to resolve a served URL from the storage
 // id it produces. The pair is the point — the id is the only thing worth
 // storing, and the URL is derived from it on demand.
+const owner = useFilesOwner()
 const save = useMutation(api.files.save)
 
 const { upload, isUploading, progress, error, storageId } = useUpload(
   api.files.generateUploadUrl,
   {
     onSuccess: async (id, file) => {
-      await save({ storageId: id, ...fileMeta(file) })
+      await save({ owner: owner.value ?? '', storageId: id, ...fileMeta(file) })
     },
   },
 )
@@ -56,14 +57,14 @@ const latestUrl = useStorageUrl(api.files.url, storageId)
       v-if="error"
       class="m-0 mt-1.5 text-xs text-error"
     >
-      {{ error.message }}
+      {{ demoRejectionReason(error, 'Upload failed.') }}
     </p>
     <p
       v-else-if="storageId"
       class="m-0 mt-1.5 wrap-anywhere text-xs text-muted"
     >
       Stored as <ProseCode>{{ storageId }}</ProseCode> —
-      <template v-if="latestUrl === undefined">
+      <template v-if="latestUrl === undefined || isUploading">
         resolving URL via <ProseCode>useStorageUrl</ProseCode>…
       </template>
       <a

@@ -66,3 +66,30 @@ pnpm dev          # from the repository root — convex dev + nuxt dev
 `nuxt build` here prints "Build complete!" and then never exits. That's a known quirk of this app's
 module graph, not a hang. It's why `ci` type-checks the site and leaves the production build to
 Vercel.
+
+## When the demos are abused
+
+The demos write to the production Convex deployment without a sign-up, and its URL is public, so
+anyone can call the functions directly. Every public write passes a per-visitor rate limit (keyed
+on the caller's IP address, IPv6 by its /64) and a global budget per demo, both in
+`convex/gate.ts`. Free text passes the word filter in `convex/moderation.ts`. Uploads go through
+the site's own endpoint (`convex/http.ts`), which stores only a PNG, JPEG, GIF, WebP or AVIF image
+up to 5 MB, judged by its bytes. Each browser lists only its own uploads, and they are deleted
+after an hour.
+
+If something still gets through:
+
+- **Pause every demo write.** Run `npx convex env set DEMOS_PAUSED 1 --prod` from this folder;
+  reads keep working and no deploy is needed. `npx convex env remove DEMOS_PAUSED --prod` resumes.
+- **Clear what's already there.** In the Convex dashboard, open the table under Data and use
+  *Clear table*.
+- **Giving a live talk?** Everyone on one Wi-Fi shares one address, so they share one bucket.
+  Raise the bucket the audience will use at the top of `convex/gate.ts` and deploy.
+
+Three caps live outside the repository. Set them once:
+
+| Where | Setting | Why |
+| --- | --- | --- |
+| Convex → production deployment → Settings → Usage limits | A daily *Function calls* limit with a warning and a disable threshold | A rejected call is still a billed call, so this is the only hard cap on Convex cost. Past it, the deployment is off until the day rolls over |
+| Vercel → Firewall | A rate-limit rule on `/__docus__/assistant` | The Docus AI assistant needs no login. `nuxt.config.ts` limits it too, but only per server instance |
+| Vercel → AI Gateway | A budget with auto top-up off | The assistant's hard cap |

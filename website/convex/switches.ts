@@ -1,19 +1,19 @@
 import { mutation, query } from './_generated/server'
 import { ConvexError, v } from 'convex/values'
-import { spend } from './gate'
+import { admit, spend } from './gate'
 
 // The switchboard — the landing page's live proof that one table reaches
 // every client. A bank of eight toggles shared by everyone on the page; a
 // flip is one mutation and every subscriber's row moves on the same commit.
 //
 // Shared-deployment guardrails: the bank is public and unauthenticated, so
-// flips ride a global per-minute budget (the real defence — handles are
-// minted client-side) and a per-handle window (fairness). No free text lands
-// in the table: the handle is clamped to a short alphanumeric token.
+// flips ride the visitor's `clicks` bucket (keyed on the address — handles
+// are minted client-side) and a global per-minute budget (gate.ts). No free
+// text lands in the table: the handle is clamped to a short alphanumeric
+// token.
 export const POSITIONS = 8
 const WINDOW_MS = 60_000
 const GLOBAL_PER_WINDOW = 120
-const HANDLE_PER_WINDOW = 30
 const HANDLE = /^[a-z0-9-]{1,16}$/
 
 export const list = query({
@@ -41,19 +41,13 @@ export const flip = mutation({
     if (!HANDLE.test(by)) {
       throw new ConvexError('Handle must be 1–16 lowercase letters, digits or dashes.')
     }
-    // The global budget first: one `meta` row holding the window's start
-    // and the flips counted inside it (gate.ts).
+    // The visitor's bucket, then the global budget: one `meta` row holding
+    // the window's start and the flips counted inside it (gate.ts).
+    await admit(ctx, 'clicks')
     const now = await spend(ctx, 'switches.flips', GLOBAL_PER_WINDOW, WINDOW_MS,
       'The board is cooling down — a lot of flips this minute. Try again in a moment.')
 
-    // The per-hand window off the rows themselves: `at` is the last flip per
-    // position, so the whole bank is one bounded read.
     const rows = await ctx.db.query('switches').take(POSITIONS * 2)
-    const mine = rows.filter(row => row.by === by && now - row.at < WINDOW_MS).length
-    if (mine >= HANDLE_PER_WINDOW) {
-      throw new ConvexError('This hand is flipping fast — a few flips a minute keeps the board readable.')
-    }
-
     const existing = rows.find(row => row.position === position)
     if (existing) {
       await ctx.db.patch(existing._id, { on: !existing.on, by, at: now })
