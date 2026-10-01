@@ -127,24 +127,26 @@ export function useAsyncPaginatedQuery<Query extends PaginatedQueryReference>(
       const currentArgs = toValue(args)
       // On the client the live subscription is the source of truth; a one-shot
       // page here could not be deduplicated against it (its args carry the
-      // pagination id), so nothing is fetched.
-      if (currentArgs === 'skip' || !import.meta.server) {
-        return null
+      // pagination id), so nothing is fetched. The fetch sits inside the server
+      // test, as in `useAsyncQuery`, so a client build drops it, and
+      // `fetchQuery`'s HTTP client with it.
+      if (import.meta.server && currentArgs !== 'skip') {
+        if (!deploymentUrl) {
+          throw new Error(
+            '`useAsyncPaginatedQuery` could not fetch during SSR: no Convex deployment URL is configured. '
+            + 'Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
+          )
+        }
+        // A plain query reference: `fetchQuery`'s args tuple is conditional on
+        // the reference type and cannot resolve against the generic `Query`.
+        const result = await fetchQuery(
+          query as FunctionReference<'query'>,
+          { ...currentArgs, paginationOpts: { numItems: initialNumItems, cursor: null } } as Record<string, Value>,
+          { token: await resolveToken(), url: deploymentUrl },
+        ) as PaginationResult<Item>
+        return { page: convexToJson(result.page as Value), isDone: result.isDone }
       }
-      if (!deploymentUrl) {
-        throw new Error(
-          '`useAsyncPaginatedQuery` could not fetch during SSR: no Convex deployment URL is configured. '
-          + 'Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.',
-        )
-      }
-      // A plain query reference: `fetchQuery`'s args tuple is conditional on
-      // the reference type and cannot resolve against the generic `Query`.
-      const result = await fetchQuery(
-        query as FunctionReference<'query'>,
-        { ...currentArgs, paginationOpts: { numItems: initialNumItems, cursor: null } } as Record<string, Value>,
-        { token: await resolveToken(), url: deploymentUrl },
-      ) as PaginationResult<Item>
-      return { page: convexToJson(result.page as Value), isDone: result.isDone }
+      return null
     },
     { server, lazy, deep: false, immediate: initialArgs !== 'skip' },
   )

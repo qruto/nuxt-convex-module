@@ -21,7 +21,7 @@ import type { StorageId } from '../composables/use-upload'
  *
  * @public
  */
-export const ConvexImage = defineComponent({
+export const ConvexImage = /* @__PURE__ */ defineComponent({
   name: 'ConvexImage',
   inheritAttrs: false,
   props: {

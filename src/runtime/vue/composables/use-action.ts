@@ -1,4 +1,4 @@
-import type { FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
+import type { FunctionReference, FunctionReference_future, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { makeFunctionReference } from 'convex/server'
 import type { Value } from 'convex/values'
 import { useConvexOrThrow, type ConvexVueClient } from '../client'
@@ -8,7 +8,7 @@ import { useConvexOrThrow, type ConvexVueClient } from '../client'
  *
  * @public
  */
-export interface VueAction<Action extends FunctionReference<'action'>> {
+export interface VueAction<Action extends FunctionReference<'action'> | FunctionReference_future<'action'>> {
   /**
    * Execute the function on the server, returning a `Promise` of its return value.
    *
@@ -20,7 +20,7 @@ export interface VueAction<Action extends FunctionReference<'action'>> {
 }
 
 function createAction(
-  actionReference: FunctionReference<'action'>,
+  actionReference: FunctionReference<'action'> | FunctionReference_future<'action'>,
   client: ConvexVueClient,
 ): VueAction<any> {
   return function (args?: Record<string, Value>): Promise<unknown> {
@@ -71,7 +71,7 @@ function createAction(
  *
  * @public
  */
-export function useAction<Action extends FunctionReference<'action'>>(
+export function useAction<Action extends FunctionReference<'action'> | FunctionReference_future<'action'>>(
   action: Action,
 ): VueAction<Action> {
   // Upstream: `useContext(ConvexContext)` plus the in-hook undefined check.

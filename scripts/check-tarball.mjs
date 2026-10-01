@@ -7,7 +7,7 @@
 // leaves a second file and the glob would silently hand two arguments to
 // publint.
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { step } from './lib/step.mjs'
@@ -253,6 +253,43 @@ try {
 
   const subpaths = Object.keys(allowed).length
   console.log(`  ✓ ${subpaths} subpaths · ${optionalPeers.size} optional peers, none reachable outside its own\n`)
+
+  // ── Size ──────────────────────────────────────────
+  //
+  // Every install downloads all of it, so it has a ceiling: a little above
+  // what 0.11.0 measured (454 KB, 102 files). What grows quietly here is the
+  // DevTools panel (a router or duplicate HTML pages coming back) and a
+  // declaration that spells out a dependency's types instead of naming them.
+  // Raise the ceiling in the change that explains the growth.
+  console.log('── Size ───────────────────────────────────────')
+  const MAX_BYTES = 480_000
+  const MAX_FILES = 110
+  let bytes = 0
+  let count = 0
+  for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue
+    bytes += statSync(join(entry.parentPath, entry.name)).size
+    count++
+  }
+  if (bytes > MAX_BYTES || count > MAX_FILES) {
+    console.error(`  ✗ ${bytes} bytes in ${count} files — over the ${MAX_BYTES}-byte / ${MAX_FILES}-file ceiling`)
+    process.exit(1)
+  }
+  console.log(`  ✓ ${(bytes / 1000).toFixed(1)} kB in ${count} files (ceiling ${MAX_BYTES / 1000} kB / ${MAX_FILES} files)\n`)
+
+  // ── DevTools panel icons ──────────────────────────
+  //
+  // UnoCSS writes an icon's CSS rule only when it can load the icon set, and
+  // gives no error when it can't: 0.10.0 shipped a panel with every icon
+  // blank. The panel's own stylesheet has to carry them.
+  console.log('── DevTools panel icons ───────────────────────')
+  const assets = join(pkgRoot, 'dist', 'devtools-client', '_nuxt')
+  const panelCss = readdirSync(assets).filter(f => f.endsWith('.css')).map(f => readFileSync(join(assets, f), 'utf8')).join('')
+  if (!/\.carbon-plug\b/.test(panelCss)) {
+    console.error('  ✗ the panel stylesheet has no icon rules — @iconify-json/carbon did not load when it was built')
+    process.exit(1)
+  }
+  console.log('  ✓ icon rules present\n')
 }
 finally {
   rmSync(extracted, { recursive: true, force: true })

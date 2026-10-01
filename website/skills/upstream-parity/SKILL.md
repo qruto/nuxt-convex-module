@@ -229,6 +229,9 @@ stop and check PARITY.md:
   `src/runtime/**` in `eslint.config.js` or `.fallowrc.jsonc` instead.
 - **Reimplementing `convexClient` / `crossDomainClient`.** They are framework-agnostic and
   imported as-is from `@convex-dev/better-auth/client/plugins`.
+- **Dropping `/* @__PURE__ */` from a module-scope `defineComponent`.** Without it every
+  component in the file ships whenever one of them is used
+  ([§2.2](../../../PARITY.md#22-translation-rules)).
 
 ---
 

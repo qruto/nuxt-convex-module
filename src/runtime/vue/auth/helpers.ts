@@ -13,7 +13,7 @@ import { useConvexAuth } from './index'
  *
  * @public
  */
-export const Authenticated = defineComponent({
+export const Authenticated = /* @__PURE__ */ defineComponent({
   name: 'Authenticated',
   setup(_, { slots }) {
     const { isLoading, isAuthenticated } = useConvexAuth()
@@ -38,7 +38,7 @@ export const Authenticated = defineComponent({
  *
  * @public
  */
-export const Unauthenticated = defineComponent({
+export const Unauthenticated = /* @__PURE__ */ defineComponent({
   name: 'Unauthenticated',
   setup(_, { slots }) {
     const { isLoading, isAuthenticated } = useConvexAuth()
@@ -64,7 +64,7 @@ export const Unauthenticated = defineComponent({
  *
  * @public
  */
-export const AuthLoading = defineComponent({
+export const AuthLoading = /* @__PURE__ */ defineComponent({
   name: 'AuthLoading',
   setup(_, { slots }) {
     const { isLoading } = useConvexAuth()
@@ -95,7 +95,7 @@ export const AuthLoading = defineComponent({
  *
  * @public
  */
-export const AuthRefreshing = defineComponent({
+export const AuthRefreshing = /* @__PURE__ */ defineComponent({
   name: 'AuthRefreshing',
   setup(_, { slots }) {
     const { isAuthenticated, isRefreshing } = useConvexAuth()

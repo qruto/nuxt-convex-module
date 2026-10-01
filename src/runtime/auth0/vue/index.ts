@@ -65,7 +65,7 @@ export function provideConvexAuthFromAuth0(
  *
  * @public
  */
-export const ConvexProviderWithAuth0 = defineComponent({
+export const ConvexProviderWithAuth0 = /* @__PURE__ */ defineComponent({
   name: 'ConvexProviderWithAuth0',
   props: {
     client: { type: Object as PropType<IConvexVueClient>, default: undefined },
@@ -88,7 +88,10 @@ function useAuthFromAuth0() {
         detailedResponse: true,
         cacheMode: forceRefreshToken ? 'off' : 'on',
       })
-      return response.id_token as string
+      // `!`: @auth0/auth0-vue 2.10+ types the detailed response as possibly
+      // `undefined`, @auth0/auth0-react does not. An `undefined` still throws
+      // here and lands in the `catch`, as upstream's does.
+      return response!.id_token as string
     }
     catch {
       return null

@@ -1,4 +1,4 @@
-import type { FunctionArgs, FunctionReference } from 'convex/server'
+import type { FunctionArgs, FunctionReference, FunctionReference_future, FunctionReturnType } from 'convex/server'
 import { makeFunctionReference } from 'convex/server'
 import type { Value } from 'convex/values'
 import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
@@ -11,12 +11,14 @@ import type { UseQueryResult as ConvexUseQueryResult } from 'convex/react'
 // Vue-enhanced form of upstream's `OptionalRestArgsOrSkip`: args accept a
 // `MaybeRefOrGetter` for reactivity. `Record<string, never>` inlines convex's
 // non-exported `EmptyObject`. The constraint matches upstream's
-// `FunctionReference<any>` so generic helpers written against the upstream
-// export keep compiling.
-export type OptionalRestArgsOrSkip<FuncRef extends FunctionReference<any>>
-  = FuncRef['_args'] extends Record<string, never>
+// `FunctionReference<any> | FunctionReference_future<any>` so generic helpers
+// written against the upstream export keep compiling.
+export type OptionalRestArgsOrSkip<
+  FuncRef extends FunctionReference<any> | FunctionReference_future<any>,
+>
+  = FunctionArgs<FuncRef> extends Record<string, never>
     ? [args?: MaybeRefOrGetter<Record<string, never> | 'skip'>]
-    : [args: MaybeRefOrGetter<FuncRef['_args'] | 'skip'>]
+    : [args: MaybeRefOrGetter<FunctionArgs<FuncRef> | 'skip'>]
 
 /**
  * Result returned by object-form {@link useQuery_experimental}.
@@ -28,7 +30,7 @@ export type UseQueryResult<QueryResult, ThrowOnError extends boolean = false>
   = ConvexUseQueryResult<QueryResult, ThrowOnError>
 
 type UseQueryOptions<
-  Query extends FunctionReference<'query'>,
+  Query extends FunctionReference<'query'> | FunctionReference_future<'query'>,
   ThrowOnError extends boolean,
 > = {
   query: Query
@@ -75,10 +77,10 @@ type UseQueryOptions<
  *
  * @public
  */
-export function useQuery<Query extends FunctionReference<'query'>>(
+export function useQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   query: Query,
   ...args: OptionalRestArgsOrSkip<Query>
-): ComputedRef<Query['_returnType'] | undefined> {
+): ComputedRef<FunctionReturnType<Query> | undefined> {
   const queryReference
     = typeof query === 'string'
       ? makeFunctionReference<'query', any, any>(query)
@@ -88,7 +90,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
   // computed re-derives it reactively instead — args arrive as a
   // `MaybeRefOrGetter` per the Vue translation rules. Upstream's `parseArgs`
   // (convex/common, not a public export) reduces to the `?? {}` defaulting.
-  const queries = computed((): RequestForQueries => {
+  const queries = computed(() => {
     const rawArgs = toValue(args[0]) ?? {}
     const skip = rawArgs === 'skip'
     const argsObject = rawArgs === 'skip' ? {} : rawArgs
@@ -105,7 +107,7 @@ export function useQuery<Query extends FunctionReference<'query'>>(
   // render and propagates it to the nearest `errorCaptured` boundary (React's
   // `<ErrorBoundary>` analog).
   return computed(() => {
-    const result = results.value['query'] as Query['_returnType'] | undefined | Error
+    const result = results.value['query'] as FunctionReturnType<Query> | undefined | Error
 
     if (result instanceof Error) {
       throw result
@@ -144,18 +146,18 @@ export function useQuery<Query extends FunctionReference<'query'>>(
  * @experimental May change in a minor release — see STABILITY.md.
  */
 export function useQuery_experimental<
-  Query extends FunctionReference<'query'>,
+  Query extends FunctionReference<'query'> | FunctionReference_future<'query'>,
   ThrowOnError extends boolean = false,
 >(
   options: UseQueryOptions<Query, ThrowOnError>,
-): ComputedRef<UseQueryResult<Query['_returnType'], ThrowOnError>>
+): ComputedRef<UseQueryResult<FunctionReturnType<Query>, ThrowOnError>>
 
 export function useQuery_experimental<
-  Query extends FunctionReference<'query'>,
+  Query extends FunctionReference<'query'> | FunctionReference_future<'query'>,
   ThrowOnError extends boolean = false,
 >(
   options: UseQueryOptions<Query, ThrowOnError>,
-): ComputedRef<UseQueryResult<Query['_returnType'], false>> {
+): ComputedRef<UseQueryResult<FunctionReturnType<Query>, false>> {
   const throwOnError = options.throwOnError ?? false
   const queryReference
     = typeof options.query === 'string'
@@ -164,7 +166,7 @@ export function useQuery_experimental<
 
   // Upstream memoizes `queries` on the stringified args (`useMemo`); this
   // computed re-derives it reactively instead.
-  const queries = computed((): RequestForQueries => {
+  const queries = computed(() => {
     const rawArgs = toValue(options.args)
     const skip = rawArgs === 'skip'
     const argsObject = !skip ? (rawArgs as Record<string, Value>) : {}
@@ -180,8 +182,8 @@ export function useQuery_experimental<
   // `status: 'error'` narrows to the literal). Errors are returned as
   // `status: 'error'` unless `throwOnError`, in which case the getter throws
   // (→ `errorCaptured`).
-  return computed<UseQueryResult<Query['_returnType'], false>>(() => {
-    const result = results.value['query'] as Query['_returnType'] | undefined | Error
+  return computed<UseQueryResult<FunctionReturnType<Query>, false>>(() => {
+    const result = results.value['query'] as FunctionReturnType<Query> | undefined | Error
 
     if (result instanceof Error) {
       if (throwOnError) {

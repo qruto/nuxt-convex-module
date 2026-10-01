@@ -916,14 +916,10 @@
      `convex-text-2` keeps the ink: the crown IS the ink, the body a
      step under it. For the 14px semibold names in the sidebar, which
      have to stay as bright as the icons beside them. */
-  --convex-text-lift: round(nearest, max(0.5px, 0.04em), 0.5px);
-  --convex-text-rim: round(nearest, max(0.5px, 0.025em), 0.5px);
+  @apply convex-text;
   --convex-face-crown: 0%;
   --convex-face-body: 8%;
   --convex-face-foot: 20%;
-  text-shadow:
-    0 calc(-1 * var(--convex-text-rim)) 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.2)),
-    0 var(--convex-text-lift) 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
   /* A HAIR OF STROKE (2026-09-16: "try to add tiny text stroke for those
      headers"). Chrome draws a clipped fill with a thinner edge than solid
      ink (the note under the domed face below), so in the dark room the
@@ -940,7 +936,6 @@
   -webkit-text-stroke: 0.02em color-mix(in oklab, currentColor, #000 25%);
   paint-order: stroke fill;
   @media (forced-colors: active) {
-    text-shadow: none;
     -webkit-text-stroke: 0;
   }
 }
@@ -964,17 +959,11 @@
      the ink rather than a white line ("a bit less light", the second
      time), and the shade is 0.5 instead of 0.6. The foot still turns a
      quarter down the face so a tall letter domes. */
+  @apply convex-text;
   --convex-text-lift: round(nearest, max(0.5px, 0.01em), 0.5px);
-  --convex-text-rim: round(nearest, max(0.5px, 0.025em), 0.5px);
   --convex-face-crown: 12%;
   --convex-face-body: 12%;
   --convex-face-foot: 25%;
-  text-shadow:
-    0 calc(-1 * var(--convex-text-rim)) 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.2)),
-    0 var(--convex-text-lift) 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6));
-  @media (forced-colors: active) {
-    text-shadow: none;
-  }
 }
 /* THE DOMED FACE, shared by both rungs above. The ink is made
    transparent and the face is a gradient of the SAME ink clipped to
@@ -1015,11 +1004,14 @@
   & *::selection {
     -webkit-text-fill-color: currentColor;
   }
+  /* `!important` because the per-room rules below outrank this selector
+     and set their own text-shadow and drop-shadow filter; forced colors
+     has to win over both. */
   @media (forced-colors: active) {
     -webkit-text-fill-color: currentColor;
     background-image: none;
-    text-shadow: none;
-    filter: none;
+    text-shadow: none !important;
+    filter: none !important;
   }
 }
 :root.dark :is(.convex-text-2, .convex-text-3) {

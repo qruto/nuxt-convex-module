@@ -3,7 +3,7 @@
 
 export const RPC_NAMESPACE = 'nuxt-convex-module'
 
-/** Route the panel iframe is served under (sirv when built, proxy in dev). */
+/** Route the panel iframe is served under (a dev-server handler when built, a proxy in dev). */
 export const DEVTOOLS_UI_ROUTE = '/__nuxt-convex-module'
 
 /** Port `pnpm dev:devtools-client` runs the panel dev server on (3300 is nuxt/fonts'). */

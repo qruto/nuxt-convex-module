@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { formatStartupSummary, integrationWarnings, isDeclaredDependency, resolveIntegrationState } from '../../src/options'
+import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveIntegrationState } from '../../src/options'
 import { hasGeneratedApi } from '../../src/functions-dir'
 
 describe('resolveIntegrationState', () => {
@@ -88,6 +88,33 @@ describe('isDeclaredDependency', () => {
     expect(isDeclaredDependency('nuxt-security', root)).toBe(false)
     writeFileSync(join(root, 'package.json'), '{ not json')
     expect(isDeclaredDependency('nuxt-security', root)).toBe(false)
+  })
+})
+
+describe('isPackageInstalled', () => {
+  const root = mkdtempSync(join(tmpdir(), 'convex-installed-'))
+  afterAll(() => rmSync(root, { recursive: true, force: true }))
+
+  function install(dir: string, id: string, manifest: Record<string, unknown> = {}) {
+    mkdirSync(join(dir, 'node_modules', id), { recursive: true })
+    writeFileSync(join(dir, 'node_modules', id, 'package.json'), JSON.stringify({ name: id, ...manifest }))
+  }
+
+  it('finds a package whatever its exports map allows', () => {
+    // ESM-only and no `./package.json` export, like nuxt-security.
+    install(root, 'fixture-esm-only', { type: 'module', exports: { '.': { import: './index.mjs' } } })
+    // No `.` export at all, like @polar-sh/checkout.
+    install(root, '@fixture/subpaths-only', { exports: { './embed': './embed.js' } })
+    expect(isPackageInstalled('fixture-esm-only', root)).toBe(true)
+    expect(isPackageInstalled('@fixture/subpaths-only', root)).toBe(true)
+    expect(isPackageInstalled('fixture-not-installed', root)).toBe(false)
+  })
+
+  it('looks in parent folders, where a hoisted install puts it', () => {
+    install(root, 'fixture-hoisted')
+    const app = join(root, 'apps', 'web')
+    mkdirSync(app, { recursive: true })
+    expect(isPackageInstalled('fixture-hoisted', app)).toBe(true)
   })
 })
 

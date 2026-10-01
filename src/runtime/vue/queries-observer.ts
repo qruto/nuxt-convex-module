@@ -1,8 +1,7 @@
 import { convexToJson, type Value } from 'convex/values'
 import type { PaginatedWatch, Watch } from './client'
 import type { QueryJournal } from 'convex/browser'
-import { type FunctionReference, getFunctionName } from 'convex/server'
-import type { RequestForQueries } from './composables/use-queries'
+import { type FunctionReference, type FunctionReference_future, getFunctionName } from 'convex/server'
 
 // Upstream imports `PaginatedQueryResult` and `SubscribeToPaginatedQueryOptions`
 // from convex's internal `browser/sync/*` modules, which are not in the package
@@ -17,8 +16,17 @@ export interface SubscribeToPaginatedQueryOptions {
 
 type Identifier = string
 
+type RequestForQueriesCompat = Record<
+  Identifier,
+  {
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>
+    args: Record<string, Value>
+    paginationOptions?: SubscribeToPaginatedQueryOptions
+  }
+>
+
 type QueryInfo = {
-  query: FunctionReference<'query'>
+  query: FunctionReference<'query'> | FunctionReference_future<'query'>
   args: Record<string, Value>
   watch: Watch<Value> | PaginatedWatch<Value>
   unsubscribe: () => void
@@ -27,7 +35,7 @@ type QueryInfo = {
 
 export interface CreateWatch {
   (
-    query: FunctionReference<'query'>,
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>,
     args: Record<string, Value>,
     options: {
       journal?: QueryJournal
@@ -53,16 +61,7 @@ export class QueriesObserver {
     this.listeners = new Set()
   }
 
-  setQueries(
-    newQueries: Record<
-      Identifier,
-      {
-        query: FunctionReference<'query'>
-        args: Record<string, Value>
-        paginationOptions?: SubscribeToPaginatedQueryOptions
-      }
-    >,
-  ) {
+  setQueries(newQueries: RequestForQueriesCompat) {
     // Add the new queries before unsubscribing from the old ones so that
     // the deduping in the `ConvexVueClient` can help if there are duplicates.
     for (const identifier of Object.keys(newQueries)) {
@@ -119,7 +118,7 @@ export class QueriesObserver {
   }
 
   getLocalResults(
-    queries: RequestForQueries,
+    queries: RequestForQueriesCompat,
   ): Record<
     Identifier,
     Value | undefined | Error | PaginatedQueryResult<Value>
@@ -130,11 +129,7 @@ export class QueriesObserver {
     > = {}
     for (const identifier of Object.keys(queries)) {
       const { query, args } = queries[identifier]!
-      // `paginationOptions` is internal upstream and stripped from the
-      // published `RequestForQueries` type, so read it through a cast.
-      const paginationOptions = (queries[identifier]! as {
-        paginationOptions?: SubscribeToPaginatedQueryOptions
-      }).paginationOptions
+      const paginationOptions = queries[identifier]!.paginationOptions
 
       // Might throw
       getFunctionName(query)
@@ -191,7 +186,7 @@ export class QueriesObserver {
 
   private addQuery(
     identifier: Identifier,
-    query: FunctionReference<'query'>,
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>,
     args: Record<string, Value>,
     {
       paginationOptions,

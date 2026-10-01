@@ -61,7 +61,7 @@ and `convex` is optional, needed only by the integration it powers:
 | Package | Range |
 |---|---|
 | `vue` | `^3.5.0` |
-| `convex` | `^1.40.0` |
+| `convex` | `^1.46.0` |
 | `@convex-dev/better-auth` | `>=0.12.0 <0.13.0` |
 | `better-auth` | `~1.6.11` |
 | `@convex-dev/polar` | `>=0.9.0 <0.10.0` |

@@ -1,29 +1,25 @@
 // PARITY: A-15
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { request, createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createApp, toNodeListener, type EventHandler } from 'h3'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import type { DevtoolsServerInfo } from '../../src/devtools/rpc-types'
 import { DEVTOOLS_UI_ROUTE, RPC_NAMESPACE } from '../../src/devtools/rpc-types'
-
-const addCustomTab = vi.fn()
-const extendServerRpc = vi.fn()
-const onDevToolsInitialized = vi.fn()
-
-vi.mock('@nuxt/devtools-kit', () => ({
-  addCustomTab: (...args: unknown[]) => addCustomTab(...args),
-  extendServerRpc: (...args: unknown[]) => extendServerRpc(...args),
-  onDevToolsInitialized: (...args: unknown[]) => onDevToolsInitialized(...args),
-}))
-
-const { setupDevtools } = await import('../../src/devtools/index')
+import { setupDevtools } from '../../src/devtools/index'
 
 const base = mkdtempSync(join(tmpdir(), 'convex-devtools-'))
 afterAll(() => rmSync(base, { recursive: true, force: true }))
 
 function fakeEnv(resolverBase: string) {
-  const hooks = new Map<string, (arg: unknown) => unknown>()
-  const nuxt = { hook: vi.fn((name: string, fn: (arg: unknown) => unknown) => hooks.set(name, fn)) }
+  const hooks = new Map<string, (arg?: unknown) => unknown>()
+  const nuxt = {
+    hook: vi.fn((name: string, fn: (arg?: unknown) => unknown) => hooks.set(name, fn)),
+    options: { devServerHandlers: [] as Array<{ route: string, handler: EventHandler }> },
+    devtools: { extendServerRpc: vi.fn() },
+  }
   const resolver = { resolve: (path: string) => join(resolverBase, path) }
   return { hooks, nuxt, resolver }
 }
@@ -39,22 +35,53 @@ const info: DevtoolsServerInfo = {
   integrations: { betterAuth: false, clerk: false, auth0: false, polar: false, security: false },
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
+/** GET a raw path (no URL normalisation, so `..` reaches the server as sent). */
+function get(server: Server, path: string) {
+  const { port } = server.address() as AddressInfo
+  return new Promise<{ status: number, type?: string, cache?: string, body: string }>((resolve, reject) => {
+    request({ port, path }, (res) => {
+      let body = ''
+      res.on('data', (chunk) => {
+        body += chunk
+      })
+      res.on('end', () => resolve({ status: res.statusCode!, type: res.headers['content-type'], cache: res.headers['cache-control'], body }))
+    }).on('error', reject).end()
+  })
+}
 
 describe('setupDevtools', () => {
-  it('serves the prebuilt panel via sirv when dist/devtools-client exists', async () => {
+  it('serves the prebuilt panel from dist/devtools-client', async () => {
     const withClient = join(base, 'with-client')
-    mkdirSync(join(withClient, 'devtools-client'), { recursive: true })
-    const { hooks, nuxt, resolver } = fakeEnv(withClient)
+    mkdirSync(join(withClient, 'devtools-client', '_nuxt'), { recursive: true })
+    writeFileSync(join(withClient, 'devtools-client', 'index.html'), '<!doctype html><title>panel</title>')
+    writeFileSync(join(withClient, 'devtools-client', '_nuxt', 'entry.js'), 'export {}')
+    writeFileSync(join(withClient, 'secret.txt'), 'outside the panel')
+    const { nuxt, resolver } = fakeEnv(withClient)
 
     setupDevtools(resolver as never, nuxt as never, info)
 
-    expect(hooks.has('vite:serverCreated')).toBe(true)
-    const middlewares = { use: vi.fn() }
-    await hooks.get('vite:serverCreated')!({ middlewares })
-    expect(middlewares.use).toHaveBeenCalledWith(DEVTOOLS_UI_ROUTE, expect.any(Function))
+    expect(nuxt.options.devServerHandlers).toHaveLength(1)
+    const { route, handler } = nuxt.options.devServerHandlers[0]!
+    expect(route).toBe(DEVTOOLS_UI_ROUTE)
+
+    // Mounted the way Nitro's dev server mounts `devServerHandlers`.
+    const server = createServer(toNodeListener(createApp().use(route, handler)))
+    await new Promise<void>(resolve => server.listen(0, resolve))
+    try {
+      const page = await get(server, `${DEVTOOLS_UI_ROUTE}/`)
+      expect(page).toMatchObject({ status: 200, type: 'text/html; charset=utf-8', cache: 'no-store' })
+      expect(page.body).toContain('<title>panel</title>')
+      expect(await get(server, `${DEVTOOLS_UI_ROUTE}/_nuxt/entry.js`))
+        .toMatchObject({ status: 200, type: 'text/javascript; charset=utf-8' })
+      expect((await get(server, `${DEVTOOLS_UI_ROUTE}/missing.js`)).status).toBe(404)
+      // A path that climbs out of the panel folder is refused, not read.
+      const escape = await get(server, `${DEVTOOLS_UI_ROUTE}/../secret.txt`)
+      expect(escape.status).toBe(404)
+      expect(escape.body).not.toContain('outside the panel')
+    }
+    finally {
+      server.close()
+    }
   })
 
   it('proxies the panel to the local dev server when the built client is absent', () => {
@@ -62,6 +89,7 @@ describe('setupDevtools', () => {
 
     setupDevtools(resolver as never, nuxt as never, info)
 
+    expect(nuxt.options.devServerHandlers).toHaveLength(0)
     expect(hooks.has('vite:extendConfig')).toBe(true)
     const viteConfig: { server?: { proxy?: Record<string, unknown> } } = {}
     hooks.get('vite:extendConfig')!(viteConfig)
@@ -88,12 +116,12 @@ describe('setupDevtools', () => {
     const projectRoot = join(base, 'rpc-project')
     mkdirSync(join(projectRoot, 'convex'), { recursive: true })
     writeFileSync(join(projectRoot, 'convex', 'messages.ts'), '')
-    const { nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
+    const { hooks, nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
 
     setupDevtools(resolver as never, nuxt as never, { ...info, rootDir: projectRoot })
-    onDevToolsInitialized.mock.calls[0]![0]()
+    hooks.get('devtools:initialized')!()
 
-    const rpc = extendServerRpc.mock.calls[0]![1] as {
+    const rpc = nuxt.devtools.extendServerRpc.mock.calls[0]![1] as {
       resolveFunctionSource: (udfPath: string) => { filepath?: string }
     }
     expect(rpc.resolveFunctionSource('messages:list'))
@@ -102,22 +130,24 @@ describe('setupDevtools', () => {
   })
 
   it('registers the iframe tab and the server RPC', () => {
-    const { nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
+    const { hooks, nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
 
     setupDevtools(resolver as never, nuxt as never, info)
 
-    expect(addCustomTab).toHaveBeenCalledWith(expect.objectContaining({
+    const tabs: unknown[] = []
+    hooks.get('devtools:customTabs')!(tabs)
+    expect(tabs).toEqual([expect.objectContaining({
       name: 'nuxt-convex-module',
       view: { type: 'iframe', src: DEVTOOLS_UI_ROUTE },
-    }))
+    })])
 
     // The RPC is registered once DevTools initializes.
-    expect(onDevToolsInitialized).toHaveBeenCalledTimes(1)
-    onDevToolsInitialized.mock.calls[0]![0]()
-    expect(extendServerRpc).toHaveBeenCalledWith(RPC_NAMESPACE, expect.objectContaining({
+    expect(nuxt.devtools.extendServerRpc).not.toHaveBeenCalled()
+    hooks.get('devtools:initialized')!()
+    expect(nuxt.devtools.extendServerRpc).toHaveBeenCalledWith(RPC_NAMESPACE, expect.objectContaining({
       getInfo: expect.any(Function),
       resolveFunctionSource: expect.any(Function),
     }))
-    expect(extendServerRpc.mock.calls[0]![1].getInfo()).toBe(info)
+    expect(nuxt.devtools.extendServerRpc.mock.calls[0]![1].getInfo()).toBe(info)
   })
 })

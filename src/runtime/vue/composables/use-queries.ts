@@ -3,8 +3,7 @@ import { onScopeDispose, shallowRef, toValue, watchEffect, type MaybeRefOrGetter
 import { useConvexOrThrow } from '../client'
 import { QueriesObserver, type CreateWatch, type SubscribeToPaginatedQueryOptions } from '../queries-observer'
 import type { QueryJournal } from 'convex/browser'
-import type { FunctionReference } from 'convex/server'
-import type { RequestForQueries } from 'convex/react'
+import type { FunctionReference, FunctionReference_future } from 'convex/server'
 
 /**
  * Load a variable number of reactive Convex queries.
@@ -14,9 +13,10 @@ import type { RequestForQueries } from 'convex/react'
  * of queries without violating the rules of composables.
  *
  * This composable accepts an object whose keys are identifiers for each query and the
- * values are objects of `{ query: FunctionReference, args: Record<string, Value> }`. The
- * `query` is a FunctionReference for the Convex query function to load, and the `args` are
- * the arguments to that function.
+ * values are objects of
+ * `{ query: FunctionReference | FunctionReference_future, args: Record<string, Value> }`.
+ * The `query` is a reference to the Convex query function to load, and the
+ * `args` are the arguments to that function.
  *
  * The composable returns an object that maps each identifier to the result of the query,
  * `undefined` if the query is still loading, or an instance of `Error` if the query
@@ -58,7 +58,7 @@ import type { RequestForQueries } from 'convex/react'
  * @public
  */
 export function useQueries(
-  queries: MaybeRefOrGetter<RequestForQueries>,
+  queries: MaybeRefOrGetter<RequestForQueriesCompat>,
 ): ShallowRef<Record<string, any | undefined | Error>> {
   // Error message includes `useQuery` because this composable is called by
   // `useQuery` more often than it's called directly.
@@ -66,7 +66,7 @@ export function useQueries(
   // Upstream memoizes `createWatch` on the client identity; a composable runs
   // once with one client, so a plain closure suffices.
   const createWatch = (
-    query: FunctionReference<'query'>,
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>,
     args: Record<string, Value>,
     {
       journal,
@@ -90,7 +90,7 @@ export function useQueries(
  * Internal version of `useQueries` that is exported for testing.
  */
 export function useQueriesHelper(
-  queries: MaybeRefOrGetter<RequestForQueries>,
+  queries: MaybeRefOrGetter<RequestForQueriesCompat>,
   createWatch: CreateWatch,
 ): ShallowRef<Record<string, any | undefined | Error>> {
   const observer = new QueriesObserver(createWatch)
@@ -136,6 +136,21 @@ export function useQueriesHelper(
 // Upstream declares `RequestForQueries` here; the port re-exports the
 // canonical type from `convex/react` instead of duplicating its shape.
 export type { RequestForQueries } from 'convex/react'
+
+// The `queries` parameter of `useQueries`: `RequestForQueries` with `query`
+// also accepting a `FunctionReference_future`. The exported type stays a plain
+// reference so that code reading a `query` out of one gets a
+// `FunctionReference` it can forward anywhere. Module-local so that a
+// consumer's declaration file inlines it rather than importing it from a path
+// outside the package's public entry points.
+type RequestForQueriesCompat = Record<
+  string,
+  {
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>
+    args: Record<string, Value>
+    paginationOptions?: SubscribeToPaginatedQueryOptions
+  }
+>
 
 /** @public */
 export const useConvexQueries = useQueries

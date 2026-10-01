@@ -16,6 +16,7 @@ import type {
   ArgsAndOptions,
   FunctionArgs,
   FunctionReference,
+  FunctionReference_future,
   FunctionReturnType,
   OptionalRestArgs,
   UserIdentityAttributes,
@@ -347,7 +348,7 @@ export class ConvexVueClient {
    *
    * @returns The {@link Watch} object.
    */
-  watchQuery<Query extends FunctionReference<'query'>>(
+  watchQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     query: Query,
     ...argsAndOptions: ArgsAndOptions<Query, WatchQueryOptions>
   ): Watch<FunctionReturnType<Query>> {
@@ -425,7 +426,7 @@ export class ConvexVueClient {
    * @param queryOptions - A query (function reference from an api object) and its args, plus
    * an optional extendSubscriptionFor for how long to subscribe to the query.
    */
-  prewarmQuery<Query extends FunctionReference<'query'>>(
+  prewarmQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     queryOptions: QueryOptions<Query> & { extendSubscriptionFor?: number },
   ) {
     const extendSubscriptionFor
@@ -460,9 +461,9 @@ export class ConvexVueClient {
    *
    * @internal
    */
-  watchPaginatedQuery<Query extends FunctionReference<'query'>>(
+  watchPaginatedQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     _query: Query,
-    _args: Query['_args'],
+    _args: FunctionArgs<Query>,
     // Upstream: `options: WatchPaginatedQueryOptions` (internal, stripped
     // from the published types); typed loosely since this method only throws.
     _options: unknown,
@@ -484,7 +485,7 @@ export class ConvexVueClient {
    * @param options - A {@link MutationOptions} options object for the mutation.
    * @returns A promise of the mutation's result.
    */
-  mutation<Mutation extends FunctionReference<'mutation'>>(
+  mutation<Mutation extends FunctionReference<'mutation'> | FunctionReference_future<'mutation'>>(
     mutation: Mutation,
     ...argsAndOptions: ArgsAndOptions<
       Mutation,
@@ -505,7 +506,7 @@ export class ConvexVueClient {
    * the arguments will be `{}`.
    * @returns A promise of the action's result.
    */
-  action<Action extends FunctionReference<'action'>>(
+  action<Action extends FunctionReference<'action'> | FunctionReference_future<'action'>>(
     action: Action,
     ...args: OptionalRestArgs<Action>
   ): Promise<FunctionReturnType<Action>> {
@@ -525,7 +526,7 @@ export class ConvexVueClient {
    * the arguments will be `{}`.
    * @returns A promise of the query's result.
    */
-  query<Query extends FunctionReference<'query'>>(
+  query<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     query: Query,
     ...args: OptionalRestArgs<Query>
   ): Promise<FunctionReturnType<Query>> {

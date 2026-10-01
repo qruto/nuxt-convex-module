@@ -84,10 +84,10 @@ const send = useMutation(api.reactions.send)
 <!-- The spec strip — version, the three peer ranges, and the upstream
      Convex release the port matches — cut into the ground under the
      keys, the copy column's full width. The peer ranges are this page's
-     copy and travel as props (convex is the module's peer range, ^1.40);
+     copy and travel as props (convex is the module's peer range, ^1.46);
      the version and the ported Convex figure the component reads for
      itself. -->
-:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.40"}
+:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.46"}
 
 #bottom
 :landing-services

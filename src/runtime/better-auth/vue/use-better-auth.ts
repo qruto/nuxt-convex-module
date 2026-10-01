@@ -27,7 +27,11 @@ type BetterAuthSessionData = {
 
 const useClientSession = () => authClient.useSession()
 
-export type BetterAuthSession = ReturnType<typeof useClientSession>
+// Read off `AuthClient`, so the published type follows the app's own client
+// through `#convex/auth-client`; `typeof useClientSession` would freeze the
+// bundled client's session into the declaration file. `useSession` is
+// overloaded, and the no-argument form is the one called above.
+export type BetterAuthSession = AuthClient['useSession'] extends { (): infer R, (useFetch: any): any } ? R : never
 
 /** The signed-in user (loose — exact fields depend on your auth schema). */
 export type BetterAuthUser = { id: string, email: string, name: string } & Record<string, unknown>

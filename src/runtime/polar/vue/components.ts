@@ -57,7 +57,7 @@ export interface PolarComponentApi {
  *
  * @public
  */
-export const CustomerPortalLink = defineComponent({
+export const CustomerPortalLink = /* @__PURE__ */ defineComponent({
   name: 'CustomerPortalLink',
   inheritAttrs: false,
   props: {
@@ -112,7 +112,7 @@ export const CustomerPortalLink = defineComponent({
  *
  * @public
  */
-export const CheckoutLink = defineComponent({
+export const CheckoutLink = /* @__PURE__ */ defineComponent({
   name: 'CheckoutLink',
   inheritAttrs: false,
   props: {

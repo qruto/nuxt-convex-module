@@ -13,7 +13,7 @@ are in [AGENTS.md](./AGENTS.md).
 
 | Upstream package | Baseline version | Diffed against |
 |---|---|---|
-| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.45.0** | tag `npm/1.45.0` in [get-convex/convex-js](https://github.com/get-convex/convex-js) |
+| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.46.0** | tag `npm/1.46.0` in [get-convex/convex-js](https://github.com/get-convex/convex-js) |
 | `@convex-dev/better-auth` | **0.12.5** | tag `v0.12.5` in [get-convex/better-auth](https://github.com/get-convex/better-auth) |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [get-convex/polar](https://github.com/get-convex/polar) |
 
@@ -101,7 +101,7 @@ result, no `throwOnError` parameter (D-02 covers the error path).
 
 ### File by file
 
-Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.45.0, not the
+Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.46.0, not the
 source.
 
 **Convex's own client** (`convex/src/…` → `src/runtime/…`)
@@ -148,7 +148,7 @@ source.
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
-| `better-auth/nuxt/middleware.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
+| `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/server-guard.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
 | `better-auth/nuxt/proxy.ts` | the `${authRoute}/**` server handler | A-14 |
 
 ---
@@ -188,7 +188,7 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
 | Static hook arguments | `MaybeRefOrGetter` inputs, read via `toValue` |
 | Returns a plain value | Returns `ComputedRef` / `ShallowRef` (VueUse convention) |
-| JSX helper components (`<Authenticated>`, …) | `defineComponent` render functions in `vue/auth/helpers.ts` |
+| JSX helper components (`<Authenticated>`, …) | `/* @__PURE__ */ defineComponent(…)` render functions in `vue/auth/helpers.ts`. The annotation lets a bundler drop an unused component; a module-scope call is otherwise kept, because Rolldown doesn't apply Vue's own `@__NO_SIDE_EFFECTS__` marker across modules. Every module-scope `defineComponent` in the runtime carries it |
 | Function-component name (automatic in React) | Explicit `name:` option — a plain-`.ts` `defineComponent` is otherwise `<Anonymous>` in devtools/warnings |
 | `{ children: ReactNode }` typing | Nothing — Vue components accept a default slot implicitly; do **not** add `slots: SlotsType<…>` declarations |
 | Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
@@ -271,7 +271,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-01 — subscriptions and `setAuth` are skipped during SSR
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
-- **Upstream** · `convex@1.45.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
+- **Upstream** · `convex@1.46.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
 - **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts)
 - **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
@@ -282,7 +282,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-02 — `useQuery` returns a lazy computed that throws when read
 
 - **Kind** · a composable body runs once — there is no render phase to throw in
-- **Upstream** · `convex@1.45.0` `react/client.ts` — `useQuery` throws inside the hook call
+- **Upstream** · `convex@1.46.0` `react/client.ts` — `useQuery` throws inside the hook call
 - **Port** · [`vue/composables/use-query.ts`](./src/runtime/vue/composables/use-query.ts)
 - **Pinned by** · `test/unit/use-query.test.ts`, `test/nuxt/auth/vue/auth-boundary.test.ts`
 - **On sync** · keep. Knock-on: `AuthBoundary` must read `user.value` during render, where
@@ -324,7 +324,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-05 — `watchPaginatedQuery` throws instead of returning a watch
 
-- **Upstream** · `convex@1.45.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
+- **Upstream** · `convex@1.46.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `ConvexVueClient.watchPaginatedQuery`
 - **Pinned by** · `test/unit/client.test.ts` — "watchPaginatedQuery"
 - **On sync** · keep the throw; port page-management changes into `use-paginated-query.ts`
@@ -334,7 +334,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-06 — the sync client's transition callback is wired directly
 
-- **Upstream** · `convex@1.45.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
+- **Upstream** · `convex@1.46.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `cachedSync`
 - **Pinned by** · `test/unit/client.test.ts`
 - **On sync** · keep; re-check if upstream stops routing transitions through `PaginatedQueryClient`
@@ -343,7 +343,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-07 — split pages inherit the split page's `paginationOpts`
 
-- **Upstream** · `convex@1.45.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
+- **Upstream** · `convex@1.46.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `splitQuery`
 - **Pinned by** · `test/nuxt/use-paginated-query.test.ts` — "page split", "splits a non-first
   page from that page's own cursor, not the start of the list"
@@ -386,7 +386,7 @@ fixes one, drop the entry rather than reverting.
 ##### D-12 — `usePaginatedQuery` throws the missing-client error
 
 - **Kind** · missing guard
-- **Upstream** · `convex@1.45.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Upstream** · `convex@1.46.0` `react/use_paginated_query.ts` — `useConvex().logger`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
 - **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
 - **On sync** · keep
@@ -402,7 +402,7 @@ is that the declaration now matches what actually happens.
 ##### D-10 — `TypeError` where upstream throws `Error`
 
 - **Kind** · error subclass
-- **Upstream** · `convex@1.45.0` `nextjs/index.ts` — deployment-URL validation
+- **Upstream** · `convex@1.46.0` `nextjs/index.ts` — deployment-URL validation
 - **Port** · [`nuxt/index.ts`](./src/runtime/nuxt/index.ts)
 - **Pinned by** · `test/unit/nuxt-server.test.ts` — "throws when no URL is available"
 - **On sync** · keep the subclass; the **message text is the contract** and stays verbatim
@@ -476,7 +476,7 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   | From | Types |
   |---|---|
   | `convex/browser` | `ConnectionState`, `OptimisticUpdate`, `QueryJournal` |
-  | `convex/server` | `FunctionReference`, `FunctionArgs`, `FunctionReturnType`, `OptionalRestArgs`, `ArgsAndOptions` |
+  | `convex/server` | `FunctionReference`, `FunctionReference_future`, `FunctionArgs`, `FunctionReturnType`, `OptionalRestArgs`, `ArgsAndOptions` |
   | `convex/values` | `Value` |
 
   A React user imports each from where it lives, which is unremarkable — they are already
@@ -579,8 +579,11 @@ so none can be "restored" by syncing.
 ##### A-12 — `convex-auth` route middleware and its redirect guard
 
 - **Port** · [`better-auth/nuxt/middleware.ts`](./src/runtime/better-auth/nuxt/middleware.ts)
-  (`serverGuard` + the `convex-auth` route middleware),
-  [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts) (`resolveAuthRedirect`)
+  (the `convex-auth` route middleware),
+  [`better-auth/nuxt/server-guard.ts`](./src/runtime/better-auth/nuxt/server-guard.ts)
+  (`serverGuard`, its own file so the middleware's lazy client chunk doesn't carry the server
+  session check), [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts)
+  (`resolveAuthRedirect`)
 - **Pinned by** · `test/unit/auth-redirect.test.ts`, `test/unit/auth/nuxt/middleware.test.ts`
 - **On sync** · keep both, and keep the docs pointing login pages at `resolveAuthRedirect`
   rather than `route.query.redirect`
@@ -714,7 +717,7 @@ file's table by row prefix, so keep [§1](#1-what-is-ported)'s row shape verbati
 
 | # | Where | Form |
 |---|---|---|
-| 1 | [§1](#1-what-is-ported), first table | `**1.45.0**` in a table cell |
+| 1 | [§1](#1-what-is-ported), first table | `**1.46.0**` in a table cell |
 | 2 | [`website/app/utils/upstream-baselines.ts`](./website/app/utils/upstream-baselines.ts) | the site's machine-readable copy (hero chip, introduction, component pages) |
 | 3 | [`website/content/3.components/1.index.md`](./website/content/3.components/1.index.md) | last cell of each component row |
 
@@ -728,8 +731,9 @@ rather than a cast at the use site, so a rename surfaces as a type error — but
 upstream change is noticed:
 
 - `setAdminAuth` / `localQueryLogs` on `BaseConvexClient` (`vue/client.ts`); `setFetchOptions`
-  / `setAdminAuth` on `ConvexHttpClient` (`nuxt/index.ts`); `paginationOptions` on
-  `RequestForQueries` (`vue/queries-observer.ts`).
+  / `setAdminAuth` on `ConvexHttpClient` (`nuxt/index.ts`); `paginationOptions`, which the
+  published `RequestForQueries` strips and the module-local `RequestForQueriesCompat` declares,
+  as upstream's own does (`vue/queries-observer.ts`, `composables/use-queries.ts`).
 - The DevTools bridge (A-11) reads the TS-private `listeners` map and `cachedSync`,
   instance-patches `transition` / `close`, and reaches `localQueryResultByToken` and
   `optimisticQueryResults.queryLogs` on `BaseConvexClient`. Re-check against
@@ -759,6 +763,7 @@ pnpm test:quality   # fallow: unused exports, duplication, file-health
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
 | 2026-09-01 | `convex` | 1.42.3 → 1.45.0 | `8a5db10` | Nothing — both upstream fixes ruled out ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)). Two pinning tests added; `better-auth` peer range mirrored |
 | 2026-07-28 | `convex` | → 1.42.3 | `aebe1ff` | Clerk adapter change (org-change deps → `authVersion`) |
 | 2026-07-28 | `@convex-dev/better-auth` | → 0.12.5 | `aebe1ff` | Initial pin |

@@ -75,7 +75,7 @@ Then open the website, launch Nuxt DevTools in the browser, and pick the Convex 
 ## Project Structure
 
 ```
-src/                  # Module source (Nuxt module + Convex component)
+src/                  # Module source: the Nuxt module and the runtime it installs
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
 templates/starter/    # The starter `create nuxt` copies — with examples/,
 examples/             # the only code here that installs the published
@@ -168,8 +168,8 @@ justification.
 
 **This is enforced, not just documented.** [`.githooks/pre-commit`](./.githooks/pre-commit)
 runs `fallow audit` before every commit. The audit is scoped to the files your branch changed
-and its default `new-only` gate fails on findings your changes *introduce* — pre-existing
-findings in a file you touched do not block you. It takes about a second. The same gate runs on
+and fails on every finding in them, including one the file already had when you opened it
+(`audit.gate: "all"` in `.fallowrc.jsonc`). It takes about a second. The same gate runs on
 every pull request in CI, so bypassing it locally with `git commit --no-verify` only defers it.
 
 ## Commit Convention
@@ -223,7 +223,7 @@ They mirror CI, split by how often each check can afford to run:
 | [`pre-push`](./.githooks/pre-push) | whole-project `fallow`, `fallow security`, `check:manifest`, `test:types:lib`, `test` (which includes the `docs` contract project), API-reference drift | `static` · Quality, Security candidates, Manifest ranges, Type check, API reference drift, Docs contract; `test` | ~20s |
 
 `pre-commit` stays cheap enough to run on every commit, so it takes the scoped `fallow audit`
-— only findings your change *introduces*, in the files it touched. `pre-push` runs once per
+— every finding, but only in the files your change touched. `pre-push` runs once per
 push and can afford the whole picture: the full `fallow` run (which, unlike the scoped audit,
 notices a config edit that strands a file elsewhere in the repo), the security-candidate scan,
 the type check, the test suite, and the API-reference drift check. A delete-only push skips it.

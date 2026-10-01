@@ -1,5 +1,5 @@
 import type { OptimisticUpdate } from 'convex/browser'
-import type { FunctionArgs, FunctionReference, FunctionReturnType, OptionalRestArgs } from 'convex/server'
+import type { FunctionArgs, FunctionReference, FunctionReference_future, FunctionReturnType, OptionalRestArgs } from 'convex/server'
 import { getFunctionName, makeFunctionReference } from 'convex/server'
 import type { Value } from 'convex/values'
 import { useConvexOrThrow, type ConvexVueClient } from '../client'
@@ -11,7 +11,7 @@ import { useConvexOrThrow, type ConvexVueClient } from '../client'
  *
  * @public
  */
-export interface VueMutation<Mutation extends FunctionReference<'mutation'>> {
+export interface VueMutation<Mutation extends FunctionReference<'mutation'> | FunctionReference_future<'mutation'>> {
   /**
    * Execute the mutation on the server, returning a `Promise` of its return value.
    *
@@ -51,7 +51,7 @@ export interface VueMutation<Mutation extends FunctionReference<'mutation'>> {
 
 // Exported only for testing.
 export function createMutation(
-  mutationReference: FunctionReference<'mutation'>,
+  mutationReference: FunctionReference<'mutation'> | FunctionReference_future<'mutation'>,
   client: ConvexVueClient,
   update?: OptimisticUpdate<any>,
 ): VueMutation<any> {
@@ -110,7 +110,7 @@ export function createMutation(
  *
  * @public
  */
-export function useMutation<Mutation extends FunctionReference<'mutation'>>(
+export function useMutation<Mutation extends FunctionReference<'mutation'> | FunctionReference_future<'mutation'>>(
   mutation: Mutation,
 ): VueMutation<Mutation> {
   const mutationReference
