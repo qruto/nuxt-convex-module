@@ -13,6 +13,7 @@ interface GuardedRoute {
   fullPath: string
 }
 
+/** Where a visitor who isn't signed in goes: the login page, with the page they asked for in `?redirect=`. */
 export function loginTarget(to: GuardedRoute, loginPath: string) {
   return { path: loginPath, query: { redirect: to.fullPath } }
 }
