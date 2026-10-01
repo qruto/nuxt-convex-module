@@ -52,7 +52,7 @@ What `useBetterAuth()` returns.
 type AuthClient = typeof authClient;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:21](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/client.ts#L21)
+Defined in: [src/runtime/better-auth/vue/client.ts:24](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/client.ts#L24)
 
 ***
 
@@ -345,12 +345,10 @@ Function to check if the error is auth related.
 ### authClient
 
 ```ts
-const authClient: VueAuthClient<{
-  plugins: ReturnType<typeof convexClient>[];
-}>;
+const authClient: ReturnType<typeof createAuthClient>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/client.ts:12](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/client.ts#L12)
+Defined in: [src/runtime/better-auth/vue/client.ts:15](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/client.ts#L15)
 
 ## Functions
 
