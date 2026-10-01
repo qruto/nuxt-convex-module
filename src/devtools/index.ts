@@ -4,7 +4,7 @@ import { extname, join } from 'node:path'
 import type { Nuxt } from '@nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
 import type { ModuleCustomTab, NuxtDevtoolsServerContext } from '@nuxt/devtools-kit/types'
-import { defineEventHandler, serveStatic } from 'h3'
+import { defineEventHandler, serveStatic, setResponseHeader } from 'h3'
 import {
   DEVTOOLS_UI_LOCAL_PORT,
   DEVTOOLS_UI_ROUTE,
@@ -49,15 +49,20 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
     // `..` segment before it reaches the file system.
     nuxt.options.devServerHandlers.push({
       route: DEVTOOLS_UI_ROUTE,
-      handler: defineEventHandler(event => serveStatic(event, {
-        getContents: id => readFile(join(devtoolsClientPath, id)),
-        getMeta: async (id) => {
-          const stats = await stat(join(devtoolsClientPath, id)).catch(() => undefined)
-          if (stats?.isFile()) {
-            return { type: CONTENT_TYPES[extname(id)], size: stats.size, mtime: stats.mtimeMs }
-          }
-        },
-      })),
+      handler: defineEventHandler((event) => {
+        // Never cached, as sirv's dev mode did: the panel's asset names can
+        // stay the same across module versions while their content changes.
+        setResponseHeader(event, 'cache-control', 'no-store')
+        return serveStatic(event, {
+          getContents: id => readFile(join(devtoolsClientPath, id)),
+          getMeta: async (id) => {
+            const stats = await stat(join(devtoolsClientPath, id)).catch(() => undefined)
+            if (stats?.isFile()) {
+              return { type: CONTENT_TYPES[extname(id)], size: stats.size, mtime: stats.mtimeMs }
+            }
+          },
+        })
+      }),
     })
   }
   else {

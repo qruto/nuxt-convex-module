@@ -38,13 +38,13 @@ const info: DevtoolsServerInfo = {
 /** GET a raw path (no URL normalisation, so `..` reaches the server as sent). */
 function get(server: Server, path: string) {
   const { port } = server.address() as AddressInfo
-  return new Promise<{ status: number, type?: string, body: string }>((resolve, reject) => {
+  return new Promise<{ status: number, type?: string, cache?: string, body: string }>((resolve, reject) => {
     request({ port, path }, (res) => {
       let body = ''
       res.on('data', (chunk) => {
         body += chunk
       })
-      res.on('end', () => resolve({ status: res.statusCode!, type: res.headers['content-type'], body }))
+      res.on('end', () => resolve({ status: res.statusCode!, type: res.headers['content-type'], cache: res.headers['cache-control'], body }))
     }).on('error', reject).end()
   })
 }
@@ -69,7 +69,7 @@ describe('setupDevtools', () => {
     await new Promise<void>(resolve => server.listen(0, resolve))
     try {
       const page = await get(server, `${DEVTOOLS_UI_ROUTE}/`)
-      expect(page).toMatchObject({ status: 200, type: 'text/html; charset=utf-8' })
+      expect(page).toMatchObject({ status: 200, type: 'text/html; charset=utf-8', cache: 'no-store' })
       expect(page.body).toContain('<title>panel</title>')
       expect(await get(server, `${DEVTOOLS_UI_ROUTE}/_nuxt/entry.js`))
         .toMatchObject({ status: 200, type: 'text/javascript; charset=utf-8' })

@@ -14,13 +14,13 @@ const active = ref<(typeof tabs)[number]['id']>('connection')
 
 <template>
   <div class="h-screen flex of-hidden font-sans text-sm">
-    <nav class="w-36 shrink-0 flex flex-col gap-0.5 p2 border-r border-base">
+    <nav class="w-36 shrink-0 flex flex-col gap-0.5 p2 border-r n-border-base">
       <button
         v-for="tab of tabs"
         :key="tab.id"
         type="button"
-        class="px2 py1.5 rounded flex items-center gap-2 text-left op65 hover:(op100 bg-active)"
-        :class="{ 'bg-active op100!': active === tab.id }"
+        class="px2 py1.5 rounded flex items-center gap-2 text-left op65 hover:(op100 n-bg-active)"
+        :class="{ 'n-bg-active op100!': active === tab.id }"
         :aria-current="active === tab.id || undefined"
         @click="active = tab.id"
       >

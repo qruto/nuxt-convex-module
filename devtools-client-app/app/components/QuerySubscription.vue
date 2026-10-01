@@ -75,7 +75,7 @@ function pretty(value: unknown): string {
         <div class="op50 text-xs">
           Server logs
         </div>
-        <div class="font-mono text-xs bg-active rounded p2 flex flex-col gap-1">
+        <div class="font-mono text-xs n-bg-active rounded p2 flex flex-col gap-1">
           <div
             v-for="(line, index) of query.logs"
             :key="index"
