@@ -19,6 +19,10 @@ A Vue and Nuxt port of Convex's own React client (`convex/react`, `convex/nextjs
 
 If `nuxt-convex-module` is not in `package.json`, or not in the `modules` array of `nuxt.config.ts`, follow [references/install.md](references/install.md) first. It covers new and existing apps, a Convex deployment without an account, and how to verify the result.
 
+## Ask before touching the user's Convex account
+
+Ask the user, and wait for a yes, before any command that logs in to Convex or creates or changes something in their Convex account: `npx convex login`, `npx convex deploy`, and `npx convex dev` or `npx convex env set` against a cloud deployment. This applies in the auth and billing references too. A secret the user pastes (a Polar token, say) is not a yes to store it. A local deployment (`CONVEX_DEPLOYMENT=anonymous:…` in `.env.local`, or `CONVEX_AGENT_MODE=anonymous npx convex dev --once`) lives on this machine, so commands against it need no approval.
+
 ## Where things live
 
 - Convex functions are in `convex/` (or the `functions` path in `convex.json`). Backend code is plain Convex: follow `convex/_generated/ai/guidelines.md` when it exists (`npx convex ai-files install` writes it), or Convex's own skills (`npx skills add get-convex/agent-skills`).
