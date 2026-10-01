@@ -11,6 +11,7 @@ read [PARITY.md](./PARITY.md) — it is the contract *and* the ledger:
 | Whether something is already a deliberate divergence | [PARITY.md §3](./PARITY.md#3-where-the-port-bends) |
 | How to run a sync, port a change, or record a divergence | the [`upstream-parity` skill](./website/skills/upstream-parity/SKILL.md) |
 | Whether a change is breaking, and which symbols are experimental | [STABILITY.md](./STABILITY.md) |
+| What users' agents are told about the module (update it with any public API, install-flow or docs-URL change) | the [`nuxt-convex-module` skill](./website/skills/nuxt-convex-module/SKILL.md) |
 
 This file covers only the rest: how to treat the ported runtime, and how to verify a change.
 

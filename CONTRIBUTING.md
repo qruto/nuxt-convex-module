@@ -82,6 +82,7 @@ examples/             # the only code here that installs the published
                       # package instead of using src/
 test/                 # Vitest unit & integration tests
 website/              # Nuxt app: product homepage · docs (Docus) with live Convex demos
+website/skills/       # The skills the site publishes: nuxt-convex-module (for apps), upstream-parity (for this repo)
 .agents/skills/       # Agent skills — one committed copy, read by most agents directly
 .claude/skills/       # Symlinks into the above, since Claude Code reads only this path
 ```
@@ -90,6 +91,12 @@ Both skill directories are committed, so a fresh clone works with no setup. `npx
 <owner/repo> --agent claude-code` writes both sides; the `pre-commit` hook fails if they drift
 apart or a skill's file is not named exactly `SKILL.md`. Deliberately not in CI — nothing about
 it reaches a consumer.
+
+The two first-party skills live in `website/skills/`, where Docus publishes them at
+`/.well-known/skills/`; `.agents/skills/` and `.claude/skills/` link to them. `nuxt-convex-module`
+is the one users install, so it follows the public API: when you rename a composable, change the
+install flow or move a docs page, update it too. `test/docs/agent-skill.test.ts` fails on names
+the module doesn't have and on links to pages that don't exist.
 
 `templates/` and `examples/` sit outside the pnpm workspace and outside ESLint,
 the root `tsconfig.json` and fallow — each app has its own `package.json` and

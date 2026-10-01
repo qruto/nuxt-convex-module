@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { PackageManager } from '#shared/package-managers'
+import { PACKAGE_MANAGERS } from '#shared/package-managers'
+
 // The package-manager picker: the label and the chooser. Mounted at the top
 // of the docs sidebar (DocsAsideLeftTop) and, below `lg` where the sidebar is
 // hidden, at the top of the header's mobile menu (AppHeader's body slot) —
