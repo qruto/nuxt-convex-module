@@ -148,7 +148,7 @@ source.
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
-| `better-auth/nuxt/middleware.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
+| `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/server-guard.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
 | `better-auth/nuxt/proxy.ts` | the `${authRoute}/**` server handler | A-14 |
 
 ---
@@ -188,7 +188,7 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
 | Static hook arguments | `MaybeRefOrGetter` inputs, read via `toValue` |
 | Returns a plain value | Returns `ComputedRef` / `ShallowRef` (VueUse convention) |
-| JSX helper components (`<Authenticated>`, …) | `defineComponent` render functions in `vue/auth/helpers.ts` |
+| JSX helper components (`<Authenticated>`, …) | `/* @__PURE__ */ defineComponent(…)` render functions in `vue/auth/helpers.ts`. The annotation lets a bundler drop an unused component; a module-scope call is otherwise kept, because Rolldown doesn't apply Vue's own `@__NO_SIDE_EFFECTS__` marker across modules. Every module-scope `defineComponent` in the runtime carries it |
 | Function-component name (automatic in React) | Explicit `name:` option — a plain-`.ts` `defineComponent` is otherwise `<Anonymous>` in devtools/warnings |
 | `{ children: ReactNode }` typing | Nothing — Vue components accept a default slot implicitly; do **not** add `slots: SlotsType<…>` declarations |
 | Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
@@ -579,8 +579,11 @@ so none can be "restored" by syncing.
 ##### A-12 — `convex-auth` route middleware and its redirect guard
 
 - **Port** · [`better-auth/nuxt/middleware.ts`](./src/runtime/better-auth/nuxt/middleware.ts)
-  (`serverGuard` + the `convex-auth` route middleware),
-  [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts) (`resolveAuthRedirect`)
+  (the `convex-auth` route middleware),
+  [`better-auth/nuxt/server-guard.ts`](./src/runtime/better-auth/nuxt/server-guard.ts)
+  (`serverGuard`, its own file so the middleware's lazy client chunk doesn't carry the server
+  session check), [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts)
+  (`resolveAuthRedirect`)
 - **Pinned by** · `test/unit/auth-redirect.test.ts`, `test/unit/auth/nuxt/middleware.test.ts`
 - **On sync** · keep both, and keep the docs pointing login pages at `resolveAuthRedirect`
   rather than `route.query.redirect`
@@ -760,8 +763,8 @@ pnpm test:quality   # fallow: unused exports, duplication, file-health
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
 | 2026-09-01 | `convex` | 1.42.3 → 1.45.0 | `8a5db10` | Nothing — both upstream fixes ruled out ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)). Two pinning tests added; `better-auth` peer range mirrored |
 | 2026-07-28 | `convex` | → 1.42.3 | `aebe1ff` | Clerk adapter change (org-change deps → `authVersion`) |
 | 2026-07-28 | `@convex-dev/better-auth` | → 0.12.5 | `aebe1ff` | Initial pin |
-| 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
 | 2026-07-28 | `@convex-dev/polar` | → 0.9.2 | `aebe1ff` | Initial pin |

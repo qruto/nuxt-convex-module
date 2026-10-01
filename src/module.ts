@@ -218,7 +218,7 @@ export default defineNuxtModule<ModuleOptions>({
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
-      // Lazy import keeps @nuxt/devtools-kit out of production module evaluation.
+      // Lazy import keeps the DevTools wiring out of production module evaluation.
       const { setupDevtools } = await import('./devtools/index')
       setupDevtools(resolver, nuxt, {
         url,

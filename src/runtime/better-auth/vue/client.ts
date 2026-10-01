@@ -1,12 +1,15 @@
 import { convexClient } from '@convex-dev/better-auth/client/plugins'
-import { createAuthClient } from 'better-auth/vue'
+import { createAuthClient, type VueAuthClient } from 'better-auth/vue'
 
 // Bundled default client — the zero-config Nuxt analog of upstream's
 // "author your own `authClient` and pass it to `ConvexBetterAuthProvider`".
 // Carries only `convexClient()`, the one plugin the integration itself needs
 // (token fetching). Point `convex.betterAuth.authClient` at your own module
 // to add app-level plugins (OTP, passkeys, cross-domain, ...).
-export const authClient = createAuthClient({
+//
+// The annotation is the type `createAuthClient` infers, named. Without it the
+// declaration file spells out the whole server-plugin type (19.7 KB of it).
+export const authClient: VueAuthClient<{ plugins: ReturnType<typeof convexClient>[] }> = createAuthClient({
   plugins: [convexClient()],
 })
 

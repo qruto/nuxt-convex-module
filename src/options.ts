@@ -2,9 +2,9 @@
 // state, the dev startup summary. Kept out of `module.ts` so they stay off the
 // package's `.` entry — nuxt-module-build re-exports everything that file
 // exports, and none of this is API. Tests import this file directly.
-import { isAbsolute, join } from 'node:path'
+import { basename, dirname, isAbsolute, join } from 'node:path'
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import { parseEnv } from 'node:util'
 
 /**
@@ -241,17 +241,29 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
  * this module) — used to auto-enable the optional integrations (Better Auth,
  * Polar, nuxt-security, ...) without making the user list extra modules.
  *
- * Probes the package directory along Node's lookup paths rather than calling
- * `require.resolve`: that honours the package's `exports` map under CJS
- * conditions, so an ESM-only package that also withholds `./package.json`
- * (nuxt-security) reports as missing even though it is right there.
+ * Probes for the package directory in every `node_modules` folder a bare
+ * import would search, rather than resolving the package: resolution honours
+ * its `exports` map, so an ESM-only package that withholds `./package.json`
+ * (nuxt-security), or one with no `.` export (@polar-sh/checkout), would
+ * report as missing even though it is right there.
  */
 export function isPackageInstalled(id: string, rootDir: string): boolean {
-  for (const base of [join(rootDir, 'package.json'), import.meta.url]) {
-    const lookupPaths = createRequire(base).resolve.paths(id) ?? []
-    if (lookupPaths.some(dir => existsSync(join(dir, id, 'package.json')))) return true
+  return [rootDir, dirname(fileURLToPath(import.meta.url))].some(base =>
+    nodeModulesPaths(base).some(dir => existsSync(join(dir, id, 'package.json'))),
+  )
+}
+
+/**
+ * The `node_modules` folders Node searches for a bare import from `dir`,
+ * nearest first. Node's global folders (`NODE_PATH`, `~/.node_modules`) are
+ * left out: Vite and ESM imports never look there.
+ */
+function nodeModulesPaths(dir: string): string[] {
+  const paths: string[] = []
+  for (let current = dir; ; current = dirname(current)) {
+    if (basename(current) !== 'node_modules') paths.push(join(current, 'node_modules'))
+    if (dirname(current) === current) return paths
   }
-  return false
 }
 
 /**

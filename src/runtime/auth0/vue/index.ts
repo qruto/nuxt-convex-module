@@ -65,7 +65,7 @@ export function provideConvexAuthFromAuth0(
  *
  * @public
  */
-export const ConvexProviderWithAuth0 = defineComponent({
+export const ConvexProviderWithAuth0 = /* @__PURE__ */ defineComponent({
   name: 'ConvexProviderWithAuth0',
   props: {
     client: { type: Object as PropType<IConvexVueClient>, default: undefined },

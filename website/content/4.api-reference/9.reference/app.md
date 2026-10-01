@@ -296,7 +296,7 @@ resolves to, and the shape to annotate a value passed on from the call site.
 const useConvexAsyncPaginatedQuery: <Query>(query, args, options) => AsyncPaginatedQueryReturn<PaginatedQueryItem<Query>> = useAsyncPaginatedQuery;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-paginated-query.ts:235](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L235)
+Defined in: [src/runtime/nuxt/composables/use-async-paginated-query.ts:237](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L237)
 
 A paginated Convex query the Nuxt way: the first page is fetched during SSR
 and hydrated from the payload, then [usePaginatedQuery](/api-reference/reference/client#usepaginatedquery) takes over on
@@ -365,7 +365,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -488,7 +488,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 

@@ -42,7 +42,8 @@ function route(path: string) {
 
 async function loadMiddleware() {
   const mod = await import('../../../../src/runtime/better-auth/nuxt/middleware')
-  return { middleware: mod.default as RouteMiddleware, serverGuard: mod.serverGuard }
+  const guard = await import('../../../../src/runtime/better-auth/nuxt/server-guard')
+  return { middleware: mod.default as RouteMiddleware, serverGuard: guard.serverGuard }
 }
 
 describe('auth route middleware', () => {

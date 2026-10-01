@@ -72,7 +72,7 @@ const increment = useMutation(api.incrementCounter.default);
 
 ### ConvexVueClient
 
-Defined in: [src/runtime/vue/client.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L190)
+Defined in: [src/runtime/vue/client.ts:191](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L191)
 
 A Convex client for use within Vue.
 
@@ -89,7 +89,7 @@ available via the [useConvex](#useconvex) composable.
 new ConvexVueClient(address, options?): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:211](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L211)
+Defined in: [src/runtime/vue/client.ts:212](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L212)
 
 ###### Parameters
 
@@ -112,7 +112,7 @@ Defined in: [src/runtime/vue/client.ts:211](https://github.com/qruto/nuxt-convex
 get url(): string;
 ```
 
-Defined in: [src/runtime/vue/client.ts:249](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L249)
+Defined in: [src/runtime/vue/client.ts:250](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L250)
 
 Return the address for this client, useful for creating a new client.
 
@@ -131,7 +131,7 @@ it may be canonicalized.
 get logger(): Logger;
 ```
 
-Defined in: [src/runtime/vue/client.ts:586](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L586)
+Defined in: [src/runtime/vue/client.ts:587](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L587)
 
 Get the logger for this client.
 
@@ -153,7 +153,7 @@ setAuth(
 ): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:292](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L292)
+Defined in: [src/runtime/vue/client.ts:293](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L293)
 
 Set the authentication token to be used for subsequent queries and mutations.
 `fetchToken` will be called automatically again if a token expires.
@@ -178,7 +178,7 @@ when the user's rights were permanently revoked.
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:316](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L316)
+Defined in: [src/runtime/vue/client.ts:317](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L317)
 
 Clear the current authentication token if set.
 
@@ -192,7 +192,7 @@ Clear the current authentication token if set.
 watchQuery<Query>(query, ...argsAndOptions): Watch<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:350](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L350)
+Defined in: [src/runtime/vue/client.ts:351](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L351)
 
 Construct a new [Watch](#watch) on a Convex query function.
 
@@ -205,7 +205,7 @@ The act of creating a watch does nothing, a Watch is stateless.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -226,7 +226,7 @@ The [Watch](#watch) object.
 prewarmQuery<Query>(queryOptions): void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:428](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L428)
+Defined in: [src/runtime/vue/client.ts:429](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L429)
 
 Indicates likely future interest in a query subscription.
 
@@ -240,7 +240,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -258,7 +258,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 mutation<Mutation>(mutation, ...argsAndOptions): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:487](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L487)
+Defined in: [src/runtime/vue/client.ts:488](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L488)
 
 Execute a mutation function.
 
@@ -266,7 +266,7 @@ Execute a mutation function.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* [`FunctionReference`](#functionreference)\<`"mutation"`\> |
+| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 ###### Parameters
 
@@ -287,7 +287,7 @@ A promise of the mutation's result.
 action<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:508](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L508)
+Defined in: [src/runtime/vue/client.ts:509](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L509)
 
 Execute an action function.
 
@@ -295,7 +295,7 @@ Execute an action function.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* [`FunctionReference`](#functionreference)\<`"action"`\> |
+| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 ###### Parameters
 
@@ -316,7 +316,7 @@ A promise of the action's result.
 query<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:528](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L528)
+Defined in: [src/runtime/vue/client.ts:529](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L529)
 
 Fetch a query result once.
 
@@ -327,7 +327,7 @@ the [useQuery](#usequery) composable.**
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -348,7 +348,7 @@ A promise of the query's result.
 connectionState(): ConnectionState;
 ```
 
-Defined in: [src/runtime/vue/client.ts:558](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L558)
+Defined in: [src/runtime/vue/client.ts:559](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L559)
 
 **`Experimental`**
 
@@ -368,7 +368,7 @@ The [ConnectionState](#connectionstate) with the Convex deployment.
 subscribeToConnectionState(cb): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:575](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L575)
+Defined in: [src/runtime/vue/client.ts:576](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L576)
 
 **`Experimental`**
 
@@ -400,7 +400,7 @@ An unsubscribe function to stop listening.
 close(): Promise<void>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:598](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L598)
+Defined in: [src/runtime/vue/client.ts:599](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L599)
 
 Close any network handles associated with this client and stop all subscriptions.
 
@@ -433,7 +433,7 @@ upstream's `ConvexProviderWithAuth` component.
 
 ### Watch
 
-Defined in: [src/runtime/vue/client.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L51)
+Defined in: [src/runtime/vue/client.ts:52](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L52)
 
 A watch on the output of a Convex query function.
 
@@ -545,7 +545,7 @@ ConvexWatch.journal
 
 ### PaginatedWatch
 
-Defined in: [src/runtime/vue/client.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L63)
+Defined in: [src/runtime/vue/client.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L64)
 
 A watch on the output of a paginated Convex query function.
 
@@ -563,7 +563,7 @@ A watch on the output of a paginated Convex query function.
 onUpdate(callback): () => void;
 ```
 
-Defined in: [src/runtime/vue/client.ts:73](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L73)
+Defined in: [src/runtime/vue/client.ts:74](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L74)
 
 Initiate a watch on the output of a paginated query.
 
@@ -594,7 +594,7 @@ localQueryResult():
   | undefined;
 ```
 
-Defined in: [src/runtime/vue/client.ts:80](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L80)
+Defined in: [src/runtime/vue/client.ts:81](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L81)
 
 Get the current result of a paginated query.
 
@@ -613,7 +613,7 @@ The current results, status, and loadMore function, or `undefined` if not loaded
 
 ### WatchQueryOptions
 
-Defined in: [src/runtime/vue/client.ts:95](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L95)
+Defined in: [src/runtime/vue/client.ts:96](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L96)
 
 Options for [ConvexVueClient.watchQuery](#watchquery).
 
@@ -621,13 +621,13 @@ Options for [ConvexVueClient.watchQuery](#watchquery).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="journal-1"></a> `journal?` | [`QueryJournal`](#queryjournal) | An (optional) journal produced from a previous execution of this query function. If there is an existing subscription to a query function with the same name and arguments, this journal will have no effect. | [src/runtime/vue/client.ts:103](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L103) |
+| <a id="journal-1"></a> `journal?` | [`QueryJournal`](#queryjournal) | An (optional) journal produced from a previous execution of this query function. If there is an existing subscription to a query function with the same name and arguments, this journal will have no effect. | [src/runtime/vue/client.ts:104](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L104) |
 
 ***
 
 ### MutationOptions
 
-Defined in: [src/runtime/vue/client.ts:116](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L116)
+Defined in: [src/runtime/vue/client.ts:117](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L117)
 
 Options for [ConvexVueClient.mutation](#mutation).
 
@@ -641,13 +641,13 @@ Options for [ConvexVueClient.mutation](#mutation).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="optimisticupdate-1"></a> `optimisticUpdate?` | [`OptimisticUpdate`](#optimisticupdate)\<`Args`\> | An optimistic update to apply along with this mutation. An optimistic update locally updates queries while a mutation is pending. Once the mutation completes, the update will be rolled back. | [src/runtime/vue/client.ts:123](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L123) |
+| <a id="optimisticupdate-1"></a> `optimisticUpdate?` | [`OptimisticUpdate`](#optimisticupdate)\<`Args`\> | An optimistic update to apply along with this mutation. An optimistic update locally updates queries while a mutation is pending. Once the mutation completes, the update will be rolled back. | [src/runtime/vue/client.ts:124](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L124) |
 
 ***
 
 ### ConvexVueClientOptions
 
-Defined in: [src/runtime/vue/client.ts:139](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L139)
+Defined in: [src/runtime/vue/client.ts:140](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L140)
 
 Options for [ConvexVueClient](#convexvueclient).
 
@@ -687,7 +687,7 @@ An interface to execute a Convex action on the server.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* [`FunctionReference`](#functionreference)\<`"action"`\> |
+| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 ```ts
 VueAction(...args): Promise<FunctionReturnType<Action>>;
@@ -721,7 +721,7 @@ An interface to execute a Convex mutation function on the server.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* [`FunctionReference`](#functionreference)\<`"mutation"`\> |
+| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 ```ts
 VueMutation(...args): Promise<FunctionReturnType<Mutation>>;
@@ -918,7 +918,7 @@ Used with the object-form overload of [useQuery](#usequery).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Properties
 
@@ -1267,7 +1267,7 @@ type RequestForQueries = Record<string, {
 }>;
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/react/use\_queries.d.ts:69
+Defined in: node\_modules/convex/dist/esm-types/react/use\_queries.d.ts:71
 
 An object representing a request to load multiple queries.
 
@@ -1287,10 +1287,11 @@ type FunctionReference<Type, Visibility, Args, ReturnType, ComponentPath> = {
   _args: Args;
   _returnType: ReturnType;
   _componentPath: ComponentPath;
+  _fn?: ReturnType;
 };
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:41
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:44
 
 A reference to a registered Convex function.
 
@@ -1315,6 +1316,9 @@ example, in React you can pass references to the react.useQuery hook:
 const result = useQuery(api.myModule.myFunction);
 ```
 
+If you want to accept a `FunctionReference` as a callback argument, prefer
+typing the callback parameter as [FunctionReference\_future](#functionreference_future).
+
 #### Type Parameters
 
 | Type Parameter | Default type | Description |
@@ -1327,25 +1331,139 @@ const result = useQuery(api.myModule.myFunction);
 
 #### Properties
 
+| Property | Type | Description | Defined in |
+| ------ | ------ | ------ | ------ |
+| <a id="_type"></a> `_type` | `Type` | - | node\_modules/convex/dist/esm-types/server/api.d.ts:45 |
+| <a id="_visibility"></a> `_visibility` | `Visibility` | - | node\_modules/convex/dist/esm-types/server/api.d.ts:46 |
+| <a id="_args"></a> ~~`_args`~~ | `Args` | To read the arguments for a `FunctionReference`, prefer [FunctionArgs](#functionargs). This slot will be removed in a future version. **Deprecated** | node\_modules/convex/dist/esm-types/server/api.d.ts:55 |
+| <a id="_returntype"></a> ~~`_returnType`~~ | `ReturnType` | To read the return type of a `FunctionReference`, prefer [FunctionReturnType](#functionreturntype). This slot will be removed in a future version. **Deprecated** | node\_modules/convex/dist/esm-types/server/api.d.ts:64 |
+| <a id="_componentpath"></a> `_componentPath` | `ComponentPath` | - | node\_modules/convex/dist/esm-types/server/api.d.ts:65 |
+
+#### Methods
+
+##### \_fn()?
+
+```ts
+optional _fn(args, keys): ReturnType;
+```
+
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:70
+
+To read the arguments or return type of a `FunctionReference`, prefer
+[FunctionArgs](#functionargs) and [FunctionReturnType](#functionreturntype).
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `args` | `Args` |
+| `keys` | `FunctionReferenceArgKeys`\<`Args`\> |
+
+###### Returns
+
+`ReturnType`
+
+***
+
+### FunctionReference\_future
+
+```ts
+type FunctionReference_future<Type, Visibility, Args, ReturnType, ComponentPath> = {
+  _type: Type;
+  _visibility: Visibility;
+  _componentPath: ComponentPath;
+  _fn?: (args, keys) => ReturnType;
+};
+```
+
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:174
+
+A reference to a Convex function whose arguments are checked closer to the
+way Convex checks them at runtime.
+
+Use this instead of [FunctionReference](#functionreference) when you accept someone else's
+Convex function as a callback and know which arguments you will pass it.
+
+A plain `FunctionReference` gets a couple things backwards: it accepts a
+function requiring arguments you never pass, and rejects a function
+accepting broader values than you pass. An ordinary TypeScript function type
+doesn't map perfectly either: it treats a surplus argument as harmless,
+where a Convex validator rejects it.
+
+This type melds regular TypeScript function reference behavior with top
+level checking of arguments to prevent surplus arguments from hitting
+runtime validation errors. The caveat: a surplus key inside a nested object,
+an array element, or one arm of a union passes the type check and fails the
+validator at runtime.
+
+```ts
+import { FunctionReference_future } from "convex/server";
+
+declare function onComplete(
+  fn: FunctionReference_future<
+    "mutation",
+    "internal",
+    { taskId: string; force: boolean },
+    null
+  >,
+): void;
+
+// Takes exactly `{ taskId: string; force: boolean }`.
+onComplete(internal.tasks.finish);
+// Takes `{ taskId: string | number; force?: boolean }`: calling it is safe.
+onComplete(internal.tasks.finishLoosely);
+// Requires a `reason` argument that `onComplete` never passes.
+onComplete(internal.tasks.finishWithReason);
+//          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ rejected
+// Takes only `{ taskId: string }`: its validator would reject `force`.
+onComplete(internal.tasks.finishById);
+//          ~~~~~~~~~~~~~~~~~~~~~~~~ rejected
+```
+
+A value of this type is usable with `ctx.runMutation`,
+`ctx.scheduler.runAfter`, `createFunctionHandle`, and everything else in
+this package that takes a reference, all of which accept either kind.
+
+It is *not* assignable to a plain `FunctionReference`. Code that wants to
+accept both kinds should take
+`FunctionReference<...> | FunctionReference_future<...>` and read arguments
+and return types through [FunctionArgs](#functionargs) and [FunctionReturnType](#functionreturntype).
+
+Argument checking here relies on `strictFunctionTypes` (implied by `strict`)
+and is skipped for projects that disable it. Everything else about the
+reference is compared exactly as `FunctionReference` compares it.
+
+#### Type Parameters
+
+| Type Parameter | Default type | Description |
+| ------ | ------ | ------ |
+| `Type` *extends* `FunctionType` | - | The type of the function ("query", "mutation", or "action"). |
+| `Visibility` *extends* `FunctionVisibility` | `"public"` | The visibility of the function ("public" or "internal"). |
+| `Args` *extends* `DefaultFunctionArgs` | `any` | The arguments the consumer of the reference will pass. |
+| `ReturnType` | `any` | The return type of this function. |
+| `ComponentPath` | `string` \| `undefined` | - |
+
+#### Properties
+
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="_type"></a> `_type` | `Type` | node\_modules/convex/dist/esm-types/server/api.d.ts:42 |
-| <a id="_visibility"></a> `_visibility` | `Visibility` | node\_modules/convex/dist/esm-types/server/api.d.ts:43 |
-| <a id="_args"></a> `_args` | `Args` | node\_modules/convex/dist/esm-types/server/api.d.ts:44 |
-| <a id="_returntype"></a> `_returnType` | `ReturnType` | node\_modules/convex/dist/esm-types/server/api.d.ts:45 |
-| <a id="_componentpath"></a> `_componentPath` | `ComponentPath` | node\_modules/convex/dist/esm-types/server/api.d.ts:46 |
+| <a id="_type-1"></a> `_type` | `Type` | node\_modules/convex/dist/esm-types/server/api.d.ts:175 |
+| <a id="_visibility-1"></a> `_visibility` | `Visibility` | node\_modules/convex/dist/esm-types/server/api.d.ts:176 |
+| <a id="_componentpath-1"></a> `_componentPath` | `ComponentPath` | node\_modules/convex/dist/esm-types/server/api.d.ts:177 |
+| <a id="_fn-1"></a> `_fn?` | (`args`, `keys`) => `ReturnType` | node\_modules/convex/dist/esm-types/server/api.d.ts:178 |
 
 ***
 
 ### FunctionArgs
 
 ```ts
-type FunctionArgs<FuncRef> = FuncRef["_args"];
+type FunctionArgs<FuncRef> = ExtractSignature<FuncRef>["args"];
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:213
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:347
 
-Given a [FunctionReference](#functionreference), get the return type of the function.
+Given a [FunctionReference](#functionreference) or [FunctionReference\_future](#functionreference_future), get
+the arguments of the function.
 
 This is represented as an object mapping argument names to values.
 
@@ -1353,17 +1471,17 @@ This is represented as an object mapping argument names to values.
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* `AnyFunctionReference` |
+| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
 ### OptionalRestArgs
 
 ```ts
-type OptionalRestArgs<FuncRef> = FuncRef["_args"] extends EmptyObject ? [EmptyObject] : [FuncRef["_args"]];
+type OptionalRestArgs<FuncRef> = FunctionArgs<FuncRef> extends EmptyObject ? [EmptyObject] : [FunctionArgs<FuncRef>];
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:222
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:371
 
 A tuple type of the (maybe optional) arguments to `FuncRef`.
 
@@ -1374,17 +1492,17 @@ skipping the arguments for functions that don't require arguments.
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* `AnyFunctionReference` |
+| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
 ### ArgsAndOptions
 
 ```ts
-type ArgsAndOptions<FuncRef, Options> = FuncRef["_args"] extends EmptyObject ? [EmptyObject, Options] : [FuncRef["_args"], Options];
+type ArgsAndOptions<FuncRef, Options> = FunctionArgs<FuncRef> extends EmptyObject ? [EmptyObject, Options] : [FunctionArgs<FuncRef>, Options];
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:232
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:381
 
 A tuple type of the (maybe optional) arguments to `FuncRef`, followed by an options
 object of type `Options`.
@@ -1397,7 +1515,7 @@ This type is used to make methods like `useQuery` type-safe while allowing
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* `AnyFunctionReference` |
+| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 | `Options` |
 
 ***
@@ -1405,18 +1523,19 @@ This type is used to make methods like `useQuery` type-safe while allowing
 ### FunctionReturnType
 
 ```ts
-type FunctionReturnType<FuncRef> = FuncRef["_returnType"];
+type FunctionReturnType<FuncRef> = ExtractSignature<FuncRef>["returnType"];
 ```
 
-Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:238
+Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:388
 
-Given a [FunctionReference](#functionreference), get the return type of the function.
+Given a [FunctionReference](#functionreference) or [FunctionReference\_future](#functionreference_future), get
+the return type of the function.
 
 #### Type Parameters
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* `AnyFunctionReference` |
+| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
@@ -1543,7 +1662,7 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 type VueMutationOptions<Args> = MutationOptions<Args>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:128](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L128)
+Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L129)
 
 #### Type Parameters
 
@@ -1559,7 +1678,7 @@ Defined in: [src/runtime/vue/client.ts:128](https://github.com/qruto/nuxt-convex
 type ConvexLogger = Exclude<BaseConvexClientOptions["logger"], boolean | undefined>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:147](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L147)
+Defined in: [src/runtime/vue/client.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L148)
 
 The logger type accepted by [ConvexVueClientOptions.logger](#logger) — the
 public shape of convex's non-exported `Logger`.
@@ -1610,7 +1729,7 @@ keep compiling. The plain union stays available as
 ### OptionalRestArgsOrSkip
 
 ```ts
-type OptionalRestArgsOrSkip<FuncRef> = FuncRef["_args"] extends Record<string, never> ? [MaybeRefOrGetter<Record<string, never> | "skip">] : [MaybeRefOrGetter<FuncRef["_args"] | "skip">];
+type OptionalRestArgsOrSkip<FuncRef> = FunctionArgs<FuncRef> extends Record<string, never> ? [MaybeRefOrGetter<Record<string, never> | "skip">] : [MaybeRefOrGetter<FunctionArgs<FuncRef> | "skip">];
 ```
 
 Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L16)
@@ -1619,7 +1738,7 @@ Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qru
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* [`FunctionReference`](#functionreference)\<`any`\> |
+| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`\> |
 
 ***
 
@@ -1629,7 +1748,7 @@ Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qru
 type UseQueryResult<QueryResult, ThrowOnError> = ConvexUseQueryResult<QueryResult, ThrowOnError>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:27](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L27)
+Defined in: [src/runtime/vue/composables/use-query.ts:29](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L29)
 
 **`Experimental`**
 
@@ -1731,7 +1850,7 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Properties
 
@@ -1930,7 +2049,7 @@ Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-con
 const ConvexClientKey: InjectionKey<ConvexVueClient>;
 ```
 
-Defined in: [src/runtime/vue/client.ts:629](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L629)
+Defined in: [src/runtime/vue/client.ts:630](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L630)
 
 Vue injection key for the [ConvexVueClient](#convexvueclient).
 
@@ -2027,7 +2146,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* [`FunctionReference`](#functionreference)\<`"action"`\> |
+| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 #### Parameters
 
@@ -2087,7 +2206,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* [`FunctionReference`](#functionreference)\<`"mutation"`\> |
+| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 #### Parameters
 
@@ -2177,7 +2296,7 @@ const { results, status, loadMore } = usePaginatedQuery(
 const useConvexQueries: (queries) => ShallowRef<Record<string, any>> = useQueries;
 ```
 
-Defined in: [src/runtime/vue/composables/use-queries.ts:141](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-queries.ts#L141)
+Defined in: [src/runtime/vue/composables/use-queries.ts:156](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-queries.ts#L156)
 
 Load a variable number of reactive Convex queries.
 
@@ -2186,9 +2305,10 @@ loading multiple queries which can be useful for loading a dynamic number
 of queries without violating the rules of composables.
 
 This composable accepts an object whose keys are identifiers for each query and the
-values are objects of `{ query: FunctionReference, args: Record<string, Value> }`. The
-`query` is a FunctionReference for the Convex query function to load, and the `args` are
-the arguments to that function.
+values are objects of
+`{ query: FunctionReference | FunctionReference_future, args: Record<string, Value> }`.
+The `query` is a reference to the Convex query function to load, and the
+`args` are the arguments to that function.
 
 The composable returns an object that maps each identifier to the result of the query,
 `undefined` if the query is still loading, or an instance of `Error` if the query
@@ -2224,7 +2344,7 @@ Throws an error if no Convex client has been provided (see [useConvex](#useconve
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `queries` | `MaybeRefOrGetter`\<[`RequestForQueries`](#requestforqueries)\> | An object mapping identifiers to objects of `{query: string, args: Record<string, Value> }` describing which query functions to fetch. Reactive (ref/computed/getter) or plain. |
+| `queries` | `MaybeRefOrGetter`\<`RequestForQueriesCompat`\> | An object mapping identifiers to objects of `{query: string, args: Record<string, Value> }` describing which query functions to fetch. Reactive (ref/computed/getter) or plain. |
 
 #### Returns
 
@@ -2239,10 +2359,10 @@ loading, or an `Error` if it threw an exception.
 ### useConvexQuery
 
 ```ts
-const useConvexQuery: <Query>(query, ...args) => ComputedRef<Query["_returnType"] | undefined> = useQuery;
+const useConvexQuery: <Query>(query, ...args) => ComputedRef<FunctionReturnType<Query> | undefined> = useQuery;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:210](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L210)
+Defined in: [src/runtime/vue/composables/use-query.ts:212](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L212)
 
 Load a reactive query within a Vue component.
 
@@ -2257,7 +2377,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -2268,7 +2388,7 @@ Throws an error if no Convex client has been provided.
 
 #### Returns
 
-`ComputedRef`\<`Query`\[`"_returnType"`\] \| `undefined`\>
+`ComputedRef`\<[`FunctionReturnType`](#functionreturntype)\<`Query`\> \| `undefined`\>
 
 a computed ref with the result of the query. Contains `undefined`
 while loading.
@@ -2629,7 +2749,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 function useConvex(): ConvexVueClient;
 ```
 
-Defined in: [src/runtime/vue/client.ts:641](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L641)
+Defined in: [src/runtime/vue/client.ts:642](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/client.ts#L642)
 
 Get the [ConvexVueClient](#convexvueclient) within a Vue component.
 
@@ -2673,7 +2793,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* [`FunctionReference`](#functionreference)\<`"action"`\> |
+| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 #### Parameters
 
@@ -2776,7 +2896,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* [`FunctionReference`](#functionreference)\<`"mutation"`\> |
+| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 #### Parameters
 
@@ -3139,9 +3259,10 @@ loading multiple queries which can be useful for loading a dynamic number
 of queries without violating the rules of composables.
 
 This composable accepts an object whose keys are identifiers for each query and the
-values are objects of `{ query: FunctionReference, args: Record<string, Value> }`. The
-`query` is a FunctionReference for the Convex query function to load, and the `args` are
-the arguments to that function.
+values are objects of
+`{ query: FunctionReference | FunctionReference_future, args: Record<string, Value> }`.
+The `query` is a reference to the Convex query function to load, and the
+`args` are the arguments to that function.
 
 The composable returns an object that maps each identifier to the result of the query,
 `undefined` if the query is still loading, or an instance of `Error` if the query
@@ -3177,7 +3298,7 @@ Throws an error if no Convex client has been provided (see [useConvex](#useconve
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `queries` | `MaybeRefOrGetter`\<[`RequestForQueries`](#requestforqueries)\> | An object mapping identifiers to objects of `{query: string, args: Record<string, Value> }` describing which query functions to fetch. Reactive (ref/computed/getter) or plain. |
+| `queries` | `MaybeRefOrGetter`\<`RequestForQueriesCompat`\> | An object mapping identifiers to objects of `{query: string, args: Record<string, Value> }` describing which query functions to fetch. Reactive (ref/computed/getter) or plain. |
 
 #### Returns
 
@@ -3192,10 +3313,10 @@ loading, or an `Error` if it threw an exception.
 ### useQuery()
 
 ```ts
-function useQuery<Query>(query, ...args): ComputedRef<Query["_returnType"] | undefined>;
+function useQuery<Query>(query, ...args): ComputedRef<FunctionReturnType<Query> | undefined>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:78](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L78)
+Defined in: [src/runtime/vue/composables/use-query.ts:80](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L80)
 
 Load a reactive query within a Vue component.
 
@@ -3210,7 +3331,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -3221,7 +3342,7 @@ Throws an error if no Convex client has been provided.
 
 #### Returns
 
-`ComputedRef`\<`Query`\[`"_returnType"`\] \| `undefined`\>
+`ComputedRef`\<[`FunctionReturnType`](#functionreturntype)\<`Query`\> \| `undefined`\>
 
 a computed ref with the result of the query. Contains `undefined`
 while loading.
@@ -3251,10 +3372,10 @@ const profile = useQuery(
 ### useQuery\_experimental()
 
 ```ts
-function useQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UseQueryResult<Query["_returnType"], ThrowOnError>>;
+function useQuery_experimental<Query, ThrowOnError>(options): ComputedRef<UseQueryResult<FunctionReturnType<Query>, ThrowOnError>>;
 ```
 
-Defined in: [src/runtime/vue/composables/use-query.ts:146](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L146)
+Defined in: [src/runtime/vue/composables/use-query.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L148)
 
 **`Experimental`**
 
@@ -3272,7 +3393,7 @@ the error will be thrown instead.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> | - |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> | - |
 | `ThrowOnError` *extends* `boolean` | `false` |
 
 #### Parameters
@@ -3283,7 +3404,7 @@ the error will be thrown instead.
 
 #### Returns
 
-`ComputedRef`\<[`UseQueryResult`](#usequeryresult)\<`Query`\[`"_returnType"`\], `ThrowOnError`\>\>
+`ComputedRef`\<[`UseQueryResult`](#usequeryresult)\<[`FunctionReturnType`](#functionreturntype)\<`Query`\>, `ThrowOnError`\>\>
 
 a computed ref with the current query state as a
 [UseQueryResult](#usequeryresult) object.
@@ -3505,7 +3626,7 @@ async function onPick(event: Event) {
 ### usePreloadedQuery()
 
 ```ts
-function usePreloadedQuery<Query>(preloadedQuery): ComputedRef<Query["_returnType"]>;
+function usePreloadedQuery<Query>(preloadedQuery): ComputedRef<FunctionReturnType<Query>>;
 ```
 
 Defined in: [src/runtime/vue/hydration.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L51)
@@ -3522,7 +3643,7 @@ Throws an error if no Convex client has been provided (see [useConvex](#useconve
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](#functionreference)\<`"query"`\> |
+| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -3532,7 +3653,7 @@ Throws an error if no Convex client has been provided (see [useConvex](#useconve
 
 #### Returns
 
-`ComputedRef`\<`Query`\[`"_returnType"`\]\>
+`ComputedRef`\<[`FunctionReturnType`](#functionreturntype)\<`Query`\>\>
 
 a computed ref with the result of the query. Initially returns the
 result fetched by the server. Subsequently returns the result fetched by the client.

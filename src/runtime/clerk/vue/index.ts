@@ -92,7 +92,7 @@ export function provideConvexAuthFromClerk(
  *
  * @public
  */
-export const ConvexProviderWithClerk = defineComponent({
+export const ConvexProviderWithClerk = /* @__PURE__ */ defineComponent({
   name: 'ConvexProviderWithClerk',
   props: {
     client: { type: Object as PropType<IConvexVueClient>, default: undefined },

@@ -75,7 +75,7 @@ Then open the website, launch Nuxt DevTools in the browser, and pick the Convex 
 ## Project Structure
 
 ```
-src/                  # Module source (Nuxt module + Convex component)
+src/                  # Module source: the Nuxt module and the runtime it installs
 devtools-client-app/  # Nuxt DevTools panel app (served in the DevTools iframe)
 templates/starter/    # The starter `create nuxt` copies — with examples/,
 examples/             # the only code here that installs the published

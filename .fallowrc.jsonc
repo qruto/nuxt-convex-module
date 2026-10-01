@@ -76,17 +76,19 @@
     "@arethetypeswrong/cli",
     "portless", // invoked inside the nested-quoted `dev` script
     "typedoc-plugin-frontmatter", // both listed as plain strings in typedoc.json "plugin"
-    "typedoc-plugin-markdown"
+    "typedoc-plugin-markdown",
+    "tailwindcss", // the website's CSS `@apply`s through Docus's Nuxt UI, which installs and runs it
+    "@iconify-json/carbon" // the DevTools panel's icons; UnoCSS loads the set by name at build time
   ],
 
-  "duplicates": {
-    // Reviewed clones, hidden until their content changes. chrome.css's
   // PR audits fail on every finding in the files a PR touches, not only the
   // ones fallow attributes to the PR. Under the default `new-only` gate, #51's
   // two clones read as inherited and passed, and main's full run then stayed
   // red for two weeks.
   "audit": { "gate": "all" },
 
+  "duplicates": {
+    // Reviewed clones, hidden until their content changes. chrome.css's
     // header rail restates depth.css's --inset-shadow-1/-2 layer for layer
     // with its own figures: a custom property's var()s resolve on the
     // element that declares it, so a scoped override has to restate the

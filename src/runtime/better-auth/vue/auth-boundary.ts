@@ -16,7 +16,7 @@ type EmptyObject = Record<string, never>
 
 // Subscribe to the session validated user to keep this check reactive to
 // actual user auth state at the provider level (rather than just jwt validity state).
-const UserSubscription = defineComponent({
+const UserSubscription = /* @__PURE__ */ defineComponent({
   name: 'UserSubscription',
   props: {
     getAuthUserFn: { type: Object as PropType<FunctionReference<'query'>>, required: true },
@@ -80,7 +80,7 @@ const UserSubscription = defineComponent({
  * @public
  * @experimental May change in a minor release — see STABILITY.md.
  */
-export const AuthBoundary = defineComponent({
+export const AuthBoundary = /* @__PURE__ */ defineComponent({
   name: 'AuthBoundary',
   props: {
     /**
