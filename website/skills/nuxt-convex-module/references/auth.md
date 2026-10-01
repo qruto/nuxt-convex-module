@@ -49,7 +49,7 @@ npm i @convex-dev/better-auth better-auth
 
 3. `convex/auth.ts`: `export const authComponent = createClient<DataModel>(components.betterAuth)` (from `@convex-dev/better-auth`), and a `createAuth(ctx)` that returns `betterAuth({ baseURL: process.env.SITE_URL, database: authComponent.adapter(ctx), emailAndPassword: { enabled: true }, plugins: [convex({ authConfig })] })`. `convex` comes from `@convex-dev/better-auth/plugins`, `betterAuth` from `better-auth`. Export a user query too: `export const { getAuthUser } = authComponent.clientApi()`.
 4. `convex/http.ts`: `authComponent.registerRoutes(http, createAuth)` on an `httpRouter()`.
-5. Env vars on the deployment. Check first with `npx convex env get BETTER_AUTH_SECRET`, and set the secret only when it is empty: a new secret invalidates every existing session, so never generate one over an old one.
+5. Env vars on the deployment. First list what is set with `npx convex env list --names-only`, which prints names and no values. Never run `npx convex env get BETTER_AUTH_SECRET`: it prints the secret. Generate the secret only when `BETTER_AUTH_SECRET` is not in that list. If it is there, keep it, because a new secret invalidates every existing session. If the command fails, stop and don't set anything.
 
    ```bash
    npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
