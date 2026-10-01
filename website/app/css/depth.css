@@ -1004,11 +1004,14 @@
   & *::selection {
     -webkit-text-fill-color: currentColor;
   }
+  /* `!important` because the per-room rules below outrank this selector
+     and set their own text-shadow and drop-shadow filter; forced colors
+     has to win over both. */
   @media (forced-colors: active) {
     -webkit-text-fill-color: currentColor;
     background-image: none;
-    text-shadow: none;
-    filter: none;
+    text-shadow: none !important;
+    filter: none !important;
   }
 }
 :root.dark :is(.convex-text-2, .convex-text-3) {
