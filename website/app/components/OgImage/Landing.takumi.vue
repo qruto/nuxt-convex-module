@@ -110,6 +110,7 @@ const composables = ['useQuery', 'useMutation', 'usePaginatedQuery', 'useUpload'
       <!-- The mark stands off the plate like the hero's lockups: a cast
            shade down-right of the 330° lamp, a hairline of light on its
            lit edge. -->
+      <!-- fallow-ignore-next-line code-duplication -- the footer strip below repeats Docs.takumi.vue's on purpose: the renderer's font scan reads only this file's static attributes, so a shared child component would lose Kode Mono -->
       <img :src="mark" width="250" height="207" style="filter: drop-shadow(-1px -1px 0 rgba(255,255,255,0.18)) drop-shadow(6px 10px 18px rgba(0,0,0,0.6));">
     </div>
 

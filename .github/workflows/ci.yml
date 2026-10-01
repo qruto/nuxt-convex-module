@@ -233,8 +233,8 @@ jobs:
       # on a job that runs code from the pull request, and a failing job with the
       # findings in its log already says the same thing.
       #
-      # On a pull request it looks only at the changed files, and fails only on
-      # findings the change introduces. On a push to main it runs over
+      # On a pull request it looks only at the changed files, and fails on any
+      # finding in them (`audit.gate` in .fallowrc.jsonc). On a push to main it runs over
       # everything, because a scoped audit passes on a config edit that strands
       # a file elsewhere.
       #

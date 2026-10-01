@@ -81,6 +81,12 @@
 
   "duplicates": {
     // Reviewed clones, hidden until their content changes. chrome.css's
+  // PR audits fail on every finding in the files a PR touches, not only the
+  // ones fallow attributes to the PR. Under the default `new-only` gate, #51's
+  // two clones read as inherited and passed, and main's full run then stayed
+  // red for two weeks.
+  "audit": { "gate": "all" },
+
     // header rail restates depth.css's --inset-shadow-1/-2 layer for layer
     // with its own figures: a custom property's var()s resolve on the
     // element that declares it, so a scoped override has to restate the
