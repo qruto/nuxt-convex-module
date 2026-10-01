@@ -75,6 +75,9 @@ jobs:
               # assets at all.
               - 'devtools-client-app/**'
               - 'test/**'
+              # Website code that test/unit imports.
+              - 'website/shared/**'
+              - 'website/app/utils/upstream-baselines.ts'
               - 'scripts/**'
               - 'examples/**'
               - 'templates/**'

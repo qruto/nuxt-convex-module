@@ -53,8 +53,7 @@ export default defineConfig({
       },
       {
         // Docs ↔ code contract: reads markdown and source, imports only
-        // src/registry.ts and the website's Vue-free agent-markdown hook.
-        // Runs in CI's `static` job, which every PR gets —
+        // src/registry.ts. Runs in CI's `static` job, which every PR gets —
         // the `test` job is skipped for docs-only changes.
         test: {
           name: 'docs',

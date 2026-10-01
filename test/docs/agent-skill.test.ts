@@ -1,12 +1,12 @@
 import { lstatSync, readdirSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS } from '../../src/registry'
-import { expandForAgents } from '../../website/shared/agent-markdown'
 import { at, contentFile, frontmatter, read, walk } from './helpers'
 
 // The agent-facing surface: the skills the site publishes at
-// /.well-known/skills/, the one prompt that installs the module with an
-// agent, and the hook that writes commands into the Markdown agents read.
+// /.well-known/skills/ and the one prompt that installs the module with an
+// agent. (The hook that writes commands into the Markdown agents read is
+// tested in test/unit/agent-markdown.test.ts — it imports website code.)
 // An agent follows a skill to the letter and never asks whether a name is
 // real, so the names, links and floors in it are held to the code here.
 
@@ -112,42 +112,5 @@ describe('the agent install prompt', () => {
 
   it.each(['README.md', 'website/content/index.md'])('%s carries the same prompt', (file) => {
     expect(read(file), `${file} has a different agent prompt from the Installation page — keep the three copies identical`).toContain(`\`\`\`text\n${prompt}\`\`\``)
-  })
-})
-
-describe('Markdown for agents', () => {
-  type Node = string | [string, Record<string, unknown>, ...Node[]]
-  const page = (...value: Node[]) => ({ type: 'minimark', value })
-
-  it('writes each package manager\'s command into a nested `:pm-*` block', () => {
-    const body = page(['callout', {}, ['pm-create', { template: 'gh:o/r/t' }]], ['pm-run', { scripts: 'dev, build' }])
-    expandForAgents(body)
-    const [callout, run] = body.value as [string, object, ...Node[]][]
-    expect(callout![2]).toEqual(['pm-create', { template: 'gh:o/r/t' },
-      ['pre', { language: 'bash', filename: 'pnpm', code: 'pnpm create nuxt@latest my-app -t gh:o/r/t' }],
-      ['pre', { language: 'bash', filename: 'npm', code: 'npm create nuxt@latest my-app -- -t gh:o/r/t' }],
-      ['pre', { language: 'bash', filename: 'yarn', code: 'yarn create nuxt my-app -t gh:o/r/t' }],
-      ['pre', { language: 'bash', filename: 'bun', code: 'bun create nuxt@latest my-app --template=gh:o/r/t' }],
-    ])
-    expect(run![3]).toEqual(['pre', { language: 'bash', filename: 'npm', code: 'npm run dev\nnpm run build' }])
-  })
-
-  it('installs dev dependencies with the dev flag', () => {
-    const body = page(['pm-install', { packages: 'x', dev: true }])
-    expandForAgents(body)
-    expect((body.value[0] as Node[])[2]).toEqual(['pre', { language: 'bash', filename: 'pnpm', code: 'pnpm add -D x' }])
-  })
-
-  it('states the baseline an `:upstream-baseline` plate shows', () => {
-    const body = page(['upstream-baseline', { source: 'convex', entry: 'convex/react-clerk' }])
-    expandForAgents(body)
-    expect((body.value[0] as Node[])[2]).toMatch(/^Matches upstream convex@\d+\.\d+\.\d+ \(convex\/react-clerk\)\.$/)
-  })
-
-  it('runs once per block', () => {
-    const body = page(['pm-x', { command: 'nuxi' }])
-    expandForAgents(body)
-    expandForAgents(body)
-    expect(body.value[0]).toHaveLength(2 + 4)
   })
 })
