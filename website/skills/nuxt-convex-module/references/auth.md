@@ -49,14 +49,14 @@ npm i @convex-dev/better-auth better-auth
 
 3. `convex/auth.ts`: `export const authComponent = createClient<DataModel>(components.betterAuth)` (from `@convex-dev/better-auth`), and a `createAuth(ctx)` that returns `betterAuth({ baseURL: process.env.SITE_URL, database: authComponent.adapter(ctx), emailAndPassword: { enabled: true }, plugins: [convex({ authConfig })] })`. `convex` comes from `@convex-dev/better-auth/plugins`, `betterAuth` from `better-auth`. Export a user query too: `export const { getAuthUser } = authComponent.clientApi()`.
 4. `convex/http.ts`: `authComponent.registerRoutes(http, createAuth)` on an `httpRouter()`.
-5. Env vars on the deployment:
+5. Env vars on the deployment. Check first with `npx convex env get BETTER_AUTH_SECRET`, and set the secret only when it is empty: a new secret invalidates every existing session, so never generate one over an old one.
 
    ```bash
    npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
    npx convex env set SITE_URL http://localhost:3000
    ```
 
-   Use the app's real dev URL for `SITE_URL`, and set both again on the production deployment with `--prod`.
+   Use the app's real dev URL for `SITE_URL`. Production needs both too, with `--prod` and its own secret, which the user sets up or approves (see the approval rule in SKILL.md).
 
 **Pages.** For the protected-page pattern (a login page that uses `resolveAuthRedirect`, plus the middleware), see https://nuxt-convex-module.dev/raw/recipes/protected-page.md. For the full reference, see https://nuxt-convex-module.dev/raw/components/better-auth.md.
 

@@ -17,6 +17,7 @@ import { isPmTag, PACKAGE_MANAGERS, pmLines } from './package-managers'
 /** A minimark node: `[tag, props, ...children]`, or a text string. */
 type MinimarkNode = string | [string, Record<string, unknown>, ...MinimarkNode[]]
 
+/** Fill one node, then its children; a node that already has children is left as it is. */
 function expand(node: MinimarkNode): void {
   if (typeof node === 'string') return
   const [tag, props, ...children] = node

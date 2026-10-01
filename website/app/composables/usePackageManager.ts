@@ -8,9 +8,11 @@ import { PACKAGE_MANAGERS } from '#shared/package-managers'
 // commands themselves live in shared/package-managers.ts.
 const STORAGE_KEY = 'nc-package-manager'
 
+/** Whether a stored value names a package manager the docs know. */
 const isPackageManager = (value: unknown): value is PackageManager =>
   PACKAGE_MANAGERS.includes(value as PackageManager)
 
+/** The reader's package manager (`pm`) and a setter that remembers it (`set`). */
 export function usePackageManager() {
   const pm = useState<PackageManager>(STORAGE_KEY, () => 'pnpm')
 
@@ -24,6 +26,7 @@ export function usePackageManager() {
     }
   })
 
+  /** Switch every `:pm-*` block to `value` and keep the choice for the next visit. */
   function set(value: PackageManager) {
     pm.value = value
     try {

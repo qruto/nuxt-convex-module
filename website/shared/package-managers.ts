@@ -42,6 +42,7 @@ const BUILDERS = {
 
 export type PmTag = keyof typeof BUILDERS
 
+/** Whether an MDC tag is one of the `:pm-*` command blocks. */
 export const isPmTag = (tag: unknown): tag is PmTag => typeof tag === 'string' && tag in BUILDERS
 
 /** The shell lines a `:pm-*` block shows for one package manager. */
