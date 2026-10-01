@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick, shallowRef } from 'vue'
 import { anyApi, getFunctionName } from 'convex/server'
-import type { FunctionReference } from 'convex/server'
+import type { FunctionReference, FunctionReference_future } from 'convex/server'
 import type { QueryJournal } from 'convex/browser'
 import type { Value } from 'convex/values'
 import { type RequestForQueries, useQueriesHelper } from '../../src/runtime/vue/composables/use-queries'
@@ -49,7 +49,7 @@ describe('useQueriesHelper', () => {
   it('adding a new query', async () => {
     const values: Record<string, Value | undefined> = {}
     const watches = new Map<string, Array<FakeWatch<Value>>>()
-    const createWatch: CreateWatch = vi.fn((query: FunctionReference<'query'>, _args: Record<string, Value>, _opts?: unknown) => {
+    const createWatch: CreateWatch = vi.fn((query: FunctionReference<'query'> | FunctionReference_future<'query'>, _args: Record<string, Value>, _opts?: unknown) => {
       const name = getFunctionName(query)
       const watch = new FakeWatch<Value>()
       watch.value = values[name]
@@ -112,7 +112,7 @@ describe('useQueriesHelper', () => {
 
   it('swapping queries and unsubscribing', async () => {
     const watches = new Map<string, Array<FakeWatch<Value>>>()
-    const createWatch: CreateWatch = vi.fn((query: FunctionReference<'query'>, _args: Record<string, Value>, _opts?: unknown) => {
+    const createWatch: CreateWatch = vi.fn((query: FunctionReference<'query'> | FunctionReference_future<'query'>, _args: Record<string, Value>, _opts?: unknown) => {
       const name = getFunctionName(query)
       const watch = new FakeWatch<Value>()
       const current = watches.get(name) ?? []

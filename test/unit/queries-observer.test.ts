@@ -1,4 +1,4 @@
-import { anyApi, type FunctionReference } from 'convex/server'
+import { anyApi, type FunctionReference, type FunctionReference_future } from 'convex/server'
 import type { Value } from 'convex/values'
 import { afterEach, beforeEach, expect, test, vi, type MockedFunction } from 'vitest'
 import type { RequestForQueries } from '../../src/runtime/vue/composables/use-queries'
@@ -7,7 +7,7 @@ import FakeWatch from '../fake-watch'
 
 let queriesObserver: QueriesObserver
 let createWatch: MockedFunction<(
-  query: FunctionReference<'query'>,
+  query: FunctionReference<'query'> | FunctionReference_future<'query'>,
   args: Record<string, Value>,
   options?: { journal?: unknown, paginationOptions?: unknown },
 ) => FakeWatch<Value>>
@@ -15,7 +15,7 @@ let listener: MockedFunction<() => void>
 
 beforeEach(() => {
   createWatch = vi.fn(() => new FakeWatch<Value>()) as MockedFunction<(
-    query: FunctionReference<'query'>,
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>,
     args: Record<string, Value>,
     options?: { journal?: unknown, paginationOptions?: unknown },
   ) => FakeWatch<Value>>
@@ -214,7 +214,7 @@ test('swapping createWatch recreates subscriptions', () => {
 
   // Swap out the `createWatch` function.
   const createWatch2 = vi.fn(() => new FakeWatch<Value>()) as MockedFunction<(
-    query: FunctionReference<'query'>,
+    query: FunctionReference<'query'> | FunctionReference_future<'query'>,
     args: Record<string, Value>,
   ) => FakeWatch<Value>>
 

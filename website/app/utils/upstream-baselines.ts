@@ -26,7 +26,7 @@ export const upstreamBaselines = {
   // same baseline with their own `entry`.
   'convex': {
     package: 'convex',
-    version: '1.45.0',
+    version: '1.46.0',
     entries: 'convex/react + convex/nextjs',
   },
   'better-auth': {

@@ -134,6 +134,7 @@ export type {
 } from 'convex/browser'
 export type {
   FunctionReference,
+  FunctionReference_future,
   FunctionArgs,
   FunctionReturnType,
   OptionalRestArgs,

@@ -1,4 +1,4 @@
-import type { FunctionReference } from 'convex/server'
+import type { FunctionArgs, FunctionReference, FunctionReference_future, FunctionReturnType } from 'convex/server'
 import { makeFunctionReference } from 'convex/server'
 import type { Value } from 'convex/values'
 import { jsonToConvex } from 'convex/values'
@@ -11,7 +11,7 @@ import { useConvexQueries, type RequestForQueries } from './composables/use-quer
  *
  * @public
  */
-export type Preloaded<Query extends FunctionReference<'query'>> = {
+export type Preloaded<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>> = {
   __type: Query
   _name: string
   _argsJSON: string
@@ -48,9 +48,9 @@ export type Preloaded<Query extends FunctionReference<'query'>> = {
  *
  * @public
  */
-export function usePreloadedQuery<Query extends FunctionReference<'query'>>(
+export function usePreloadedQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   preloadedQuery: MaybeRefOrGetter<Preloaded<Query>>,
-): ComputedRef<Query['_returnType']> {
+): ComputedRef<FunctionReturnType<Query>> {
   const { query, args, preloadedResult } = usePreloadedPayload(preloadedQuery)
 
   // On the server there is no live query — expose the preloaded value as a
@@ -76,19 +76,19 @@ export function usePreloadedQuery<Query extends FunctionReference<'query'>>(
  *
  * @internal
  */
-export function usePreloadedPayload<Query extends FunctionReference<'query'>>(
+export function usePreloadedPayload<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   preloadedQuery: MaybeRefOrGetter<Preloaded<Query>>,
 ): {
   query: ComputedRef<Query>
-  args: ComputedRef<Query['_args']>
-  preloadedResult: ComputedRef<Query['_returnType']>
+  args: ComputedRef<FunctionArgs<Query>>
+  preloadedResult: ComputedRef<FunctionReturnType<Query>>
 } {
   const args = computed(
-    () => jsonToConvex(toValue(preloadedQuery)._argsJSON) as Query['_args'],
+    () => jsonToConvex(toValue(preloadedQuery)._argsJSON) as FunctionArgs<Query>,
   )
 
   const preloadedResult = computed(
-    () => jsonToConvex(toValue(preloadedQuery)._valueJSON) as Query['_returnType'],
+    () => jsonToConvex(toValue(preloadedQuery)._valueJSON) as FunctionReturnType<Query>,
   )
 
   const query = computed(
@@ -104,14 +104,14 @@ export function usePreloadedPayload<Query extends FunctionReference<'query'>>(
  *
  * @internal
  */
-export function useReactiveQuery<Query extends FunctionReference<'query'>>(
+export function useReactiveQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   query: ComputedRef<Query>,
-  args: ComputedRef<Query['_args'] | 'skip'>,
-): ComputedRef<Query['_returnType'] | undefined> {
-  const queriesInput = computed((): RequestForQueries => {
+  args: ComputedRef<FunctionArgs<Query> | 'skip'>,
+): ComputedRef<FunctionReturnType<Query> | undefined> {
+  const queriesInput = computed(() => {
     const currentArgs = args.value
     if (currentArgs === 'skip') {
-      return {}
+      return {} as RequestForQueries
     }
     return {
       query: {
@@ -126,7 +126,7 @@ export function useReactiveQuery<Query extends FunctionReference<'query'>>(
   // Mirrors `useQuery`: errors throw on read and propagate to the nearest
   // `errorCaptured` boundary.
   return computed(() => {
-    const r = allResults.value.query as Query['_returnType'] | undefined | Error
+    const r = allResults.value.query as FunctionReturnType<Query> | undefined | Error
     if (r instanceof Error) throw r
     return r
   })

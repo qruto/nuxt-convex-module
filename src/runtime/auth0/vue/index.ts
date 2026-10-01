@@ -88,7 +88,10 @@ function useAuthFromAuth0() {
         detailedResponse: true,
         cacheMode: forceRefreshToken ? 'off' : 'on',
       })
-      return response.id_token as string
+      // `!`: @auth0/auth0-vue 2.10+ types the detailed response as possibly
+      // `undefined`, @auth0/auth0-react does not. An `undefined` still throws
+      // here and lands in the `catch`, as upstream's does.
+      return response!.id_token as string
     }
     catch {
       return null

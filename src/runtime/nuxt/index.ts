@@ -45,6 +45,7 @@ import { ConvexHttpClient } from 'convex/browser'
 import type {
   ArgsAndOptions,
   FunctionReference,
+  FunctionReference_future,
   FunctionReturnType,
 } from 'convex/server'
 import { getFunctionName } from 'convex/server'
@@ -101,7 +102,7 @@ export type NuxtOptions = {
  *
  * @public
  */
-export async function preloadQuery<Query extends FunctionReference<'query'>>(
+export async function preloadQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   query: Query,
   ...args: ArgsAndOptions<Query, NuxtOptions>
 ): Promise<Preloaded<Query>> {
@@ -122,7 +123,7 @@ export async function preloadQuery<Query extends FunctionReference<'query'>>(
  *
  * @public
  */
-export function preloadedQueryResult<Query extends FunctionReference<'query'>>(
+export function preloadedQueryResult<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   preloaded: Preloaded<Query>,
 ): FunctionReturnType<Query> {
   return jsonToConvex(preloaded._valueJSON)
@@ -140,7 +141,7 @@ export function preloadedQueryResult<Query extends FunctionReference<'query'>>(
  *
  * @public
  */
-export async function fetchQuery<Query extends FunctionReference<'query'>>(
+export async function fetchQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   query: Query,
   ...args: ArgsAndOptions<Query, NuxtOptions>
 ): Promise<FunctionReturnType<Query>> {
@@ -162,7 +163,7 @@ export async function fetchQuery<Query extends FunctionReference<'query'>>(
  * @public
  */
 export async function fetchMutation<
-  Mutation extends FunctionReference<'mutation'>,
+  Mutation extends FunctionReference<'mutation'> | FunctionReference_future<'mutation'>,
 >(
   mutation: Mutation,
   ...args: ArgsAndOptions<Mutation, NuxtOptions>
@@ -184,7 +185,7 @@ export async function fetchMutation<
  *
  * @public
  */
-export async function fetchAction<Action extends FunctionReference<'action'>>(
+export async function fetchAction<Action extends FunctionReference<'action'> | FunctionReference_future<'action'>>(
   action: Action,
   ...args: ArgsAndOptions<Action, NuxtOptions>
 ): Promise<FunctionReturnType<Action>> {

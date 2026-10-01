@@ -6,7 +6,9 @@ import {
   makeFunctionReference,
   type FunctionArgs,
   type FunctionReference,
+  type FunctionReference_future,
   type FunctionReturnType,
+  type OptionalRestArgs,
   type PaginationOptions,
   type PaginationResult,
 } from 'convex/server'
@@ -1216,7 +1218,7 @@ class LocalQueryStoreFake implements OptimisticLocalStore {
     Record<string, { args: Record<string, Value>, value: undefined | Value }>
   > = {}
 
-  setQuery(query: FunctionReference<'query'>, args: unknown, value: unknown): void {
+  setQuery(query: FunctionReference<'query'> | FunctionReference_future<'query'>, args: unknown, value: unknown): void {
     const queriesByName = this.queries[getFunctionName(query)] ?? {}
     this.queries[getFunctionName(query)] = queriesByName
     const rawArgs = (args ?? {}) as Record<string, Value>
@@ -1224,7 +1226,7 @@ class LocalQueryStoreFake implements OptimisticLocalStore {
     queriesByName[serializedArgs] = { args: rawArgs, value: value as Value | undefined }
   }
 
-  getAllQueries<Query extends FunctionReference<'query'>>(
+  getAllQueries<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     query: Query,
   ): Array<{
     args: FunctionArgs<Query>
@@ -1236,11 +1238,11 @@ class LocalQueryStoreFake implements OptimisticLocalStore {
     }))
   }
 
-  getQuery<Query extends FunctionReference<'query'>>(
+  getQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
     query: Query,
-    args: FunctionArgs<Query>,
+    ...args: OptionalRestArgs<Query>
   ): FunctionReturnType<Query> | undefined {
-    const serializedArgs = JSON.stringify(convexToJson(args as Value))
+    const serializedArgs = JSON.stringify(convexToJson((args[0] ?? {}) as Value))
     return this.queries[getFunctionName(query)]?.[serializedArgs]
       ?.value as FunctionReturnType<Query> | undefined
   }

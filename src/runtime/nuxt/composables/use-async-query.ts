@@ -12,7 +12,7 @@
 
 import { useAsyncData, useRuntimeConfig, useState } from '#app'
 import { computed, shallowRef, toValue, type ComputedRef, type MaybeRefOrGetter, type ShallowRef } from 'vue'
-import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server'
+import type { FunctionArgs, FunctionReference, FunctionReference_future, FunctionReturnType } from 'convex/server'
 import { getFunctionName, makeFunctionReference } from 'convex/server'
 import { convexToJson, jsonToConvex } from 'convex/values'
 import type { Value } from 'convex/values'
@@ -157,7 +157,7 @@ type AsyncQueryPayload = { value: ReturnType<typeof convexToJson> } | null
  *
  * @public
  */
-export function useAsyncQuery<Query extends FunctionReference<'query'>>(
+export function useAsyncQuery<Query extends FunctionReference<'query'> | FunctionReference_future<'query'>>(
   query: Query,
   args?: MaybeRefOrGetter<FunctionArgs<Query> | 'skip'>,
   options: AsyncQueryOptions = {},
@@ -230,10 +230,10 @@ export function useAsyncQuery<Query extends FunctionReference<'query'>>(
   // throws on read.
   const liveResults: ShallowRef<Record<string, unknown>>
     = !import.meta.server && live && client
-      ? useConvexQueries(computed((): RequestForQueries => {
+      ? useConvexQueries(computed(() => {
           const currentArgs = toValue(args) ?? {}
           if (currentArgs === 'skip') {
-            return {}
+            return {} as RequestForQueries
           }
           return {
             query: { query: queryReference, args: currentArgs as Record<string, Value> },
