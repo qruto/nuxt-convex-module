@@ -74,9 +74,9 @@ Convex runs the backend in a deployment. `convex dev --once` connects to one (cr
 
 A local deployment runs only while `convex dev` runs. The `dev` script keeps it running, so that is the command the user starts.
 
-## 3. Add example code, only when it helps
+## 3. Add example code, only when the user asked for it
 
-Skip this when the user asked for a specific feature (build that instead) or the app already has Convex functions. When they just want to see it work, add the starter's table and functions:
+An install request is not a request for example code: skip this step, and never replace the user's pages to make room for it. Offer it in step 5 instead. Do it when the user asked for an example or a demo (or for a feature: then build that feature, not this). The example is the starter's table and functions:
 
 ```ts [convex/schema.ts]
 import { defineSchema, defineTable } from 'convex/server'
@@ -108,7 +108,7 @@ export const send = mutation({
 })
 ```
 
-Use them in a page or `app.vue`:
+Use them in a new page, or in `app.vue` only when it is still Nuxt's untouched welcome page and the user agreed:
 
 ```vue
 <script setup lang="ts">
@@ -136,7 +136,7 @@ Run `npx convex dev --once` again (with `CONVEX_AGENT_MODE=anonymous` for a loca
 
 1. `convex/_generated/api.d.ts` exists.
 2. Start the `dev` script in the background (`npm run dev`, `pnpm dev`, …) and wait for the Nuxt URL. The module logs one line that names the deployment, such as `Convex http://127.0.0.1:3210 · functions: convex/ · integrations: none`. A warning that starts with `No Convex deployment URL configured` means step 2 didn't run in this folder.
-3. Request the page with `curl` and check the HTML. With step 3's example, the page should contain the `Nuxt + Convex` heading or the message list without errors.
+3. Request the page with `curl` and check for HTTP 200 and no error page. With step 3's example in place, also write a message with `npx convex run messages:send '{"body":"hi"}'` and check that the next request's HTML contains it.
 4. Stop the dev process when you are done. Don't leave it running.
 
 If something fails, every message the module prints is listed with its fix in [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md).
@@ -150,4 +150,4 @@ If something fails, every message the module prints is listed with its fix in [T
 - Convex's own guidelines for writing backend functions: `npx convex ai-files install` writes them to `convex/_generated/ai/` and points `AGENTS.md` and `CLAUDE.md` at them. Offer it; it edits those two files.
 - What they can add: Better Auth, Clerk or Auth0 ([auth.md](auth.md)), Polar billing ([polar.md](polar.md)), and `nuxt-security` for a CSP that knows the deployment's origins.
 
-Install the optional packages only when the user asks for them.
+Install the optional packages only when the user asks for them. If you skipped step 3, offer the example: a `messages` table with a live list and a form.
