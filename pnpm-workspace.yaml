@@ -86,14 +86,18 @@ overrides:
   # fixed in 0.28.1). fontless only imports `transform`, stable across 0.x.
   # Remove when fontless allows ^0.28.
   'fontless>esbuild': ^0.28.1
-  # ajv@8.20.0 asks for fast-uri ^3.0.1, which resolves to 3.1.5 — in range for
-  # four advisories fixed in 3.1.6: two SSRF (malformed and repeated scheme
-  # separators) and two host confusion (skipped IDN canonicalisation,
-  # percent-encoded scheme). ajv only reaches this repository through commitlint
-  # and the docs site, but the fix is a patch release its own range already
-  # accepts. Not scoped to one parent, because they all ask for the same ^3
-  # range. Remove when ajv's floor moves past 3.1.6.
-  fast-uri: ^3.1.6
+  # ajv@8.20.0 asks for fast-uri ^3.0.1, which pnpm keeps at an older 3.1.x —
+  # in range for advisories fixed in 3.1.6 (two SSRF, two host confusion) and
+  # 3.1.8 (host case normalisation via percent-encoded octets). ajv only reaches
+  # this repository through commitlint and the docs site, but the fix is a patch
+  # release its own range already accepts. Not scoped to one parent, because they
+  # all ask for the same ^3 range. Remove when ajv's floor moves past 3.1.8.
+  fast-uri: ^3.1.8
+  # minimatch 5.x and 9.x (via archiver, dev-only) ask for brace-expansion ^2,
+  # which pnpm keeps at 2.1.4 — in range for the quadratic `{a},b}` expansion
+  # fixed in 2.1.7. A patch release inside the existing range. Remove when
+  # archiver's minimatch floor resolves 2.1.7 on its own.
+  'brace-expansion@^2': ^2.1.7
   # postcss@8.5.26 asks for nanoid ^3.3.11. 3.3.18 fixes an infinite loop when a
   # custom generator is called with a size of zero or less. postcss only arrives
   # through Nuxt's Vite builder, so this is dev-only — but again, the fix is a
