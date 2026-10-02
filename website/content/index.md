@@ -184,10 +184,16 @@ links:
       label: "[text-box:trim-both_cap_alphabetic] overflow-visible!"
 ---
 #title
-:convex-text[Up and running in three moves]
+:convex-text[One prompt, or three moves]
 
 #body
 ::landing-deploy
+```text
+Install nuxt-convex-module, the Convex module for Nuxt, in this project:
+run `npx skills add https://nuxt-convex-module.dev --skill nuxt-convex-module -y`,
+then follow .agents/skills/nuxt-convex-module/references/install.md.
+```
+
 ```bash
 npx nuxi module add nuxt-convex-module
 ```

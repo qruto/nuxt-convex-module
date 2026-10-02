@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import { expandForAgents } from './shared/agent-markdown'
 import { signalDark, signalLight } from './shiki-themes'
 
 // The playground runs against a local anonymous Convex deployment
@@ -160,6 +161,14 @@ export default defineNuxtConfig({
     hoist: ['@nuxt/content'],
   },
   hooks: {
+    // Agents read the pages as Markdown (`/raw/*.md`, `/llms-full.txt`, the
+    // MCP server's `get-page`), where a `:pm-*` block would print as an empty
+    // tag. This writes the commands into it — see shared/agent-markdown.ts.
+    // Parsed pages are cached by content, not by hook: after changing this,
+    // `rm -rf .data/content` before checking locally.
+    'content:file:afterParse'({ content }) {
+      expandForAgents(content.body)
+    },
     // Client HMR needs NO override: Nuxt CLI pins the HMR WebSocket to the
     // main dev server (verified: no standalone HMR port is ever bound), so
     // the browser's derived default — wss://<page-host>/_nuxt/ — goes through
@@ -208,8 +217,10 @@ export default defineNuxtConfig({
     // `convex dev --start`; the module must not rewrite this package's script.
     devScript: false,
   },
-  // Publish the repository's own agent skill at /.well-known/skills/ (Docus
-  // scans each subfolder for a SKILL.md; .agents/skills/upstream-parity links here).
+  // Publish the repository's agent skills at /.well-known/skills/: the
+  // `nuxt-convex-module` skill for apps that use the module, and the
+  // contributors' `upstream-parity`. Docus scans each real subfolder for a
+  // SKILL.md (symlinks are skipped); .agents/skills/* link back here.
   docus: { skills: { dir: 'skills' } },
   // Providers are pinned rather than discovered. @nuxt/fonts walks its
   // provider list per family, and Technor exists on Fontshare only — naming
@@ -252,16 +263,21 @@ export default defineNuxtConfig({
       { prefix: 'nc', dir: fileURLToPath(new URL('app/assets/icons', import.meta.url)) },
     ],
   },
-  // `llms.txt` — the section map an agent reads first. Docus fills title
-  // and description from package.json; the generated TypeDoc pages are
-  // left out, the hand-written pages are what an agent should read.
+  // `llms.txt` — the section map an agent reads first. Docus fills the title
+  // from `site.name`; the description is the `>` line right under it, so it
+  // carries the agent install path too (`notes` would print at the bottom).
+  // The generated TypeDoc pages are left out, the hand-written pages are
+  // what an agent should read. `/components` and `/api-reference` match by
+  // prefix so their index pages — the packages table, the subpath exports —
+  // are listed too.
   llms: {
+    description: 'Documentation for nuxt-convex-module, the Convex module for Nuxt: live queries, mutations, actions, pagination, file storage, SSR, auth and security. Agents: install the skill with `npx skills add https://nuxt-convex-module.dev --skill nuxt-convex-module -y` and follow its `references/install.md`; the docs MCP server is https://nuxt-convex-module.dev/mcp.',
     sections: [
       { title: 'Getting Started', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/getting-started/%' }] },
       { title: 'Guide', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/guide/%' }] },
-      { title: 'Components', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/components/%' }] },
+      { title: 'Components', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/components%' }] },
       { title: 'Recipes', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/recipes/%' }] },
-      { title: 'API Reference', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/api-reference/%' }, { field: 'path', operator: 'NOT LIKE', value: '/api-reference/reference/%' }] },
+      { title: 'API Reference', contentCollection: 'docs', contentFilters: [{ field: 'path', operator: 'LIKE', value: '/api-reference%' }, { field: 'path', operator: 'NOT LIKE', value: '/api-reference/reference/%' }] },
     ],
   },
   // The docs MCP server Docus serves at `/mcp` (listed in the nuxt/modules

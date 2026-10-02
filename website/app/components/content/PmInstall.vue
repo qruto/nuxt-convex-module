@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { pmLines } from '#shared/package-managers'
+
 // `:pm-install{packages="convex"}` → `pnpm add convex`, or whichever manager
 // the reader picked in the sidebar. `dev` installs as a devDependency.
 const props = defineProps<{ packages: string, dev?: boolean }>()
-const { commands } = usePackageManager()
-const lines = computed(() => [`${props.dev ? commands.value.addDev : commands.value.add} ${props.packages}`])
+const { pm } = usePackageManager()
+const lines = computed(() => pmLines('pm-install', props, pm.value))
 </script>
 
 <template>
