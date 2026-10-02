@@ -53,6 +53,7 @@ const [prompt, ...moves] = codeSlotParts(useSlots(), steps.length + 1)
       <div :class="[well, 'max-w-3xl']">
         <component :is="prompt" />
       </div>
+      <AgentPromptLinks class="-mt-1 mb-3" />
       <p class="m-0 text-sm leading-relaxed text-toned">
         Paste it into Claude Code, Cursor or Codex. The agent adds the module's skill, installs the module, starts a local Convex deployment and checks the dev server. Or take the three moves by hand.
       </p>

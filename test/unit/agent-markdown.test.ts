@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { AGENT_PROMPT, AGENT_PROMPT_LINKS } from '../../website/shared/agent-prompt'
 import { expandForAgents } from '../../website/shared/agent-markdown'
+import { contentFile, read } from '../docs/helpers'
 
 // The content hook behind the Markdown agents read (`/raw/*.md`,
 // `/llms-full.txt`, MCP `get-page`): every `:pm-*` block gets one labelled
@@ -36,10 +38,31 @@ describe('Markdown for agents', () => {
     expect((body.value[0] as Node[])[2]).toMatch(/^Matches upstream convex@\d+\.\d+\.\d+ \(convex\/react-clerk\)\.$/)
   })
 
+  it('writes the open-in-agent links into `:agent-prompt-links`', () => {
+    const body = page(['agent-prompt-links', {}])
+    expandForAgents(body)
+    const links = JSON.stringify(body.value[0])
+    for (const { href, label } of AGENT_PROMPT_LINKS) expect(links).toContain(JSON.stringify(['a', { href }, label]))
+  })
+
   it('runs once per block', () => {
     const body = page(['pm-x', { command: 'nuxi' }])
     expandForAgents(body)
     expandForAgents(body)
     expect(body.value[0]).toHaveLength(2 + 4)
+  })
+})
+
+describe('the agent install prompt', () => {
+  it('is the prompt the Installation page shows', () => {
+    // test/docs/agent-skill.test.ts holds the page, the README and the landing
+    // to each other; this ties the links' copy to them.
+    const page = read(contentFile('/getting-started/installation'))
+    expect(page).toContain(`\`\`\`text\n${AGENT_PROMPT}\n\`\`\``)
+  })
+
+  it('hands the whole prompt to each agent link', () => {
+    for (const { href } of AGENT_PROMPT_LINKS)
+      expect(decodeURIComponent(href.slice(href.indexOf('=') + 1))).toBe(AGENT_PROMPT)
   })
 })
