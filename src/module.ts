@@ -1,5 +1,6 @@
 import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
+import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 import { deploymentEnv, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
@@ -241,10 +242,26 @@ export default defineNuxtModule<ModuleOptions>({
       const result = setupDevScript(nuxt.options.rootDir)
       if (result.changed) {
         logger.info(`Set \`scripts.dev\` to \`${result.to}\` — one command now runs Convex beside Nuxt, no .env needed locally. Set \`convex.devScript: false\` to keep your own script.`)
+        hintAgent()
       }
     }
   },
 })
+
+let agentHinted = false
+
+/**
+ * After a setup notice, and only when an AI coding agent runs Nuxt (std-env
+ * reads Claude Code's, Codex's, Cursor's, Gemini CLI's… environment, or
+ * `AI_AGENT`): the commands that work without a terminal to answer prompts.
+ * `npx convex dev` asks to log in and never exits; an agent needs the
+ * one-shot local form. Once per process.
+ */
+function hintAgent(): void {
+  if (agentHinted || !detectAgent().name) return
+  agentHinted = true
+  logger.info('An AI agent is running Nuxt. `CONVEX_AGENT_MODE=anonymous npx convex dev --once` sets up a local Convex deployment with no prompts and no account, writes .env.local and the codegen, then exits. For the setup steps and this module\'s API: `npx skills add https://nuxt-convex-module.dev --skill nuxt-convex-module -y`.')
+}
 
 /** Whether the Nuxt DevTools UI itself is enabled for this app. */
 function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
@@ -357,6 +374,7 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
       'No Convex deployment URL configured. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config, '
       + 'or run `npx convex dev`: it writes CONVEX_URL to .env.local, which the module reads in development.',
     )
+    hintAgent()
   }
 
   const siteUrl = resolved.siteUrl
@@ -459,6 +477,7 @@ function registerConvexApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
         if (nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
           notifiedMissing = true
           logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. Convex features no-op until it exists.`)
+          hintAgent()
         }
         return 'import { defineNuxtPlugin } from \'#app\'\nexport default defineNuxtPlugin(() => {})\n'
       }
