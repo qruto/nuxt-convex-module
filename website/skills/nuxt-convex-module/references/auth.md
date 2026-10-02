@@ -52,15 +52,17 @@ npm i @convex-dev/better-auth better-auth
 5. Env vars on the deployment. A new `BETTER_AUTH_SECRET` invalidates every existing session, so the block below sets it only when the deployment has none. It checks with `npx convex env list --names-only`, which prints names and no values, and stops if that check fails. Never run `npx convex env get BETTER_AUTH_SECRET`: it prints the secret.
 
    ```bash
+   app_url=http://localhost:3000   # replace with the URL `nuxt dev` prints for this app
    if names="$(npx convex env list --names-only)"; then
-     printf '%s\n' "$names" | grep -Fxq BETTER_AUTH_SECRET || npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
-     npx convex env set SITE_URL http://localhost:3000
+     { printf '%s\n' "$names" | grep -Fxq BETTER_AUTH_SECRET || npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"; } \
+       && npx convex env set SITE_URL "$app_url" \
+       || echo "Setting the env vars failed; check the output above before going on." >&2
    else
      echo "Could not list the deployment's env vars; nothing was set." >&2
    fi
    ```
 
-   Use the app's real dev URL for `SITE_URL`. Production needs both too, with `--prod` and its own secret, which the user sets up or approves (see the approval rule in SKILL.md).
+   Set `app_url` to the app's real dev URL first: Better Auth uses `SITE_URL` as its base URL. Production needs both too, with `--prod` and its own secret, which the user sets up or approves (see the approval rule in SKILL.md).
 
 **Pages.** For the protected-page pattern (a login page that uses `resolveAuthRedirect`, plus the middleware), see https://nuxt-convex-module.dev/raw/recipes/protected-page.md. For the full reference, see https://nuxt-convex-module.dev/raw/components/better-auth.md.
 
