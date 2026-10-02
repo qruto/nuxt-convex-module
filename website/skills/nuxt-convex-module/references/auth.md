@@ -54,8 +54,12 @@ npm i @convex-dev/better-auth better-auth
    ```bash
    app_url=http://localhost:3000   # replace with the URL `nuxt dev` prints for this app
    if names="$(npx convex env list --names-only)"; then
-     { printf '%s\n' "$names" | grep -Fxq BETTER_AUTH_SECRET || npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"; } \
-       && npx convex env set SITE_URL "$app_url" \
+     printf '%s\n' "$names" | grep -Fxq BETTER_AUTH_SECRET
+     case $? in
+       0) ;;   # already set: keep it
+       1) secret="$(openssl rand -base64 32)" && npx convex env set BETTER_AUTH_SECRET "$secret" ;;
+       *) false ;;   # grep itself failed: change nothing
+     esac && npx convex env set SITE_URL "$app_url" \
        || echo "Setting the env vars failed; check the output above before going on." >&2
    else
      echo "Could not list the deployment's env vars; nothing was set." >&2
