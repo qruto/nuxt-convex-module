@@ -293,7 +293,7 @@ function segments(body: string) {
           </p>
           <NuxtLink
             :to="current.to"
-            class="stamp mt-auto inline-flex items-center gap-1.5 self-start pt-1 text-lit no-underline hover:underline"
+            class="stamp mt-auto inline-flex items-center gap-1.5 self-start pt-1 text-lit neon-underline"
           >
             {{ current.cta }}
             <UIcon

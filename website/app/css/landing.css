@@ -229,6 +229,11 @@ html.landing-snap-driven:has(.landing-panel) {
      just landed never runs its first line under the rail. */
   padding-top: var(--ui-header-height, 4rem);
   display: grid;
+  /* One column that can shrink to the plate. The implicit track is
+     `auto`, which will not go below its content's min-content width, so
+     on a phone the deploy plate held the page 39px wider than the screen
+     and the whole landing scrolled sideways. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
 }
 /* UPageSection's container opens with `lg:py-40` — 160px of lead-in

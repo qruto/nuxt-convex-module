@@ -433,6 +433,37 @@ html:active-view-transition-type(back)::view-transition-new(root) {
      (2026-09-16, "gray on gray"). Light has nothing to close. */
   --dish-ground-rim: 0 1px 0 light-dark(transparent, rgb(255 255 255 / 0.1));
 }
+/* THE LIGHT SEARCH WELL IS CUT TO THE GROUND, NOT BELOW IT (2026-10-02:
+   "the search bar looks too dark and gray compared to the surface").
+   The field is cut through the rail to the page, so its floor is the
+   page's own tone — the ground, 93.8%, a few levels under the ~96% rail.
+   It sat at the ground taken 4% down and then 3.5% more at the lip:
+   ~20 levels under the rail, a grey slab with a ring round it. The
+   depth is now drawn by the WALL — a hard shade row under the lip and
+   a soft one falling a few pixels down the floor — and by the rail's
+   own edge catching the lamp one row below the cut, which light left
+   transparent. The ring drops to a whisper of shade over the floor.
+   Header only: the package chooser is cut into the ground itself, where
+   ground −4% is right. Dark values are depth.css's and the scope
+   above's, verbatim. */
+.app-header {
+  --dish-body-ground: light-dark(
+      var(--ui-bg),
+      color-mix(in srgb, var(--ui-bg), #000 12%));
+  --gradient-recessed-ground: linear-gradient(180deg,
+    color-mix(in srgb, var(--dish-body-ground), #000 3.5%),
+    var(--dish-body-ground) 34%, var(--dish-body-ground) 76%,
+    color-mix(in srgb, var(--dish-body-ground), var(--dish-floor-lift) 3%));
+  --recess-edge-ground: light-dark(rgb(0 0 0 / 0.07), oklch(12% 0 0));
+  --recess-lip-ground: inset 0 0 0 1px var(--recess-edge-ground);
+  --inset-shadow-2:
+    inset 0 1px 0 0 light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.55)),
+    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.25)),
+    inset 0 5px 6px -4px light-dark(rgb(0 0 0 / 0.1), transparent),
+    inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.6), oklch(80% 0.035 65 / 0.11)),
+    inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.55), oklch(80% 0.035 65 / 0.055));
+  --dish-ground-rim: 0 1px 0 light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.1));
+}
 
 /* -- THE FIELD-GROUP SEAM ----------------------------------------
    Docus hardcodes `border-l border-muted` on the dropdown half of
@@ -759,6 +790,94 @@ html:active-view-transition-type(back)::view-transition-new(root) {
     0 0 12px 1px light-dark(
       color-mix(in srgb, var(--ui-primary) 18%, transparent),
       color-mix(in srgb, var(--ui-primary) 45%, transparent));
+}
+/* The same lit tube as a GLYPH: an icon that is the light rather than
+   a marking on the plate — the search field's lens, the row the palette
+   has under its cursor. A drop-shadow straight on a nuxt-icon glyph is
+   cut away by the mask it casts from, so it takes concave-icon's shell:
+   the mask moves to a pseudo and the glow stays on the element. Colour
+   comes from the paired text-* utility, so the halo is the ink's own. */
+@utility neon-icon {
+  &.iconify {
+    background: none;
+    mask: none;
+    position: relative;
+    filter:
+      drop-shadow(0 0 1px color-mix(in srgb, currentColor 60%, transparent))
+      drop-shadow(0 0 5px light-dark(
+        color-mix(in srgb, currentColor 35%, transparent),
+        color-mix(in srgb, currentColor 60%, transparent)));
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      mask-image: var(--svg);
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+    }
+    @media (forced-colors: active) {
+      filter: none;
+    }
+  }
+}
+/* The same lit tube as an UNDERLINE: a text link stands on a groove (the
+   --seam-x cut), and hover or focus lights the tube in its shade row —
+   drawn in from the start, let out past the end. Background layers, not a
+   pseudo, so a link that wraps keeps one line across its fragments. Square
+   ends: the glow stays clear of a theme's corner radius. `:any-link` lifts
+   it over a theme's `transition-colors`, which would drop the sweep. */
+@utility neon-underline {
+  &:any-link {
+    /* Room for the glow. An inline ignores both for layout; the margin
+       hands the room back when the link is a block or flex item. */
+    padding-block-end: 4px;
+    margin-block-end: -4px;
+    background-image:
+      linear-gradient(light-dark(currentColor, color-mix(in oklab, currentColor, #fff 22%)) 0 0),
+      linear-gradient(transparent, light-dark(
+        color-mix(in srgb, currentColor 25%, transparent),
+        color-mix(in srgb, currentColor 45%, transparent)), transparent),
+      linear-gradient(var(--seam-shade) 0 1px, var(--seam-catch) 1px 2px);
+    background-repeat: no-repeat;
+    background-size: 0 1px, 0 5px, 100% 2px;
+    background-position: right 0 bottom 4px, right 0 bottom 2px, left 0 bottom 3px;
+    @media (prefers-reduced-motion: no-preference) {
+      transition: color 150ms, background-size 350ms var(--ease-out);
+    }
+  }
+  &:any-link:is(:hover, :focus-visible) {
+    background-size: 100% 1px, 100% 5px, 100% 2px;
+    background-position: left 0 bottom 4px, left 0 bottom 2px, left 0 bottom 3px;
+  }
+  /* A code chip covers the groove, and only a sliver of light would leak
+     under it; the chip's own lift is the cue there. */
+  &:any-link:has(> code) {
+    background-image: none;
+  }
+  @media (forced-colors: active) {
+    &:any-link { background-image: none; }
+    &:any-link:is(:hover, :focus-visible) { text-decoration-line: underline; }
+  }
+}
+/* THE SEARCH BACKDROP. The palette is the one thing on the site lifted
+   clear of the page, so the page under it steps back: dimmed, softened,
+   and lit warm from behind the panel — the signal light spilling round
+   its edges is what says the panel stands off the page rather than
+   being printed over it. Nuxt UI renders the overlay as the panel's
+   sibling and ContentSearch hands no class to it, hence the :has(). */
+[data-slot="overlay"]:has(+ .search-console) {
+  background:
+    /* Eased in several stops: a straight two-stop falloff this wide
+       draws visible contour rings on the light scrim. */
+    radial-gradient(64rem 40rem at 50% 50% in oklab,
+      --alpha(var(--color-signal-500) / 24%) 30%,
+      --alpha(var(--color-signal-500) / 14%) 44%,
+      --alpha(var(--color-signal-500) / 6%) 57%,
+      --alpha(var(--color-signal-500) / 1.5%) 67%,
+      transparent 74%),
+    light-dark(oklch(93.8% 0 0 / 0.55), oklch(12% 0 0 / 0.72));
+  backdrop-filter: blur(6px) saturate(1.15);
 }
 .scribe {
   display: block;
