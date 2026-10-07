@@ -17,13 +17,13 @@
         :product-ids="['demo-product']"
         :embed="false"
         target="_blank"
-        class="convex rounded-[10px] inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-primary-700 no-underline transition-[color,box-shadow] duration-150 ease-out hover:text-primary active:concave dark:text-primary-300"
+        class="convex rounded-[10px] inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-primary-700 no-underline transition-[color,box-shadow] duration-150 ease-out hover:text-primary-800 active:concave dark:text-primary-300 dark:hover:text-primary"
       >
         Buy demo product
       </CheckoutLink>
       <CustomerPortalLink
         return-url="/components/polar"
-        class="convex rounded-[10px] inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-default no-underline transition-[color,box-shadow] duration-150 ease-out hover:text-primary active:concave"
+        class="convex rounded-[10px] inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold text-default no-underline transition-[color,box-shadow] duration-150 ease-out hover:text-primary-700 dark:hover:text-primary active:concave"
       >
         Manage subscription
       </CustomerPortalLink>

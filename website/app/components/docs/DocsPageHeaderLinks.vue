@@ -19,17 +19,24 @@ const { origin } = useRequestURL()
 const { t } = useDocusI18n()
 
 // useClipboard's contract: nothing without the Clipboard API, and `copied`
-// holds for 1.5s after a copy.
+// holds for 1.5s after a copy. A refused write (no permission, an insecure
+// page) is a copy that did not happen — reported as false, not thrown.
 const copied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
 async function copy(text: string) {
-  if (!navigator.clipboard) return
-  await navigator.clipboard.writeText(text)
+  if (!navigator.clipboard) return false
+  try {
+    await navigator.clipboard.writeText(text)
+  }
+  catch {
+    return false
+  }
   copied.value = true
   clearTimeout(copiedTimer)
   copiedTimer = setTimeout(() => {
     copied.value = false
   }, 1500)
+  return true
 }
 
 // ufo's joinURL and withTrailingSlash, for the two shapes used here.
@@ -70,8 +77,8 @@ const items = computed(() => [
     {
       label: 'Copy MCP Server URL',
       icon: 'i-lucide-link',
-      onSelect() {
-        copy(mcpServerUrl.value)
+      async onSelect() {
+        if (!await copy(mcpServerUrl.value)) return
         toast.add({
           title: 'Copied to clipboard',
           icon: 'i-lucide-check-circle',
@@ -88,8 +95,8 @@ const items = computed(() => [
 ])
 
 async function copyPage() {
-  const page = await $fetch<string>(`/raw${route.path}.md`)
-  copy(page)
+  const page = await $fetch<string>(`/raw${route.path}.md`).catch(() => undefined)
+  if (page) await copy(page)
 }
 </script>
 

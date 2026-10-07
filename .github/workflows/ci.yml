@@ -451,16 +451,17 @@ jobs:
       # unjs/unimport#568, and whatwg-url@17.1.1, published the same day, has
       # it too. While the 404 lasts, this check reads 7.0.1 in its place, so
       # every other package is still verified. It stops pinning by itself
-      # once npm serves the attestation, and says so.
+      # once npm serves the attestation (a 200 — any other answer, a network
+      # failure included, keeps the pin), and says so.
       - name: Verify dependency signatures
         if: ${{ !cancelled() }}
         working-directory: ${{ runner.temp }}/smoke-starter
         run: | # zizmor: ignore[adhoc-packages]
-          if [ "$(curl -s -o /dev/null -w '%{http_code}' https://registry.npmjs.org/-/npm/v1/attestations/unimport@7.0.2)" = 404 ]; then
-            node -e "const fs = require('fs'); const p = JSON.parse(fs.readFileSync('package.json')); p.overrides = { 'unimport@7.0.2': '7.0.1' }; fs.writeFileSync('package.json', JSON.stringify(p, null, 2))"
-            npx --yes npm@11.17.0 install --no-audit --no-fund
-          else
+          if [ "$(curl -s -o /dev/null -w '%{http_code}' https://registry.npmjs.org/-/npm/v1/attestations/unimport@7.0.2)" = 200 ]; then
             echo "::warning::npm now serves unimport@7.0.2's attestation — remove the pin in this step (unjs/unimport#568)."
+          else
+            node -e "const fs = require('fs'); const p = JSON.parse(fs.readFileSync('package.json')); p.overrides = { ...p.overrides, 'unimport@7.0.2': '7.0.1' }; fs.writeFileSync('package.json', JSON.stringify(p, null, 2))"
+            npx --yes npm@11.17.0 install --no-audit --no-fund
           fi
           npx --yes npm@11.17.0 audit signatures
 

@@ -81,7 +81,6 @@ const links = computed(() => appConfig.github && appConfig.github.url
       <IconMenuToggle
         :open="open"
         :aria-label="open ? uiT('header.close') : uiT('header.open')"
-        :aria-expanded="open"
         class="lg:hidden"
         @click="toggle"
       />

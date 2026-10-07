@@ -97,7 +97,7 @@ export default defineAppConfig({
           color: 'neutral',
           variant: 'outline',
           class:
-            'ring-0 convex hover:text-primary active:concave active:translate-y-[0.5px]',
+            'ring-0 convex hover:text-primary-700 dark:hover:text-primary active:concave active:translate-y-[0.5px]',
         },
         // Docus renders the docs' "Copy page" group as variant="soft",
         // which the theme leaves completely unstyled — so the one chip
@@ -164,7 +164,13 @@ export default defineAppConfig({
       slots: {
         // `rounded-` restates the part's own radius so the modal theme's
         // `rounded-lg` is replaced rather than racing it.
-        modal: 'search-console part-panel rounded-(--radius-card) divide-y-0 sm:h-[30rem]',
+        modal: 'search-console part-panel rounded-(--radius-card) divide-y-0',
+      },
+      // The height sits in the variant the theme sets its own in
+      // (`sm:h-[28rem]`): variant classes merge after the slot's, so in
+      // the slot above it lost.
+      variants: {
+        fullscreen: { false: { modal: 'sm:h-[30rem]' } },
       },
     },
     commandPalette: {

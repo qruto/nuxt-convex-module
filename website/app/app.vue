@@ -26,23 +26,32 @@ const { seo } = appConfig
 useDocusShortcuts()
 const site = useSiteConfig()
 const { locale, locales, isEnabled, switchLocalePath } = useDocusI18n()
-const { isEnabled: isAssistantEnabled, isOpen: isAssistantOpen, messages: assistantMessages } = useAssistant()
+const { isEnabled: isAssistantEnabled, isOpen: isAssistantOpen, messages: assistantMessages, open: openAssistant } = useAssistant()
 
 const assistantWanted = ref(false)
 watch(isAssistantOpen, (open) => {
   if (open) assistantWanted.value = true
 })
+// Only a question asked on this page view is handed over — not one left
+// stored by a request that failed earlier, which Docus's panel, mounted at
+// hydration, never re-sent either.
+let askedBeforeMount = false
+watch(assistantMessages, (list) => {
+  askedBeforeMount = list.at(-1)?.role === 'user'
+})
 function askPending() {
-  if (assistantMessages.value.at(-1)?.role === 'user') assistantMessages.value = [...assistantMessages.value]
+  if (askedBeforeMount) assistantMessages.value = [...assistantMessages.value]
 }
 // ⌘I is the panel's own shortcut, registered inside it — so until it is
-// wanted, this one opens it. From then on the panel's handler toggles it
-// and this one stands aside, so one press never toggles twice.
+// wanted, this one opens it (through Docus's open(), which stands down
+// while Nuxt Studio's sidebar is expanded, as the panel's does). From then
+// on the panel's handler toggles it and this one stands aside, so one
+// press never toggles twice.
 defineShortcuts({
   meta_i: {
     usingInput: true,
     handler: () => {
-      if (isAssistantEnabled.value && !assistantWanted.value) isAssistantOpen.value = true
+      if (isAssistantEnabled.value && !assistantWanted.value) openAssistant()
     },
   },
 })
