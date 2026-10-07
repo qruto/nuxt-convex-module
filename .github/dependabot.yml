@@ -34,16 +34,18 @@ updates:
     # `toWebRequest`, which the Better Auth proxy imports. Drop this entry when
     # the module moves to Nuxt 5.
     #
-    # Nuxt 4.6 (released 2026-10-05) is held back until it settles. `nuxt`
-    # itself comes from the pnpm catalog, which Dependabot does not update, so
-    # lift this by moving the catalog together with @nuxt/kit and @nuxt/schema.
-    # 4.6 also pulls in cssnano 9, which fails `trustPolicy: no-downgrade`:
+    # Nuxt 4.6 (released 2026-10-05) is held back until it settles. Lift all
+    # three entries together: on its own, `nuxt` (the pnpm catalog) fails to
+    # update and the group ships @nuxt/kit and @nuxt/schema without it. 4.6
+    # also pulls in cssnano 9, which fails `trustPolicy: no-downgrade`:
     # cssnano moved its release approval from npm to GitHub.
     ignore:
       - dependency-name: better-auth
         versions: ['>=1.7.0']
       - dependency-name: h3
         update-types: ['version-update:semver-major']
+      - dependency-name: nuxt
+        versions: ['>=4.6.0']
       - dependency-name: '@nuxt/kit'
         versions: ['>=4.6.0']
       - dependency-name: '@nuxt/schema'

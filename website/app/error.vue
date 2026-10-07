@@ -5,6 +5,7 @@
 // still put all the locales there. Copied from docus@5.13.0 app/error.vue
 // (its helpers arrive through the layer's auto-imports); re-diff on a
 // Docus bump.
+// fallow-ignore-file code-duplication -- app.vue is the same Docus file's sibling, copied verbatim for the same reason; both stay diffable against Docus, not against each other
 import type { NuxtError } from '#app'
 import type { ContentNavigationItem, PageCollections } from '@nuxt/content'
 import en from '#ui/locale/en'
