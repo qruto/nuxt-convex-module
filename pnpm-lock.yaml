@@ -1703,8 +1703,8 @@ packages:
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
 
-  '@modelcontextprotocol/sdk@1.30.0':
-    resolution: {integrity: sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==}
+  '@modelcontextprotocol/sdk@1.32.1':
+    resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -11399,7 +11399,7 @@ snapshots:
       json5: 2.2.3
       rollup: 4.63.1
 
-  '@modelcontextprotocol/sdk@1.30.0(supports-color@10.2.2)(zod@4.5.4)':
+  '@modelcontextprotocol/sdk@1.32.1(supports-color@10.2.2)(zod@4.5.4)':
     dependencies:
       '@hono/node-server': 2.1.1(hono@4.13.12)
       ajv: 8.20.0
@@ -13075,7 +13075,7 @@ snapshots:
 
   '@nuxtjs/mcp-toolkit@0.19.0(@vue/compiler-sfc@3.5.42)(h3@1.15.11)(magic-string@1.4.2)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.6)(rollup@4.63.1)(supports-color@10.2.2)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.6)(rollup@4.63.1)(vite@8.2.2(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(webpack@5.109.2(cssnano@8.0.10(postcss@8.5.26))(csso@5.0.5)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.26)))(vite@8.2.2(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3))(zod@4.5.4)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.30.0(supports-color@10.2.2)(zod@4.5.4)
+      '@modelcontextprotocol/sdk': 1.32.1(supports-color@10.2.2)(zod@4.5.4)
       '@nuxt/kit': 4.5.2(magic-string@1.4.2)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.6)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.6)(rollup@4.63.1)(vite@8.2.2(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(webpack@5.109.2(cssnano@8.0.10(postcss@8.5.26))(csso@5.0.5)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.26)))
       '@vitejs/plugin-vue': 6.0.8(vite@8.2.2(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3))
       h3: 1.15.11
