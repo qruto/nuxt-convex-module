@@ -254,7 +254,7 @@
     "installed-check": "^11.0.0",
     "nuxt": "catalog:",
     "nuxt-security": "^2.6.0",
-    "pkg-pr-new": "^0.0.88",
+    "pkg-pr-new": "^0.0.90",
     "playwright-core": "^1.63.0",
     "portless": "0.15.7",
     "publint": "^0.3.24",
