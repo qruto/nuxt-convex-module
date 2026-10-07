@@ -33,11 +33,21 @@ updates:
     # h3 2.x needs Nitro 3, which Nuxt 4 does not run on, and drops
     # `toWebRequest`, which the Better Auth proxy imports. Drop this entry when
     # the module moves to Nuxt 5.
+    #
+    # Nuxt 4.6 (released 2026-10-05) is held back until it settles. `nuxt`
+    # itself comes from the pnpm catalog, which Dependabot does not update, so
+    # lift this by moving the catalog together with @nuxt/kit and @nuxt/schema.
+    # 4.6 also pulls in cssnano 9, which fails `trustPolicy: no-downgrade`:
+    # cssnano moved its release approval from npm to GitHub.
     ignore:
       - dependency-name: better-auth
         versions: ['>=1.7.0']
       - dependency-name: h3
         update-types: ['version-update:semver-major']
+      - dependency-name: '@nuxt/kit'
+        versions: ['>=4.6.0']
+      - dependency-name: '@nuxt/schema'
+        versions: ['>=4.6.0']
     # Groups only apply to the kind of update named in `applies-to`, which
     # defaults to version updates. Without the second group, every CVE fix
     # opens its own PR.

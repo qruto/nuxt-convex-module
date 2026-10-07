@@ -5,7 +5,7 @@
 // UFooterColumns.
 const appConfig = useAppConfig()
 
-const repo = computed(() => appConfig.github?.url ?? '')
+const repo = computed(() => (appConfig.github || undefined)?.url ?? '')
 
 const columns = computed(() => [
   {

@@ -227,7 +227,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@auth0/auth0-vue": "^2.11.0",
-    "@clerk/vue": "2.5.9",
+    "@clerk/vue": "2.5.10",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@convex-dev/better-auth": "^0.12.5",
