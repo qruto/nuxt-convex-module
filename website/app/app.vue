@@ -15,7 +15,7 @@
 //    parser, Shiki — about 700 KiB) loads only for someone who asks. A
 //    question asked before it exists — the floating input opens it with
 //    one — is handed over again once it has mounted: the panel only sends
-//    on a change it sees.
+//    on a change it sees. Its ⌘I shortcut is stood in for until then.
 import type { ContentNavigationItem, PageCollections } from '@nuxt/content'
 import en from '#ui/locale/en'
 
@@ -35,6 +35,17 @@ watch(isAssistantOpen, (open) => {
 function askPending() {
   if (assistantMessages.value.at(-1)?.role === 'user') assistantMessages.value = [...assistantMessages.value]
 }
+// ⌘I is the panel's own shortcut, registered inside it — so until it is
+// wanted, this one opens it. From then on the panel's handler toggles it
+// and this one stands aside, so one press never toggles twice.
+defineShortcuts({
+  meta_i: {
+    usingInput: true,
+    handler: () => {
+      if (isAssistantEnabled.value && !assistantWanted.value) isAssistantOpen.value = true
+    },
+  },
+})
 
 const nuxtUiLocale = computed(() => nuxtUiLocales[locale.value as keyof typeof nuxtUiLocales] || nuxtUiLocales.en)
 const lang = computed(() => nuxtUiLocale.value.code)

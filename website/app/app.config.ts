@@ -473,9 +473,16 @@ export default defineAppConfig({
       // whose ends its own corner radius bent up. A link around a chip:
       // the chip takes the link colour — the 700 ink in light, as every
       // accent text there (depth.css, after text-lit) — and lifts on hover
-      // (the theme's dashed-border affordance needs a border).
+      // (the theme's dashed-border affordance needs a border). The hover
+      // and focus inks are restated too: the theme sets them to plain
+      // `text-primary`, which depth.css's light rule does not reach under
+      // a state variant, so the chip fell to the 500 face (2.6:1) on hover.
       a: {
-        base: 'border-b-0 neon-underline [&>code]:text-primary-700 dark:[&>code]:text-primary hover:[&>code]:convex',
+        base: [
+          'border-b-0 neon-underline hover:[&>code]:convex',
+          '[&>code]:text-primary-700 hover:[&>code]:text-primary-700 focus-visible:[&>code]:text-primary-700',
+          'dark:[&>code]:text-primary dark:hover:[&>code]:text-primary dark:focus-visible:[&>code]:text-primary',
+        ].join(' '),
       },
       // Code blocks → the deep tray, face and all. They used to take the
       // cast without the face on the belief that Shiki painted its own

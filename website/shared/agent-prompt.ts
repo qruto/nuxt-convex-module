@@ -42,7 +42,9 @@ const copilotIn = (scheme: string) => `${scheme}://GitHub.Copilot-Chat/chat?mode
  * handler (2026-10-02).
  *
  * Left out: Claude Code in the terminal (`claude-cli://` opens in the home
- * directory, and "this project" would be the wrong one); Cline, whose link
+ * directory, and "this project" would be the wrong one); VS Code's Agents
+ * window (`vscode://agents/new` drafts with No Workspace unless the link
+ * names a folder, and the site cannot know the reader's); Cline, whose link
  * starts the task at once; Augment, whose prompt link is behind a server
  * flag; and the Codex, Gemini, Kilo Code, Amp and Continue extensions,
  * JetBrains, Warp and Grok Build, which take no prompt from a link.
@@ -92,7 +94,6 @@ export const AGENT_PROVIDERS: AgentProvider[] = [
     links: [
       { app: 'VS Code', icon: 'i-simple-icons-visualstudiocode', href: copilotIn('vscode') },
       { app: 'Insiders', icon: 'i-simple-icons-visualstudiocode', href: copilotIn('vscode-insiders') },
-      { app: 'Agents window', icon: 'i-simple-icons-visualstudiocode', href: `vscode://agents/new?prompt=${twice}` },
     ],
   },
   {

@@ -62,11 +62,15 @@ describe('the agent install prompt', () => {
   })
 
   it('hands the whole prompt to each agent link', () => {
+    // VS Code and its forks decode the link once more before the handler
+    // reads it, so their links carry the prompt encoded twice; every other
+    // app reads it encoded once.
+    const vscodeFamily = new Set(['vscode:', 'vscode-insiders:', 'vscodium:', 'cursor:', 'windsurf:', 'kiro:', 'antigravity-ide:', 'trae:', 'positron:'])
     for (const { href } of AGENT_PROVIDERS.flatMap(provider => provider.links)) {
-      const params = new URL(href).searchParams
+      const url = new URL(href)
+      const params = url.searchParams
       const prompt = params.get('prompt') ?? params.get('text') ?? params.get('q') ?? params.get('query') ?? ''
-      // VS Code and its forks decode the link once more before the handler reads it.
-      expect([prompt, decodeURIComponent(prompt)]).toContain(AGENT_PROMPT)
+      expect(vscodeFamily.has(url.protocol) ? decodeURIComponent(prompt) : prompt, href).toBe(AGENT_PROMPT)
     }
   })
 

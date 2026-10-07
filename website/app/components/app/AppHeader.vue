@@ -7,15 +7,19 @@
 // composables arrive through the layer's auto-imports); re-diff on a
 // Docus bump. The one other change: the two icon-only buttons Docus
 // renders without a name — the assistant and the menu toggle — are named:
-// the assistant with its own tooltip's string, the toggle with the words
-// Nuxt UI's default toggle uses. And the parts that only render in the
+// the assistant with its own tooltip's string, the toggle with Nuxt UI's own
+// strings for its default toggle (`header.open` / `header.close`), which
+// follow the locale as Docus's do. And the parts that only render in the
 // mobile menu or in modes this site never turns on are Lazy-, so their
 // code stays out of every page's bundle (Nuxt Hints, 2026-10-05).
+import { useLocale } from '#ui/composables/useLocale'
+
 const appConfig = useAppConfig()
 
 const { isEnabled: isAssistantEnabled } = useAssistant()
 const { isEnabled, locales, t } = useDocusI18n()
 const { subNavigationMode } = useSubNavigation()
+const { t: uiT } = useLocale()
 
 const links = computed(() => appConfig.github && appConfig.github.url
   ? [
@@ -76,7 +80,7 @@ const links = computed(() => appConfig.github && appConfig.github.url
     <template #toggle="{ open, toggle }">
       <IconMenuToggle
         :open="open"
-        :aria-label="open ? 'Close menu' : 'Open menu'"
+        :aria-label="open ? uiT('header.close') : uiT('header.open')"
         :aria-expanded="open"
         class="lg:hidden"
         @click="toggle"

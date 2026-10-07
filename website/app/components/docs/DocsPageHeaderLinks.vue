@@ -5,12 +5,16 @@
 // app/components/docs/DocsPageHeaderLinks.vue; re-diff on a Docus bump.
 // Its two imports could not come with it — @vueuse/core and ufo are Docus's
 // dependencies, out of reach under pnpm's isolated layout — so the clipboard
-// and the URL joins are written out below, behaving as theirs do.
+// and the URL joins are written out below, behaving as theirs do. The
+// origin comes from useRequestURL() rather than `window`.
 const route = useRoute()
 const toast = useToast()
 const runtimeConfig = useRuntimeConfig()
 const appBaseURL = runtimeConfig.app?.baseURL || '/'
 const mcpRoute = (runtimeConfig.public.mcp as { route?: string } | undefined)?.route || '/mcp'
+// The request's origin, not `window`'s: it is there on the server too, so
+// the server-rendered links are whole and nothing reads a browser global.
+const { origin } = useRequestURL()
 
 const { t } = useDocusI18n()
 
@@ -33,9 +37,9 @@ const withTrailingSlash = (url: string) => url.endsWith('/') ? url : `${url}/`
 const joinURL = (base: string, ...parts: string[]) =>
   [base.replace(/\/+$/, ''), ...parts.map(part => part.replace(/^\/+|\/+$/g, ''))].join('/')
 
-const markdownLink = computed(() => `${window?.location?.origin}${withTrailingSlash(appBaseURL)}raw${route.path}.md`)
-const mcpServerUrl = computed(() => `${window?.location?.origin}${joinURL(appBaseURL, mcpRoute)}`)
-const mcpDeeplink = computed(() => `${window?.location?.origin}${joinURL(appBaseURL, mcpRoute, 'deeplink')}`)
+const markdownLink = computed(() => `${origin}${withTrailingSlash(appBaseURL)}raw${route.path}.md`)
+const mcpServerUrl = computed(() => `${origin}${joinURL(appBaseURL, mcpRoute)}`)
+const mcpDeeplink = computed(() => `${origin}${joinURL(appBaseURL, mcpRoute, 'deeplink')}`)
 const items = computed(() => [
   [{
     label: t('docs.copy.link'),
