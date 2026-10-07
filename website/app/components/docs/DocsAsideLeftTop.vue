@@ -13,7 +13,7 @@ const { subNavigationMode, sections } = useSubNavigation()
     v-if="subNavigationMode === 'aside'"
     class="mb-2"
   >
-    <UPageAnchors :links="sections" />
+    <LazyUPageAnchors :links="sections" />
     <USeparator
       type="dashed"
       class="my-4"

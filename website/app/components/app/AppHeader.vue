@@ -5,11 +5,16 @@
 // pin the site to one scheme instead. Everything else is Docus's markup,
 // copied verbatim from docus@5.13.0 app/components/app/AppHeader.vue (its
 // composables arrive through the layer's auto-imports); re-diff on a
-// Docus bump.
+// Docus bump. The one other change: the two icon-only buttons Docus
+// renders without a name — the assistant and the menu toggle — are named:
+// the assistant with its own tooltip's string, the toggle with the words
+// Nuxt UI's default toggle uses. And the parts that only render in the
+// mobile menu or in modes this site never turns on are Lazy-, so their
+// code stays out of every page's bundle (Nuxt Hints, 2026-10-05).
 const appConfig = useAppConfig()
 
 const { isEnabled: isAssistantEnabled } = useAssistant()
-const { isEnabled, locales } = useDocusI18n()
+const { isEnabled, locales, t } = useDocusI18n()
 const { subNavigationMode } = useSubNavigation()
 
 const links = computed(() => appConfig.github && appConfig.github.url
@@ -39,19 +44,19 @@ const links = computed(() => appConfig.github && appConfig.github.url
       <AppHeaderCTA />
 
       <template v-if="isAssistantEnabled">
-        <AssistantChat />
+        <AssistantChat :aria-label="t('assistant.tooltip')" />
       </template>
 
       <template v-if="isEnabled && locales.length > 1">
         <ClientOnly>
-          <LanguageSelect />
+          <LazyLanguageSelect />
 
           <template #fallback>
             <div class="h-8 w-8 animate-pulse bg-neutral-200 dark:bg-neutral-800 rounded-md" />
           </template>
         </ClientOnly>
 
-        <USeparator
+        <LazyUSeparator
           orientation="vertical"
           class="h-8"
         />
@@ -71,6 +76,8 @@ const links = computed(() => appConfig.github && appConfig.github.url
     <template #toggle="{ open, toggle }">
       <IconMenuToggle
         :open="open"
+        :aria-label="open ? 'Close menu' : 'Open menu'"
+        :aria-expanded="open"
         class="lg:hidden"
         @click="toggle"
       />
@@ -79,15 +86,15 @@ const links = computed(() => appConfig.github && appConfig.github.url
     <!-- The mobile menu opens with the package chooser the sidebar carries
          on wide screens; below `lg` this is the only place it can live. -->
     <template #body>
-      <DocsPackageChooser class="mb-4" />
-      <AppHeaderBody />
+      <LazyDocsPackageChooser class="mb-4" />
+      <LazyAppHeaderBody />
     </template>
 
     <template
       v-if="subNavigationMode === 'header'"
       #bottom
     >
-      <AppHeaderBottom />
+      <LazyAppHeaderBottom />
     </template>
   </UHeader>
 </template>

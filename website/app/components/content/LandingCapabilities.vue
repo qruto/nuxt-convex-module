@@ -213,6 +213,12 @@ const flaps = (text: string) => Array.from(text, ch => (ch === ' ' ? NBSP : ch))
 
 const GLYPHS = 'abcdefghijklmnopqrstuvwxyz0123456789.-_/:#'
 const FLICK_MS = 70
+// A flap flicks about its own middle. Played through the Web Animations
+// API: restarting a CSS animation means toggling its class around a forced
+// reflow, and at dozens of flaps every 70ms that reflow restyled and laid
+// out the whole page each time — most of the landing's main-thread time on
+// a phone (Lighthouse trace, 2026-10-06).
+const FLICK: Keyframe[] = [{ transform: 'scaleY(1)' }, { transform: 'scaleY(0.12)' }, { transform: 'scaleY(1)' }]
 
 // The flap elements, gathered off the template so the drum can turn
 // them without a reactive string per character:
@@ -307,9 +313,7 @@ function spin(el: HTMLElement, target: string, turns: number, delay: number, gen
     }
     const done = i >= turns
     el.textContent = done ? target : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]!
-    el.classList.remove('flick')
-    void el.offsetWidth
-    el.classList.add('flick')
+    el.animate(FLICK, FLICK_MS)
     clack()
     if (!done) {
       i++
@@ -666,7 +670,7 @@ onBeforeUnmount(() => {
 .params {
   font-size: 0.8em;
 }
-/* A FLAP: one character of a token. It flicks about its own middle.
+/* A FLAP: one character of a token (the flick is FLICK, in the script).
    Blank flaps are the spaces between parameters; they hold their width
    and never turn. */
 .flap {
@@ -676,14 +680,6 @@ onBeforeUnmount(() => {
 }
 .flap.blank {
   min-inline-size: 0.6em;
-}
-.flap.flick {
-  animation: flap-flick 70ms linear;
-}
-@keyframes flap-flick {
-  0% { transform: scaleY(1); }
-  50% { transform: scaleY(0.12); }
-  100% { transform: scaleY(1); }
 }
 /* On a phone the composables drop under the name. */
 @container (width < 32rem) {
@@ -695,11 +691,6 @@ onBeforeUnmount(() => {
   }
   .fns {
     grid-column: 2;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .flap.flick {
-    animation: none;
   }
 }
 </style>
