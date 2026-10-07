@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AGENT_PROMPT, AGENT_PROMPT_LINKS } from '../../website/shared/agent-prompt'
+import { AGENT_PROMPT, AGENT_PROVIDERS } from '../../website/shared/agent-prompt'
 import { expandForAgents } from '../../website/shared/agent-markdown'
 import { contentFile, read } from '../docs/helpers'
 
@@ -41,8 +41,8 @@ describe('Markdown for agents', () => {
   it('writes the open-in-agent links into `:agent-prompt-links`', () => {
     const body = page(['agent-prompt-links', {}])
     expandForAgents(body)
-    const links = JSON.stringify(body.value[0])
-    for (const { href, label } of AGENT_PROMPT_LINKS) expect(links).toContain(JSON.stringify(['a', { href }, label]))
+    const links = JSON.stringify(body.value)
+    for (const { href, app } of AGENT_PROVIDERS.flatMap(provider => provider.links)) expect(links).toContain(JSON.stringify(['a', { href }, app]))
   })
 
   it('runs once per block', () => {
@@ -62,7 +62,16 @@ describe('the agent install prompt', () => {
   })
 
   it('hands the whole prompt to each agent link', () => {
-    for (const { href } of AGENT_PROMPT_LINKS)
-      expect(decodeURIComponent(href.slice(href.indexOf('=') + 1))).toBe(AGENT_PROMPT)
+    for (const { href } of AGENT_PROVIDERS.flatMap(provider => provider.links)) {
+      const params = new URL(href).searchParams
+      const prompt = params.get('prompt') ?? params.get('text') ?? params.get('q') ?? params.get('query') ?? ''
+      // VS Code and its forks decode the link once more before the handler reads it.
+      expect([prompt, decodeURIComponent(prompt)]).toContain(AGENT_PROMPT)
+    }
+  })
+
+  it('is a prompt Cursor accepts', () => {
+    // Cursor's link handler refuses any prompt that mentions an env file.
+    expect(AGENT_PROMPT).not.toMatch(/\.env(?:\b|\W)/)
   })
 })
