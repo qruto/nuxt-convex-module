@@ -15,10 +15,12 @@ const isConnected = computed(() => connectionState.value?.isWebSocketConnected ?
 <template>
   <div class="part-card sheen my-6">
     <div class="flex items-center justify-between gap-4 px-4 pt-3 pb-2.5">
-      <span class="stamp text-toned">{{ title }}</span>
+      <h2 class="m-0 stamp text-toned">
+        {{ title }}
+      </h2>
       <span
         class="inline-flex flex-none items-center gap-1.5 stamp"
-        :class="isConnected ? 'text-toned' : 'text-dimmed'"
+        :class="isConnected ? 'text-toned' : 'text-muted'"
       >
         <i
           aria-hidden="true"

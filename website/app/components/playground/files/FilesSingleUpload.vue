@@ -18,7 +18,11 @@ const { upload, isUploading, progress, error, storageId } = useUpload(
 )
 
 // UFileUpload owns the picker; the v-model watch hands the file to `upload`
-// and clears the model so the same file can be picked again.
+// and clears the model so the same file can be picked again. Its key is
+// named from inside: UFileUpload hands an `aria-label` to its hidden file
+// input, so the button a reader reaches is named by the hidden text in the
+// leading slot, beside the theme's own icon.
+const uploadIcon = useAppConfig().ui.icons.upload
 const picked = ref<File | null>(null)
 watch(picked, async (file) => {
   if (!file) return
@@ -33,18 +37,26 @@ const latestUrl = useStorageUrl(api.files.url, storageId)
 
 <template>
   <section>
-    <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+    <h3 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
       Single upload — <ProseCode>useUpload</ProseCode>
-    </h4>
+    </h3>
     <div class="flex flex-wrap items-center gap-2.5">
       <UFileUpload
         v-model="picked"
         accept="image/*"
         variant="button"
         :disabled="isUploading"
-        aria-label="Upload one image"
-      />
-      <UProgress
+      >
+        <template #leading="{ ui }">
+          <UIcon
+            :name="uploadIcon"
+            data-slot="icon"
+            :class="ui.icon()"
+          />
+          <span class="sr-only">Upload one image</span>
+        </template>
+      </UFileUpload>
+      <LazyUProgress
         v-if="isUploading"
         size="sm"
         class="w-32"
@@ -72,7 +84,7 @@ const latestUrl = useStorageUrl(api.files.url, storageId)
         :href="latestUrl"
         target="_blank"
         rel="noopener"
-        class="text-primary underline underline-offset-2"
+        class="text-primary neon-underline"
       >served URL</a>
       <template v-else>
         file no longer exists

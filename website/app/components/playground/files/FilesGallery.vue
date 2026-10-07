@@ -16,9 +16,9 @@ function formatSize(size: number) {
 
 <template>
   <section>
-    <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+    <h3 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
       Gallery — live <ProseCode>useQuery</ProseCode> with resolved URLs
-    </h4>
+    </h3>
     <p
       v-if="files === undefined"
       class="m-0 text-xs text-muted"

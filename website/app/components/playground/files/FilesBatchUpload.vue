@@ -39,22 +39,34 @@ function statusTone(status: UploadQueueItem['status']) {
 function statusLabel(item: UploadQueueItem) {
   return item.status === 'uploading' ? `${Math.round(item.progress * 100)}%` : item.status
 }
+
+// Named from inside, as the single upload's key is: UFileUpload gives an
+// `aria-label` to its hidden input, not to the drop zone a reader reaches.
+const uploadIcon = useAppConfig().ui.icons.upload
 </script>
 
 <template>
   <section>
-    <h4 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
+    <h3 class="m-0 mb-2 text-[0.8125rem] font-semibold text-highlighted">
       Batch upload — <ProseCode>useUploadQueue</ProseCode>
-    </h4>
+    </h3>
     <div class="flex flex-wrap items-center gap-2.5">
       <UFileUpload
         v-model="picked"
         accept="image/*"
         multiple
-        aria-label="Upload several images"
         class="min-h-24 w-full"
-      />
-      <UProgress
+      >
+        <template #leading="{ ui }">
+          <UAvatar
+            :icon="uploadIcon"
+            data-slot="avatar"
+            :class="ui.avatar()"
+          />
+          <span class="sr-only">Upload several images</span>
+        </template>
+      </UFileUpload>
+      <LazyUProgress
         v-if="isUploading"
         size="sm"
         class="w-32"
