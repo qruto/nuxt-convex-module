@@ -198,7 +198,7 @@ const onCount = computed(() => switches.value.filter(row => row.on).length)
         type="button"
         class="switch group flex flex-col items-center gap-2.5 rounded-strip py-1 outline-none focus-visible:ring-2 focus-visible:ring-primary"
         :aria-pressed="row.on"
-        :aria-label="`Switch ${row.position + 1}, ${row.on ? 'on' : 'off'}`"
+        :aria-label="`Switch ${String(row.position + 1).padStart(2, '0')}`"
         :disabled="busy === row.position"
         @click="flip(row.position)"
       >

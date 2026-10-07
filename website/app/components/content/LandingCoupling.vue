@@ -40,7 +40,7 @@ const PARTS: Part[] = [
     id: 'nuxt',
     name: 'Nuxt',
     role: 'frontend',
-    claim: 'The Vue framework for building web apps.',
+    claim: 'The full-stack framework for building web apps, from the first page to production.',
     site: 'nuxt.com',
     href: 'https://nuxt.com',
     viewBox: '0 0 48 32',
@@ -52,7 +52,7 @@ const PARTS: Part[] = [
     id: 'convex',
     name: 'Convex',
     role: 'backend',
-    claim: 'The reactive backend platform that keeps up with you and your agents.',
+    claim: 'The reactive backend that keeps your web app in sync with its data in real time.',
     site: 'convex.dev',
     href: 'https://convex.dev',
     // The symbol's own ink box out of the lockup's frame (47.7→100.7 × 49.9→98.8).
@@ -148,9 +148,9 @@ const GRADIENTS = PARTS.flatMap(part => part.paths.map(path => ({
             <p class="stamp label m-0 text-toned">
               {{ part.role }}
             </p>
-            <h3 class="m-0 font-display text-3xl font-semibold text-highlighted sm:text-4xl">
+            <h2 class="m-0 font-display text-3xl font-semibold text-highlighted sm:text-4xl">
               {{ part.name }}
-            </h3>
+            </h2>
           </div>
           <p class="m-0 text-base/7 text-pretty text-muted">
             {{ part.claim }}

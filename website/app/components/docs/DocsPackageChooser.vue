@@ -7,7 +7,24 @@ import { PACKAGE_MANAGERS } from '#shared/package-managers'
 // hidden, at the top of the header's mobile menu (AppHeader's body slot) —
 // one component, so the two cannot drift apart.
 const { pm, set } = usePackageManager()
-const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name, icon: `i-vscode-icons-file-type-${name}` }))
+const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name }))
+
+// The marks are written out in full, never assembled from the name: the icon
+// module bundles the names its scan finds in the source, and a name built at
+// runtime was never bundled — npm, yarn and bun went blank in the menu on the
+// deployed site, whose CSP blocks the Iconify API the client falls back to.
+// vscode-icons draws pnpm's lower blocks white, and on the light pocket they
+// vanished; its light variant draws them grey. npm, yarn and bun read on both
+// grounds. Both marks are rendered and the colour-mode class picks one, so
+// the server's markup is right whichever scheme the visitor's OS is in.
+const MARKS: Record<PackageManager, { dark: string, light: string }> = {
+  pnpm: { dark: 'i-vscode-icons-file-type-pnpm', light: 'i-vscode-icons-file-type-light-pnpm' },
+  npm: { dark: 'i-vscode-icons-file-type-npm', light: 'i-vscode-icons-file-type-npm' },
+  yarn: { dark: 'i-vscode-icons-file-type-yarn', light: 'i-vscode-icons-file-type-yarn' },
+  bun: { dark: 'i-vscode-icons-file-type-bun', light: 'i-vscode-icons-file-type-bun' },
+}
+const darkIcon = (name: PackageManager) => MARKS[name].dark
+const lightIcon = (name: PackageManager) => MARKS[name].light
 </script>
 
 <template>
@@ -34,7 +51,7 @@ const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name, icon: `i
     <USelect
       :model-value="pm"
       :items="items"
-      :icon="`i-vscode-icons-file-type-${pm}`"
+      :icon="darkIcon(pm)"
       color="neutral"
       variant="soft"
       size="sm"
@@ -50,6 +67,15 @@ const items = PACKAGE_MANAGERS.map(name => ({ label: name, value: name, icon: `i
       }"
       aria-label="preferred package manager"
       @update:model-value="set($event as PackageManager)"
-    />
+    >
+      <template #leading="{ ui }">
+        <span class="contents dark:hidden"><UIcon :name="lightIcon(pm)" :class="ui.leadingIcon()" /></span>
+        <span class="hidden dark:contents"><UIcon :name="darkIcon(pm)" :class="ui.leadingIcon()" /></span>
+      </template>
+      <template #item-leading="{ item, ui }">
+        <span class="contents dark:hidden"><UIcon :name="lightIcon(item.value)" :class="ui.itemLeadingIcon()" /></span>
+        <span class="hidden dark:contents"><UIcon :name="darkIcon(item.value)" :class="ui.itemLeadingIcon()" /></span>
+      </template>
+    </USelect>
   </div>
 </template>

@@ -208,13 +208,23 @@ const line = computed(() => {
           class="ln"
           :class="{ mine: row.mine }"
         >
-          <span class="t">{{ row.time }}</span>
+          <!-- The server prints the time in its own zone (UTC) and the
+               browser in the reader's, so the two times are allowed to
+               differ at hydration: Vue takes the browser's without
+               logging a mismatch. -->
+          <span
+            class="t"
+            data-allow-mismatch="text"
+          >{{ row.time }}</span>
           <span
             class="e"
             aria-hidden="true"
           >{{ KINDS[row.kind] }}</span>
           <span class="w">{{ row.name }}<span class="c">{{ row.city ?? '' }}</span></span>
-          <span class="sr-only">{{ KINDS[row.kind] }} {{ row.name }}{{ row.city ? `, ${row.city}` : '' }}, {{ clock(row.at) }}</span>
+          <span
+            class="sr-only"
+            data-allow-mismatch="text"
+          >{{ KINDS[row.kind] }} {{ row.name }}{{ row.city ? `, ${row.city}` : '' }}, {{ clock(row.at) }}</span>
         </div>
       </TransitionGroup>
       <p
@@ -249,10 +259,7 @@ const line = computed(() => {
           >
             {{ emoji }}
           </button>
-          <span
-            class="n"
-            :aria-label="`${tally[kind]} today`"
-          >{{ tally[kind] }}</span>
+          <span class="n">{{ tally[kind] }}<span class="sr-only"> today</span></span>
         </span>
       </div>
       <span
@@ -489,8 +496,8 @@ const line = computed(() => {
 .shuffle {
   position: absolute;
   inset-inline-end: 0.2rem;
-  inline-size: 1.4rem;
-  block-size: 1.4rem;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
   padding: 0;
   border: 0;
   border-radius: var(--radius-chip);

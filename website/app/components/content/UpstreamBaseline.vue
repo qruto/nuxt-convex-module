@@ -42,7 +42,7 @@ const baseline = computed(() => upstreamBaselines[props.source])
     <NuxtLink
       :to="PARITY_MANIFEST_URL"
       target="_blank"
-      class="ms-auto text-toned underline-offset-4 transition-colors hover:text-primary hover:underline"
+      class="ms-auto text-toned neon-underline hover:text-primary-700 dark:hover:text-primary"
     >
       parity map
     </NuxtLink>

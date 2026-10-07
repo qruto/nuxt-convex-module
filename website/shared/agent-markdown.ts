@@ -1,6 +1,6 @@
 import type { UpstreamSource } from '../app/utils/upstream-baselines'
 import type { PmProps } from './package-managers'
-import { AGENT_PROMPT_LINKS } from './agent-prompt'
+import { AGENT_PROVIDERS } from './agent-prompt'
 import { upstreamBaselines } from '../app/utils/upstream-baselines'
 import { isPmTag, PACKAGE_MANAGERS, pmLines } from './package-managers'
 
@@ -23,8 +23,11 @@ type Props = Record<string, unknown>
 
 /** The text each kind of block stands for, as minimark children. */
 const FILLERS: Record<string, (props: Props) => MinimarkNode[]> = {
-  'agent-prompt-links': () => [['p', {}, 'Or open it in ', ...AGENT_PROMPT_LINKS.flatMap((link, i): MinimarkNode[] =>
-    [...(i ? [' or '] : []), ['a', { href: link.href }, link.label]]), '.']],
+  'agent-prompt-links': () => [
+    ['p', {}, 'Or open it in your agent with the prompt typed in:'],
+    ['ul', {}, ...AGENT_PROVIDERS.map(({ agent, maker, links }): MinimarkNode =>
+      ['li', {}, `${agent} (${maker}): `, ...links.flatMap(({ app, href }, i): MinimarkNode[] => [...(i ? [', '] : []), ['a', { href }, app]])])],
+  ],
   'upstream-baseline': (props) => {
     const baseline = upstreamBaselines[(props.source ?? 'convex') as UpstreamSource]
     return baseline ? [`Matches upstream ${baseline.package}@${baseline.version} (${props.entry ?? baseline.entries}).`] : []

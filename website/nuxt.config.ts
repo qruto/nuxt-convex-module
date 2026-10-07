@@ -28,6 +28,16 @@ export default defineNuxtConfig({
     // module once, in its own setup — unlisted, it never reads the site's
     // fonts and sets the social cards in its bundled Inter.
     '@nuxt/fonts',
+    // Keeps `onServerPrefetch` in the client build, where Nuxt strips it by
+    // default. Vue numbers useId() past every component that registers one,
+    // and Nuxt Icon registers one per icon — so with the calls gone from the
+    // client, every id after the header's icons differed from the server's,
+    // and each tab's and accordion's aria-controls pointed at nothing. A
+    // module, because the default list is merged with defu, which appends.
+    (_options, nuxt) => {
+      const { client } = nuxt.options.optimization.treeShake.composables
+      if (client.vue) client.vue = client.vue.filter(name => name !== 'onServerPrefetch')
+    },
   ],
   // nuxt-security's default limiter (150 requests per 5 minutes per IP) is
   // sized for a built site. Vite serves a page as hundreds of module
@@ -262,6 +272,15 @@ export default defineNuxtConfig({
     customCollections: [
       { prefix: 'nc', dir: fileURLToPath(new URL('app/assets/icons', import.meta.url)) },
     ],
+    // Bundle every icon the source names, `.ts` files included. Docus turns
+    // the scan on, and its globs stop at .vue/.md/.yml — so the names in
+    // app.config.ts and shared/agent-prompt.ts were left to the client's
+    // fallback, the public Iconify API, which this site's CSP blocks: they
+    // went blank whenever the client drew them first (a menu, a tab, a
+    // client-side page change). The default excludes still apply.
+    clientBundle: {
+      scan: { globInclude: ['**/*.{vue,jsx,tsx,md,mdc,mdx,yml,yaml,ts}'] },
+    },
   },
   // `llms.txt` — the section map an agent reads first. Docus fills the title
   // from `site.name`; the description is the `>` line right under it, so it

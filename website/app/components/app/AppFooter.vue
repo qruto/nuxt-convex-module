@@ -65,7 +65,7 @@ const columns = computed(() => [
       <UContainer>
         <UFooterColumns
           :columns="columns"
-          :ui="{ label: 'stamp text-dimmed' }"
+          :ui="{ label: 'stamp text-muted' }"
         >
           <template #left>
             <p class="m-0 font-display text-base font-bold text-highlighted">

@@ -35,9 +35,16 @@ export default defineAppConfig({
       twMergeConfig: {
         extend: {
           classGroups: {
-            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass', 'panel-matte'],
+            depth: ['convex', 'convex-0', 'convex-2', 'convex-3', 'convex-accent', 'concave', 'concave-2', 'concave-ground', 'part-plate', 'part-card', 'part-panel', 'part-well', 'part-tray', 'part-dish', 'part-code', 'panel-glass', 'panel-matte'],
             // `part-code-shell` only re-points the gutter's marking, so it is
             // NOT on the depth axis — it composes with part-code.
+          },
+          // Every recipe writes its own box-shadow, so a depth class also
+          // retires any shadow or ring written before it. Without this a
+          // theme's `shadow-lg ring` and a later `part-panel` both reach
+          // the element and Tailwind's emission order picks the winner.
+          conflictingClassGroups: {
+            depth: ['shadow', 'ring-w'],
           },
         },
       },
@@ -90,7 +97,7 @@ export default defineAppConfig({
           color: 'neutral',
           variant: 'outline',
           class:
-            'ring-0 convex hover:text-primary active:concave active:translate-y-[0.5px]',
+            'ring-0 convex hover:text-primary-700 dark:hover:text-primary active:concave active:translate-y-[0.5px]',
         },
         // Docus renders the docs' "Copy page" group as variant="soft",
         // which the theme leaves completely unstyled — so the one chip
@@ -145,6 +152,61 @@ export default defineAppConfig({
       },
     },
 
+    // The ⌘K palette: a panel lifted clear of the page (part-panel), the
+    // field cut into it as a well 16px in from the edge — the card's own
+    // inset, so the well's 12 and the card's 28 stay concentric — and the
+    // signal colour carried by light, not paint: the field's lens and the
+    // row under the cursor glow (neon, neon-icon in chrome.css), and the
+    // backdrop is lit warm round the panel (THE SEARCH BACKDROP, same
+    // file — `search-console` is its hook). The panel's own divider goes:
+    // a well needs no rule under it.
+    contentSearch: {
+      slots: {
+        // `rounded-` restates the part's own radius so the modal theme's
+        // `rounded-lg` is replaced rather than racing it.
+        modal: 'search-console part-panel rounded-(--radius-card) divide-y-0',
+      },
+      // The height sits in the variant the theme sets its own in
+      // (`sm:h-[28rem]`): variant classes merge after the slot's, so in
+      // the slot above it lost.
+      variants: {
+        fullscreen: { false: { modal: 'sm:h-[30rem]' } },
+      },
+    },
+    commandPalette: {
+      slots: {
+        root: 'divide-y-0',
+        input: 'm-4 mb-2 part-well [&>input]:caret-primary [&>[data-slot=leading]>*]:text-primary [&>[data-slot=leading]>*]:neon-icon',
+        close: 'convex-0 rounded-(--radius-chip) hover:convex hover:text-highlighted active:concave',
+        // The list fades under the field and into the footer rather
+        // than being cut off at a hard line.
+        viewport: '[mask-image:linear-gradient(transparent,#000_0.75rem,#000_calc(100%-1.25rem),transparent)]',
+        group: 'px-3 py-2',
+        // A spec label, as on the docs page header: mono, cut in, opened
+        // by the lit tick.
+        label: 'font-mono font-semibold tracking-[0.06em] concave-text text-toned flex items-center gap-1.5 before:content-[\'\'] before:h-[1.5px] before:w-3.5 before:rounded-full before:neon',
+        // The row under the cursor stands up out of the panel as a
+        // raised strip, with the lit tick on its leading edge.
+        item: 'rounded-(--radius-strip) before:rounded-(--radius-strip) after:absolute after:start-1 after:inset-y-3 after:w-[2px] after:rounded-full after:neon after:opacity-0 data-highlighted:not-data-disabled:after:opacity-100 data-highlighted:not-data-disabled:before:convex-0',
+        itemLabelBase: '[&>mark]:rounded-[3px]',
+        itemLabelSuffix: '[&>mark]:rounded-[3px]',
+        itemDescription: '[&>mark]:rounded-[3px]',
+        footer: 'px-4 py-2.5 shadow-[inset_0_1px_0_var(--seam-shade),inset_0_2px_0_var(--seam-catch)]',
+      },
+      variants: {
+        size: {
+          md: { label: 'px-2.5 pt-2 pb-1.5', item: 'px-3 py-2.5 gap-3' },
+        },
+        active: {
+          true: { item: 'before:bg-transparent', itemLeadingIcon: 'text-primary' },
+          false: {
+            item: 'data-highlighted:not-data-disabled:before:bg-transparent',
+            itemLeadingIcon: 'group-data-highlighted:not-group-data-disabled:text-primary group-data-highlighted:not-group-data-disabled:neon-icon',
+          },
+        },
+      },
+    },
+
     // Sidebar. Two things happen here.
     //
     // 1. The depth rules are keyed `variant: 'link'`, NOT 'pill'.
@@ -177,6 +239,7 @@ export default defineAppConfig({
       slots: {
         listWithChildren: 'border-0 shadow-(--seam-y)',
         trigger: 'convex-text-2',
+        link: 'convex-text',
         linkLeadingIcon: 'convex-icon',
         // Wrap rather than clip: a narrow aside shows the whole name.
         linkTitle: 'whitespace-normal text-clip overflow-visible',
@@ -411,10 +474,21 @@ export default defineAppConfig({
           color: { neutral: 'border-0 convex-0 text-highlighted' },
         },
       },
-      // A link around a chip: the chip takes the link colour and lifts
-      // on hover (the theme's dashed-border affordance needs a border).
+      // Links stand on a groove that lights up under the cursor
+      // (neon-underline, chrome.css) — in place of the theme's border,
+      // whose ends its own corner radius bent up. A link around a chip:
+      // the chip takes the link colour — the 700 ink in light, as every
+      // accent text there (depth.css, after text-lit) — and lifts on hover
+      // (the theme's dashed-border affordance needs a border). The hover
+      // and focus inks are restated too: the theme sets them to plain
+      // `text-primary`, which depth.css's light rule does not reach under
+      // a state variant, so the chip fell to the 500 face (2.6:1) on hover.
       a: {
-        base: '[&>code]:text-primary hover:[&>code]:convex',
+        base: [
+          'border-b-0 neon-underline hover:[&>code]:convex',
+          '[&>code]:text-primary-700 hover:[&>code]:text-primary-700 focus-visible:[&>code]:text-primary-700',
+          'dark:[&>code]:text-primary dark:hover:[&>code]:text-primary dark:focus-visible:[&>code]:text-primary',
+        ].join(' '),
       },
       // Code blocks → the deep tray, face and all. They used to take the
       // cast without the face on the belief that Shiki painted its own
@@ -423,10 +497,35 @@ export default defineAppConfig({
       // sat on a muted tile — a step ABOVE the page in light — and read
       // flat beside every other cut (2026-09-16, the light-room pass).
       // `rounded-lg` keeps the radius it had; the tray's own rung would
-      // be the well's 12.
-      pre: { slots: { base: 'rounded-lg border-0 part-tray' } },
+      // be the well's 12. Below `lg` the copy button is always showing
+      // and the code wraps, so the end padding clears the button — the
+      // first line of a long prompt ran under it on a phone.
+      pre: { slots: { base: 'rounded-lg border-0 part-tray max-lg:pe-12' } },
       // kbd in docs → raised key cap.
       kbd: { base: 'shadow-(--elevation-0)' },
+      // Coloured callouts (::note, ::warning, ::caution) take the 800 step
+      // for their copy, links and code in light, and the 700 for the icon:
+      // the theme's 600 on its own 10% tint is 2.9:1 for the signal orange
+      // on this ground (info is signal) and under 4.5:1 for amber too. Dark
+      // keeps the theme's own 300 and the accent link colour.
+      callout: {
+        variants: {
+          color: {
+            info: {
+              base: 'text-info-800 [&_a]:text-info-800 dark:[&_a]:text-info [&_code]:text-info-800',
+              icon: 'text-info-700 dark:text-info',
+            },
+            warning: {
+              base: 'text-warning-800 [&_a]:text-warning-800 dark:[&_a]:text-warning [&_code]:text-warning-800',
+              icon: 'text-warning-700 dark:text-warning',
+            },
+            error: {
+              base: 'text-error-800 [&_a]:text-error-800 dark:[&_a]:text-error [&_code]:text-error-800',
+              icon: 'text-error-700 dark:text-error',
+            },
+          },
+        },
+      },
       // MDC ::card tiles → bead-blast plates that raise on hover.
       card: {
         slots: {

@@ -157,6 +157,12 @@
   --ui-border:          oklch(88.5% 0 0);
   --ui-border-muted:    var(--ui-color-neutral-200);
   --ui-border-accented: var(--ui-color-neutral-300);
+  /* Muted ink a step down from neutral-500 (2026-10-05, the a11y pass).
+     500 is AA on Nuxt UI's white page and 3.94:1 on this ground: the
+     sidebar and TOC links, page descriptions and card copy all failed.
+     49.5% holds 4.5:1 on every light surface down to a ground dish, and
+     stays a clear step above toned (neutral-600, 43.9%). */
+  --ui-text-muted: oklch(49.5% 0 0);
 }
 
 /* -- The shadow ladder -------------------------------------------
@@ -257,11 +263,20 @@
      rather than a smudge. Every recess reads these two tokens — concave,
      concave-2, concave-ground, the part-* cuts, and the header rail's
      re-scoped copy in chrome.css — so the change is site-wide. */
+  /* THE LIGHT WALL (2026-10-05). The light shade below lands mostly
+     under the opaque lip ring, so the row inside the ring came out
+     LIGHTER than the ring and the eye read a drawn line, not a cut — the
+     failure the 2026-09-12 note on --recess-edge warns about. The first
+     layer is a hard row on the first pixel inside the ring, light only
+     (transparent in dark): the darkest row of every cut is now the wall
+     under its lip, and the floor keeps its tone. */
   --inset-shadow-1:
+    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.07), transparent),
     inset 0 2px 1px -1px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.4)),
     inset 0 -6px 8px -7px light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.03)),
     inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.8), oklch(80% 0.035 65 / 0.016));
   --inset-shadow-2:
+    inset 0 2px 0 0 light-dark(rgb(0 0 0 / 0.08), transparent),
     inset 0 3px 1px -1px light-dark(rgb(0 0 0 / 0.075), rgb(0 0 0 / 0.45)),
     inset 0 -12px 14px -12px light-dark(rgb(255 255 255 / 0.95), oklch(80% 0.035 65 / 0.035)),
     inset 0 -2px 0 light-dark(rgb(255 255 255 / 0.9), oklch(80% 0.035 65 / 0.018));
@@ -371,8 +386,10 @@
 
 /* -- The faces ---------------------------------------------------
    The tonal ramps that make a surface read as gently domed or as
-   dished, endpoints from the --ui-bg ladder. */
-:root {
+   dished, endpoints from the --ui-bg ladder. Declared on the plates
+   too, so the dish ramps re-resolve against a plate's own --dish-body
+   (THE CUT TAKES ITS TONE FROM WHAT IT IS CUT INTO, below). */
+:root, .part-plate, .part-card, .part-panel {
   --gradient-surface: linear-gradient(180deg,
     color-mix(in srgb, var(--ui-bg-accented), var(--ui-bg-elevated) 55%),
     var(--ui-bg-elevated) 58%,
@@ -486,6 +503,29 @@
     inset 0 1px 0 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14)),
     inset 0 -1px 0 0 light-dark(rgb(0 0 0 / 0.14), rgb(0 0 0 / 0.45)),
     inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035));
+}
+
+/* THE CUT TAKES ITS TONE FROM WHAT IT IS CUT INTO (2026-10-02: "those
+   concave surfaces are much darker gray than the parent surface, they
+   should be integrated more smoothly"). The light --dish-body above is
+   set against the page ground, so a well cut into a 98% plate landed
+   21 levels under it, and a dish inside that well went lower still.
+   Inside a plate the light floor is 3% under the plate's own face, a
+   nested dish 2% under that, and the lip a hair lighter to match. Dark
+   repeats the :root formulas, so it renders unchanged. The tokens built
+   from these resolve where they are declared, so the plates restate the
+   lips here and the ramps through the faces block above. */
+.part-plate, .part-card, .part-panel {
+  --dish-body: light-dark(
+      color-mix(in srgb, var(--ui-bg-elevated), #000 3%),
+      color-mix(in srgb, var(--ui-bg-muted), #000 20%));
+  --dish-body-ground: light-dark(
+      color-mix(in srgb, var(--dish-body), #000 2%),
+      color-mix(in srgb, var(--ui-bg), #000 12%));
+  --recess-edge: light-dark(oklch(91% 0 0), oklch(34% 0 0));
+  --recess-edge-ground: light-dark(var(--recess-edge), oklch(12% 0 0));
+  --recess-lip: inset 0 0 0 1px var(--recess-edge);
+  --recess-lip-ground: inset 0 0 0 1px var(--recess-edge-ground);
 }
 
 /* -- The accent material -----------------------------------------
@@ -1046,38 +1086,57 @@
    fill, and the hair the dark room needs came out as an outline round
    every 14px name. */
 :root:not(.dark) :is(.convex-text-2, .convex-text-3) {
+  /* LIT FROM ABOVE, PRESSED UP OUT OF THE PAGE (2026-10-06: "less
+     elevated, a more premium emboss" — dark is the reference). In the
+     light the face is ONE ramp, cap top to baseline, lighter at the
+     crown — the dark room's plateau hid the gradient here. Round it,
+     one device row each, as in the dark room: a white rim over the
+     letter, a dark wall under it — the edge of a shallow emboss, not
+     the side of a raised block — then a faint soft cast onto the page. */
   -webkit-text-stroke: 0;
   background-image: linear-gradient(180deg,
-    color-mix(in oklab, currentColor, #fff var(--convex-face-crown)) calc(50% - 0.29em),
-    color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% - 0.19em),
-    color-mix(in oklab, currentColor, #fff var(--convex-face-body)) calc(50% + 0.08em),
-    color-mix(in oklab, currentColor, #fff var(--convex-face-foot)) calc(50% + 0.33em));
+    color-mix(in oklab, currentColor, #fff var(--convex-face-crown)) calc(50% - 0.34em),
+    color-mix(in oklab, currentColor, #fff var(--convex-face-foot)) calc(50% + 0.34em));
+  filter:
+    drop-shadow(0 calc(-1 * var(--convex-text-lift)) 0 rgb(255 255 255 / 0.9))
+    drop-shadow(0 var(--convex-text-lift) 0 var(--convex-text-wall))
+    drop-shadow(0 0.03em 0.04em var(--convex-text-cast));
 }
 :root:not(.dark) .convex-text-2 {
-  /* A shallower crown than the display rung's: on a 13px mono the
-     crown band lands across the x-height and a 46% lift read as two
-     tones of letter, not a lit edge. */
-  --convex-face-crown: 38%;
-  --convex-face-body: 29%;
-  --convex-face-foot: 23%;
+  /* DOMED BY THE FACE (2026-10-05: "make them lighter with a tiny
+     gradient"). The middle of the ramp holds 5.4:1 on the ground, a step
+     darker than the page links under it (muted, 49.5%) — the floor a
+     14px name can go to.
+     NO SOFT CAST (2026-10-07: the header brand "feels blurry"). At 13px
+     the cast is 0.4px down with 0.5px of blur, so it lands as a grey halo
+     round every glyph, not as a shadow under it. Small type keeps only
+     the two hard rows, and the wall is a step darker to carry the lift
+     on its own. */
+  --convex-face-crown: 48%;
+  --convex-face-foot: 22%;
+  --convex-text-wall: rgb(0 0 0 / 0.4);
+  --convex-text-cast: transparent;
   text-shadow: none;
-  filter:
-    drop-shadow(0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.9))
-    drop-shadow(0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.32));
 }
 :root:not(.dark) .convex-text-3 {
-  --convex-text-lift: round(nearest, max(0.5px, 0.03em), 0.5px);
-  --convex-face-crown: 62%;
-  --convex-face-body: 46%;
-  --convex-face-foot: 38%;
-  /* Shade first — text-shadows paint first-on-top — so the rim shows
-     only where the shade does not reach: the top strip of every glyph
-     and the row above it. Then the ground cast, soft and short, the
-     hero's own reach at this size. */
-  text-shadow:
-    0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.36),
-    0 calc(-1 * var(--convex-text-rim)) 0 rgb(255 255 255 / 0.3);
-  filter: drop-shadow(0 0.03em 0.05em rgb(0 0 0 / 0.2));
+  /* THE DARK ROOM'S EMBOSS, IN THE LIGHT (2026-10-05: "by analogy from
+     dark mode, but keep contrast"). Dark's lift (one device row) and a
+     shade over the face: the row the shade misses is the lit edge of
+     every glyph, and the body sits under the shade. The face is lifted
+     all the way to white at the crown because the shade darkens it
+     (2026-10-06: "make headings lighter") — the middle of the letter
+     holds 3:1, the large-text floor. The wall is strong because one row
+     of it has to read against a face this light.
+     The rim is a FILTER, not a text-shadow. A text-shadow paints over the
+     face: a white rim lightened every row of the glyph but the bottom
+     ones, which then showed as a black stripe — an outline round the
+     foot of every letter. A drop-shadow paints under the glyph, so the
+     rim stays outside it. */
+  --convex-face-crown: 100%;
+  --convex-face-foot: 76%;
+  --convex-text-wall: rgb(0 0 0 / 0.6);
+  --convex-text-cast: rgb(0 0 0 / 0.12);
+  text-shadow: 0 var(--convex-text-lift) 0 rgb(0 0 0 / 0.4);
 }
 /* The ink-keeping rung's shadows are a FILTER. A text-shadow paints
    between the background and the ink, and with the ink transparent it
@@ -1135,12 +1194,33 @@
      mask. Independent passes, never chained. */
   &.iconify {
     filter:
-      drop-shadow(0 -0.5px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.11)))
-      drop-shadow(0 0.5px 0 light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.6)));
+      drop-shadow(0 -0.5px 0 rgb(255 255 255 / 0.11))
+      drop-shadow(0 0.5px 0 rgb(0 0 0 / 0.6));
+    /* The light room takes the sidebar names' rim and cast
+       (convex-text-2), so an icon stands as high as the name beside it. */
+    :root:not(.dark) & {
+      filter:
+        drop-shadow(0 -0.5px 0 rgb(255 255 255 / 0.9))
+        drop-shadow(0 0.5px 0 rgb(0 0 0 / 0.16));
+      @media (forced-colors: active) {
+        filter: none;
+      }
+    }
     @media (forced-colors: active) {
       filter: none;
     }
   }
+}
+/* An icon beside a raised name takes the NAME's ink, a step toward the
+   room (2026-10-06: "icon lighter than text in light, darker in dark"):
+   it is the smaller mark, so it sits back from the name in both rooms,
+   and follows it through hover and open. `currentColor` in `color` is
+   the inherited ink — the name's. */
+:root:not(.dark) .convex-text-2 > .convex-icon {
+  color: color-mix(in oklab, currentColor, #fff 45%);
+}
+:root.dark .convex-text-2 > .convex-icon {
+  color: color-mix(in oklab, currentColor, #000 22%);
 }
 @utility concave-icon {
   &.iconify {
@@ -1191,6 +1271,15 @@
     inset 0 0 0 1px light-dark(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.035)),
     0 12px 28px -18px light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.7));
   @supports (corner-shape: squircle) { corner-shape: squircle; }
+  /* SHEERER IN LIGHT (2026-10-02: "add light opacity to the table of
+     contents and make it slightly blurry"). 0.42 white over the 93.8%
+     ground composited to a near-solid card, and 14px of blur erased the
+     grain under it. Half the white and a short blur: the pane is a tint
+     the grain still reads through, softened rather than wiped. */
+  :root:not(.dark) & {
+    background: rgb(255 255 255 / 0.2);
+    backdrop-filter: blur(4px) saturate(1.2);
+  }
 }
 
 /* Frosted sheet — the same glass, but matte: a panel that slides OVER
@@ -1276,6 +1365,9 @@
                   more important.
      part-card    the smaller raised part, 16px inset (a card in a
                   grid, a pane on a plate).
+     part-panel   a card that FLOATS over the page rather than sitting
+                  on it: the search palette. The card's shape, the top
+                  rung's cast and a long drop under it.
      part-well    the shallow pocket cut into a plate: a readout, a
                   field, a rail. This is the default cut.
      part-tray    the deep pocket a whole stage sits in: a code well,
@@ -1304,6 +1396,17 @@
   --depth: convex;
   background: var(--gradient-surface);
   box-shadow: var(--bevel), var(--elevation-1);
+  border-radius: var(--radius-card);
+  @supports (corner-shape: squircle) { corner-shape: squircle; }
+}
+/* The top rung plus the drop a part lifted well clear of the page
+   throws: long, soft, and far darker in the dark room, where only a
+   deep shadow reads against a near-black ground. */
+@utility part-panel {
+  --depth: convex;
+  background: var(--gradient-surface);
+  box-shadow: var(--bevel), var(--elevation-3),
+    0 32px 64px -24px light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.8));
   border-radius: var(--radius-card);
   @supports (corner-shape: squircle) { corner-shape: squircle; }
 }
@@ -1435,4 +1538,16 @@
    `text-primary-700 dark:text-primary-300` pair by hand. */
 @utility text-lit {
   color: light-dark(var(--ui-color-primary-700), var(--ui-color-primary-300));
+}
+/* Accent TEXT in the light room is the 700 step (2026-10-05, the a11y
+   pass). Every theme writes `text-primary` for links, the active sidebar
+   row and the TOC's current entry, and the 500 face is 2.6:1 on this
+   ground — a fill colour, not an ink. Fills keep 500: only the colour
+   utility moves, and only in light, where 700 holds 4.5:1 on the ground,
+   the glass and the plates. In the utilities layer at the utility's own
+   specificity, so hover and state variants still win over it. */
+@layer utilities {
+  :where(:root:not(.dark)) .text-primary {
+    color: var(--ui-color-primary-700);
+  }
 }
