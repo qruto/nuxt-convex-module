@@ -110,6 +110,11 @@ overrides:
   # worth closing. Its sibling packages accept `^3`, so core can move on its own.
   # Remove when @nuxt/ui's floor passes 3.30.4.
   '@tiptap/core': ^3.30.4
+  # @tiptap/pm@3.29.2 (same docus editor) asks for prosemirror-view ^1.41.9,
+  # which pnpm keeps at 1.42.2 — in range for the paste-handling XSS fixed in
+  # 1.42.3. A patch release inside the existing range. Remove when @tiptap/pm
+  # resolves 1.42.3 on its own.
+  prosemirror-view: ^1.42.3
 
 # --- Integrity ---------------------------------------------------------------
 # Fail a script outright when node_modules is out of sync with the lockfile, so

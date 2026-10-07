@@ -29,13 +29,25 @@ updates:
     # update, so without this the group below would propose one that the add-on
     # then rejects at install time. Drop this entry when @convex-dev/better-auth
     # supports better-auth 1.7 (and widen the peer range with it).
+    #
+    # h3 2.x needs Nitro 3, which Nuxt 4 does not run on, and drops
+    # `toWebRequest`, which the Better Auth proxy imports. Drop this entry when
+    # the module moves to Nuxt 5.
     ignore:
       - dependency-name: better-auth
         versions: ['>=1.7.0']
+      - dependency-name: h3
+        update-types: ['version-update:semver-major']
+    # Groups only apply to the kind of update named in `applies-to`, which
+    # defaults to version updates. Without the second group, every CVE fix
+    # opens its own PR.
     groups:
       all-non-major:
         patterns: ['*']
         update-types: [minor, patch]
+      security:
+        applies-to: security-updates
+        patterns: ['*']
     commit-message:
       prefix: chore
       include: scope
