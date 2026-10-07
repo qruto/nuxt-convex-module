@@ -38,18 +38,20 @@ updates:
     # three entries together: on its own, `nuxt` (the pnpm catalog) fails to
     # update and the group ships @nuxt/kit and @nuxt/schema without it. 4.6
     # also pulls in cssnano 9, which fails `trustPolicy: no-downgrade`:
-    # cssnano moved its release approval from npm to GitHub.
+    # cssnano moved its release approval from npm to GitHub. Held by update
+    # type, not by version range, so 4.5.x patches and security updates still
+    # come through.
     ignore:
       - dependency-name: better-auth
         versions: ['>=1.7.0']
       - dependency-name: h3
         update-types: ['version-update:semver-major']
       - dependency-name: nuxt
-        versions: ['>=4.6.0']
+        update-types: ['version-update:semver-minor']
       - dependency-name: '@nuxt/kit'
-        versions: ['>=4.6.0']
+        update-types: ['version-update:semver-minor']
       - dependency-name: '@nuxt/schema'
-        versions: ['>=4.6.0']
+        update-types: ['version-update:semver-minor']
     # Groups only apply to the kind of update named in `applies-to`, which
     # defaults to version updates. Without the second group, every CVE fix
     # opens its own PR.
