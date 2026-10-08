@@ -90,7 +90,7 @@ const send = useMutation(api.messages.send)
 </template>
 ```
 
-To start a new app, create it from [`templates/starter`](templates/starter), an unbranded Nuxt app with the module installed and one live Convex table:
+To start a new app, create it from [`templates/starter`](templates/starter), a minimal Nuxt app with the module installed and one live Convex table:
 
 ```bash
 pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/templates/starter

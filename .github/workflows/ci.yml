@@ -18,6 +18,13 @@ on:
   pull_request:
     branches:
       - main
+  # Weekly, and by hand from the Actions tab (say, right before a release): the
+  # same checks on main with nothing changed here, so a new Nuxt or Convex
+  # release that breaks a fresh app shows up without waiting for a pull
+  # request. The consumer smoke tests in `pack` install the newest of each.
+  schedule:
+    - cron: '41 5 * * 1' # Mondays
+  workflow_dispatch:
 
 # Cancel superseded runs on a pull request, never on main. `head_ref` is empty on
 # a push, so cancelling there would put every merge in one group, and two merges
@@ -31,9 +38,9 @@ concurrency:
 permissions: {}
 
 jobs:
-  # Works out which of the expensive jobs this change needs. On a push to main
-  # they all run anyway: that costs one full run per merge, and a green main is
-  # worth the minutes.
+  # Works out which of the expensive jobs a pull request needs. Anywhere else —
+  # a push to main, the weekly run, a run by hand — they all run anyway: that
+  # costs one full run per merge, and a green main is worth the minutes.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -49,6 +56,7 @@ jobs:
           persist-credentials: false
 
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        if: github.event_name == 'pull_request'
         id: filter
         with:
           # `&shared` / `*shared` is a YAML anchor, and this action resolves
@@ -264,7 +272,7 @@ jobs:
 
   test:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.src == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
@@ -313,7 +321,7 @@ jobs:
   # the Better Auth proxy.
   e2e:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -353,7 +361,7 @@ jobs:
   # what no other job here exercises.
   pack:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -384,22 +392,40 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:tarball
 
-      - name: Consumer smoke test (npm install + build)
+      - name: Consumer smoke test (npm install, build, serve)
         if: ${{ !cancelled() }}
         env:
           NUXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
-        # No lockfile, on purpose: this is what a new user gets. `npm` comes
-        # from the runner image, because pnpm's Node runtime ships without npm
-        # and npx from pnpm 11 on — and a stock npm is exactly the path being
-        # tested.
+        # No lockfile, on purpose: this is what a new user gets, newest Nuxt
+        # included — the repository's own lockfile pins Nuxt, so this is where
+        # a new Nuxt release meets the module first. `npm` comes from the
+        # runner image, because pnpm's Node runtime ships without npm and npx
+        # from pnpm 11 on — and a stock npm is exactly the path being tested.
         #
         # The version pin is a workaround. The image's own npm (10.9.x) crashes
         # while resolving peers on any Nuxt 4 tree: `Cannot read properties of
         # null (reading 'edgesOut')`, npm/cli#9787, fixed in 11.6.0. It is not
         # about this package — a bare `npm install` of the example hits it too.
         # Pinning also keeps this job reproducible when the runner image moves.
+        #
+        # Building is not enough: on Nuxt 4.6, `build` succeeded and the built
+        # server then failed every request (ERR_MODULE_NOT_FOUND). So each app
+        # is served and asked for its home page, which has to render although
+        # nothing answers at the placeholder deployment URL.
         run: | # zizmor: ignore[adhoc-packages]
           TARBALL="$PWD/$(ls nuxt-convex-module-*.tgz)"
+          serve() {
+            PORT=3000 node .output/server/index.mjs > server.log 2>&1 &
+            local server=$! code
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 30 --retry-connrefused --retry-delay 1 http://localhost:3000/ || true)
+            kill "$server"
+            wait "$server" || true # the next app needs the port
+            if [ "$code" != 200 ] || grep -q 'Cannot find module' server.log; then
+              echo "::error::The built $(basename "$PWD") answered HTTP $code"
+              cat server.log
+              return 1
+            fi
+          }
           # Both apps: `templates/starter` is what `create nuxt` hands a new
           # user, `examples/playground` is the StackBlitz template pkg.pr.new
           # ships — and nothing else ever builds it (pkg.pr.new only uploads
@@ -409,7 +435,8 @@ jobs:
             cp -R "$app" "$SMOKE"
             (cd "$SMOKE" \
               && npx --yes npm@11.17.0 install --no-audit --no-fund "$TARBALL" \
-              && npx --yes npm@11.17.0 run build)
+              && npx --yes npm@11.17.0 run build \
+              && serve)
           done
 
       # pnpm 11 and later stop an install at the first build script nobody has
@@ -477,7 +504,7 @@ jobs:
   # aggregate like every other third-party service.
   website:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.website == 'true' }}
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

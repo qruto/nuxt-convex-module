@@ -6,11 +6,11 @@
       <strong>yours</strong>; nothing is hosted for you.
     </p>
     <p>
-      Start it with <code>npm run dev</code>. That runs <code>convex dev</code>, which logs you
-      in, creates a dev deployment, pushes this app's functions from <code>convex/</code> and
-      starts Nuxt beside it.
+      Start it with the <code>dev</code> script. That runs <code>convex dev</code>, which sets up
+      a deployment (a local one needs no account), pushes this app's functions from
+      <code>convex/</code> and starts Nuxt beside it.
     </p>
-    <pre class="concave"><code>npm run dev</code></pre>
+    <pre class="concave"><code>npm run dev   # or pnpm dev, yarn dev, bun dev</code></pre>
     <p class="hint">
       Serving a build? Set <code>NUXT_PUBLIC_CONVEX_URL</code> to your deployment URL where it
       runs.

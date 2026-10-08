@@ -208,6 +208,34 @@ describe('stability', () => {
   })
 })
 
+describe('install commands', () => {
+  // A peer capped below its next minor is installed as `name@major.minor`.
+  // Unpinned, pnpm, yarn and bun take the newest release whatever the peer
+  // range says; only npm picks one that fits.
+  const capped = Object.entries(manifest.peerDependencies).flatMap(([pkg, range]) => {
+    const tilde = range.match(/^~(\d+)\.(\d+)\.\d+$/)
+    const bounded = range.match(/^>=(\d+)\.(\d+)\.\d+ <(\d+)\.(\d+)\.0$/)
+    const oneMinor = bounded && bounded[3] === bounded[1] && Number(bounded[4]) === Number(bounded[2]) + 1
+    const m = tilde ?? (oneMinor ? bounded : null)
+    return m ? [[pkg, `${pkg}@${m[1]}.${m[2]}`] as const] : []
+  })
+  const commands = [...contentPages, ...skillPages, 'README.md'].flatMap(file =>
+    [...read(file).matchAll(/packages="([^"]+)"|\b(?:npm i|npm install|pnpm add|yarn add|bun add)[ \t]+([^\n`]+)/g)]
+      .map(m => ({ file: file.replace(`${process.cwd()}/`, ''), tokens: (m[1] ?? m[2])!.split(/\s+/) })))
+
+  it('finds the capped peers and the commands', () => {
+    expect(capped.map(([pkg]) => pkg)).toEqual(expect.arrayContaining(['better-auth', '@convex-dev/better-auth', '@convex-dev/polar']))
+    expect(commands.length).toBeGreaterThan(10)
+  })
+
+  it.each(capped)('`%s` is installed as `%s`', (pkg, spec) => {
+    for (const { file, tokens } of commands) {
+      for (const token of tokens.filter(t => t === pkg || t.startsWith(`${pkg}@`)))
+        expect(token, `${file} installs ${token}; write ${spec}`).toBe(spec)
+    }
+  })
+})
+
 describe('contributor docs cite real CI jobs', () => {
   const jobIds = new Set([...read('.github/workflows/ci.yml').matchAll(/^ {2}([a-z-]+):$/gm)].map(m => m[1]!))
   const hooksTable = read('CONTRIBUTING.md').match(/\| Hook \| Runs \| Mirrors[\s\S]*?\n\n/)?.[0] ?? ''

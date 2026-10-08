@@ -188,6 +188,16 @@ export default defineNuxtModule<ModuleOptions>({
     // runtime must always be transpiled.
     nuxt.options.build.transpile.push(resolver.resolve('./runtime'))
 
+    // Transpiled, the runtime is an importer inside node_modules, and Nuxt
+    // 4.6's production SSR build rewrites such an importer's `convex/browser`
+    // into a file path. Nitro then inlines the Convex client and emits its
+    // `../index.js` import relative to the wrong directory: the built server
+    // fails every request with ERR_MODULE_NOT_FOUND. Nuxt leaves a deduped
+    // package as a plain import, and one copy of `convex` per app is what
+    // the client needs anyway.
+    nuxt.options.vite.resolve ??= {}
+    nuxt.options.vite.resolve.dedupe = [...(nuxt.options.vite.resolve.dedupe ?? []), 'convex']
+
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
 
     const diagnostics = validateModuleOptions({

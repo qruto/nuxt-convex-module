@@ -6,12 +6,14 @@ Follow these steps in order. Every command runs without prompts, so you can run 
 
 1. **Package manager.** `pnpm-lock.yaml` → pnpm, `package-lock.json` → npm, `yarn.lock` → yarn, `bun.lock` or `bun.lockb` → bun. No lockfile → npm. Use it for every command below:
 
-   | | install | run a package | run a script |
-   |---|---|---|---|
-   | pnpm | `pnpm add` | `pnpm dlx` | `pnpm <script>` |
-   | npm | `npm i` | `npx` | `npm run <script>` |
-   | yarn | `yarn add` | `yarn dlx` (`npx` on Yarn 1) | `yarn <script>` |
-   | bun | `bun add` | `bunx` | `bun run <script>` |
+   | | install | run a package | run the project's `convex` | run a script |
+   |---|---|---|---|---|
+   | pnpm | `pnpm add` | `pnpm dlx` | `pnpm exec convex` | `pnpm <script>` |
+   | npm | `npm i` | `npx` | `npx convex` | `npm run <script>` |
+   | yarn | `yarn add` | `yarn dlx` (`npx` on Yarn 1) | `yarn convex` | `yarn <script>` |
+   | bun | `bun add` | `bunx` | `bunx convex` | `bun run <script>` |
+
+   `npx convex` below is the project's own `convex`. Run it as that column says, not with `dlx`, which fetches a separate copy.
 
 2. **Versions.** The module needs Nuxt ≥ 4.1.0 and Node ≥ 24.11.0. Check `node -v` and the `nuxt` version in `package.json`. If either is lower, stop and tell the user; don't upgrade Nuxt on your own.
 3. **What is already there.**
@@ -22,7 +24,7 @@ Follow these steps in order. Every command runs without prompts, so you can run 
 
 ## 1a. No Nuxt app yet: create one from the starter
 
-The starter is an unbranded Nuxt app with the module installed and one live `messages` table. `create nuxt` needs these flags when it has no terminal to ask in:
+The starter is a minimal Nuxt app with the module installed and one live `messages` table, shown on a welcome page (`app/app.vue`) that is meant to be replaced. `create nuxt` needs these flags when it has no terminal to ask in:
 
 ```bash
 pnpm create nuxt@latest my-app -t gh:qruto/nuxt-convex-module/templates/starter --packageManager pnpm --gitInit
@@ -31,7 +33,7 @@ yarn create nuxt my-app -t gh:qruto/nuxt-convex-module/templates/starter --packa
 bun create nuxt@latest my-app --template=gh:qruto/nuxt-convex-module/templates/starter --packageManager bun --gitInit
 ```
 
-Use the user's name for the app instead of `my-app`, and pass `--gitInit=false` when the folder is already inside a git repository. npm needs the `--` before `-t`; Bun rejects `-t`, so it takes `--template=`. Then `cd` into the new folder and go to step 2.
+Use the user's name for the app instead of `my-app`, and pass `--gitInit=false` when the folder is already inside a git repository. npm needs the `--` before `-t`; Bun rejects `-t`, so it takes `--template=`. Then `cd` into the new folder and run the `npx skills add` command from the prompt there too: it installed the skill in the folder you started in, and the app needs its own copy for later tasks. Go to step 2.
 
 ## 1b. An existing Nuxt app: add the module
 
@@ -137,7 +139,7 @@ Run `npx convex dev --once` again (with `CONVEX_AGENT_MODE=anonymous` for a loca
 1. `convex/_generated/api.d.ts` exists.
 2. Start the `dev` script in the background (`npm run dev`, `pnpm dev`, …) and wait for the Nuxt URL. The module logs one line that names the deployment, such as `Convex http://127.0.0.1:3210 · functions: convex/ · integrations: none`. A warning that starts with `No Convex deployment URL configured` means step 2 didn't run in this folder.
 3. Request the page with `curl` and check for HTTP 200 and no error page. With step 3's example in place, also write a message with `npx convex run messages:send '{"body":"hi"}'` and check that the next request's HTML contains it.
-4. Stop the dev process when you are done. Don't leave it running.
+4. Stop the dev process when you are done, with Ctrl-C or `kill -INT <pid>`. A plain `kill` sends SIGTERM, which stops `convex dev` but leaves Nuxt and the local Convex backend running, and the next `dev` then fails with `A local backend is still running on port …` until you stop the process on that port.
 
 If something fails, every message the module prints is listed with its fix in [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md).
 

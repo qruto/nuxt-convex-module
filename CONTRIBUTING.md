@@ -103,12 +103,15 @@ the root `tsconfig.json` and fallow — each app has its own `package.json` and
 committed `convex/_generated`, so treating them as workspace source would be
 wrong. Both apps have a job beyond being documentation:
 
-- **[`templates/starter/`](./templates/starter)** — the unbranded app a new user
-  creates with `create nuxt`: the official Nuxt starter plus the module and one
-  table. Keep it that small and free of this repository's concerns. The `pack`
-  CI job copies it, installs the packed tarball with plain `npm`, and builds it:
-  the only place a registry-shaped install (lifecycle scripts, engines, export
-  maps) is exercised at all.
+- **[`templates/starter/`](./templates/starter)** — the app a new user creates
+  with `create nuxt`: the official Nuxt starter plus the module, one table and a
+  welcome page in plain CSS. Keep it that small and free of this repository's
+  concerns. The `pack` CI job copies it, installs the packed tarball with plain
+  `npm`, builds it and requests its home page from the built server: the only
+  place a registry-shaped install (lifecycle scripts, engines, export maps, the
+  newest Nuxt) is exercised at all. `create nuxt` takes the template from `main`
+  but installs the module from npm, so a template change that needs an
+  unreleased module change breaks new apps until the next release.
 - **[`examples/playground/`](./examples/playground)** — the app behind the
   **Open in StackBlitz** link on every pull request. `preview.yml` hands it to
   pkg.pr.new as `--template`, and pkg.pr.new rewrites its `nuxt-convex-module`
