@@ -11,12 +11,21 @@ const send = useMutation(api.messages.send)
 watch(messages, () => emit('received'))
 
 const body = ref('')
+// While offline, Convex holds a mutation until it reconnects: one send at a
+// time, or every press of Enter queues another copy.
+const sending = ref(false)
 
 async function submit() {
   const text = body.value.trim()
-  if (!text) return
+  if (!text || sending.value) return
+  sending.value = true
   emit('sent')
-  await send({ body: text })
+  try {
+    await send({ body: text })
+  }
+  finally {
+    sending.value = false
+  }
   // Keep anything typed while the message was sending.
   if (body.value.trim() === text) body.value = ''
 }
@@ -38,7 +47,7 @@ async function submit() {
         maxlength="280"
         autocomplete="off"
       >
-      <button class="button convex-accent" type="submit" :disabled="!body.trim()">
+      <button class="button convex-accent" type="submit" :disabled="!body.trim() || sending">
         Send
       </button>
     </form>

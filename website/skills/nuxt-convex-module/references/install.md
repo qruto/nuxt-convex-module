@@ -139,7 +139,7 @@ Run `npx convex dev --once` again (with `CONVEX_AGENT_MODE=anonymous` for a loca
 1. `convex/_generated/api.d.ts` exists.
 2. Start the `dev` script in the background (`npm run dev`, `pnpm dev`, …) and wait for the Nuxt URL. The module logs one line that names the deployment, such as `Convex http://127.0.0.1:3210 · functions: convex/ · integrations: none`. A warning that starts with `No Convex deployment URL configured` means step 2 didn't run in this folder.
 3. Request the page with `curl` and check for HTTP 200 and no error page. With step 3's example in place, also write a message with `npx convex run messages:send '{"body":"hi"}'` and check that the next request's HTML contains it.
-4. Stop the dev process when you are done, with Ctrl-C or `kill -INT <pid>`. A plain `kill` sends SIGTERM, which stops `convex dev` but leaves Nuxt and the local Convex backend running, and the next `dev` then fails with `A local backend is still running on port …` until you stop the process on that port.
+4. Stop the dev process when you are done, with Ctrl-C or, on macOS and Linux, `kill -INT <pid>`. On Windows, `taskkill /PID <pid> /T /F` ends it together with the processes it started. A plain `kill` sends SIGTERM, which stops `convex dev` but leaves Nuxt and the local Convex backend running, and the next `dev` then fails with `A local backend is still running on port …` until you stop the process on that port.
 
 If something fails, every message the module prints is listed with its fix in [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md).
 
