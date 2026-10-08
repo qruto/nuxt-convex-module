@@ -12,7 +12,7 @@ Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `i
 ## Better Auth
 
 ```bash
-npm i @convex-dev/better-auth better-auth
+npm i @convex-dev/better-auth@~0.12.0 better-auth@~1.6.11
 ```
 
 **What the module adds on its own:**

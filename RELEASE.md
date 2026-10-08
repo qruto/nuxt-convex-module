@@ -9,6 +9,11 @@ environment can do.
 
 ## Cut a release
 
+If nothing has merged for a while, run **Actions → CI → Run workflow** on `main` first. Its `pack`
+job installs the packed module into the starter and the playground with the newest Nuxt and
+Convex, builds both and requests a page from each built server, so a breaking upstream release
+shows up before yours does. It also runs every Monday on its own.
+
 1. **Actions → Release Prepare → Run workflow.** Pick the bump, or leave `auto` to work it out
    from the commit messages since the last tag. To name the version outright, fill in
    `version` (`1.0.0`) — the bump is then ignored.

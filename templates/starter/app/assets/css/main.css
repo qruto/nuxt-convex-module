@@ -1,0 +1,201 @@
+/* Titanium greys, one orange accent, and surfaces that are either CONVEX
+   (raised off the page) or CONCAVE (cut into it). The page follows the
+   system's light or dark scheme. To make it yours, change the --signal-*
+   colours and the --background-* greys. */
+
+:root {
+  color-scheme: light dark;
+
+  --signal-300: oklch(79.62% 0.1264 46.68);
+  --signal-400: oklch(71.05% 0.1872 38.87);
+  --signal-500: oklch(68.24% 0.2107 37.69);
+  --signal-600: oklch(63.23% 0.2172 35.1);
+  --signal-700: oklch(54.55% 0.1893 34.63);
+  --signal-950: oklch(26.61% 0.0792 36.77);
+
+  --background: light-dark(oklch(93.8% 0 0), oklch(20.5% 0 0));
+  --background-raised: light-dark(oklch(98.5% 0 0), oklch(26.9% 0 0));
+  --background-highlight: light-dark(#fff, oklch(37.1% 0 0));
+  /* The surface a cut is made in: the page, until a convex part sets its own.
+     A cut has no colour of its own; it takes this one. */
+  --surface: var(--background);
+  --text-strong: light-dark(oklch(20.5% 0 0), oklch(97% 0 0));
+  --text: light-dark(oklch(37.1% 0 0), oklch(92.2% 0 0));
+  --text-muted: light-dark(oklch(49.5% 0 0), oklch(70.8% 0 0));
+  --accent: light-dark(var(--signal-700), var(--signal-400));
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* A cut inside a card sits 1rem in, so its corner is the card's minus 1rem:
+     nested corners stay parallel. */
+  --radius-card: 1.75rem;
+  --radius-recess: 0.75rem;
+
+  /* Light from overhead: a bright line on the top edge, a hard shade on the
+     bottom one, a soft shadow on the page. A cut reverses it. */
+  --convex-gradient: linear-gradient(180deg,
+    color-mix(in srgb, var(--background-highlight), var(--background-raised) 55%),
+    var(--background-raised) 58%,
+    color-mix(in srgb, var(--background-raised), #000 2.5%));
+  --convex-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.08)),
+    inset 0 -1px 0 light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.42)),
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.45)),
+    0 3px 6px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.45));
+  /* The walls of a cut: a shaded lip all round, deepest under the top edge,
+     and the surface's own rim catching the light just below it. */
+  --concave-shadow:
+    inset 0 0 0 1px light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.4)),
+    inset 0 1px 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.5)),
+    inset 0 6px 9px -6px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.6)),
+    inset 1px 0 3px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.4)),
+    inset -1px 0 3px -2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.4)),
+    inset 0 -1px 0 light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.05)),
+    0 1px 0 light-dark(#fff, rgb(255 255 255 / 0.07));
+
+  /* The orange plate, the same in both schemes. */
+  --accent-face: var(--signal-500);
+  --accent-gradient: linear-gradient(180deg,
+    color-mix(in oklab, var(--accent-face), #fff 16%), var(--accent-face) 55%,
+    color-mix(in oklab, var(--accent-face), #000 10%));
+  --accent-shadow:
+    0 0 0 1px light-dark(
+      color-mix(in oklab, var(--signal-700) 88%, transparent),
+      color-mix(in oklab, var(--signal-950) 88%, transparent)),
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    inset 0 -1px 0 light-dark(color-mix(in oklab, var(--signal-950) 30%, transparent), rgb(0 0 0 / 0.3)),
+    0 1px 2px light-dark(color-mix(in oklab, var(--signal-950) 22%, transparent), rgb(0 0 0 / 0.4)),
+    0 3px 7px -4px color-mix(in oklab, var(--signal-500) 55%, transparent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  /* A turned finish: fine rings spun out from a lamp over the top of the
+     page. The inks stay rgb(): Safari smears 1px lines in a repeating
+     gradient written in a newer colour syntax. */
+  background-image:
+    radial-gradient(120% 56rem at 50% 0, light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05)), transparent),
+    repeating-radial-gradient(circle at 50% 0, light-dark(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.016)) 0 1px, transparent 1px 5px),
+    repeating-radial-gradient(circle at 50% 0, light-dark(rgb(0 0 0 / 0.03), rgb(0 0 0 / 0.18)) 0 1px, transparent 1px 11px);
+  color: var(--text);
+  font: 400 1rem/1.55 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  color: var(--text-strong);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.15em;
+}
+
+code, kbd, pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--signal-500) 22%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A raised part. Cuts inside it take its face as their surface. */
+.convex {
+  --surface: var(--background-raised);
+  background: var(--convex-gradient);
+  box-shadow: var(--convex-shadow);
+}
+
+/* A cut into whatever surface it sits in, and what a pressed raised part
+   becomes. Less light reaches the bottom of a hole, so the floor starts a
+   step under the surface and turns back toward it; the walls do the rest. */
+.concave,
+a.convex:active,
+.button:not(.convex-accent):enabled:active {
+  background: linear-gradient(180deg,
+    light-dark(color-mix(in srgb, var(--surface), #000 7%), color-mix(in srgb, var(--surface), #000 34%)),
+    light-dark(color-mix(in srgb, var(--surface), #000 2.5%), color-mix(in srgb, var(--surface), #000 15%)) 45%,
+    light-dark(color-mix(in srgb, var(--surface), #000 1%), color-mix(in srgb, var(--surface), #000 6%)));
+  box-shadow: var(--concave-shadow);
+}
+
+/* Text cut into the surface: a shade over each letter's top edge, a lit
+   edge under its foot. */
+.concave-text {
+  text-shadow:
+    0 -1px 0 light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.7)),
+    0 1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.12));
+}
+
+/* Buttons are raised parts that settle into the page when pressed. */
+.button {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  border: 0;
+  border-radius: var(--radius-recess);
+  background: var(--convex-gradient);
+  box-shadow: var(--convex-shadow);
+  color: var(--text-strong);
+  font: 500 0.95rem/1 var(--font-sans);
+  cursor: pointer;
+  transition: box-shadow 150ms, background 150ms, opacity 150ms;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.button.convex-accent {
+  background: var(--accent-gradient);
+  box-shadow: var(--accent-shadow);
+  color: var(--signal-950);
+  font-weight: 600;
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--signal-300) 60%, transparent);
+}
+
+.button.convex-accent:enabled:hover {
+  --accent-face: var(--signal-400);
+}
+
+.button.convex-accent:enabled:active {
+  --accent-face: var(--signal-600);
+  box-shadow: var(--accent-shadow), inset 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+@media (forced-colors: active) {
+  .button,
+  .convex,
+  .concave {
+    border: 1px solid CanvasText;
+  }
+}

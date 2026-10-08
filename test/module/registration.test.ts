@@ -98,6 +98,12 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(keys.indexOf('#convex/api')).toBeLessThan(keys.indexOf('#convex'))
   })
 
+  // Without it, a Nuxt 4.6 production server fails every request: its build
+  // inlines the Convex client with a broken relative import.
+  it('dedupes convex on Vite, which keeps it external in the server build', () => {
+    expect(r.options.vite.resolve?.dedupe).toContain('convex')
+  })
+
   it('publishes the five runtime-config keys', () => {
     expect(r.options.runtimeConfig.public.convex).toEqual({
       url: 'https://example.convex.cloud',

@@ -7,7 +7,8 @@ description: >-
   useAsyncQuery, useMutation, useAction, usePaginatedQuery, file uploads,
   fetchQuery in server routes, auth state with Better Auth, Clerk or Auth0,
   Polar checkout links — or when a Nuxt app's Convex setup misbehaves: no
-  deployment URL, missing codegen, `#convex/api` typed as any.
+  deployment URL, missing codegen, `#convex/api` typed as any, a built server
+  that cannot find `convex`, a local backend still running on its port.
 license: MIT
 ---
 
@@ -92,7 +93,7 @@ The same client runs without Nuxt. Create a `ConvexVueClient`, provide it under 
 
 Every page is Markdown at the links below; the docs MCP server at `https://nuxt-convex-module.dev/mcp` serves the same pages through `get-page`.
 
-- [Installation](https://nuxt-convex-module.dev/raw/getting-started/installation.md), [Configuration](https://nuxt-convex-module.dev/raw/getting-started/configuration.md) (module options, runtime config, `#convex/*` aliases), [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md) (every message the module prints, with the fix), [Security](https://nuxt-convex-module.dev/raw/getting-started/security.md)
+- [Installation](https://nuxt-convex-module.dev/raw/getting-started/installation.md), [Configuration](https://nuxt-convex-module.dev/raw/getting-started/configuration.md) (module options, runtime config, `#convex/*` aliases), [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md) (every message the module prints, and two from the Convex CLI and Node, with the fix), [Security](https://nuxt-convex-module.dev/raw/getting-started/security.md)
 - Guide: [Queries](https://nuxt-convex-module.dev/raw/guide/queries.md), [Mutations and actions](https://nuxt-convex-module.dev/raw/guide/mutations-and-actions.md), [Pagination](https://nuxt-convex-module.dev/raw/guide/pagination.md), [File storage](https://nuxt-convex-module.dev/raw/guide/file-storage.md), [Server and SSR](https://nuxt-convex-module.dev/raw/guide/server-and-ssr.md), [Auth state](https://nuxt-convex-module.dev/raw/guide/auth-state.md), [Connection state](https://nuxt-convex-module.dev/raw/guide/connection-state.md)
 - Components: [Better Auth](https://nuxt-convex-module.dev/raw/components/better-auth.md), [Clerk](https://nuxt-convex-module.dev/raw/components/clerk.md), [Auth0](https://nuxt-convex-module.dev/raw/components/auth0.md), [Polar](https://nuxt-convex-module.dev/raw/components/polar.md)
 - Recipes: [Infinite scroll](https://nuxt-convex-module.dev/raw/recipes/infinite-scroll.md), [Optimistic list](https://nuxt-convex-module.dev/raw/recipes/optimistic-list.md), [Protected page](https://nuxt-convex-module.dev/raw/recipes/protected-page.md), [Image upload](https://nuxt-convex-module.dev/raw/recipes/image-upload.md)

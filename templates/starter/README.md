@@ -1,7 +1,12 @@
 # Nuxt Convex Starter
 
 A Nuxt app with [`nuxt-convex-module`](https://nuxt-convex-module.dev) and one Convex table:
-a message list rendered on the server that updates live, and a form that adds to it.
+a message board that renders on the server and updates live in every open tab.
+
+- `convex/schema.ts` and `convex/messages.ts`: the table and the functions that read and write it.
+- `app/components/Messages.vue`: the board, calling those functions with `useAsyncQuery` and `useMutation`.
+- `app/app.vue`: the welcome page around it. Replace it with your own.
+- `app/assets/css/main.css`: the look, in plain CSS. Change the colours at the top, or delete the file.
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) and the [module documentation](https://nuxt-convex-module.dev) to learn more.
 
