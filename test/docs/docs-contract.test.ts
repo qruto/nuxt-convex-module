@@ -209,15 +209,16 @@ describe('stability', () => {
 })
 
 describe('install commands', () => {
-  // A peer capped below its next minor is installed as `name@major.minor`.
-  // Unpinned, pnpm, yarn and bun take the newest release whatever the peer
-  // range says; only npm picks one that fits.
+  // A peer capped below its next minor is installed as `name@~x.y.z`, the
+  // range's own floor. Unpinned, pnpm, yarn and bun take the newest release
+  // whatever the peer range says; only npm picks one that fits. `~` is safe in
+  // every shell, `^` is not: zsh's extendedglob reads it as a pattern.
   const capped = Object.entries(manifest.peerDependencies).flatMap(([pkg, range]) => {
-    const tilde = range.match(/^~(\d+)\.(\d+)\.\d+$/)
-    const bounded = range.match(/^>=(\d+)\.(\d+)\.\d+ <(\d+)\.(\d+)\.0$/)
-    const oneMinor = bounded && bounded[3] === bounded[1] && Number(bounded[4]) === Number(bounded[2]) + 1
-    const m = tilde ?? (oneMinor ? bounded : null)
-    return m ? [[pkg, `${pkg}@${m[1]}.${m[2]}`] as const] : []
+    const tilde = range.match(/^~((\d+)\.(\d+)\.\d+)$/)
+    const bounded = range.match(/^>=((\d+)\.(\d+)\.\d+) <(\d+)\.(\d+)\.0$/)
+    const oneMinor = bounded && bounded[4] === bounded[2] && Number(bounded[5]) === Number(bounded[3]) + 1
+    const floor = tilde?.[1] ?? (oneMinor ? bounded[1] : undefined)
+    return floor ? [[pkg, `${pkg}@~${floor}`] as const] : []
   })
   const commands = [...contentPages, ...skillPages, 'README.md'].flatMap(file =>
     [...read(file).matchAll(/packages="([^"]+)"|\b(?:npm i|npm install|pnpm add|yarn add|bun add)[ \t]+([^\n`]+)/g)]
