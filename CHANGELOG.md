@@ -1,5 +1,69 @@
 # Changelog
 
+## v0.11.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.10.0...v0.11.0)
+
+### 🚀 Enhancements
+
+- Add an unbranded starter template and find the dev deployment on the first run ([#55](https://github.com/qruto/nuxt-convex-module/pull/55))
+- ⚠️  Sync with convex 1.46.0 and shrink what the package ships ([#61](https://github.com/qruto/nuxt-convex-module/pull/61))
+- Lead installation with an AI agent and publish an agent skill ([#65](https://github.com/qruto/nuxt-convex-module/pull/65))
+
+#### Website
+
+- Brand social cards for the landing and docs pages ([#51](https://github.com/qruto/nuxt-convex-module/pull/51))
+- Protect the live demos from abuse ([#56](https://github.com/qruto/nuxt-convex-module/pull/56))
+- Open the install prompt in every agent, and an accessibility and performance pass ([#71](https://github.com/qruto/nuxt-convex-module/pull/71))
+
+### 🩹 Fixes
+
+- Support Nuxt 4.6 production builds and smooth the install flow ([#81](https://github.com/qruto/nuxt-convex-module/pull/81))
+
+#### Dependencies
+
+- Patch transitive security advisories and group Dependabot's CVE fixes ([#76](https://github.com/qruto/nuxt-convex-module/pull/76))
+
+### 📖 Documentation
+
+- Start a new app from an example in one command ([#54](https://github.com/qruto/nuxt-convex-module/pull/54))
+
+### 🏡 Chore
+
+- Track the Claude Code project settings ([#60](https://github.com/qruto/nuxt-convex-module/pull/60))
+
+#### Dependencies
+
+- Patch the open Dependabot advisories ([#66](https://github.com/qruto/nuxt-convex-module/pull/66))
+- Bump the all-non-major group with 10 updates ([#69](https://github.com/qruto/nuxt-convex-module/pull/69))
+- Bump @clerk/vue, @convex-dev/rate-limiter and docus ([#78](https://github.com/qruto/nuxt-convex-module/pull/78))
+
+#### Dev dependencies
+
+- Bump pkg-pr-new from 0.0.88 to 0.0.90 in the all-non-major group across 1 directory ([#79](https://github.com/qruto/nuxt-convex-module/pull/79))
+
+### 🤖 CI
+
+- Clear the duplication findings failing main and hold nuxt 4.6 too ([#80](https://github.com/qruto/nuxt-convex-module/pull/80))
+
+#### Dependencies
+
+- Bump the actions group across 1 directory with 4 updates ([#52](https://github.com/qruto/nuxt-convex-module/pull/52))
+- Bump fallow-rs/fallow ([#68](https://github.com/qruto/nuxt-convex-module/pull/68))
+- Bump step-security/harden-runner ([#77](https://github.com/qruto/nuxt-convex-module/pull/77))
+
+#### Website
+
+- Turn off Vercel preview deployments ([#59](https://github.com/qruto/nuxt-convex-module/pull/59))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Sync with convex 1.46.0 and shrink what the package ships ([#61](https://github.com/qruto/nuxt-convex-module/pull/61))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.10.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.9.1...v0.10.0)
