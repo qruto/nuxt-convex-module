@@ -761,6 +761,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-10-19 | `convex` | 1.46.0 → 1.47.0 | #87 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`; the published client `dist` is byte-identical |
 | 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
 | 2026-09-01 | `convex` | 1.42.3 → 1.45.0 | `9b3d58d` | Nothing — both upstream fixes ruled out ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)). Two pinning tests added; `better-auth` peer range mirrored |
 | 2026-07-28 | `convex` | → 1.42.3 | `b5891af` | Clerk adapter change (org-change deps → `authVersion`) |
