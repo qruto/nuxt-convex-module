@@ -164,6 +164,15 @@ describe('peer dependencies', () => {
       + `raise the peer floor to match, or the port claims support for a line it never builds against`,
     ).toBe(false)
   })
+
+  // CI's consumer smoke test installs this app without a lockfile, so it gets
+  // the newest version each declared range allows: the range has to be ours.
+  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL('test/fixtures/integrations/package.json', root)), 'utf8')) as {
+    dependencies: Record<string, string>
+  }
+  it.each(peers)('%s: the integrations fixture installs it at the peer range', (pkg, range) => {
+    expect(fixture.dependencies[pkg]).toBe(range)
+  })
 })
 
 describe('PARITY.md baselines', () => {

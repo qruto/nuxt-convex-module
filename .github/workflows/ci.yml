@@ -426,11 +426,14 @@ jobs:
               return 1
             fi
           }
-          # Both apps: `templates/starter` is what `create nuxt` hands a new
-          # user, `examples/playground` is the StackBlitz template pkg.pr.new
-          # ships — and nothing else ever builds it (pkg.pr.new only uploads
-          # the directory).
-          for app in templates/starter examples/playground; do
+          # `templates/starter` is what `create nuxt` hands a new user,
+          # `examples/playground` is the StackBlitz template pkg.pr.new ships —
+          # and nothing else ever builds it (pkg.pr.new only uploads the
+          # directory). Neither uses an integration, so
+          # `test/fixtures/integrations` turns on every one at its peer range,
+          # with placeholder keys: an upstream break that only shows with
+          # Better Auth, Polar, Clerk, Auth0 or nuxt-security fails here.
+          for app in templates/starter examples/playground test/fixtures/integrations; do
             SMOKE="$RUNNER_TEMP/smoke-$(basename "$app")"
             cp -R "$app" "$SMOKE"
             (cd "$SMOKE" \
