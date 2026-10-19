@@ -58,7 +58,7 @@ In scope is code shipped by this package — module setup, runtime composables a
 Nitro server handlers, the Better Auth proxy routes, and the Convex-aware CSP this module
 generates.
 
-Vulnerabilities in the upstream projects the module integrates with — [Convex](https://github.com/get-convex),
+Vulnerabilities in the upstream projects the module integrates with — [Convex](https://github.com/convex),
 [Better Auth](https://github.com/better-auth/better-auth), or Polar — belong in *their*
 security process, not here. Report them to that project directly. If you are unsure which side a
 finding lands on, report it here and we will route it.

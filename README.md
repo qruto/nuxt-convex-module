@@ -9,8 +9,8 @@
 
 # nuxt-convex-module
 
-Connects a [Nuxt](https://nuxt.com) app to a [Convex](https://convex.dev) backend: live queries, mutations, actions, pagination,
-file storage and SSR, auto-imported and typed against your deployment.
+[Convex](https://convex.dev) backend integration with live queries, mutations, actions, pagination, file storage and SSR,
+auto-imported and typed against your deployment.
 
 <sub>The same [Vue](https://vuejs.org) client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub>
 

@@ -13,9 +13,9 @@ are in [AGENTS.md](./AGENTS.md).
 
 | Upstream package | Baseline version | Diffed against |
 |---|---|---|
-| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.46.0** | tag `npm/1.46.0` in [get-convex/convex-js](https://github.com/get-convex/convex-js) |
-| `@convex-dev/better-auth` | **0.12.5** | tag `v0.12.5` in [get-convex/better-auth](https://github.com/get-convex/better-auth) |
-| `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [get-convex/polar](https://github.com/get-convex/polar) |
+| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.47.0** | tag `npm/1.47.0` in [convex/convex-js](https://github.com/convex/convex-js) |
+| `@convex-dev/better-auth` | **0.12.5** | tag `v0.12.5` in [convex/better-auth](https://github.com/convex/better-auth) |
+| `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
 install, which is the wider `peerDependencies` range in `package.json`.
@@ -101,7 +101,7 @@ result, no `throwOnError` parameter (D-02 covers the error path).
 
 ### File by file
 
-Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.46.0, not the
+Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.47.0, not the
 source.
 
 **Convex's own client** (`convex/src/…` → `src/runtime/…`)
@@ -223,7 +223,7 @@ What makes the contract a property of the repo rather than a promise:
 
 | Guard | Fails when |
 |---|---|
-| `test/unit/upstream-baselines.test.ts` | a baseline bump misses one of the four version sites ([§4](#4-keeping-parity)) |
+| `test/unit/upstream-baselines.test.ts` | a baseline bump misses one of the three version sites ([§4](#4-keeping-parity)) |
 | `test/unit/parity-manifest.test.ts` | this file stops describing the source tree — a runtime file with no row, a mapped path that no longer exists, a `PARITY:` marker with no entry, a `D-*` entry with no marker, a cited test that is gone |
 | `test/unit/devtools-bridge.test.ts` | an upstream sync renames a client internal the DevTools bridge reads |
 
@@ -271,7 +271,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-01 — subscriptions and `setAuth` are skipped during SSR
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
-- **Upstream** · `convex@1.46.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
+- **Upstream** · `convex@1.47.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
 - **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts)
 - **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
@@ -282,7 +282,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-02 — `useQuery` returns a lazy computed that throws when read
 
 - **Kind** · a composable body runs once — there is no render phase to throw in
-- **Upstream** · `convex@1.46.0` `react/client.ts` — `useQuery` throws inside the hook call
+- **Upstream** · `convex@1.47.0` `react/client.ts` — `useQuery` throws inside the hook call
 - **Port** · [`vue/composables/use-query.ts`](./src/runtime/vue/composables/use-query.ts)
 - **Pinned by** · `test/unit/use-query.test.ts`, `test/nuxt/auth/vue/auth-boundary.test.ts`
 - **On sync** · keep. Knock-on: `AuthBoundary` must read `user.value` during render, where
@@ -324,7 +324,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-05 — `watchPaginatedQuery` throws instead of returning a watch
 
-- **Upstream** · `convex@1.46.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
+- **Upstream** · `convex@1.47.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `ConvexVueClient.watchPaginatedQuery`
 - **Pinned by** · `test/unit/client.test.ts` — "watchPaginatedQuery"
 - **On sync** · keep the throw; port page-management changes into `use-paginated-query.ts`
@@ -334,7 +334,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-06 — the sync client's transition callback is wired directly
 
-- **Upstream** · `convex@1.46.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
+- **Upstream** · `convex@1.47.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `cachedSync`
 - **Pinned by** · `test/unit/client.test.ts`
 - **On sync** · keep; re-check if upstream stops routing transitions through `PaginatedQueryClient`
@@ -343,7 +343,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-07 — split pages inherit the split page's `paginationOpts`
 
-- **Upstream** · `convex@1.46.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
+- **Upstream** · `convex@1.47.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `splitQuery`
 - **Pinned by** · `test/nuxt/use-paginated-query.test.ts` — "page split", "splits a non-first
   page from that page's own cursor, not the start of the list"
@@ -386,7 +386,7 @@ fixes one, drop the entry rather than reverting.
 ##### D-12 — `usePaginatedQuery` throws the missing-client error
 
 - **Kind** · missing guard
-- **Upstream** · `convex@1.46.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Upstream** · `convex@1.47.0` `react/use_paginated_query.ts` — `useConvex().logger`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
 - **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
 - **On sync** · keep
@@ -402,7 +402,7 @@ is that the declaration now matches what actually happens.
 ##### D-10 — `TypeError` where upstream throws `Error`
 
 - **Kind** · error subclass
-- **Upstream** · `convex@1.46.0` `nextjs/index.ts` — deployment-URL validation
+- **Upstream** · `convex@1.47.0` `nextjs/index.ts` — deployment-URL validation
 - **Port** · [`nuxt/index.ts`](./src/runtime/nuxt/index.ts)
 - **Pinned by** · `test/unit/nuxt-server.test.ts` — "throws when no URL is available"
 - **On sync** · keep the subclass; the **message text is the contract** and stays verbatim
@@ -717,7 +717,7 @@ file's table by row prefix, so keep [§1](#1-what-is-ported)'s row shape verbati
 
 | # | Where | Form |
 |---|---|---|
-| 1 | [§1](#1-what-is-ported), first table | `**1.46.0**` in a table cell |
+| 1 | [§1](#1-what-is-ported), first table | `**1.47.0**` in a table cell |
 | 2 | [`website/app/utils/upstream-baselines.ts`](./website/app/utils/upstream-baselines.ts) | the site's machine-readable copy (hero chip, introduction, component pages) |
 | 3 | [`website/content/3.components/1.index.md`](./website/content/3.components/1.index.md) | last cell of each component row |
 
@@ -734,7 +734,7 @@ upstream change is noticed:
   / `setAdminAuth` on `ConvexHttpClient` (`nuxt/index.ts`); `paginationOptions`, which the
   published `RequestForQueries` strips and the module-local `RequestForQueriesCompat` declares,
   as upstream's own does (`vue/queries-observer.ts`, `composables/use-queries.ts`).
-- The DevTools bridge (A-11) reads the TS-private `listeners` map and `cachedSync`,
+- The DevTools bridge (A-15) reads the TS-private `listeners` map and `cachedSync`,
   instance-patches `transition` / `close`, and reaches `localQueryResultByToken` and
   `optimisticQueryResults.queryLogs` on `BaseConvexClient`. Re-check against
   `browser/sync/client.ts`. The canary in `test/unit/devtools-bridge.test.ts` fails loudly on a
@@ -745,26 +745,24 @@ upstream change is noticed:
   `LoadMoreOfPaginatedQuery`, `validateDeploymentUrl`). If upstream ever exports them properly,
   switch to the import (N-13).
 
-**Mirror a moved peer range twice.** `@convex-dev/better-auth@0.12.5` peers
-`better-auth >=1.6.11 <1.7.0`; `package.json` mirrors that and `.github/dependabot.yml` holds
-Dependabot below 1.7. Both move only when the add-on's own peer range does.
+**Move a peer range everywhere it is stated.** A range lives in `package.json`'s
+`peerDependencies`, the [`STABILITY.md`](./STABILITY.md) table and the installation page's
+range table; `test/docs/docs-contract.test.ts` holds the last two to the first. A `convex` floor
+also moves in `website/package.json`, `templates/starter` and `examples/playground`. A range
+held by an add-on's own peer has a Dependabot ignore too: `@convex-dev/better-auth@0.12.5` peers
+`better-auth >=1.6.11 <1.7.0`, and `.github/dependabot.yml` holds Dependabot below 1.7. Both
+move only when the add-on's own peer range does.
 
 ### The gate
 
-```bash
-pnpm dev:prepare    # build the module stub + prepare Nuxt
-pnpm lint
-pnpm test:types     # vue-tsc (lib + website)
-pnpm test           # vitest: unit + nuxt projects
-pnpm test:quality   # fallow: unused exports, duplication, file-health
-```
+A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 ### History
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
 | 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
-| 2026-09-01 | `convex` | 1.42.3 → 1.45.0 | `8a5db10` | Nothing — both upstream fixes ruled out ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)). Two pinning tests added; `better-auth` peer range mirrored |
-| 2026-07-28 | `convex` | → 1.42.3 | `aebe1ff` | Clerk adapter change (org-change deps → `authVersion`) |
-| 2026-07-28 | `@convex-dev/better-auth` | → 0.12.5 | `aebe1ff` | Initial pin |
-| 2026-07-28 | `@convex-dev/polar` | → 0.9.2 | `aebe1ff` | Initial pin |
+| 2026-09-01 | `convex` | 1.42.3 → 1.45.0 | `9b3d58d` | Nothing — both upstream fixes ruled out ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)). Two pinning tests added; `better-auth` peer range mirrored |
+| 2026-07-28 | `convex` | → 1.42.3 | `b5891af` | Clerk adapter change (org-change deps → `authVersion`) |
+| 2026-07-28 | `@convex-dev/better-auth` | → 0.12.5 | `b5891af` | Initial pin |
+| 2026-07-28 | `@convex-dev/polar` | → 0.9.2 | `b5891af` | Initial pin |

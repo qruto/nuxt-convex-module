@@ -6,15 +6,12 @@ One pass, per upstream release. Tick in order — later steps assume earlier one
 
 - [ ] Read the current baseline and file map in [`PARITY.md`](../../../../PARITY.md) §1.
 - [ ] Read [`PARITY.md`](../../../../PARITY.md) §3.2 (`D-*`) and §3.4 — they say what **not** to port.
-- [ ] Have an upstream checkout with tags: `git -C "$UPSTREAM" fetch --tags`.
 
 ## Diff
 
-- [ ] `git -C "$UPSTREAM" log --oneline <oldTag>..<newTag> -- <paths>` — read the *why*.
-- [ ] `git -C "$UPSTREAM" diff <oldTag> <newTag> -- <paths>` — read the *what*.
-- [ ] `<paths>` = the mapped entry points **and** the internals the port re-implements. For
-      `convex` that means `src/browser/sync` as well — skipping it misses fixes like
-      `7ceee3e`.
+- [ ] `pnpm parity:diff <convex|better-auth|polar> [to]` — the commit list (the *why*), then the
+      diff (the *what*), over the mapped paths **and** the internals the port re-implements.
+- [ ] `npm view <package>@<old> exports` against `<new>` — a new entry point is a scope decision.
 - [ ] Classify every hunk: port / skip (formatting) / skip (`@internal`) / skip (already ruled
       out) / re-read a `D-*` entry first.
 - [ ] For anything `@internal`: confirm against the **published** `.d.ts`, not the source.
@@ -31,24 +28,22 @@ One pass, per upstream release. Tick in order — later steps assume earlier one
 
 ## Record
 
+- [ ] The devDependency (root, and `website/package.json` where it lists the package) and the lockfile.
 - [ ] `PARITY.md` §1 — pinned-baselines table (keep the row shape).
 - [ ] `website/app/utils/upstream-baselines.ts`.
 - [ ] `website/content/3.components/1.index.md` — last cell of each component row.
-- [ ] `PARITY.md` §4 *History* — a row, including "nothing needed porting" if so.
+- [ ] `PARITY.md` §3 — the `<package>@<version>` upstream citations.
+- [ ] `PARITY.md` §4 *History* — a row with the PR number, including "nothing ported" if so.
 - [ ] New divergence? Job 3 in [`SKILL.md`](../SKILL.md) — entry + marker + test.
 - [ ] New file? `PARITY.md` §1 *File by file*, or `test/unit/parity-manifest.test.ts` fails.
-- [ ] Peer range moved? `package.json` **and** `.github/dependabot.yml`.
+- [ ] Peer range moved? Every site in PARITY.md §4's *Move a peer range* paragraph.
 
 ## Verify
 
-- [ ] `pnpm dev:prepare`
-- [ ] `pnpm lint`
-- [ ] `pnpm test:types`
-- [ ] `pnpm test`
-- [ ] `pnpm test:quality`
+- [ ] The full gate in [`AGENTS.md`](../../../../AGENTS.md#verification).
 
 ## Ship
 
-- [ ] Commit as `chore(parity): track <package> <version>`.
+- [ ] PR title by PARITY.md §4's release mapping: `chore(parity)`, `feat(parity)` or `feat(parity)!`.
 - [ ] Body names each upstream commit ported, and each deliberately skipped with the reason.
-- [ ] PR description links the upstream compare view.
+- [ ] Body links the upstream compare view.

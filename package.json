@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuxt-convex-module",
   "version": "0.11.0",
-  "description": "Connects a Nuxt app to a Convex backend: live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.",
+  "description": "Convex backend integration with live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qruto/nuxt-convex-module.git"
@@ -183,6 +183,7 @@
     "check:manifest": "installed-check -d --no-workspaces",
     "check:tarball": "node scripts/check-tarball.mjs",
     "check:rulesets": "node scripts/check-rulesets.mjs",
+    "parity:diff": "node scripts/parity-diff.mjs",
     "check:consumer-types": "node scripts/check-consumer-types.mjs"
   },
   "dependencies": {
@@ -232,13 +233,13 @@
     "@commitlint/config-conventional": "^21.2.3",
     "@convex-dev/better-auth": "^0.12.5",
     "@convex-dev/polar": "^0.9.2",
-    "@nuxt/devtools": "^3.4.2",
-    "@nuxt/devtools-kit": "^3.4.2",
+    "@nuxt/devtools": "^3.4.4",
+    "@nuxt/devtools-kit": "^3.4.4",
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/eslint-config": "^1.17.0",
     "@nuxt/module-builder": "^1.0.3",
-    "@nuxt/schema": "^4.5.2",
-    "@nuxt/test-utils": "^4.3.2",
+    "@nuxt/schema": "^4.6.2",
+    "@nuxt/test-utils": "^4.3.4",
     "@polar-sh/checkout": "^0.4.1",
     "@types/node": "^26.6.3",
     "@types/ws": "^8.18.2",
@@ -247,7 +248,7 @@
     "@vue/test-utils": "^2.5.1",
     "better-auth": "~1.6.33",
     "changelogen": "^0.6.2",
-    "convex": "^1.46.0",
+    "convex": "^1.47.0",
     "eslint": "^10.11.0",
     "fallow": "3.31.0",
     "happy-dom": "^20.14.5",
