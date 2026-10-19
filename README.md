@@ -1,31 +1,36 @@
-<div align="center">
+<p align="center">
+  <a href="https://nuxt-convex-module.dev"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero-dark.svg">
+    <img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero-light.svg" alt="Nuxt × Convex" width="560">
+  </picture></a>
+</p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero-dark.svg">
-  <img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero-light.svg" alt="Nuxt × Convex" width="560">
-</picture>
+<p align="center">
+  <a href="https://www.npmjs.com/package/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/npm.svg" alt="npm" height="20" align="middle"></a> &nbsp;<a href="https://www.npmjs.com/package/nuxt-convex-module"><sub><b>View on npm</b></sub></a> &nbsp;&nbsp;&nbsp; <a href="https://github.com/qruto/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/github.svg" alt="GitHub" height="20" align="middle"></a> &nbsp;<a href="https://github.com/qruto/nuxt-convex-module"><sub><b>Source on GitHub</b></sub></a>
+</p>
 
-<a href="https://www.npmjs.com/package/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/npm.svg" alt="npm" height="20" align="middle"></a> &nbsp;<a href="https://www.npmjs.com/package/nuxt-convex-module"><sub><b>View on npm</b></sub></a> &nbsp;&nbsp;&nbsp; <a href="https://github.com/qruto/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/github.svg" alt="GitHub" height="20" align="middle"></a> &nbsp;<a href="https://github.com/qruto/nuxt-convex-module"><sub><b>Source on GitHub</b></sub></a>
+<h1 align="center">nuxt-convex-module</h1>
 
-# nuxt-convex-module
+<p align="center">
+  <a href="https://convex.dev">Convex</a> backend integration with live queries, mutations, actions, pagination, file storage and SSR,
+  auto-imported and typed against your deployment.
+</p>
 
-[Convex](https://convex.dev) backend integration with live queries, mutations, actions, pagination, file storage and SSR,
-auto-imported and typed against your deployment.
+<p align="center">
+  <sub>The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub>
+</p>
 
-<sub>The same [Vue](https://vuejs.org) client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub>
+<p align="center">
+  <a href="https://nuxt.com"><img src="https://img.shields.io/badge/Nuxt-020420?logo=nuxt&style=plastic" alt="Nuxt"></a>
+  <a href="https://convex.dev"><img src="https://img.shields.io/badge/Convex-020420?logo=convex&style=plastic" alt="Convex"></a>
+  <a href="https://npmjs.com/package/nuxt-convex-module"><img src="https://img.shields.io/npm/v/nuxt-convex-module/latest.svg?style=plastic&colorA=020420&colorB=00DC82" alt="npm version"></a>
+  <a href="https://npm.chart.dev/nuxt-convex-module"><img src="https://img.shields.io/npm/dm/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82" alt="npm downloads"></a>
+  <a href="https://github.com/qruto/nuxt-convex-module/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/qruto/nuxt-convex-module/ci.yml?branch=main&style=plastic&colorA=020420&label=tests" alt="Tests"></a>
+  <a href="https://codecov.io/gh/qruto/nuxt-convex-module"><img src="https://img.shields.io/codecov/c/github/qruto/nuxt-convex-module?style=plastic&colorA=020420&label=coverage" alt="Coverage"></a>
+  <a href="https://npmjs.com/package/nuxt-convex-module"><img src="https://img.shields.io/npm/l/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82" alt="License"></a>
+</p>
 
-[![Nuxt][nuxt-src]][nuxt-href]
-[![Convex][convex-src]][convex-href]
-<img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/separator.svg" alt="" height="20">
-[![npm version][npm-version-src]][npm-version-href]
-[![npm downloads][npm-downloads-src]][npm-downloads-href]
-<img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/separator.svg" alt="" height="20">
-[![Tests][tests-src]][tests-href]
-[![Coverage][coverage-src]][coverage-href]
-<img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/separator.svg" alt="" height="20">
-[![License][license-src]][license-href]
-
-**With an AI agent** — paste this into Claude Code, Cursor, Codex or any agent that runs commands:
+<p align="center"><b>With an AI agent</b><br>Paste this into Claude Code, Cursor, Codex or any agent that runs commands:</p>
 
 ```text
 Install nuxt-convex-module, the Convex module for Nuxt, in this project:
@@ -33,15 +38,21 @@ run `npx skills add https://nuxt-convex-module.dev --skill nuxt-convex-module -y
 then follow .agents/skills/nuxt-convex-module/references/install.md.
 ```
 
-**By hand**
+<p align="center"><b>By hand</b></p>
 
 ```bash
 npx nuxi@latest module add nuxt-convex-module
 ```
 
-[Documentation](https://nuxt-convex-module.dev) · [Installation](https://nuxt-convex-module.dev/getting-started/installation) · [AI agents](https://nuxt-convex-module.dev/getting-started/ai-agents) · [Components](https://nuxt-convex-module.dev/components) · [Upstream parity](./PARITY.md) · [Stability](./STABILITY.md) · [Security](#security)
-
-</div>
+<p align="center">
+  <a href="https://nuxt-convex-module.dev">Documentation</a>
+  <a href="https://nuxt-convex-module.dev/getting-started/installation">· Installation</a>
+  <a href="https://nuxt-convex-module.dev/getting-started/ai-agents">· AI agents</a>
+  <a href="https://nuxt-convex-module.dev/components">· Components</a>
+  <a href="./PARITY.md">· Upstream parity</a>
+  <a href="./STABILITY.md">· Stability</a>
+  <a href="#security">· Security</a>
+</p>
 
 ## What you get
 
@@ -130,24 +141,3 @@ Found a vulnerability? Report it privately via [GitHub Security Advisories](http
 ## License
 
 [MIT](./LICENSE)
-
-<!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/nuxt-convex-module/latest.svg?style=plastic&colorA=020420&colorB=00DC82
-[npm-version-href]: https://npmjs.com/package/nuxt-convex-module
-
-[npm-downloads-src]: https://img.shields.io/npm/dm/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82
-[npm-downloads-href]: https://npm.chart.dev/nuxt-convex-module
-
-[license-src]: https://img.shields.io/npm/l/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82
-[license-href]: https://npmjs.com/package/nuxt-convex-module
-
-[tests-src]: https://img.shields.io/github/actions/workflow/status/qruto/nuxt-convex-module/ci.yml?branch=main&style=plastic&colorA=020420&label=tests
-[tests-href]: https://github.com/qruto/nuxt-convex-module/actions/workflows/ci.yml
-
-[coverage-src]: https://img.shields.io/codecov/c/github/qruto/nuxt-convex-module?style=plastic&colorA=020420&label=coverage
-[coverage-href]: https://codecov.io/gh/qruto/nuxt-convex-module
-
-[nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt&style=plastic
-[nuxt-href]: https://nuxt.com
-[convex-src]: https://img.shields.io/badge/Convex-020420?logo=convex&style=plastic
-[convex-href]: https://convex.dev
