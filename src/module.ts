@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { deploymentEnv, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
@@ -386,8 +386,13 @@ function readBetterAuthOptions(options: ModuleOptions): BetterAuthModuleOptions 
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
 function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string } {
-  const resolved = resolveDeploymentUrls(options, deploymentEnv(nuxt.options.rootDir, process.env, nuxt.options.dev))
+  const env = deploymentEnv(nuxt.options.rootDir, process.env, nuxt.options.dev)
+  const resolved = resolveDeploymentUrls(options, env)
   const url = nuxt.options._prepare ? '' : resolved.url
+
+  if (nuxt.options.dev && url) {
+    for (const message of deploymentWarnings(options, env)) logger.warn(message)
+  }
 
   if (!url && !nuxt.options._prepare) {
     logger.warn(

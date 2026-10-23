@@ -290,6 +290,30 @@ export function resolveDeploymentUrls(
 }
 
 /**
+ * The development warning for an app that calls another deployment than the
+ * one `npx convex dev` pushes its functions to. The CLI writes that deployment
+ * as `CONVEX_URL`, but `convex.url` and `NUXT_PUBLIC_CONVEX_URL` win over it,
+ * so a value left from another project or deployment points the app elsewhere.
+ * Every new or changed function then fails as not found, and neither the CLI
+ * nor Nuxt says why.
+ */
+export function deploymentWarnings(
+  options: { url?: string },
+  env: Record<string, string | undefined>,
+): string[] {
+  const warnings: string[] = []
+  const cliUrl = stripTrailingSlashes(env.CONVEX_URL || '')
+  const source = options.url ? '`convex.url`' : env.NUXT_PUBLIC_CONVEX_URL ? 'NUXT_PUBLIC_CONVEX_URL' : ''
+  const { url } = resolveDeploymentUrls(options, env)
+  if (cliUrl && source && url !== cliUrl) {
+    warnings.push(
+      `The app calls ${url} (from ${source}), but \`npx convex dev\` pushes your functions to ${cliUrl} (CONVEX_URL). New or changed functions will fail with "Could not find public function". Remove ${source} to follow \`convex dev\`, or point it at ${cliUrl}.`,
+    )
+  }
+  return warnings
+}
+
+/**
  * The environment {@link resolveDeploymentUrls} reads: `env` itself, and in
  * development the app's `.env.local` beneath it, so a variable already set
  * wins. `npx convex dev` writes the deployment URL to `.env.local`, and Nuxt

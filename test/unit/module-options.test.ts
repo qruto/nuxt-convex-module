@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { deploymentEnv, resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
+import { deploymentEnv, deploymentWarnings, resolveDeploymentUrls, validateModuleOptions } from '../../src/options'
 
 const rootDir = mkdtempSync(join(tmpdir(), 'convex-module-options-'))
 afterAll(() => rmSync(rootDir, { recursive: true, force: true }))
@@ -172,6 +172,29 @@ describe('resolveDeploymentUrls', () => {
 
   it('resolves to empty strings when nothing is configured', () => {
     expect(resolveDeploymentUrls({}, {})).toEqual({ url: '', siteUrl: '' })
+  })
+})
+
+describe('deploymentWarnings', () => {
+  const cli = { CONVEX_URL: 'https://cli.convex.cloud' }
+
+  it('warns when convex.url points away from the deployment convex dev pushes to', () => {
+    expect(deploymentWarnings({ url: 'https://old.convex.cloud' }, cli)[0])
+      .toContain('The app calls https://old.convex.cloud (from `convex.url`), but `npx convex dev` pushes your functions to https://cli.convex.cloud')
+  })
+
+  it('names NUXT_PUBLIC_CONVEX_URL when that is the source', () => {
+    expect(deploymentWarnings({}, { ...cli, NUXT_PUBLIC_CONVEX_URL: 'https://old.convex.cloud' })[0])
+      .toContain('(from NUXT_PUBLIC_CONVEX_URL)')
+  })
+
+  it('stays quiet when both name the same deployment', () => {
+    expect(deploymentWarnings({ url: 'https://cli.convex.cloud/' }, cli)).toEqual([])
+  })
+
+  it('stays quiet without convex dev or without an override', () => {
+    expect(deploymentWarnings({ url: 'https://old.convex.cloud' }, {})).toEqual([])
+    expect(deploymentWarnings({}, cli)).toEqual([])
   })
 })
 
