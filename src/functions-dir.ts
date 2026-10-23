@@ -20,8 +20,8 @@ export function resolveFunctionsDir(rootDir: string): string {
 
 /**
  * Whether `convex dev` (codegen) has emitted the generated `api` module for a
- * project — the fs-guard shared by the provide-api plugin template, the
- * fallback type template, and the dev-time onboarding notice.
+ * project — the fs-guard shared by the fallback type template and the
+ * dev-time onboarding notice.
  */
 export function hasGeneratedApi(rootDir: string, functionsDir: string = resolveFunctionsDir(rootDir)): boolean {
   const generatedApi = join(rootDir, functionsDir, '_generated', 'api')

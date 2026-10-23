@@ -1,7 +1,4 @@
 type TestRuntimeConfig = {
-  convex?: {
-    siteUrl?: string
-  }
   public?: {
     convex?: {
       url?: string

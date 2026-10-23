@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The proxy is three lines; both matter. It must hand the site URL to
-// convexAuth's own resolution (private key → public key → env) instead of
+// convexAuth's own resolution (runtime config → env) instead of
 // reading one key itself, and it must refuse methods outside the Better Auth
 // surface on its own, with or without nuxt-security's route rule in front.
 

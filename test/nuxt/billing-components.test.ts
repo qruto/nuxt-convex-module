@@ -97,17 +97,6 @@ describe('CheckoutLink', () => {
     expect(openSpy).toHaveBeenCalledWith('https://polar.test/redirect', '_blank', 'noopener')
     expect(PolarEmbedCheckout.create).not.toHaveBeenCalled()
   })
-
-  it('is inert when the billing namespace has no checkout action', async () => {
-    const actionSpy = vi.spyOn(client, 'action')
-    const wrapper = await mountComponent(CheckoutLink, { productIds: ['prod_1'], lazy: true, polarApi: {} as PolarComponentApi })
-    await flushPromises()
-
-    await wrapper.find('a').trigger('click')
-    await flushPromises()
-
-    expect(actionSpy).not.toHaveBeenCalled()
-  })
 })
 
 describe('CustomerPortalLink', () => {
@@ -131,14 +120,5 @@ describe('CustomerPortalLink', () => {
     expect(anchor.exists()).toBe(true)
     expect(anchor.attributes('href')).toBe('https://polar.test/portal')
     expect(anchor.attributes('target')).toBe('_blank')
-  })
-
-  it('renders nothing when the portal action is not configured', async () => {
-    const actionSpy = vi.spyOn(client, 'action')
-    const wrapper = await mountComponent(CustomerPortalLink, { polarApi: {} as PolarComponentApi })
-    await flushPromises()
-
-    expect(wrapper.find('a').exists()).toBe(false)
-    expect(actionSpy).not.toHaveBeenCalled()
   })
 })

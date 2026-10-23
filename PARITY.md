@@ -140,7 +140,6 @@ source.
 |---|---|---|
 | `vue/composables/{use-query,use-mutation,use-action,use-connection-state}.ts` | homes for hooks upstream declares in `client.ts` | N-12 |
 | `vue/composables/{use-upload,use-upload-queue,use-storage-url}.ts` | file-storage helpers | A-02 |
-| `vue/provide.ts` | `provideConvexApi` / `useConvexApi` | A-03 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
 | `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
 | `nuxt/composables/use-async-paginated-query.ts` | `useAsyncPaginatedQuery` — the paginated `useAsyncQuery` | A-16 |
@@ -149,7 +148,7 @@ source.
 | `nuxt/config.ts`, `src/module.ts`, `src/functions-dir.ts` | module wiring | A-09 |
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
 | `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/server-guard.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
-| `better-auth/nuxt/proxy.ts` | the `${authRoute}/**` server handler | A-14 |
+| `better-auth/nuxt/proxy.ts` | the `${betterAuth.authRoute}/**` server handler | A-14 |
 
 ---
 
@@ -252,8 +251,7 @@ because that is what decides how to treat one on a sync.
 | <a id="n-05"></a>**N-05** | Static hook arguments | `MaybeRefOrGetter`, read via `toValue` | *Static hook arguments* |
 | <a id="n-06"></a>**N-06** | Returns a plain value | Returns `ComputedRef` / `ShallowRef` | *Returns a plain value*. Applies to `ConvexAuthState` and to `UsePaginatedQueryReturnType`, redefined as `{ results, status, isLoading: ComputedRef, loadMore }` with a stable `loadMore`; upstream's plain union stays exported as `UsePaginatedQueryResult` |
 | <a id="n-07"></a>**N-07** | `NextjsOptions`, `convexBetterAuthNextJs` | `NuxtOptions`, `convexBetterAuthNuxt` | *Framework-qualified names* + *Ambient per-request context*. `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }` pair |
-| <a id="n-08"></a>**N-08** | Polar `polarApi`, `productIds` props | Same names; `polarApi` optional | [§2.1](#21-the-contract) — a required prop may become optional with an auto-provided default (`api.billing`). Names stay verbatim |
-| <a id="n-09"></a>**N-09** | better-auth `convexSiteUrl`, required | Optional; falls back to runtime config / `NUXT_PUBLIC_CONVEX_SITE_URL` | [§2.1](#21-the-contract), same rule as N-08. An upstream call site passing it behaves identically, and a missing value still throws. Its sibling `convexUrl` is accepted and ignored — upstream requires but never reads it either. Pinned by `test/unit/auth/nuxt/server.test.ts` |
+| <a id="n-09"></a>**N-09** | better-auth `convexSiteUrl`, required | Optional; falls back to runtime config / `NUXT_PUBLIC_CONVEX_SITE_URL` | [§2.1](#21-the-contract): a required option may become optional with an auto-provided default. An upstream call site passing it behaves identically, and a missing value still throws. Its sibling `convexUrl` is accepted and ignored — upstream requires but never reads it either. Pinned by `test/unit/auth/nuxt/server.test.ts` |
 | <a id="n-10"></a>**N-10** | `useAuthFromBetterAuth` | `useBetterAuth` | The provider prop it fed does not exist here; the service is consumed directly |
 | <a id="n-11"></a>**N-11** | `use_paginated_query.ts` + `use_paginated_query2.ts` | one `use-paginated-query.ts` | Both files' exports form one composable surface; splitting them in Vue would duplicate the state machine |
 | <a id="n-12"></a>**N-12** | Hooks declared in `react/client.ts` | `vue/composables/{use-query,use-mutation,use-action,use-connection-state}.ts` | *Hook `useX()`*. `vue/index.ts` re-exports them in upstream's order; `vue/client.ts` carries a header naming the split |
@@ -444,17 +442,6 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Pinned by** · `test/unit/use-upload.test.ts`, `test/nuxt/use-storage.test.ts`
 - **Why** · Convex file storage has a documented three-step flow but no client helpers in
   `convex/react`. These wrap it with progress, cancellation and queueing.
-
-##### A-03 — the generated `api` object, reachable without importing it
-
-- **Port** · [`vue/provide.ts`](./src/runtime/vue/provide.ts) — `provideConvexApi`, `useConvexApi`,
-  `useConvexNamespace`, `ConvexApiKey`
-- **Pinned by** · `test/nuxt/provide.test.ts`
-- **Why** · `convex/_generated/api` lives at a path relative to the Convex directory, so every
-  component that calls a function would otherwise carry its own `../../convex/_generated/api`
-  import. Providing it once at app level and injecting it (`useConvexApi()`) removes that,
-  and `useConvexNamespace('messages')` narrows to one module. React apps import it directly
-  because they have no auto-import layer to be consistent with.
 
 ##### A-04 — `useAsyncQuery`
 

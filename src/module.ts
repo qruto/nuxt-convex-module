@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
@@ -7,7 +7,7 @@ import { deploymentEnv, formatStartupSummary, integrationWarnings, isDeclaredDep
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isAutoImported, type AutoImports, type Integration, type Registration } from './registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, autoImportedAs, type AutoImports, type Integration, type Registration } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -32,6 +32,12 @@ export interface BetterAuthModuleOptions {
    * @example './app/convex-auth-client'
    */
   authClient?: string
+  /**
+   * Route the same-origin proxy to Better Auth is mounted at. Defaults to
+   * `/api/auth`, Better Auth's own default `basePath`; moving it needs an
+   * `authClient` created with the same `basePath`.
+   */
+  authRoute?: string
   /**
    * Restrict cross-domain one-time-token (`?ott=`) sign-in completion to one
    * app route, e.g. `'/auth/callback'`. Only meaningful when your auth client
@@ -106,14 +112,13 @@ export interface ModuleOptions {
    * Which names are auto-imported. `true` registers every composable, component
    * and Nitro helper under its upstream name (`useQuery`, `<Authenticated>`,
    * `fetchQuery`) and, where one exists, its prefixed twin (`useConvexQuery`).
-   * `'prefixed'` registers only names carrying `Convex` (`useConvexQuery`,
-   * `<ConvexImage>`, `provideConvexAuth`, `convexAuth`, …) so a bare name never
-   * collides with another module's; the rest stay importable from the subpath
-   * exports. `false` auto-imports nothing.
+   * `'prefixed'` registers every one of them with `Convex` in its name, as the
+   * Nuxt module author guide asks (`useConvexQuery`, `<ConvexAuthenticated>`,
+   * `fetchConvexQuery`, `useConvexBetterAuth`, …), so a bare name never
+   * collides with another module's; the upstream names stay importable from
+   * the subpath exports. `false` auto-imports nothing.
    */
   autoImports?: AutoImports
-  /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
-  authRoute?: string
   /**
    * Convex panel in Nuxt DevTools (dev only): connection state, live query
    * subscriptions, auth state, and client logs. Enabled by default whenever
@@ -134,11 +139,6 @@ export interface ModuleOptions {
 }
 
 declare module '@nuxt/schema' {
-  interface RuntimeConfig {
-    convex: {
-      siteUrl: string
-    }
-  }
   interface PublicRuntimeConfig {
     convex: {
       url: string
@@ -162,7 +162,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     autoImports: true,
-    authRoute: '/api/auth',
     devtools: true,
     devScript: true,
   },
@@ -199,17 +198,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
 
+    const betterAuthOptions = readBetterAuthOptions(options)
     const diagnostics = validateModuleOptions({
       url,
       siteUrl,
-      authRoute: options.authRoute || '/api/auth',
+      authRoute: betterAuthOptions.authRoute || '/api/auth',
       loginPath: nuxt.options.runtimeConfig.public.convex.loginPath,
-      authClient: typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined,
+      authClient: betterAuthOptions.authClient,
       rootDir: nuxt.options.rootDir,
     })
     for (const message of diagnostics.errors) logger.error(message)
     for (const message of diagnostics.warnings) logger.warn(message)
-    options.authRoute = diagnostics.authRoute
     nuxt.options.runtimeConfig.public.convex.loginPath = diagnostics.loginPath
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
@@ -219,12 +218,11 @@ export default defineNuxtModule<ModuleOptions>({
     registerAuthClientAlias(resolver, nuxt, options)
     registerConvexAliases(nuxt)
 
-    registerConvexApiPlugin(resolver, nuxt)
     registerConvexTypeFallback(nuxt)
     const autoImports = options.autoImports ?? true
     registerVueComposables(resolver, autoImports)
     registerAuthComponents(resolver, autoImports)
-    const integrations = registerIntegrations(resolver, nuxt, options, autoImports)
+    const integrations = registerIntegrations(resolver, nuxt, options, autoImports, diagnostics.authRoute)
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
@@ -284,7 +282,7 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
-function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports): IntegrationFlags {
+function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports, authRoute: string): IntegrationFlags {
   type Key = keyof IntegrationFlags & keyof ModuleOptions
   const report = (key: Key, pkg: string, state: ReturnType<typeof resolveIntegrationState>): boolean => {
     if (state.missingPackage) {
@@ -300,7 +298,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
-    registerBetterAuth(resolver, options.authRoute || '/api/auth', autoImports)
+    registerBetterAuth(resolver, authRoute, autoImports)
   }
   else {
     // No auth integration manages the client — provide a base one so the data
@@ -374,6 +372,16 @@ function registerSecurity(resolver: Resolver): void {
 }
 
 /**
+ * `convex.betterAuth` when it is an object. `authRoute` moved under it in
+ * 0.12: the old key fails loudly rather than leave the proxy where the app's
+ * client no longer calls.
+ */
+function readBetterAuthOptions(options: ModuleOptions): BetterAuthModuleOptions {
+  if ('authRoute' in options) logger.error('`convex.authRoute` moved to `convex.betterAuth.authRoute`.')
+  return typeof options.betterAuth === 'object' ? options.betterAuth : {}
+}
+
+/**
  * Resolve the Convex deployment URL from module options or environment, and
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
@@ -418,7 +426,6 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     crossDomainCallbackRoute,
     loginPath,
   }
-  runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
   return { url, siteUrl }
 }
@@ -465,62 +472,32 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
 }
 
 /**
- * Auto-provide the generated Convex `api` (`#convex/api`) app-wide so the
- * composables and components that read from a namespace (e.g. the Polar
- * `<CheckoutLink>`) work with zero arguments — see `runtime/vue/provide.ts`.
- * Runs on both server and client.
- *
- * Generated as a template so we can fs-guard it: before `convex dev` has emitted
- * `_generated/api`, the import would fail the build, so we emit a no-op plugin
- * instead (features fall back to graceful no-ops). The plugin is regenerated
- * with the real wiring on the next build once codegen has run.
- */
-function registerConvexApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
-  const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
-  const provideModule = resolver.resolve('./runtime/vue/provide')
-  // One-shot onboarding notice: point at `npx convex dev` while codegen is
-  // absent, and confirm (once) when the watcher re-renders with it present.
-  let notifiedMissing = false
-
-  addPluginTemplate({
-    filename: 'nuxt-convex-module-provide-api.mjs',
-    getContents: () => {
-      if (!hasGeneratedApi(nuxt.options.rootDir, functionsDir)) {
-        if (nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
-          notifiedMissing = true
-          logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. Convex features no-op until it exists.`)
-          hintAgent()
-        }
-        return 'import { defineNuxtPlugin } from \'#app\'\nexport default defineNuxtPlugin(() => {})\n'
-      }
-      if (notifiedMissing) {
-        notifiedMissing = false
-        logger.success('Convex codegen detected — generated `api` wired app-wide.')
-      }
-      return [
-        'import { defineNuxtPlugin } from \'#app\'',
-        'import { api } from \'#convex/api\'',
-        `import { provideConvexApi } from ${JSON.stringify(provideModule)}`,
-        'export default defineNuxtPlugin((nuxtApp) => {',
-        '  provideConvexApi(api, nuxtApp.vueApp)',
-        '})',
-        '',
-      ].join('\n')
-    },
-  })
-}
-
-/**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
- * server routes import `#convex/api` too). Symmetric to
- * {@link registerConvexApiPlugin}'s runtime no-op guard, and re-rendered by
- * {@link watchConvexCodegen} the moment codegen lands.
+ * server routes import `#convex/api` too): `any`-typed placeholders until
+ * `convex dev` emits the generated `api`. Re-rendered by
+ * {@link watchConvexCodegen} the moment codegen lands, which is also when the
+ * one-shot onboarding notice confirms it.
  */
 function registerConvexTypeFallback(nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
+  // One-shot onboarding notice: point at `npx convex dev` while codegen is
+  // absent, and confirm (once) when the watcher re-renders with it present.
+  let notifiedMissing = false
   addTypeTemplate({
     filename: 'types/nuxt-convex-module-api-fallback.d.ts',
-    getContents: () => convexTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
+    getContents: () => {
+      const generated = hasGeneratedApi(nuxt.options.rootDir, functionsDir)
+      if (!generated && nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
+        notifiedMissing = true
+        logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. \`#convex/api\` is typed \`any\` until it exists.`)
+        hintAgent()
+      }
+      if (generated && notifiedMissing) {
+        notifiedMissing = false
+        logger.success('Convex codegen detected — `#convex/api` is typed from it.')
+      }
+      return convexTypeFallbackContents(generated, functionsDir)
+    },
   }, { nuxt: true, nitro: true })
 }
 
@@ -548,20 +525,22 @@ function registerAuthComponents(resolver: Resolver, autoImports: AutoImports): v
 
 /** `addImports` + `addServerImports` for everything an integration registers that `autoImports` keeps. */
 function registerIntegrationImports(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
-  const kept = (entries: Registration[]) => entries
-    .filter(entry => isAutoImported(entry.name, autoImports))
-    .map(entry => ({ ...entry, from: resolver.resolve(`./${entry.from}`) }))
+  const kept = (entries: Registration[]) => entries.flatMap((entry) => {
+    const as = autoImportedAs(entry.name, autoImports, entries.map(e => e.name))
+    return as ? [{ ...entry, as, from: resolver.resolve(`./${entry.from}`) }] : []
+  })
   const app = kept(APP_IMPORTS[integration])
   const server = kept(SERVER_IMPORTS[integration])
   if (app.length > 0) addImports(app)
   if (server.length > 0) addServerImports(server)
 }
 
-/** `addComponent` for everything an integration registers that `autoImports` keeps; the name is the export. */
+/** `addComponent` for everything an integration registers that `autoImports` keeps, under the name it keeps it as. */
 function registerComponents(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
-  for (const { name, from } of APP_COMPONENTS[integration]) {
-    if (!isAutoImported(name, autoImports)) continue
-    addComponent({ name, filePath: resolver.resolve(`./${from}`), export: name })
+  const entries = APP_COMPONENTS[integration]
+  for (const { name, from } of entries) {
+    const as = autoImportedAs(name, autoImports, entries.map(e => e.name))
+    if (as) addComponent({ name: as, filePath: resolver.resolve(`./${from}`), export: name })
   }
 }
 

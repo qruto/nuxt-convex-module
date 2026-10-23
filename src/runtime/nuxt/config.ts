@@ -9,9 +9,6 @@ import { useRuntimeConfig } from '#imports'
 export const CONVEX_INITIAL_TOKEN_KEY = 'convex:initialToken'
 
 type ConvexRuntimeConfig = {
-  convex?: {
-    siteUrl?: string
-  }
   public?: {
     convex?: {
       url?: string
@@ -29,7 +26,7 @@ export function getConvexRuntimeConfig() {
     const config = useRuntimeConfig() as ConvexRuntimeConfig
     return {
       url: config.public?.convex?.url,
-      siteUrl: config.convex?.siteUrl || config.public?.convex?.siteUrl,
+      siteUrl: config.public?.convex?.siteUrl,
     }
   }
   catch {

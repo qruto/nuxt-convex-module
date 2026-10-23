@@ -5,7 +5,7 @@ import { sep } from 'node:path'
 import { loadNuxt } from '@nuxt/kit'
 import type { Nuxt, NuxtOptions } from '@nuxt/schema'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isAutoImported } from '../../src/registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, autoImportedAs } from '../../src/registry'
 
 // What the module registers into a Nuxt app, observed on a real Nuxt instance
 // — `loadNuxt` with `ready: true` runs the module's setup and nothing else, in
@@ -70,9 +70,9 @@ async function load(overrides: Record<string, unknown> = {}): Promise<{ nuxt: Nu
     nuxt,
     registered: {
       options: nuxt.options,
-      imports: ours(imports).map(i => i.name),
+      imports: ours(imports).map(i => (i as { as?: string }).as ?? i.name),
       components: ours(components),
-      serverImports: ours(nitro.imports.imports).map(i => i.name),
+      serverImports: ours(nitro.imports.imports).map(i => (i as { as?: string }).as ?? i.name),
       middleware: ours(app.middleware),
     },
   }
@@ -111,7 +111,7 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
       crossDomainCallbackRoute: '',
       loginPath: '/login',
     })
-    expect(r.options.runtimeConfig.convex).toEqual({ siteUrl: 'https://example.convex.site' })
+    expect(r.options.runtimeConfig.convex).toBeUndefined()
   })
 
   it('auto-imports exactly the core and Better Auth names', () => {
@@ -196,14 +196,17 @@ describe('with autoImports: \'prefixed\'', () => {
   beforeAll(async () => ({ nuxt, registered: r } = await load({ autoImports: 'prefixed' })), 60_000)
   afterAll(() => nuxt.close())
 
-  const prefixed = (all: string[]) => all.filter(name => isAutoImported(name, 'prefixed')).sort()
+  const prefixed = (all: string[]) => all.flatMap(name => autoImportedAs(name, 'prefixed', all) ?? []).sort()
 
-  it('registers only the Convex-marked names; bare upstream names stay importable', () => {
+  it('registers every name with Convex in it; bare upstream names stay importable', () => {
     expect([...r.imports].sort()).toEqual(prefixed(names(APP_IMPORTS, ['core', 'betterAuth'])))
-    expect(r.imports).toContain('useConvexQuery')
+    expect(r.imports).toEqual(expect.arrayContaining(['useConvexQuery', 'useConvexPreloadedQuery', 'uploadConvexFile', 'useConvexBetterAuth', 'ConvexAsyncQueryReturn']))
     expect(r.imports).not.toContain('useQuery')
+    expect(r.imports.filter(name => !/convex/i.test(name))).toEqual([])
+    expect(r.components.map(c => c.pascalName)).toEqual(expect.arrayContaining(['ConvexAuthenticated', 'ConvexAuthBoundary', 'ConvexImage']))
     expect(r.components.map(c => c.pascalName).sort()).toEqual(prefixed(names(APP_COMPONENTS, ['core', 'betterAuth'])))
     expect([...r.serverImports].sort()).toEqual(prefixed(names(SERVER_IMPORTS, ['core', 'betterAuth'])))
+    expect(r.serverImports).toEqual(expect.arrayContaining(['fetchConvexQuery', 'preloadedConvexQueryResult', 'convexAuth']))
   })
 
   it('leaves plugins, the proxy and the middleware in place', () => {
@@ -230,7 +233,7 @@ describe('with autoImports: false', () => {
 describe('with a custom authRoute and auth client', () => {
   let nuxt: Nuxt
   let r: Registered
-  beforeAll(async () => ({ nuxt, registered: r } = await load({ authRoute: '/auth', betterAuth: { authClient: './auth-client' } })), 60_000)
+  beforeAll(async () => ({ nuxt, registered: r } = await load({ betterAuth: { authRoute: '/auth', authClient: './auth-client' } })), 60_000)
   afterAll(() => nuxt.close())
 
   it('moves the proxy, its rules, and the auth-client alias together', () => {

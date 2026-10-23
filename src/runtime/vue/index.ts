@@ -168,12 +168,3 @@ export {
   type GetStorageUrl,
 } from './composables/use-storage-url'
 export { ConvexImage } from './components/convex-image'
-
-// App API wiring (provide/consume the generated Convex `api`).
-export {
-  provideConvexApi,
-  useConvexApi,
-  useConvexNamespace,
-  ConvexApiKey,
-  type ConvexApi,
-} from './provide'

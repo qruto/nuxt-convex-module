@@ -73,11 +73,6 @@ describe('runtime config', () => {
     expect(CONFIGURATION).toContain(`runtimeConfig.public.convex.${key}`)
     expect(CONFIGURATION).toContain(`NUXT_PUBLIC_CONVEX_${snake(key)}`)
   })
-
-  it('documents the private key and its override', () => {
-    expect(CONFIGURATION).toContain('runtimeConfig.convex.siteUrl')
-    expect(CONFIGURATION).toContain('NUXT_CONVEX_SITE_URL')
-  })
 })
 
 describe('auto-imports and components', () => {
@@ -117,11 +112,16 @@ describe('subpath exports', () => {
     expect(known.has(specifier), `${specifier} is imported in ${where} but is not a key of package.json exports`).toBe(true)
   })
 
+  // The `/vue` names are for plain Vue apps, so the plain-Vue guide lists them
+  // and the API reference does not.
   const table = read('website/content/4.api-reference/index.md')
-  it.each(keys)('%s is in the API-reference subpath table', (key) => {
+  const plainVue = read('website/content/2.guide/9.plain-vue.md')
+  it.each(keys)('%s is in the API-reference subpath table, or the plain-Vue guide for a /vue name', (key) => {
     const specifier = key === '.' ? 'nuxt-convex-module' : `nuxt-convex-module${key.slice(1)}`
-    const alias = key.endsWith('/vue') || key === './vue' ? `(alias \`${key.slice(1)}\`)` : undefined
-    expect(table.includes(`| \`${specifier}\``) || (alias !== undefined && table.includes(alias)), `${key} is a package.json export with no row (or alias mention) in 4.api-reference/index.md's subpath table`).toBe(true)
+    const documented = key.endsWith('/vue')
+      ? plainVue.includes(`\`${key.slice(2)}\``) || plainVue.includes(`\`${specifier}\``)
+      : table.includes(`| \`${specifier}\``)
+    expect(documented, `${key} is a package.json export that its page does not name`).toBe(true)
   })
 })
 
@@ -209,12 +209,14 @@ describe('stability', () => {
 })
 
 describe('install commands', () => {
-  // A peer capped below its next minor is installed as `name@~x.y.z`, the
-  // range's own floor. Unpinned, pnpm, yarn and bun take the newest release
+  // A peer capped below its next minor (`~x.y.z`, `>=x.y.z <x.(y+1).0`, or a
+  // `^0.y.z` with y > 0, which semver caps the same way) is installed as `name@~x.y.z`,
+  // the range's own floor. Unpinned, pnpm, yarn and bun take the newest release
   // whatever the peer range says; only npm picks one that fits. `~` is safe in
   // every shell, `^` is not: zsh's extendedglob reads it as a pattern.
   const capped = Object.entries(manifest.peerDependencies).flatMap(([pkg, range]) => {
-    const tilde = range.match(/^~((\d+)\.(\d+)\.\d+)$/)
+    const tilde = range.match(/^[~^]((\d+)\.(\d+)\.\d+)$/)
+    if (range.startsWith('^') && (tilde?.[2] !== '0' || tilde[3] === '0')) return []
     const bounded = range.match(/^>=((\d+)\.(\d+)\.\d+) <(\d+)\.(\d+)\.0$/)
     const oneMinor = bounded && bounded[4] === bounded[2] && Number(bounded[5]) === Number(bounded[3]) + 1
     const floor = tilde?.[1] ?? (oneMinor ? bounded[1] : undefined)
@@ -225,7 +227,7 @@ describe('install commands', () => {
       .map(m => ({ file: file.replace(`${process.cwd()}/`, ''), tokens: (m[1] ?? m[2])!.split(/\s+/) })))
 
   it('finds the capped peers and the commands', () => {
-    expect(capped.map(([pkg]) => pkg)).toEqual(expect.arrayContaining(['better-auth', '@convex-dev/better-auth', '@convex-dev/polar']))
+    expect(capped.map(([pkg]) => pkg)).toEqual(expect.arrayContaining(['better-auth', '@convex-dev/better-auth', '@convex-dev/polar', '@polar-sh/checkout']))
     expect(commands.length).toBeGreaterThan(10)
   })
 

@@ -83,7 +83,7 @@ The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and
 
 ## Billing
 
-Polar's `<CheckoutLink>` and `<CustomerPortalLink>` switch on when `@convex-dev/polar` is installed and read their actions from `api.billing`: [references/polar.md](references/polar.md).
+Polar's `<CheckoutLink>` and `<CustomerPortalLink>` switch on when `@convex-dev/polar` is installed and take their actions through `:polar-api` (usually `api.billing`): [references/polar.md](references/polar.md).
 
 ## Plain Vue
 

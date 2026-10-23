@@ -39,9 +39,6 @@
  * const messages: AsyncQueryReturn<Doc<'messages'>[]> = useAsyncQuery(api.messages.list, {})
  * ```
  *
- * Before 1.0 the composable was auto-imported but reachable from no subpath,
- * so neither the explicit form nor the types could be written at all.
- *
  * @module app
  */
 

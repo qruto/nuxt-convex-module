@@ -7,13 +7,13 @@ import type { Nuxt } from '@nuxt/schema'
 import { resolveFunctionsDir } from './functions-dir'
 
 /** Templates that must re-render when `convex dev` emits `_generated/api`. */
-export const CODEGEN_GUARDED_TEMPLATES = ['nuxt-convex-module-provide-api.mjs', 'types/nuxt-convex-module-api-fallback.d.ts']
+export const CODEGEN_GUARDED_TEMPLATES = ['types/nuxt-convex-module-api-fallback.d.ts']
 
 /**
  * In dev, re-render the codegen-guarded templates the instant `convex dev`
- * emits `_generated/api`, so the generated `api` is wired app-wide (and the
- * placeholder types retire) without a dev-server restart — the fs-guarded
- * templates otherwise only re-evaluate on a full rebuild.
+ * emits `_generated/api`, so the placeholder types retire without a
+ * dev-server restart — the fs-guarded templates otherwise only re-evaluate on
+ * a full rebuild.
  *
  * Nuxt's watcher covers each layer's `srcDir` (`app/` in a Nuxt 4 layout),
  * `server/`, and whatever `nuxt.options.watch` names. A root-level `convex/`

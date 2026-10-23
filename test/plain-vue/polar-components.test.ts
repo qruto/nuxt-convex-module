@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { defineComponent, h, nextTick, provide } from 'vue'
+import { type Component, defineComponent, h, nextTick, provide } from 'vue'
 import { makeFunctionReference } from 'convex/server'
 import { ConvexClientKey, ConvexVueClient } from '../../src/runtime/vue/client'
 import { silentConnectLogger } from '../helpers/silent-logger'
@@ -28,7 +28,7 @@ const mountWithClient = (target: typeof CheckoutLink | typeof CustomerPortalLink
   mount(defineComponent({
     setup() {
       provide(ConvexClientKey, client)
-      return () => h(target, props, { default: () => 'Go' })
+      return () => h(target as Component, props, { default: () => 'Go' })
     },
   }))
 

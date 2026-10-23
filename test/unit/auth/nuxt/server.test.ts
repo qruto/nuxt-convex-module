@@ -395,9 +395,6 @@ describe('auth/nuxt/server', () => {
   it('uses Nuxt runtime config for the Convex site URL when no override or env is set', async () => {
     const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
     setNuxtRuntimeConfigForTests({
-      convex: {
-        siteUrl: 'https://runtime.convex.site',
-      },
       public: {
         convex: {
           siteUrl: 'https://public-runtime.convex.site',
@@ -408,6 +405,6 @@ describe('auth/nuxt/server', () => {
 
     await convexAuth(event()).getToken()
 
-    expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://runtime.convex.site')
+    expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://public-runtime.convex.site')
   })
 })

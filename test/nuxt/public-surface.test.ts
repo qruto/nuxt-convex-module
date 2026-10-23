@@ -59,11 +59,10 @@ const ENTRY: Record<string, Entry> = {
     source: 'src/runtime/vue/index.ts',
     values: [
       'AuthLoading', 'AuthRefreshing', 'Authenticated', 'Unauthenticated', 'ConvexImage',
-      'ConvexApiKey', 'ConvexAuthStateKey', 'ConvexClientKey', 'ConvexVueClient',
+      'ConvexAuthStateKey', 'ConvexClientKey', 'ConvexVueClient',
       'createConvexAuthState', 'createScopedConvexAuthState', 'provideConvexAuth', 'useConvexAuth',
       'insertAtBottomIfLoaded', 'insertAtPosition', 'insertAtTop', 'optimisticallyUpdateValueInPaginatedQuery',
       'resetPaginationId',
-      'provideConvexApi', 'useConvexApi', 'useConvexNamespace',
       'useConvex', 'useConvexConnectionState', 'usePreloadedQuery', 'useSubscription',
       'useQuery', 'useQuery_experimental', 'useQueries', 'useMutation', 'useAction',
       'usePaginatedQuery', 'usePaginatedQuery_experimental',
@@ -74,7 +73,7 @@ const ENTRY: Record<string, Entry> = {
       'useConvexStorageUrl', 'useConvexUpload', 'useConvexUploadQueue',
     ],
     types: [
-      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexApi', 'ConvexAuthProviderOptions',
+      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexAuthProviderOptions',
       'ConvexAuthState', 'ConvexLogger', 'ConvexVueClientOptions', 'EnqueueInput', 'FunctionArgs', 'FunctionReference',
       'FunctionReference_future', 'FunctionReturnType', 'GenerateUploadUrl', 'GetStorageUrl', 'IConvexVueClient', 'MutationOptions',
       'OptimisticUpdate', 'OptionalRestArgs', 'OptionalRestArgsOrSkip', 'PaginatedQueryArgs', 'PaginatedQueryItem',
