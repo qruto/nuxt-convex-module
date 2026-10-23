@@ -51,9 +51,6 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'useConvexStorageUrl', from: composable('use-storage-url') },
     { name: 'useConvexAuth', from: vue('auth/index') },
     { name: 'provideConvexAuth', from: vue('auth/index') },
-    { name: 'provideConvexApi', from: vue('provide') },
-    { name: 'useConvexApi', from: vue('provide') },
-    { name: 'useConvexNamespace', from: vue('provide') },
     { name: 'usePreloadedQuery', from: vue('hydration') },
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
     // Its types too, so `import type { AsyncQueryReturn } from '#imports'` works

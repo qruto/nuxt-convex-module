@@ -7,7 +7,6 @@
 import { defineComponent, h, mergeProps, type PropType, ref, watch } from 'vue'
 import type { FunctionReference } from 'convex/server'
 import { useAction } from '../../vue/composables/use-action'
-import { useConvexNamespace } from '../../vue/provide'
 
 /**
  * Args of the Polar-generated `generateCheckoutLink` action. Mirrors the
@@ -36,14 +35,14 @@ export type CheckoutArgs = {
 /**
  * The subset of the Polar component's action references these components need —
  * a Vue port mirror of `@convex-dev/polar`'s `PolarComponentApi`
- * (`Pick<…, 'generateCheckoutLink' | 'generateCustomerPortalUrl'>`). Supplied
- * via the auto-provided `api.billing` namespace, or passed through `:polar-api`.
+ * (`Pick<…, 'generateCheckoutLink' | 'generateCustomerPortalUrl'>`), passed
+ * through `:polar-api` — usually the app's `api.billing`.
  *
  * @public
  */
 export interface PolarComponentApi {
-  generateCheckoutLink?: FunctionReference<'action', 'public', CheckoutArgs, { url: string }>
-  generateCustomerPortalUrl?: FunctionReference<'action', 'public', { returnUrl?: string }, { url: string }>
+  generateCheckoutLink: FunctionReference<'action', 'public', CheckoutArgs, { url: string }>
+  generateCustomerPortalUrl: FunctionReference<'action', 'public', { returnUrl?: string }, { url: string }>
 }
 
 /**
@@ -52,7 +51,7 @@ export interface PolarComponentApi {
  *
  * @example
  * ```vue
- * <CustomerPortalLink>Manage subscription</CustomerPortalLink>
+ * <CustomerPortalLink :polar-api="api.billing">Manage subscription</CustomerPortalLink>
  * ```
  *
  * @public
@@ -61,22 +60,17 @@ export const CustomerPortalLink = /* @__PURE__ */ defineComponent({
   name: 'CustomerPortalLink',
   inheritAttrs: false,
   props: {
-    // Optional in the port: defaults to the auto-provided `api.billing` namespace.
-    polarApi: { type: Object as PropType<PolarComponentApi>, default: undefined },
+    polarApi: { type: Object as PropType<Pick<PolarComponentApi, 'generateCustomerPortalUrl'>>, required: true },
     returnUrl: { type: String, default: undefined },
   },
   setup(props, { slots, attrs }) {
-    const polarApi = props.polarApi ?? useConvexNamespace<PolarComponentApi>('billing')
-    // The action may be absent from the auto-provided namespace, hence the guard.
-    const generateCustomerPortalUrl = polarApi?.generateCustomerPortalUrl
-      ? useAction(polarApi.generateCustomerPortalUrl)
-      : undefined
+    const generateCustomerPortalUrl = useAction(props.polarApi.generateCustomerPortalUrl)
     const portalUrl = ref<string>()
 
     // useEffect never runs during SSR, so the effect is server-guarded. The
     // negative form on purpose: outside Nuxt neither flag is defined, and
     // `!import.meta.server` is then true where `import.meta.client` is not.
-    if (!import.meta.server && generateCustomerPortalUrl) {
+    if (!import.meta.server) {
       watch(
         () => props.returnUrl,
         (returnUrl) => {
@@ -105,7 +99,7 @@ export const CustomerPortalLink = /* @__PURE__ */ defineComponent({
  *
  * @example
  * ```vue
- * <CheckoutLink :product-ids="[productId]" :trial-interval-count="7" trial-interval="day">
+ * <CheckoutLink :polar-api="api.billing" :product-ids="[productId]" :trial-interval-count="7" trial-interval="day">
  *   Start free trial
  * </CheckoutLink>
  * ```
@@ -116,8 +110,7 @@ export const CheckoutLink = /* @__PURE__ */ defineComponent({
   name: 'CheckoutLink',
   inheritAttrs: false,
   props: {
-    // Optional in the port: defaults to the auto-provided `api.billing` namespace.
-    polarApi: { type: Object as PropType<PolarComponentApi>, default: undefined },
+    polarApi: { type: Object as PropType<Pick<PolarComponentApi, 'generateCheckoutLink'>>, required: true },
     productIds: { type: Array as PropType<string[]>, required: true },
     subscriptionId: { type: String, default: undefined },
     metadata: { type: Object as PropType<Record<string, string>>, default: undefined },
@@ -129,16 +122,12 @@ export const CheckoutLink = /* @__PURE__ */ defineComponent({
     lazy: { type: Boolean, default: false },
   },
   setup(props, { slots, attrs }) {
-    const polarApi = props.polarApi ?? useConvexNamespace<PolarComponentApi>('billing')
-    // The action may be absent from the auto-provided namespace, hence the guard.
-    const generateCheckoutLink = polarApi?.generateCheckoutLink
-      ? useAction(polarApi.generateCheckoutLink)
-      : undefined
+    const generateCheckoutLink = useAction(props.polarApi.generateCheckoutLink)
     const checkoutLink = ref<string>()
     const isLoading = ref(false)
 
     // useEffect never runs during SSR, so the effect is server-guarded (see above).
-    if (!import.meta.server && generateCheckoutLink) {
+    if (!import.meta.server) {
       watch(
         () => [props.lazy, props.productIds, props.subscriptionId, props.metadata, props.embed, props.trialInterval, props.trialIntervalCount, props.locale],
         async () => {
@@ -166,45 +155,43 @@ export const CheckoutLink = /* @__PURE__ */ defineComponent({
     }
 
     // `lazy` is reactive in Vue, so its gate moves to the render site (`onClick`
-    // binds only while lazy); this guard covers the possibly-absent action.
-    const handleClick = generateCheckoutLink
-      ? async (e: MouseEvent) => {
-        e.preventDefault()
-        if (isLoading.value) return
-        isLoading.value = true
-        try {
-          const { url } = await generateCheckoutLink({
-            productIds: props.productIds,
-            subscriptionId: props.subscriptionId,
-            metadata: props.metadata,
-            origin: window.location.origin,
-            successUrl: window.location.href,
-            trialInterval: props.trialInterval,
-            trialIntervalCount: props.trialIntervalCount,
-            locale: props.locale,
-          })
-          if (props.embed) {
-            // `@polar-sh/checkout` is an optional peer dependency, so it is imported lazily.
-            const { PolarEmbedCheckout } = await import('@polar-sh/checkout/embed')
-            await PolarEmbedCheckout.create(url, { theme: props.theme })
-          }
-          else {
-            // PARITY: D-09
-            // `noopener` is a deliberate divergence from upstream's bare
-            // `window.open(url, '_blank')`: unlike `<a target="_blank">`, `window.open`
-            // keeps `window.opener` live, letting the checkout tab navigate this one.
-            // The forced `null` return is unused here.
-            // Not an open redirect: `url` is this app's own Convex action response
-            // (polarApi/api.billing), never request or location input.
-            // fallow-ignore-next-line security-sink -- target comes from our own backend; verified 2026-09-02
-            window.open(url, '_blank', 'noopener')
-          }
+    // binds only while lazy).
+    const handleClick = async (e: MouseEvent) => {
+      e.preventDefault()
+      if (isLoading.value) return
+      isLoading.value = true
+      try {
+        const { url } = await generateCheckoutLink({
+          productIds: props.productIds,
+          subscriptionId: props.subscriptionId,
+          metadata: props.metadata,
+          origin: window.location.origin,
+          successUrl: window.location.href,
+          trialInterval: props.trialInterval,
+          trialIntervalCount: props.trialIntervalCount,
+          locale: props.locale,
+        })
+        if (props.embed) {
+          // `@polar-sh/checkout` is an optional peer dependency, so it is imported lazily.
+          const { PolarEmbedCheckout } = await import('@polar-sh/checkout/embed')
+          await PolarEmbedCheckout.create(url, { theme: props.theme })
         }
-        finally {
-          isLoading.value = false
+        else {
+          // PARITY: D-09
+          // `noopener` is a deliberate divergence from upstream's bare
+          // `window.open(url, '_blank')`: unlike `<a target="_blank">`, `window.open`
+          // keeps `window.opener` live, letting the checkout tab navigate this one.
+          // The forced `null` return is unused here.
+          // Not an open redirect: `url` is this app's own Convex action response
+          // (polarApi/api.billing), never request or location input.
+          // fallow-ignore-next-line security-sink -- target comes from our own backend; verified 2026-09-02
+          window.open(url, '_blank', 'noopener')
         }
       }
-      : undefined
+      finally {
+        isLoading.value = false
+      }
+    }
 
     // `mergeProps` concatenates event listeners, so a consumer's `@click`
     // (arriving via attrs — an additive convenience over upstream, which

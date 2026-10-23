@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
@@ -219,7 +219,6 @@ export default defineNuxtModule<ModuleOptions>({
     registerAuthClientAlias(resolver, nuxt, options)
     registerConvexAliases(nuxt)
 
-    registerConvexApiPlugin(resolver, nuxt)
     registerConvexTypeFallback(nuxt)
     const autoImports = options.autoImports ?? true
     registerVueComposables(resolver, autoImports)
@@ -465,62 +464,32 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
 }
 
 /**
- * Auto-provide the generated Convex `api` (`#convex/api`) app-wide so the
- * composables and components that read from a namespace (e.g. the Polar
- * `<CheckoutLink>`) work with zero arguments — see `runtime/vue/provide.ts`.
- * Runs on both server and client.
- *
- * Generated as a template so we can fs-guard it: before `convex dev` has emitted
- * `_generated/api`, the import would fail the build, so we emit a no-op plugin
- * instead (features fall back to graceful no-ops). The plugin is regenerated
- * with the real wiring on the next build once codegen has run.
- */
-function registerConvexApiPlugin(resolver: Resolver, nuxt: Nuxt): void {
-  const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
-  const provideModule = resolver.resolve('./runtime/vue/provide')
-  // One-shot onboarding notice: point at `npx convex dev` while codegen is
-  // absent, and confirm (once) when the watcher re-renders with it present.
-  let notifiedMissing = false
-
-  addPluginTemplate({
-    filename: 'nuxt-convex-module-provide-api.mjs',
-    getContents: () => {
-      if (!hasGeneratedApi(nuxt.options.rootDir, functionsDir)) {
-        if (nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
-          notifiedMissing = true
-          logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. Convex features no-op until it exists.`)
-          hintAgent()
-        }
-        return 'import { defineNuxtPlugin } from \'#app\'\nexport default defineNuxtPlugin(() => {})\n'
-      }
-      if (notifiedMissing) {
-        notifiedMissing = false
-        logger.success('Convex codegen detected — generated `api` wired app-wide.')
-      }
-      return [
-        'import { defineNuxtPlugin } from \'#app\'',
-        'import { api } from \'#convex/api\'',
-        `import { provideConvexApi } from ${JSON.stringify(provideModule)}`,
-        'export default defineNuxtPlugin((nuxtApp) => {',
-        '  provideConvexApi(api, nuxtApp.vueApp)',
-        '})',
-        '',
-      ].join('\n')
-    },
-  })
-}
-
-/**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
- * server routes import `#convex/api` too). Symmetric to
- * {@link registerConvexApiPlugin}'s runtime no-op guard, and re-rendered by
- * {@link watchConvexCodegen} the moment codegen lands.
+ * server routes import `#convex/api` too): `any`-typed placeholders until
+ * `convex dev` emits the generated `api`. Re-rendered by
+ * {@link watchConvexCodegen} the moment codegen lands, which is also when the
+ * one-shot onboarding notice confirms it.
  */
 function registerConvexTypeFallback(nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
+  // One-shot onboarding notice: point at `npx convex dev` while codegen is
+  // absent, and confirm (once) when the watcher re-renders with it present.
+  let notifiedMissing = false
   addTypeTemplate({
     filename: 'types/nuxt-convex-module-api-fallback.d.ts',
-    getContents: () => convexTypeFallbackContents(hasGeneratedApi(nuxt.options.rootDir, functionsDir), functionsDir),
+    getContents: () => {
+      const generated = hasGeneratedApi(nuxt.options.rootDir, functionsDir)
+      if (!generated && nuxt.options.dev && !nuxt.options._prepare && !notifiedMissing) {
+        notifiedMissing = true
+        logger.info(`Convex codegen not found in \`${functionsDir}/_generated\` — run \`npx convex dev\`. \`#convex/api\` is typed \`any\` until it exists.`)
+        hintAgent()
+      }
+      if (generated && notifiedMissing) {
+        notifiedMissing = false
+        logger.success('Convex codegen detected — `#convex/api` is typed from it.')
+      }
+      return convexTypeFallbackContents(generated, functionsDir)
+    },
   }, { nuxt: true, nitro: true })
 }
 

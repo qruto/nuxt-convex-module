@@ -30,7 +30,7 @@ Once `@convex-dev/polar` is in `package.json`, the module registers `<CheckoutLi
 
    `POLAR_SERVER` is `sandbox` or `production`. The tokens come from the user's Polar dashboard; ask for them, never invent them. In Polar, the webhook endpoint is the deployment's site URL plus `/polar/events`, with the `product.created`, `product.updated`, `subscription.created` and `subscription.updated` events.
 
-3. **`convex/billing.ts`.** The file name matters: the components read their actions from `api.billing`.
+3. **`convex/billing.ts`.** Export the actions from one module; the components take it through `:polar-api`.
 
    ```ts
    import { Polar } from '@convex-dev/polar'
@@ -47,18 +47,20 @@ Once `@convex-dev/polar` is in `package.json`, the module registers `<CheckoutLi
    export const { generateCheckoutLink, generateCustomerPortalUrl } = polar.api()
    ```
 
-   With the actions in another module, pass it to the components as `:polar-api="api.yourModule"`.
-
 4. `convex/http.ts`: `polar.registerRoutes(http)` on an `httpRouter()`, which handles the webhook at `/polar/events`.
 
 ## Use
 
 ```vue
+<script setup lang="ts">
+import { api } from '#convex/api'
+</script>
+
 <template>
-  <CheckoutLink :product-ids="[productId]">
+  <CheckoutLink :polar-api="api.billing" :product-ids="[productId]">
     Upgrade
   </CheckoutLink>
-  <CustomerPortalLink return-url="/account">
+  <CustomerPortalLink :polar-api="api.billing" return-url="/account">
     Manage subscription
   </CustomerPortalLink>
 </template>
