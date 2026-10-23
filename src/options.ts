@@ -306,8 +306,13 @@ export function deploymentWarnings(
   const source = options.url ? '`convex.url`' : env.NUXT_PUBLIC_CONVEX_URL ? 'NUXT_PUBLIC_CONVEX_URL' : ''
   const { url } = resolveDeploymentUrls(options, env)
   if (cliUrl && source && url !== cliUrl) {
+    // Every override naming another deployment: removing only the one that
+    // won would hand the app to the next.
+    const stale = ([['`convex.url`', options.url], ['NUXT_PUBLIC_CONVEX_URL', env.NUXT_PUBLIC_CONVEX_URL]] as const)
+      .filter(([, value]) => value && stripTrailingSlashes(value) !== cliUrl)
+      .map(([name]) => name)
     warnings.push(
-      `The app calls ${url} (from ${source}), but \`npx convex dev\` pushes your functions to ${cliUrl} (CONVEX_URL). New or changed functions will fail with "Could not find public function". Remove ${source} to follow \`convex dev\`, or point it at ${cliUrl}.`,
+      `The app calls ${url} (from ${source}), but \`npx convex dev\` pushes your functions to ${cliUrl} (CONVEX_URL). New or changed functions will fail with "Could not find public function". Remove ${stale.join(' and ')} to follow \`convex dev\`, or point ${source} at ${cliUrl}.`,
     )
   }
   return warnings

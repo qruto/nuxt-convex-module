@@ -188,6 +188,14 @@ describe('deploymentWarnings', () => {
       .toContain('(from NUXT_PUBLIC_CONVEX_URL)')
   })
 
+  it('names every stale override, since removing only the winner hands the app to the next', () => {
+    const [warning] = deploymentWarnings({ url: 'https://old.convex.cloud' }, { ...cli, NUXT_PUBLIC_CONVEX_URL: 'https://older.convex.cloud' })
+    expect(warning).toContain('Remove `convex.url` and NUXT_PUBLIC_CONVEX_URL to follow `convex dev`, or point `convex.url` at https://cli.convex.cloud.')
+    // An override that already matches is no part of the problem.
+    expect(deploymentWarnings({ url: 'https://old.convex.cloud' }, { ...cli, NUXT_PUBLIC_CONVEX_URL: 'https://cli.convex.cloud' })[0])
+      .toContain('Remove `convex.url` to follow')
+  })
+
   it('stays quiet when both name the same deployment', () => {
     expect(deploymentWarnings({ url: 'https://cli.convex.cloud/' }, cli)).toEqual([])
   })
