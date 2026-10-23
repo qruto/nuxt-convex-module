@@ -1,6 +1,6 @@
 <p align="center"><a href="https://nuxt-convex-module.dev"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/hero.svg" alt="Nuxt × Convex" width="560"></a></p>
 
-<p align="center"><a href="https://www.npmjs.com/package/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/npm.svg" alt="npm" height="20" align="middle"></a> &nbsp;<a href="https://www.npmjs.com/package/nuxt-convex-module"><sub><b>View on npm</b></sub></a> &nbsp;&nbsp;&nbsp; <a href="https://github.com/qruto/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/github.svg" alt="GitHub" height="20" align="middle"></a> &nbsp;<a href="https://github.com/qruto/nuxt-convex-module"><sub><b>Source on GitHub</b></sub></a></p>
+<p align="center"><a href="https://www.npmjs.com/package/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/link-npm.svg" alt="View on npm" height="20"></a> &nbsp;&nbsp;&nbsp; <a href="https://github.com/qruto/nuxt-convex-module"><img src="https://raw.githubusercontent.com/qruto/nuxt-convex-module/main/.github/assets/link-github.svg" alt="Source on GitHub" height="20"></a></p>
 
 <h1 align="center">nuxt-convex-module</h1>
 
