@@ -5,3 +5,8 @@
 id = "GHSA-86w9-cpqp-85rv"
 ignoreUntil = 2027-01-31T00:00:00Z
 reason = "node-forge 1.4.0 has no patched release. Dev-only: listhen (via @nuxt/cli and nitropack) uses it to generate the local dev certificate, never to verify RSA signatures, which is what the advisory is about."
+
+[[IgnoredVulns]]
+id = "GHSA-mrhx-c7xc-m3w5"
+ignoreUntil = 2027-01-31T00:00:00Z
+reason = "zod 3.25.76 has no patched 3.x release (the fix is 4.6.6). Website build only: @nuxt/content uses it in its build-time module to validate this repository's own markdown, never request input. Every zod 4 copy is on 4.6.7."
