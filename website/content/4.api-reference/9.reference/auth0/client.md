@@ -97,7 +97,7 @@ Convex with Auth0.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | [`ConvexProviderWithAuth0Options`](#convexproviderwithauth0options) |
+| `options?` | [`ConvexProviderWithAuth0Options`](#convexproviderwithauth0options) |
 
 #### Returns
 

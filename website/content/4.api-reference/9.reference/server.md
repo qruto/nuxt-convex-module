@@ -88,7 +88,7 @@ component.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query"></a> `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -119,7 +119,7 @@ Returns the result of executing a query via [preloadQuery](#preloadquery).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-1"></a> `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -149,7 +149,7 @@ Execute a Convex query function.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-2"></a> `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -180,7 +180,7 @@ Execute a Convex mutation function.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"mutation"`\> |
+| <a id="type-parameter-mutation"></a> `Mutation` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"mutation"`\> |
 
 #### Parameters
 
@@ -211,7 +211,7 @@ Execute a Convex action function.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"action"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"action"`\> |
+| <a id="type-parameter-action"></a> `Action` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"action"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"action"`\> |
 
 #### Parameters
 

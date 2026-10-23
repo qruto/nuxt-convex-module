@@ -149,7 +149,7 @@ Convex with Clerk.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | [`ConvexProviderWithClerkOptions`](#convexproviderwithclerkoptions) |
+| `options?` | [`ConvexProviderWithClerkOptions`](#convexproviderwithclerkoptions) |
 
 #### Returns
 
