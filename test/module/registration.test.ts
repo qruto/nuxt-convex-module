@@ -111,7 +111,7 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
       crossDomainCallbackRoute: '',
       loginPath: '/login',
     })
-    expect(r.options.runtimeConfig.convex).toEqual({ siteUrl: 'https://example.convex.site' })
+    expect(r.options.runtimeConfig.convex).toBeUndefined()
   })
 
   it('auto-imports exactly the core and Better Auth names', () => {
@@ -233,7 +233,7 @@ describe('with autoImports: false', () => {
 describe('with a custom authRoute and auth client', () => {
   let nuxt: Nuxt
   let r: Registered
-  beforeAll(async () => ({ nuxt, registered: r } = await load({ authRoute: '/auth', betterAuth: { authClient: './auth-client' } })), 60_000)
+  beforeAll(async () => ({ nuxt, registered: r } = await load({ betterAuth: { authRoute: '/auth', authClient: './auth-client' } })), 60_000)
   afterAll(() => nuxt.close())
 
   it('moves the proxy, its rules, and the auth-client alias together', () => {

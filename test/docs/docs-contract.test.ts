@@ -73,11 +73,6 @@ describe('runtime config', () => {
     expect(CONFIGURATION).toContain(`runtimeConfig.public.convex.${key}`)
     expect(CONFIGURATION).toContain(`NUXT_PUBLIC_CONVEX_${snake(key)}`)
   })
-
-  it('documents the private key and its override', () => {
-    expect(CONFIGURATION).toContain('runtimeConfig.convex.siteUrl')
-    expect(CONFIGURATION).toContain('NUXT_CONVEX_SITE_URL')
-  })
 })
 
 describe('auto-imports and components', () => {

@@ -33,6 +33,12 @@ export interface BetterAuthModuleOptions {
    */
   authClient?: string
   /**
+   * Route the same-origin proxy to Better Auth is mounted at. Defaults to
+   * `/api/auth`, Better Auth's own default `basePath`; moving it needs an
+   * `authClient` created with the same `basePath`.
+   */
+  authRoute?: string
+  /**
    * Restrict cross-domain one-time-token (`?ott=`) sign-in completion to one
    * app route, e.g. `'/auth/callback'`. Only meaningful when your auth client
    * installs `crossDomainClient()`. By default a token completes sign-in on
@@ -113,8 +119,6 @@ export interface ModuleOptions {
    * the subpath exports. `false` auto-imports nothing.
    */
   autoImports?: AutoImports
-  /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
-  authRoute?: string
   /**
    * Convex panel in Nuxt DevTools (dev only): connection state, live query
    * subscriptions, auth state, and client logs. Enabled by default whenever
@@ -135,11 +139,6 @@ export interface ModuleOptions {
 }
 
 declare module '@nuxt/schema' {
-  interface RuntimeConfig {
-    convex: {
-      siteUrl: string
-    }
-  }
   interface PublicRuntimeConfig {
     convex: {
       url: string
@@ -163,7 +162,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     autoImports: true,
-    authRoute: '/api/auth',
     devtools: true,
     devScript: true,
   },
@@ -200,17 +198,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
 
+    const betterAuthOptions = readBetterAuthOptions(options)
     const diagnostics = validateModuleOptions({
       url,
       siteUrl,
-      authRoute: options.authRoute || '/api/auth',
+      authRoute: betterAuthOptions.authRoute || '/api/auth',
       loginPath: nuxt.options.runtimeConfig.public.convex.loginPath,
-      authClient: typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined,
+      authClient: betterAuthOptions.authClient,
       rootDir: nuxt.options.rootDir,
     })
     for (const message of diagnostics.errors) logger.error(message)
     for (const message of diagnostics.warnings) logger.warn(message)
-    options.authRoute = diagnostics.authRoute
     nuxt.options.runtimeConfig.public.convex.loginPath = diagnostics.loginPath
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
@@ -224,7 +222,7 @@ export default defineNuxtModule<ModuleOptions>({
     const autoImports = options.autoImports ?? true
     registerVueComposables(resolver, autoImports)
     registerAuthComponents(resolver, autoImports)
-    const integrations = registerIntegrations(resolver, nuxt, options, autoImports)
+    const integrations = registerIntegrations(resolver, nuxt, options, autoImports, diagnostics.authRoute)
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
@@ -284,7 +282,7 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
-function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports): IntegrationFlags {
+function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports, authRoute: string): IntegrationFlags {
   type Key = keyof IntegrationFlags & keyof ModuleOptions
   const report = (key: Key, pkg: string, state: ReturnType<typeof resolveIntegrationState>): boolean => {
     if (state.missingPackage) {
@@ -300,7 +298,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
-    registerBetterAuth(resolver, options.authRoute || '/api/auth', autoImports)
+    registerBetterAuth(resolver, authRoute, autoImports)
   }
   else {
     // No auth integration manages the client — provide a base one so the data
@@ -374,6 +372,16 @@ function registerSecurity(resolver: Resolver): void {
 }
 
 /**
+ * `convex.betterAuth` when it is an object. `authRoute` moved under it in
+ * 0.12: the old key fails loudly rather than leave the proxy where the app's
+ * client no longer calls.
+ */
+function readBetterAuthOptions(options: ModuleOptions): BetterAuthModuleOptions {
+  if ('authRoute' in options) logger.error('`convex.authRoute` moved to `convex.betterAuth.authRoute`.')
+  return typeof options.betterAuth === 'object' ? options.betterAuth : {}
+}
+
+/**
  * Resolve the Convex deployment URL from module options or environment, and
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
@@ -418,7 +426,6 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     crossDomainCallbackRoute,
     loginPath,
   }
-  runtimeConfig.convex = { ...runtimeConfig.convex, siteUrl }
 
   return { url, siteUrl }
 }

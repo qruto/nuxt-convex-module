@@ -7,10 +7,10 @@
 Everything a consumer can write against, whether or not it appears in `package.json`:
 
 - **Module options** — every key of `ModuleOptions` and `BetterAuthModuleOptions`, and its default.
-- **Runtime config** — the five `runtimeConfig` keys the module writes and their Nitro override
-  names (`NUXT_PUBLIC_CONVEX_URL`, `NUXT_PUBLIC_CONVEX_SITE_URL`,
-  `NUXT_PUBLIC_CONVEX_CROSS_DOMAIN_CALLBACK_ROUTE`, `NUXT_PUBLIC_CONVEX_LOGIN_PATH`,
-  `NUXT_CONVEX_SITE_URL`), plus the unprefixed `CONVEX_URL` / `CONVEX_SITE_URL` read at build time.
+- **Runtime config** — the four public `runtimeConfig` keys the module writes and their Nitro
+  override names (`NUXT_PUBLIC_CONVEX_URL`, `NUXT_PUBLIC_CONVEX_SITE_URL`,
+  `NUXT_PUBLIC_CONVEX_CROSS_DOMAIN_CALLBACK_ROUTE`, `NUXT_PUBLIC_CONVEX_LOGIN_PATH`), plus the
+  unprefixed `CONVEX_URL` / `CONVEX_SITE_URL` read at build time.
 - **Import aliases** — the `#convex/*` names and their resolution order, and `#convex/auth-client`.
 - **Auto-imports and components** — every name on the
   [app](https://nuxt-convex-module.dev/api-reference/auto-imports) and
@@ -18,7 +18,7 @@ Everything a consumer can write against, whether or not it appears in `package.j
   auto-registered component. This registry lives in no manifest; it is the most-used surface.
 - **Subpath exports** — every key of `exports` in `package.json`, and every value and type
   reachable from it. `test/nuxt/public-surface.test.ts` records the full list.
-- **Wiring** — the `convex-auth` middleware name, the `authRoute` proxy route and its method list, the
+- **Wiring** — the `convex-auth` middleware name, the `betterAuth.authRoute` proxy route and its method list, the
   `?redirect=` query the middleware attaches.
 - **Peer floors** — the `peerDependencies` ranges, `compatibility.nuxt`, and `engines.node`.
 
@@ -65,10 +65,10 @@ and `convex` is optional, needed only by the integration it powers:
 | `@convex-dev/better-auth` | `>=0.12.0 <0.13.0` |
 | `better-auth` | `~1.6.11` |
 | `@convex-dev/polar` | `>=0.9.0 <0.10.0` |
-| `@polar-sh/checkout` | `>=0.4.0` |
-| `@clerk/vue` | `>=2.0.0` |
-| `@auth0/auth0-vue` | `>=2.0.0` |
-| `nuxt-security` | `>=2.6.0` |
+| `@polar-sh/checkout` | `>=0.4.0 <0.5.0` |
+| `@clerk/vue` | `^2.0.0` |
+| `@auth0/auth0-vue` | `^2.0.0` |
+| `nuxt-security` | `^2.6.0` |
 
 A range is what you may install. The baseline [PARITY.md](./PARITY.md) pins per upstream package
 is narrower: the exact release the ported files were diffed against, and the one the test suite

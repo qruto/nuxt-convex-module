@@ -39,9 +39,7 @@ export default function convexSecurityPlugin(nitroApp: SecurityNitroApp): void {
   nitroApp.hooks.hook('nuxt-security:routeRules', (rules) => {
     const global = rules['/**']
     if (!global) return
-    const config = useRuntimeConfig() as { convex?: { siteUrl?: string }, public?: { convex?: { url?: string, siteUrl?: string } } }
-    const url = config.public?.convex?.url
-    const siteUrl = config.convex?.siteUrl || config.public?.convex?.siteUrl
+    const { url, siteUrl } = (useRuntimeConfig() as { public?: { convex?: { url?: string, siteUrl?: string } } }).public?.convex ?? {}
     applyConvexSecurityDefaults(
       global,
       import.meta.dev ? [] : convexConnectSrc(url, siteUrl),

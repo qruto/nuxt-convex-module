@@ -140,14 +140,14 @@ export function validateModuleOptions(input: {
     )
   }
 
-  const authRoute = normalizeRoutePath(input.authRoute, 'convex.authRoute', warnings)
+  const authRoute = normalizeRoutePath(input.authRoute, 'convex.betterAuth.authRoute', warnings)
   const loginPath = normalizeRoutePath(input.loginPath ?? '/login', 'convex.betterAuth.loginPath', warnings)
   // The bundled Better Auth client is created with Better Auth's default
   // `basePath`, `/api/auth`. Moving the proxy without moving the client leaves
   // every auth call hitting a route that no longer exists — silently, as 404s.
   if (authRoute !== '/api/auth' && !input.authClient) {
     errors.push(
-      `\`convex.authRoute\` is "${authRoute}" but the bundled Better Auth client still calls /api/auth, so every auth request would 404. Keep the default route, or set \`convex.betterAuth.authClient\` to a client created with \`basePath: "${authRoute}"\`.`,
+      `\`convex.betterAuth.authRoute\` is "${authRoute}" but the bundled Better Auth client still calls /api/auth, so every auth request would 404. Keep the default route, or set \`convex.betterAuth.authClient\` to a client created with \`basePath: "${authRoute}"\`.`,
     )
   }
 
@@ -212,7 +212,7 @@ export function integrationWarnings(
   }
   if (flags.polar && !isInstalled('@polar-sh/checkout')) {
     warnings.push(
-      '`@convex-dev/polar` is installed but its peer `@polar-sh/checkout` is not — `<CheckoutLink>` imports it and the build fails the moment the component is used. Run `npm install @polar-sh/checkout`.',
+      '`@convex-dev/polar` is installed but its peer `@polar-sh/checkout` is not — `<CheckoutLink>` imports it and the build fails the moment the component is used. Run `npm install @polar-sh/checkout@~0.4.0`.',
     )
   }
   return warnings

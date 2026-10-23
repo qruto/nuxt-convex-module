@@ -73,19 +73,6 @@ describe('convexSecurityPlugin', () => {
     ])
   })
 
-  it('prefers the private siteUrl over the public one', () => {
-    setNuxtRuntimeConfigForTests({
-      convex: { siteUrl: 'https://private.convex.site' },
-      public: { convex: { url: URL, siteUrl: 'https://public.convex.site' } },
-    })
-    const rules: Record<string, SecurityRules> = { '/**': {} }
-
-    installPlugin().fire(rules)
-
-    expect(cspOf(rules['/**']!)['connect-src']).toContain('https://private.convex.site')
-    expect(cspOf(rules['/**']!)['connect-src']).not.toContain('https://public.convex.site')
-  })
-
   it('keeps the app\'s own directive entries and only appends', () => {
     setNuxtRuntimeConfigForTests({ public: { convex: { url: URL } } })
     const rules: Record<string, SecurityRules> = {

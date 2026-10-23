@@ -1,7 +1,7 @@
 # Billing: Polar
 
 ```bash
-npm i @convex-dev/polar@~0.9.0 @polar-sh/checkout
+npm i @convex-dev/polar@~0.9.0 @polar-sh/checkout@~0.4.0
 ```
 
 Once `@convex-dev/polar` is in `package.json`, the module registers `<CheckoutLink>` and `<CustomerPortalLink>` globally. Nothing goes in `nuxt.config.ts`.
