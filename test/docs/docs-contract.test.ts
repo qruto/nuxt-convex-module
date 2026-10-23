@@ -264,7 +264,7 @@ describe('README', () => {
   // as "pagination,file". GitHub and npm hide this, so every prose line has to
   // be a whole paragraph or list item.
   it('keeps every paragraph on one line', () => {
-    const prose = README.replace(/^```[\s\S]+?^```/gm, '').replace(/^(?:\[[^\]]+\]:|<!--).*$/gm, '').split('\n')
+    const prose = README.replace(/^```[\s\S]+?^```/gm, '').replace(/^\[[^\]]+\]:.*$/gm, '').split('\n')
     const wrapped = prose.filter((line, i) => /^[^\s#|>-]/.test(line) && /^[^\s#|>`-]/.test(prose[i + 1] ?? ''))
     expect(wrapped, 'a paragraph continues on the next line').toEqual([])
   })
