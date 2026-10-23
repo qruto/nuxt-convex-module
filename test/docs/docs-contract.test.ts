@@ -209,12 +209,14 @@ describe('stability', () => {
 })
 
 describe('install commands', () => {
-  // A peer capped below its next minor is installed as `name@~x.y.z`, the
-  // range's own floor. Unpinned, pnpm, yarn and bun take the newest release
+  // A peer capped below its next minor (`~x.y.z`, `>=x.y.z <x.(y+1).0`, or a
+  // `^0.y.z`, which semver caps the same way) is installed as `name@~x.y.z`,
+  // the range's own floor. Unpinned, pnpm, yarn and bun take the newest release
   // whatever the peer range says; only npm picks one that fits. `~` is safe in
   // every shell, `^` is not: zsh's extendedglob reads it as a pattern.
   const capped = Object.entries(manifest.peerDependencies).flatMap(([pkg, range]) => {
-    const tilde = range.match(/^~((\d+)\.(\d+)\.\d+)$/)
+    const tilde = range.match(/^[~^]((\d+)\.(\d+)\.\d+)$/)
+    if (range.startsWith('^') && tilde?.[2] !== '0') return []
     const bounded = range.match(/^>=((\d+)\.(\d+)\.\d+) <(\d+)\.(\d+)\.0$/)
     const oneMinor = bounded && bounded[4] === bounded[2] && Number(bounded[5]) === Number(bounded[3]) + 1
     const floor = tilde?.[1] ?? (oneMinor ? bounded[1] : undefined)
@@ -225,7 +227,7 @@ describe('install commands', () => {
       .map(m => ({ file: file.replace(`${process.cwd()}/`, ''), tokens: (m[1] ?? m[2])!.split(/\s+/) })))
 
   it('finds the capped peers and the commands', () => {
-    expect(capped.map(([pkg]) => pkg)).toEqual(expect.arrayContaining(['better-auth', '@convex-dev/better-auth', '@convex-dev/polar']))
+    expect(capped.map(([pkg]) => pkg)).toEqual(expect.arrayContaining(['better-auth', '@convex-dev/better-auth', '@convex-dev/polar', '@polar-sh/checkout']))
     expect(commands.length).toBeGreaterThan(10)
   })
 
