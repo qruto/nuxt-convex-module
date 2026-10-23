@@ -1,6 +1,5 @@
 import { computed } from 'vue'
-import { setResponseHeader } from 'h3'
-import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent } from '#app'
+import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
@@ -15,6 +14,7 @@ import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
 export async function prefetchAuthToken(
   event: ReturnType<typeof useRequestEvent>,
   initialToken: ReturnType<typeof useState<string | null>>,
+  cacheControl: { value: unknown },
 ) {
   try {
     const token = await convexAuth(event!).getToken()
@@ -26,7 +26,7 @@ export async function prefetchAuthToken(
       // shared/browser caching by default so an authenticated page can never
       // be replayed to a different user from a CDN or proxy. Set early enough
       // that a route with stricter needs can still override it.
-      setResponseHeader(event, 'Cache-Control', 'private, no-store')
+      cacheControl.value = 'private, no-store'
     }
   }
   catch (error) {
@@ -77,7 +77,8 @@ export default defineNuxtPlugin({
     // per-route warning). The payload is the same either way — a null token.
     const event = useRequestEvent()
     if (event && !import.meta.prerender) {
-      await prefetchAuthToken(event, initialToken)
+      // Taken before the await: the Nuxt context it needs is gone after it.
+      await prefetchAuthToken(event, initialToken, useResponseHeader('Cache-Control'))
     }
   },
 })

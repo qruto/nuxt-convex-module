@@ -87,7 +87,7 @@ const send = useMutation(api.reactions.send)
      copy and travel as props (convex is the module's peer range, ^1.46);
      the version and the ported Convex figure the component reads for
      itself. -->
-:landing-version-chip{nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.46"}
+:landing-version-chip{nuxt="≥ 4.6" vue="≥ 3.5" convex="≥ 1.46"}
 
 #bottom
 :landing-services

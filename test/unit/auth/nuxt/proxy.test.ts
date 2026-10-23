@@ -1,5 +1,4 @@
 // PARITY: A-14
-import { Readable } from 'node:stream'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The proxy is three lines; both matter. It must hand the site URL to
@@ -13,17 +12,11 @@ vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }
 
 const proxy = (await import('../../../../src/runtime/better-auth/nuxt/proxy')).default
 
-// Enough of an H3Event for assertMethod, event.path, and toWebRequest (which
-// reads the body as a stream for anything but GET/HEAD).
+// The `nuxt/server` event: a web Request, which normalises its URL, and the
+// router's `**` match, which Nitro 2 takes from the raw path.
 const event = (method: string, path = '/api/auth/get-session') => ({
-  method,
-  path,
-  context: {},
-  headers: new Headers({ host: 'app.test' }),
-  node: {
-    req: Object.assign(Readable.from([]), { method, url: path, headers: { host: 'app.test' } }),
-    res: {},
-  },
+  req: new Request(`https://app.test${path}`, { method }),
+  context: { params: { _: path.replace(/^\/api\/auth\//, '').split('?')[0] } },
 }) as never
 
 describe('auth proxy handler', () => {
@@ -40,15 +33,15 @@ describe('auth proxy handler', () => {
   })
 
   it.each(['PUT', 'DELETE', 'PATCH'])('%s is refused with 405 before reaching the deployment', async (method) => {
-    await expect(proxy(event(method))).rejects.toMatchObject({ statusCode: 405 })
+    await expect(proxy(event(method))).rejects.toMatchObject({ status: 405 })
     expect(convexAuth).not.toHaveBeenCalled()
   })
 
-  // h3 routes the raw path and the handler forwards the normalised one, so a
+  // Nitro 2 routes the raw path and the handler forwards the normalised one, so a
   // dot-segment path that matches /api/auth/** would be sent to the site
   // origin as /secret — any HTTP action on the deployment, through this app.
-  it.each(['/api/auth/../../secret', '/api/auth/%2e%2e/%2e%2e/secret', '/api/auth/./get-session'])('%s is refused with 400', async (path) => {
-    await expect(proxy(event('GET', path))).rejects.toMatchObject({ statusCode: 400 })
+  it.each(['/api/auth/../../secret', '/api/auth/%2e%2e/%2e%2e/secret', '/api/auth/..%5c..%5csecret', '/api/auth/./get-session'])('%s is refused with 400', async (path) => {
+    await expect(proxy(event('GET', path))).rejects.toMatchObject({ status: 400 })
     expect(convexAuth).not.toHaveBeenCalled()
   })
 

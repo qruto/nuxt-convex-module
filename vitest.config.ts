@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 
 const nuxtImportsTestAlias = fileURLToPath(new URL('./test/helpers/nuxt-imports.ts', import.meta.url))
+const nuxtServerTestAlias = fileURLToPath(new URL('./test/helpers/nuxt-server.ts', import.meta.url))
 // The Better Auth runtime imports the app's client via `#convex/auth-client`
 // (the module aliases it to the user's client or the bundled default). Tests
 // resolve it to the bundled default and mock it where needed.
@@ -77,6 +78,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '#imports': nuxtImportsTestAlias,
+            'nuxt/server': nuxtServerTestAlias,
             '#convex/auth-client': authClientTestAlias,
           },
         },
@@ -97,6 +99,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '#imports': nuxtImportsTestAlias,
+            'nuxt/server': nuxtServerTestAlias,
             '#convex/auth-client': authClientTestAlias,
           },
         },

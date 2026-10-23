@@ -1,6 +1,8 @@
 // PARITY: A-14
-import { assertMethod, createError, defineEventHandler, toWebRequest } from 'h3'
+import { createError, defineEventHandler, getRouterParam } from 'nuxt/server'
 import { convexAuth } from './server'
+
+const METHODS = ['GET', 'HEAD', 'POST', 'OPTIONS']
 
 /**
  * Proxy all `${convex.authRoute}/**` requests (default `/api/auth/**`) to the
@@ -15,19 +17,21 @@ import { convexAuth } from './server'
  * route; enforcing it here too keeps the proxy closed to `PUT`/`DELETE` probes when
  * nuxt-security is not installed.
  *
- * The path check: h3 routes the request's raw path, and the handler forwards the
- * URL-normalised one. `/api/auth/../../x` (or its `%2e%2e` spelling) matches this
- * route and normalises to `/x`, which the proxy would send to the site origin —
- * any HTTP action on the deployment, reached through the app's origin with the
- * app's cookies attached. Next.js normalises before routing, so upstream's
- * handler never sees such a path; Nitro does not, so it is refused here.
+ * The path check: Nitro 2 routes the request's raw path, and the handler forwards
+ * the URL-normalised one. `/api/auth/../../x` (or its `%2e%2e` spelling) matches
+ * this route and normalises to `/x`, which the proxy would send to the site
+ * origin — any HTTP action on the deployment, reached through the app's origin
+ * with the app's cookies attached. Next.js normalises before routing, so
+ * upstream's handler never sees such a path; Nitro 2 does not, so a dot segment
+ * in the part of the path this route matched is refused here.
  */
 export default defineEventHandler(async (event) => {
-  assertMethod(event, ['GET', 'HEAD', 'POST', 'OPTIONS'])
-  const routed = event.path.split('?')[0]
-  const forwarded = new URL(toWebRequest(event).url).pathname
-  if (forwarded !== routed) {
-    throw createError({ statusCode: 400, statusMessage: 'Bad Request' })
+  if (!METHODS.includes(event.req.method)) {
+    throw createError({ status: 405, statusText: 'Method Not Allowed' })
+  }
+  const matched = getRouterParam(event, '_', { decode: true }) ?? ''
+  if (matched.split(/[/\\]/).some(segment => segment === '.' || segment === '..')) {
+    throw createError({ status: 400, statusText: 'Bad Request' })
   }
   return convexAuth(event).handler()
 })

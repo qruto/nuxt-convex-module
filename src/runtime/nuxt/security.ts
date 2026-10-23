@@ -1,5 +1,5 @@
 // PARITY: A-11
-import { getConvexRuntimeConfig } from './config'
+import { useRuntimeConfig } from 'nuxt/server'
 import { applyConvexSecurityDefaults, convexConnectSrc, convexResourceSrc, type SecurityRules } from './csp'
 
 /**
@@ -25,7 +25,8 @@ export interface SecurityNitroApp {
  * origins are appended to whatever the app configured, whatever the order of
  * `modules`. nuxt-security sorts its own Nitro plugins last, so this listener
  * is in place before the hook fires. The deployment URL comes from runtime
- * config, so it need not be known at build time.
+ * config, so it need not be known at build time. `nuxt/server` is its only
+ * server import, so the same file runs on Nitro 2 and Nitro 3.
  *
  * `connect-src` is tightened only in production: creating it in dev would
  * block the Vite HMR and devtools WebSockets, which run on ports `'self'`
@@ -38,7 +39,9 @@ export default function convexSecurityPlugin(nitroApp: SecurityNitroApp): void {
   nitroApp.hooks.hook('nuxt-security:routeRules', (rules) => {
     const global = rules['/**']
     if (!global) return
-    const { url, siteUrl } = getConvexRuntimeConfig()
+    const config = useRuntimeConfig() as { convex?: { siteUrl?: string }, public?: { convex?: { url?: string, siteUrl?: string } } }
+    const url = config.public?.convex?.url
+    const siteUrl = config.convex?.siteUrl || config.public?.convex?.siteUrl
     applyConvexSecurityDefaults(
       global,
       import.meta.dev ? [] : convexConnectSrc(url, siteUrl),

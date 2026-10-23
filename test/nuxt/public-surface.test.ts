@@ -113,7 +113,7 @@ const ENTRY: Record<string, Entry> = {
   './better-auth/server': {
     source: 'src/runtime/better-auth/nuxt/server.ts',
     values: ['convexAuth', 'convexBetterAuthNuxt'],
-    types: ['ConvexAuthOptions', 'ConvexAuthService'],
+    types: ['ConvexAuthEvent', 'ConvexAuthOptions', 'ConvexAuthService'],
   },
   './polar/client': {
     source: 'src/runtime/polar/vue/components.ts',

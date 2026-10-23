@@ -1,4 +1,3 @@
-import type { H3Event } from 'h3'
 import { queryCollection } from '@nuxt/content/server'
 
 // The docs card (app/components/OgImage/Docs.takumi.vue) gets its text
@@ -24,7 +23,7 @@ interface DocsPage { title?: string, description?: string, seo?: { title?: strin
 
 let pages: Promise<DocsPage[]> | undefined
 
-function loadPages(e: H3Event) {
+function loadPages(e: Parameters<typeof queryCollection>[0]) {
   pages ??= queryCollection(e, 'docs')
     .select('title', 'description', 'seo')
     .all()

@@ -6,7 +6,7 @@
 // (2026-09-14: "less dark, aligned with the container, concave").
 //
 // The peer ranges arrive as props from the markdown (`:landing-version-chip
-// {nuxt="≥ 4.1" vue="≥ 3.5" convex="≥ 1.40"}`) — they are the page's copy,
+// {nuxt="≥ 4.6" vue="≥ 3.5" convex="≥ 1.46"}`) — they are the page's copy,
 // and the strip needs them as label/figure pairs rather than as one
 // sentence to split.
 const props = defineProps<{
@@ -51,7 +51,7 @@ const cells = computed(() => [
 
 <template>
   <!-- A definition list is what a nameplate IS — a name and a figure,
-       five times — so a screen reader gets "nuxt ≥ 4.1" as one pair.
+       five times — so a screen reader gets "nuxt ≥ 4.6" as one pair.
 
        The strip is a cut into the section ground (`concave-ground`: the
        ground's own tone on the floor, the walls drawing the recess), the

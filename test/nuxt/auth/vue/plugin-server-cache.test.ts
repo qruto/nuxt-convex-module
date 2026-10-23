@@ -21,9 +21,10 @@ async function loadPrefetch() {
   return mod.prefetchAuthToken
 }
 
+// The plugin hands in `useResponseHeader('Cache-Control')`, taken before its
+// first await; a plain ref stands in for it.
 function fakeEvent() {
-  const setHeader = vi.fn()
-  return { event: { node: { res: { setHeader } } } as never, setHeader }
+  return { event: {} as never, cacheControl: { value: undefined as unknown } }
 }
 
 describe('auth/vue/plugin.server prefetchAuthToken', () => {
@@ -34,38 +35,38 @@ describe('auth/vue/plugin.server prefetchAuthToken', () => {
   it('stashes the token and forbids caching when authenticated', async () => {
     const prefetchAuthToken = await loadPrefetch()
     mockGetToken.mockResolvedValue('jwt-1')
-    const { event, setHeader } = fakeEvent()
+    const { event, cacheControl } = fakeEvent()
     const initialToken = { value: null as string | null } as never
 
-    await prefetchAuthToken(event, initialToken)
+    await prefetchAuthToken(event, initialToken, cacheControl)
 
     expect((initialToken as { value: string | null }).value).toBe('jwt-1')
-    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'private, no-store')
+    expect(cacheControl.value).toBe('private, no-store')
   })
 
   it('leaves caching untouched for an anonymous request', async () => {
     const prefetchAuthToken = await loadPrefetch()
     mockGetToken.mockResolvedValue(null)
-    const { event, setHeader } = fakeEvent()
+    const { event, cacheControl } = fakeEvent()
     const initialToken = { value: null as string | null } as never
 
-    await prefetchAuthToken(event, initialToken)
+    await prefetchAuthToken(event, initialToken, cacheControl)
 
     expect((initialToken as { value: string | null }).value).toBeNull()
-    expect(setHeader).not.toHaveBeenCalled()
+    expect(cacheControl.value).toBeUndefined()
   })
 
   it('never sets the header (and never throws) when the token fetch fails', async () => {
     const prefetchAuthToken = await loadPrefetch()
     mockGetToken.mockRejectedValue(new Error('boom'))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { event, setHeader } = fakeEvent()
+    const { event, cacheControl } = fakeEvent()
     const initialToken = { value: null as string | null } as never
 
-    await expect(prefetchAuthToken(event, initialToken)).resolves.toBeUndefined()
+    await expect(prefetchAuthToken(event, initialToken, cacheControl)).resolves.toBeUndefined()
 
     expect((initialToken as { value: string | null }).value).toBeNull()
-    expect(setHeader).not.toHaveBeenCalled()
+    expect(cacheControl.value).toBeUndefined()
     expect(warn).toHaveBeenCalled()
     warn.mockRestore()
   })
