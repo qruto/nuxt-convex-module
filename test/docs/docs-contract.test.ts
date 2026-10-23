@@ -210,13 +210,13 @@ describe('stability', () => {
 
 describe('install commands', () => {
   // A peer capped below its next minor (`~x.y.z`, `>=x.y.z <x.(y+1).0`, or a
-  // `^0.y.z`, which semver caps the same way) is installed as `name@~x.y.z`,
+  // `^0.y.z` with y > 0, which semver caps the same way) is installed as `name@~x.y.z`,
   // the range's own floor. Unpinned, pnpm, yarn and bun take the newest release
   // whatever the peer range says; only npm picks one that fits. `~` is safe in
   // every shell, `^` is not: zsh's extendedglob reads it as a pattern.
   const capped = Object.entries(manifest.peerDependencies).flatMap(([pkg, range]) => {
     const tilde = range.match(/^[~^]((\d+)\.(\d+)\.\d+)$/)
-    if (range.startsWith('^') && tilde?.[2] !== '0') return []
+    if (range.startsWith('^') && (tilde?.[2] !== '0' || tilde[3] === '0')) return []
     const bounded = range.match(/^>=((\d+)\.(\d+)\.\d+) <(\d+)\.(\d+)\.0$/)
     const oneMinor = bounded && bounded[4] === bounded[2] && Number(bounded[5]) === Number(bounded[3]) + 1
     const floor = tilde?.[1] ?? (oneMinor ? bounded[1] : undefined)
