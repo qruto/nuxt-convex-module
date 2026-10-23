@@ -640,3 +640,32 @@ jobs:
             esac
           done
           echo "All required jobs passed or were skipped."
+
+  # The Monday run is where a new Nuxt or Convex release meets the module first
+  # (the `pack` smoke tests install the newest of each), and a failed scheduled
+  # run only emails whoever last edited the cron. File it on weekly.yml's drift
+  # issue instead; see the `report` job there for why an issue, and why it is
+  # matched by exact title.
+  report:
+    needs: all-checks
+    if: ${{ always() && github.event_name == 'schedule' && needs.all-checks.result == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body=$(printf 'ci (scheduled): a required job failed\n\n%s\n' "$RUN_URL")
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
+            --json number,title \
+            --jq '[.[] | select(.title == "ci: weekly drift")][0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment --repo "$GITHUB_REPOSITORY" "$existing" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title 'ci: weekly drift' --body "$body"
+          fi

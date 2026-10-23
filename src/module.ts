@@ -368,6 +368,9 @@ function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): Return
  * runtime config rather than fixed at build time.
  */
 function registerSecurity(resolver: Resolver): void {
+  // Deprecated in kit 4.6 for `addNitroPlugin`, which only exists from 4.6.
+  // Switch when the Nuxt floor reaches 4.6.
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   addServerPlugin(resolver.resolve('./runtime/nuxt/security'))
 }
 

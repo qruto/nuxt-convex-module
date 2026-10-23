@@ -26,7 +26,7 @@ Ask the user, and wait for a yes, before any command that logs in to Convex or c
 
 ## Where things live
 
-- Convex functions are in `convex/` (or the `functions` path in `convex.json`). Backend code is plain Convex: follow `convex/_generated/ai/guidelines.md` when it exists (`npx convex ai-files install` writes it), or Convex's own skills (`npx skills add get-convex/agent-skills`).
+- Convex functions are in `convex/` (or the `functions` path in `convex.json`). Backend code is plain Convex: follow `convex/_generated/ai/guidelines.md` when it exists (`npx convex ai-files install` writes it), or Convex's own skills (`npx skills add convex/agent-skills`).
 - Import function references from `#convex/api`: `import { api } from '#convex/api'`. `#convex/dataModel` and `#convex/server` alias the other generated files.
 - `convex dev` generates `convex/_generated/`. Until it exists, `#convex/*` imports are typed `any`. Run `npx convex dev --once` before type-checking.
 - Composables, components and server helpers are auto-imported. Don't import from `convex/react`; that is React.

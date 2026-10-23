@@ -177,7 +177,7 @@ describe('peer dependencies', () => {
 
 describe('PARITY.md baselines', () => {
   // upstream-baselines.test.ts already pins these numbers to PARITY.md, the
-  // README and the components overview. This is the other half: the number has
+  // site's copy and the components overview. This is the other half: the number has
   // to describe the code actually in node_modules, or every one of those
   // statements is confidently wrong.
   it.each(Object.entries(upstreamBaselines))(

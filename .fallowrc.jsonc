@@ -78,7 +78,11 @@
     "typedoc-plugin-frontmatter", // both listed as plain strings in typedoc.json "plugin"
     "typedoc-plugin-markdown",
     "tailwindcss", // the website's CSS `@apply`s through Docus's Nuxt UI, which installs and runs it
-    "@iconify-json/carbon" // the DevTools panel's icons; UnoCSS loads the set by name at build time
+    "@iconify-json/carbon", // the DevTools panel's icons; UnoCSS loads the set by name at build time
+    // Docus installs Nuxt UI and the website imports it through Nuxt's `#ui`
+    // alias. Listing it in website/package.json instead makes docus's own
+    // OgImage component fail `nuxt typecheck`.
+    "@nuxt/ui"
   ],
 
   // PR audits fail on every finding in the files a PR touches, not only the

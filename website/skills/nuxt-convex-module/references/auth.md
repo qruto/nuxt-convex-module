@@ -5,7 +5,7 @@ Each integration switches on when its package is in the app's `package.json`. Th
 Every provider has two halves:
 
 - **The Nuxt side**, which this module wires.
-- **The Convex side**: functions and env vars on the deployment. That half is framework-independent, so Convex's guides for React apply unchanged. Convex's `convex-setup-auth` skill (`npx skills add get-convex/agent-skills`) covers it too.
+- **The Convex side**: functions and env vars on the deployment. That half is framework-independent, so Convex's guides for React apply unchanged. Convex's `convex-setup-auth` skill (`npx skills add convex/agent-skills`) covers it too.
 
 Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `isAuthenticated`, and the `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>` and `<AuthRefreshing>` components. During SSR it reads as loading.
 
