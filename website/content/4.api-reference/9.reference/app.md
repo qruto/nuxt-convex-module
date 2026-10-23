@@ -87,7 +87,7 @@ fields plus the `error` and `refresh` of the Nuxt data contract.
 
 | Type Parameter |
 | ------ |
-| `Item` |
+| <a id="type-parameter-item"></a> `Item` |
 
 #### Properties
 
@@ -111,13 +111,14 @@ the refs of [AsyncPaginatedQueryData](#asyncpaginatedquerydata).
 
 #### Extends
 
-- `PromiseLike`\<[`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\>\>.[`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\>
+- `PromiseLike`\<[`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\>\>
+- [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\>
 
 #### Type Parameters
 
 | Type Parameter |
 | ------ |
-| `Item` |
+| <a id="type-parameter-item-1"></a> `Item` |
 
 #### Properties
 
@@ -146,8 +147,8 @@ Attaches callbacks for the resolution and/or rejection of the Promise.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TResult1` | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\> |
-| `TResult2` | `never` |
+| <a id="type-parameter-tresult1"></a> `TResult1` | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata)\<`Item`\> |
+| <a id="type-parameter-tresult2"></a> `TResult2` | `never` |
 
 ###### Parameters
 
@@ -164,9 +165,7 @@ A Promise for the completion of which ever callback is executed.
 
 ###### Inherited from
 
-```ts
-PromiseLike.then
-```
+`PromiseLike.then`
 
 ***
 
@@ -204,7 +203,7 @@ useAsyncQuery(...)` blocks until the initial fetch settles, like
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Properties
 
@@ -231,8 +230,8 @@ Attaches callbacks for the resolution and/or rejection of the Promise.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TResult1` | [`AsyncQueryData`](#asyncquerydata)\<`T`\> |
-| `TResult2` | `never` |
+| <a id="type-parameter-tresult1-1"></a> `TResult1` | [`AsyncQueryData`](#asyncquerydata)\<`T`\> |
+| <a id="type-parameter-tresult2-1"></a> `TResult2` | `never` |
 
 ###### Parameters
 
@@ -249,9 +248,7 @@ A Promise for the completion of which ever callback is executed.
 
 ###### Inherited from
 
-```ts
-PromiseLike.then
-```
+`PromiseLike.then`
 
 ## Type Aliases
 
@@ -283,7 +280,7 @@ resolves to, and the shape to annotate a value passed on from the call site.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-1"></a> `T` |
 
 ## Variables
 
@@ -303,7 +300,7 @@ the client — live rows and `loadMore`, no loading flash for the first page.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](/api-reference/reference/client#paginatedqueryreference) |
+| <a id="type-parameter-__typequery"></a> `Query` *extends* [`PaginatedQueryReference`](/api-reference/reference/client#paginatedqueryreference) |
 
 #### Parameters
 
@@ -362,7 +359,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-__typequery-1"></a> `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -422,7 +419,7 @@ the client — live rows and `loadMore`, no loading flash for the first page.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](/api-reference/reference/client#paginatedqueryreference) |
+| <a id="type-parameter-query"></a> `Query` *extends* [`PaginatedQueryReference`](/api-reference/reference/client#paginatedqueryreference) |
 
 #### Parameters
 
@@ -485,7 +482,7 @@ subscription simply takes over. Compared to `preloadQuery` +
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-1"></a> `Query` *extends* \| [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> \| [`FunctionReference_future`](/api-reference/reference/client#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 

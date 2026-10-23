@@ -137,8 +137,8 @@ Defined in: node\_modules/@convex-dev/better-auth/dist/plugins/cross-domain/clie
 | ------ | ------ |
 | `opts?` | \{ `storage?`: \{ `setItem`: (`key`, `value`) => `any`; `getItem`: (`key`) => `string` \| `null`; \}; `storagePrefix?`: `string`; `disableCache?`: `boolean`; \} |
 | `opts.storage?` | \{ `setItem`: (`key`, `value`) => `any`; `getItem`: (`key`) => `string` \| `null`; \} |
-| `opts.storage.setItem?` | (`key`, `value`) => `any` |
-| `opts.storage.getItem?` | (`key`) => `string` \| `null` |
+| `opts.storage.setItem` | (`key`, `value`) => `any` |
+| `opts.storage.getItem` | (`key`) => `string` \| `null` |
 | `opts.storagePrefix?` | `string` |
 | `opts.disableCache?` | `boolean` |
 
@@ -377,7 +377,7 @@ mitigation.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | [`ConsumeCrossDomainOneTimeTokenOptions`](#consumecrossdomainonetimetokenoptions) |
+| `options?` | [`ConsumeCrossDomainOneTimeTokenOptions`](#consumecrossdomainonetimetokenoptions) |
 
 #### Returns
 
@@ -410,7 +410,7 @@ compiling.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> |
+| <a id="type-parameter-query"></a> `Query` *extends* [`FunctionReference`](/api-reference/reference/client#functionreference)\<`"query"`\> |
 
 #### Parameters
 
@@ -443,7 +443,7 @@ middleware sets — never navigate to that value directly.
 | Parameter | Type | Default value | Description |
 | ------ | ------ | ------ | ------ |
 | `value` | `unknown` | `undefined` | Candidate destination, typically `route.query.redirect`. A repeated query parameter arrives as an array and is rejected: which entry the app meant is ambiguous, and an attacker chooses the other one. |
-| `fallback` | `string` | `'/'` | Where to send the visitor when `value` is not a safe same-origin path. Defaults to `/`, and is returned as given — pass a path you control, not user input. |
+| `fallback?` | `string` | `'/'` | Where to send the visitor when `value` is not a safe same-origin path. Defaults to `/`, and is returned as given — pass a path you control, not user input. |
 
 #### Returns
 

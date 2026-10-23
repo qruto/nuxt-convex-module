@@ -205,7 +205,7 @@ The act of creating a watch does nothing, a Watch is stateless.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-5"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -240,7 +240,7 @@ To use this in a Vue component, call useQuery() and ignore the return value.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-6"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -266,7 +266,7 @@ Execute a mutation function.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
+| <a id="type-parameter-mutation"></a> `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 ###### Parameters
 
@@ -295,7 +295,7 @@ Execute an action function.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
+| <a id="type-parameter-action"></a> `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 ###### Parameters
 
@@ -327,7 +327,7 @@ the [useQuery](#usequery) composable.**
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-7"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 ###### Parameters
 
@@ -449,7 +449,7 @@ the internal `localQueryLogs`, which is stripped from the published
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Methods
 
@@ -485,9 +485,7 @@ react.Watch.localQueryResult.
 
 ###### Inherited from
 
-```ts
-ConvexWatch.onUpdate
-```
+`ConvexWatch.onUpdate`
 
 ##### localQueryResult()
 
@@ -515,9 +513,7 @@ An error if the query encountered an error on the server.
 
 ###### Inherited from
 
-```ts
-ConvexWatch.localQueryResult
-```
+`ConvexWatch.localQueryResult`
 
 ##### journal()
 
@@ -537,9 +533,7 @@ If we have not yet received a result for this query, this will be `undefined`.
 
 ###### Inherited from
 
-```ts
-ConvexWatch.journal
-```
+`ConvexWatch.journal`
 
 ***
 
@@ -553,7 +547,7 @@ A watch on the output of a paginated Convex query function.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-1"></a> `T` |
 
 #### Methods
 
@@ -635,7 +629,7 @@ Options for [ConvexVueClient.mutation](#mutation).
 
 | Type Parameter |
 | ------ |
-| `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
+| <a id="type-parameter-args-3"></a> `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
 
 #### Properties
 
@@ -660,7 +654,7 @@ Options for [ConvexVueClient](#convexvueclient).
 | Property | Modifier | Type | Description | Inherited from | Defined in |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | <a id="unsavedchangeswarning"></a> `unsavedChangesWarning?` | `public` | `boolean` | Whether to prompt the user if they have unsaved changes pending when navigating away or closing a web page. This is only possible when the `window` object exists, i.e. in a browser. The default value is `true` in browsers. | `BaseConvexClientOptions.unsavedChangesWarning` | node\_modules/convex/dist/esm-types/browser/sync/client.d.ts:23 |
-| <a id="websocketconstructor"></a> `webSocketConstructor?` | `public` | \{ (`url`, `protocols?`): `WebSocket`; `prototype`: `WebSocket`; `CONNECTING`: `0`; `OPEN`: `1`; `CLOSING`: `2`; `CLOSED`: `3`; \} | Specifies an alternate [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) constructor to use for client communication with the Convex cloud. The default behavior is to use `WebSocket` from the global environment. | `BaseConvexClientOptions.webSocketConstructor` | node\_modules/convex/dist/esm-types/browser/sync/client.d.ts:30 |
+| <a id="websocketconstructor"></a> `webSocketConstructor?` | `public` | \{ new (`url`, `protocols?`): `WebSocket`; `prototype`: `WebSocket`; `CONNECTING`: `0`; `OPEN`: `1`; `CLOSING`: `2`; `CLOSED`: `3`; \} | Specifies an alternate [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) constructor to use for client communication with the Convex cloud. The default behavior is to use `WebSocket` from the global environment. | `BaseConvexClientOptions.webSocketConstructor` | node\_modules/convex/dist/esm-types/browser/sync/client.d.ts:30 |
 | `webSocketConstructor.prototype` | `public` | `WebSocket` | - | - | node\_modules/typescript/lib/lib.dom.d.ts:40936 |
 | `webSocketConstructor.CONNECTING` | `readonly` | `0` | - | - | node\_modules/typescript/lib/lib.dom.d.ts:40938 |
 | `webSocketConstructor.OPEN` | `readonly` | `1` | - | - | node\_modules/typescript/lib/lib.dom.d.ts:40939 |
@@ -687,7 +681,7 @@ An interface to execute a Convex action on the server.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
+| <a id="type-parameter-action-1"></a> `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 ```ts
 VueAction(...args): Promise<FunctionReturnType<Action>>;
@@ -721,7 +715,7 @@ An interface to execute a Convex mutation function on the server.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
+| <a id="type-parameter-mutation-1"></a> `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 ```ts
 VueMutation(...args): Promise<FunctionReturnType<Mutation>>;
@@ -772,13 +766,13 @@ completed and queries have been updated.
 
 | Type Parameter |
 | ------ |
-| `T` *extends* [`OptimisticUpdate`](#optimisticupdate)\<[`FunctionArgs`](#functionargs)\<`Mutation`\>\> |
+| <a id="type-parameter-t-2"></a> `T` *extends* [`OptimisticUpdate`](#optimisticupdate)\<[`FunctionArgs`](#functionargs)\<`Mutation`\>\> |
 
 ###### Parameters
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `optimisticUpdate` | `T` & `ReturnType`\<`T`\> *extends* `Promise`\<`any`\> ? `"Optimistic update handlers must be synchronous"` : \{ \} | The optimistic update to apply. |
+| `optimisticUpdate` | `T` & (`ReturnType`\<`T`\> *extends* `Promise`\<`any`\> ? `"Optimistic update handlers must be synchronous"` : \{ \}) | The optimistic update to apply. |
 
 ###### Returns
 
@@ -918,13 +912,13 @@ Used with the object-form overload of [useQuery](#usequery).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Properties
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="query-1"></a> `query` | `Query` | The query function to run. | node\_modules/convex/dist/esm-types/browser/query\_options.d.ts:13 |
+| <a id="query"></a> `query` | `Query` | The query function to run. | node\_modules/convex/dist/esm-types/browser/query\_options.d.ts:13 |
 | <a id="args"></a> `args` | [`FunctionArgs`](#functionargs)\<`Query`\> | The arguments to the query function. | node\_modules/convex/dist/esm-types/browser/query\_options.d.ts:17 |
 
 ***
@@ -1015,7 +1009,7 @@ again.
 
 | Type Parameter |
 | ------ |
-| `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
+| <a id="type-parameter-args"></a> `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
 
 #### Parameters
 
@@ -1076,7 +1070,7 @@ This function reference must:
 type UsePaginatedQueryResult<Item> = {
   results: Item[];
   loadMore: (numItems) => void;
-} & 
+} & (
   | {
   status: "LoadingFirstPage";
   isLoading: true;
@@ -1092,7 +1086,7 @@ type UsePaginatedQueryResult<Item> = {
   | {
   status: "Exhausted";
   isLoading: false;
-};
+});
 ```
 
 Defined in: node\_modules/convex/dist/esm-types/react/use\_paginated\_query.d.ts:80
@@ -1111,18 +1105,18 @@ This includes:
 - `loadMore(n)` A callback to fetch more results. This will only fetch more
 results if the status is "CanLoadMore".
 
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-item"></a> `Item` |
+
 #### Type Declaration
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
 | `results` | `Item`[] | node\_modules/convex/dist/esm-types/react/use\_paginated\_query.d.ts:81 |
 | `loadMore()` | (`numItems`) => `void` | node\_modules/convex/dist/esm-types/react/use\_paginated\_query.d.ts:82 |
-
-#### Type Parameters
-
-| Type Parameter |
-| ------ |
-| `Item` |
 
 ***
 
@@ -1155,7 +1149,7 @@ object for the query, excluding the `paginationOpts` argument.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-1"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 ***
 
@@ -1174,7 +1168,7 @@ paginated over.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-2"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 ***
 
@@ -1197,17 +1191,17 @@ Options for object-form [usePaginatedQuery\_experimental](#usepaginatedquery_exp
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
-| `ThrowOnError` *extends* `boolean` | `false` |
+| <a id="type-parameter-query-3"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
+| <a id="type-parameter-throwonerror"></a> `ThrowOnError` *extends* `boolean` | `false` |
 
 #### Properties
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="query-5"></a> `query` | `Query` | - | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:8 |
-| <a id="args-2"></a> `args` | [`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\> \| `"skip"` | - | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:9 |
+| <a id="query-1"></a> `query` | `Query` | - | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:8 |
+| <a id="args-1"></a> `args` | [`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\> \| `"skip"` | - | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:9 |
 | <a id="initialnumitems"></a> `initialNumItems` | `number` | - | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:10 |
-| <a id="throwonerror-1"></a> `throwOnError?` | `ThrowOnError` | When `true` (default for positional form), errors are thrown and caught by an error boundary. When `false` (default for object form), errors are returned as `{ status: "Error", error: Error }` instead of being thrown. | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:16 |
+| <a id="throwonerror"></a> `throwOnError?` | `ThrowOnError` | When `true` (default for positional form), errors are thrown and caught by an error boundary. When `false` (default for object form), errors are returned as `{ status: "Error", error: Error }` instead of being thrown. | node\_modules/convex/dist/esm-types/react/use\_paginated\_query2.d.ts:16 |
 
 ***
 
@@ -1253,8 +1247,8 @@ used by the positional form.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
-| `ThrowOnError` *extends* `boolean` | `false` |
+| <a id="type-parameter-query-4"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
+| <a id="type-parameter-throwonerror-1"></a> `ThrowOnError` *extends* `boolean` | `false` |
 
 ***
 
@@ -1287,7 +1281,7 @@ type FunctionReference<Type, Visibility, Args, ReturnType, ComponentPath> = {
   _args: Args;
   _returnType: ReturnType;
   _componentPath: ComponentPath;
-  _fn?: ReturnType;
+  _fn?(args, keys): ReturnType;
 };
 ```
 
@@ -1323,11 +1317,11 @@ typing the callback parameter as [FunctionReference\_future](#functionreference_
 
 | Type Parameter | Default type | Description |
 | ------ | ------ | ------ |
-| `Type` *extends* `FunctionType` | - | The type of the function ("query", "mutation", or "action"). |
-| `Visibility` *extends* `FunctionVisibility` | `"public"` | The visibility of the function ("public" or "internal"). |
-| `Args` *extends* `DefaultFunctionArgs` | `any` | The arguments to this function. This is an object mapping argument names to their types. |
-| `ReturnType` | `any` | The return type of this function. |
-| `ComponentPath` | `string` \| `undefined` | - |
+| <a id="type-parameter-type"></a> `Type` *extends* `FunctionType` | - | The type of the function ("query", "mutation", or "action"). |
+| <a id="type-parameter-visibility"></a> `Visibility` *extends* `FunctionVisibility` | `"public"` | The visibility of the function ("public" or "internal"). |
+| <a id="type-parameter-args-1"></a> `Args` *extends* `DefaultFunctionArgs` | `any` | The arguments to this function. This is an object mapping argument names to their types. |
+| <a id="type-parameter-returntype"></a> `ReturnType` | `any` | The return type of this function. |
+| <a id="type-parameter-componentpath"></a> `ComponentPath` | `string` \| `undefined` | - |
 
 #### Properties
 
@@ -1344,7 +1338,7 @@ typing the callback parameter as [FunctionReference\_future](#functionreference_
 ##### \_fn()?
 
 ```ts
-optional _fn(args, keys): ReturnType;
+_fn?(args, keys): ReturnType;
 ```
 
 Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:70
@@ -1437,11 +1431,11 @@ reference is compared exactly as `FunctionReference` compares it.
 
 | Type Parameter | Default type | Description |
 | ------ | ------ | ------ |
-| `Type` *extends* `FunctionType` | - | The type of the function ("query", "mutation", or "action"). |
-| `Visibility` *extends* `FunctionVisibility` | `"public"` | The visibility of the function ("public" or "internal"). |
-| `Args` *extends* `DefaultFunctionArgs` | `any` | The arguments the consumer of the reference will pass. |
-| `ReturnType` | `any` | The return type of this function. |
-| `ComponentPath` | `string` \| `undefined` | - |
+| <a id="type-parameter-type-1"></a> `Type` *extends* `FunctionType` | - | The type of the function ("query", "mutation", or "action"). |
+| <a id="type-parameter-visibility-1"></a> `Visibility` *extends* `FunctionVisibility` | `"public"` | The visibility of the function ("public" or "internal"). |
+| <a id="type-parameter-args-2"></a> `Args` *extends* `DefaultFunctionArgs` | `any` | The arguments the consumer of the reference will pass. |
+| <a id="type-parameter-returntype-1"></a> `ReturnType` | `any` | The return type of this function. |
+| <a id="type-parameter-componentpath-1"></a> `ComponentPath` | `string` \| `undefined` | - |
 
 #### Properties
 
@@ -1471,14 +1465,14 @@ This is represented as an object mapping argument names to values.
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
+| <a id="type-parameter-funcref"></a> `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
 ### OptionalRestArgs
 
 ```ts
-type OptionalRestArgs<FuncRef> = FunctionArgs<FuncRef> extends EmptyObject ? [EmptyObject] : [FunctionArgs<FuncRef>];
+type OptionalRestArgs<FuncRef> = FunctionArgs<FuncRef> extends EmptyObject ? [args?: EmptyObject] : [args: FunctionArgs<FuncRef>];
 ```
 
 Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:371
@@ -1492,14 +1486,14 @@ skipping the arguments for functions that don't require arguments.
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
+| <a id="type-parameter-funcref-1"></a> `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
 ### ArgsAndOptions
 
 ```ts
-type ArgsAndOptions<FuncRef, Options> = FunctionArgs<FuncRef> extends EmptyObject ? [EmptyObject, Options] : [FunctionArgs<FuncRef>, Options];
+type ArgsAndOptions<FuncRef, Options> = FunctionArgs<FuncRef> extends EmptyObject ? [args?: EmptyObject, options?: Options] : [args: FunctionArgs<FuncRef>, options?: Options];
 ```
 
 Defined in: node\_modules/convex/dist/esm-types/server/api.d.ts:381
@@ -1515,8 +1509,8 @@ This type is used to make methods like `useQuery` type-safe while allowing
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
-| `Options` |
+| <a id="type-parameter-funcref-2"></a> `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
+| <a id="type-parameter-options"></a> `Options` |
 
 ***
 
@@ -1535,7 +1529,7 @@ the return type of the function.
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
+| <a id="type-parameter-funcref-3"></a> `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`, `any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`, `any`\> |
 
 ***
 
@@ -1573,8 +1567,8 @@ You can see the full set of supported types at
 
 ```ts
 type IConvexVueClient = {
-  setAuth: void;
-  clearAuth: void;
+  setAuth(fetchToken, onChange, onRefreshChange?): void;
+  clearAuth(): void;
 };
 ```
 
@@ -1668,7 +1662,7 @@ Defined in: [src/runtime/vue/client.ts:129](https://github.com/qruto/nuxt-convex
 
 | Type Parameter |
 | ------ |
-| `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
+| <a id="type-parameter-args-4"></a> `Args` *extends* `Record`\<`string`, [`Value`](#value)\> |
 
 ***
 
@@ -1713,7 +1707,7 @@ keep compiling. The plain union stays available as
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-9"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Properties
 
@@ -1729,7 +1723,7 @@ keep compiling. The plain union stays available as
 ### OptionalRestArgsOrSkip
 
 ```ts
-type OptionalRestArgsOrSkip<FuncRef> = FunctionArgs<FuncRef> extends Record<string, never> ? [MaybeRefOrGetter<Record<string, never> | "skip">] : [MaybeRefOrGetter<FunctionArgs<FuncRef> | "skip">];
+type OptionalRestArgsOrSkip<FuncRef> = FunctionArgs<FuncRef> extends Record<string, never> ? [args?: MaybeRefOrGetter<Record<string, never> | "skip">] : [args: MaybeRefOrGetter<FunctionArgs<FuncRef> | "skip">];
 ```
 
 Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-query.ts#L16)
@@ -1738,7 +1732,7 @@ Defined in: [src/runtime/vue/composables/use-query.ts:16](https://github.com/qru
 
 | Type Parameter |
 | ------ |
-| `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`\> |
+| <a id="type-parameter-funcref-4"></a> `FuncRef` *extends* \| [`FunctionReference`](#functionreference)\<`any`\> \| [`FunctionReference_future`](#functionreference_future)\<`any`\> |
 
 ***
 
@@ -1760,8 +1754,8 @@ Result returned by object-form [useQuery\_experimental](#usequery_experimental).
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `QueryResult` | - |
-| `ThrowOnError` *extends* `boolean` | `false` |
+| <a id="type-parameter-queryresult"></a> `QueryResult` | - |
+| <a id="type-parameter-throwonerror-3"></a> `ThrowOnError` *extends* `boolean` | `false` |
 
 ***
 
@@ -1850,7 +1844,7 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-18"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Properties
 
@@ -2131,7 +2125,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
+| <a id="type-parameter-__typeaction"></a> `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 #### Parameters
 
@@ -2191,7 +2185,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
+| <a id="type-parameter-__typemutation"></a> `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 #### Parameters
 
@@ -2238,7 +2232,7 @@ This can be used to power "infinite scroll" UIs.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-__typequery"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -2362,7 +2356,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-__typequery-1"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -2468,7 +2462,7 @@ exposing per-item and aggregate progress.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `generateUploadUrl` | [`GenerateUploadUrl`](#generateuploadurl) | A `FunctionReference` for the public `generateUploadUrl` mutation. |
-| `options` | [`UseUploadQueueOptions`](#useuploadqueueoptions) | Optional [UseUploadQueueOptions](#useuploadqueueoptions). |
+| `options?` | [`UseUploadQueueOptions`](#useuploadqueueoptions) | Optional [UseUploadQueueOptions](#useuploadqueueoptions). |
 
 #### Returns
 
@@ -2531,7 +2525,7 @@ and sets [VueUpload.error](#error-1).
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `generateUploadUrl` | [`GenerateUploadUrl`](#generateuploadurl) | A `FunctionReference` for the public `generateUploadUrl` mutation. |
-| `options` | [`UseUploadOptions`](#useuploadoptions) | Optional [UseUploadOptions](#useuploadoptions) callbacks. |
+| `options?` | [`UseUploadOptions`](#useuploadoptions) | Optional [UseUploadOptions](#useuploadoptions) callbacks. |
 
 #### Returns
 
@@ -2768,7 +2762,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
+| <a id="type-parameter-action-2"></a> `Action` *extends* \| [`FunctionReference`](#functionreference)\<`"action"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"action"`\> |
 
 #### Parameters
 
@@ -2871,7 +2865,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
+| <a id="type-parameter-mutation-2"></a> `Mutation` *extends* \| [`FunctionReference`](#functionreference)\<`"mutation"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"mutation"`\> |
 
 #### Parameters
 
@@ -2922,7 +2916,7 @@ This can be used to power "infinite scroll" UIs.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-8"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -2997,7 +2991,7 @@ Optimistically update values in a paginated list.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-10"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -3031,7 +3025,7 @@ would flash in/out once the real first page arrives.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-11"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -3064,7 +3058,7 @@ page has loaded (otherwise it would pop out when the server responds).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-12"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -3097,7 +3091,7 @@ query, given a sort order and a function deriving the sort key.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-13"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 #### Parameters
 
@@ -3156,7 +3150,7 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
+| <a id="type-parameter-query-14"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) |
 
 ##### Parameters
 
@@ -3204,8 +3198,8 @@ identical observable results (`results`/`data`, `status`, `loadMore`).
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
-| `ThrowOnError` *extends* `boolean` | `false` |
+| <a id="type-parameter-query-15"></a> `Query` *extends* [`PaginatedQueryReference`](#paginatedqueryreference) | - |
+| <a id="type-parameter-throwonerror-2"></a> `ThrowOnError` *extends* `boolean` | `false` |
 
 ##### Parameters
 
@@ -3306,7 +3300,7 @@ Throws an error if no Convex client has been provided.
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-16"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
@@ -3368,8 +3362,8 @@ the error will be thrown instead.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> | - |
-| `ThrowOnError` *extends* `boolean` | `false` |
+| <a id="type-parameter-query-17"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> | - |
+| <a id="type-parameter-throwonerror-4"></a> `ThrowOnError` *extends* `boolean` | `false` |
 
 #### Parameters
 
@@ -3468,7 +3462,7 @@ exposing per-item and aggregate progress.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `generateUploadUrl` | [`GenerateUploadUrl`](#generateuploadurl) | A `FunctionReference` for the public `generateUploadUrl` mutation. |
-| `options` | [`UseUploadQueueOptions`](#useuploadqueueoptions) | Optional [UseUploadQueueOptions](#useuploadqueueoptions). |
+| `options?` | [`UseUploadQueueOptions`](#useuploadqueueoptions) | Optional [UseUploadQueueOptions](#useuploadqueueoptions). |
 
 #### Returns
 
@@ -3562,7 +3556,7 @@ and sets [VueUpload.error](#error-1).
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `generateUploadUrl` | [`GenerateUploadUrl`](#generateuploadurl) | A `FunctionReference` for the public `generateUploadUrl` mutation. |
-| `options` | [`UseUploadOptions`](#useuploadoptions) | Optional [UseUploadOptions](#useuploadoptions) callbacks. |
+| `options?` | [`UseUploadOptions`](#useuploadoptions) | Optional [UseUploadOptions](#useuploadoptions) callbacks. |
 
 #### Returns
 
@@ -3618,7 +3612,7 @@ Throws an error if no Convex client has been provided (see [useConvex](#useconve
 
 | Type Parameter |
 | ------ |
-| `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
+| <a id="type-parameter-query-19"></a> `Query` *extends* \| [`FunctionReference`](#functionreference)\<`"query"`\> \| [`FunctionReference_future`](#functionreference_future)\<`"query"`\> |
 
 #### Parameters
 
