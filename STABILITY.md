@@ -23,7 +23,8 @@ Everything a consumer can write against, whether or not it appears in `package.j
 - **Peer floors** — the `peerDependencies` ranges, `compatibility.nuxt`, and `engines.node`.
 
 Removing or renaming any of these, changing a default, tightening a peer range or raising a floor
-is a **major** release.
+is a **major** release. Before 1.0 a major release is the next minor (0.11 → 0.12), as semver
+reads `0.y`.
 
 ## Tiers
 
@@ -78,7 +79,8 @@ runs on.
 
 A stable symbol that is going away is marked `@deprecated` with its replacement, logs a runtime
 warning where types cannot catch the use, stays for at least one minor, and is removed in the next
-major. The changelog names every deprecation.
+major. The changelog names every deprecation. Before 1.0 a removal skips the deprecation minor: the
+release's breaking changes name it with what to use instead.
 
 ## Not covered
 

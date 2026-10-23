@@ -76,7 +76,7 @@ an optional override for the Convex site URL.
 | Name | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
 | `convexUrl?` | `string` | Accepted for drop-in compatibility with upstream `convexBetterAuthNextJs` option objects and ignored — upstream requires but never reads it either; the deployment URL comes from runtime config. | [src/runtime/better-auth/nuxt/server.ts:179](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L179) |
-| `convexSiteUrl?` | `string` | Override the Convex site URL. Defaults to `runtimeConfig.convex.siteUrl`, then `runtimeConfig.public.convex.siteUrl`, then the `NUXT_PUBLIC_CONVEX_SITE_URL` process variable. | [src/runtime/better-auth/nuxt/server.ts:185](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L185) |
+| `convexSiteUrl?` | `string` | Override the Convex site URL. Defaults to `runtimeConfig.public.convex.siteUrl`, then the `NUXT_PUBLIC_CONVEX_SITE_URL` process variable. | [src/runtime/better-auth/nuxt/server.ts:185](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L185) |
 
 ## Variables
 

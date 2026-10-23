@@ -112,11 +112,16 @@ describe('subpath exports', () => {
     expect(known.has(specifier), `${specifier} is imported in ${where} but is not a key of package.json exports`).toBe(true)
   })
 
+  // The `/vue` names are for plain Vue apps, so the plain-Vue guide lists them
+  // and the API reference does not.
   const table = read('website/content/4.api-reference/index.md')
-  it.each(keys)('%s is in the API-reference subpath table', (key) => {
+  const plainVue = read('website/content/2.guide/9.plain-vue.md')
+  it.each(keys)('%s is in the API-reference subpath table, or the plain-Vue guide for a /vue name', (key) => {
     const specifier = key === '.' ? 'nuxt-convex-module' : `nuxt-convex-module${key.slice(1)}`
-    const alias = key.endsWith('/vue') || key === './vue' ? `(alias \`${key.slice(1)}\`)` : undefined
-    expect(table.includes(`| \`${specifier}\``) || (alias !== undefined && table.includes(alias)), `${key} is a package.json export with no row (or alias mention) in 4.api-reference/index.md's subpath table`).toBe(true)
+    const documented = key.endsWith('/vue')
+      ? plainVue.includes(`\`${key.slice(2)}\``) || plainVue.includes(`\`${specifier}\``)
+      : table.includes(`| \`${specifier}\``)
+    expect(documented, `${key} is a package.json export that its page does not name`).toBe(true)
   })
 })
 

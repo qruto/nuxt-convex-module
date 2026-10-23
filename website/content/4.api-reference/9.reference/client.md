@@ -1861,21 +1861,6 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 | <a id="_argsjson"></a> `_argsJSON` | `string` | [src/runtime/vue/hydration.ts:17](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L17) |
 | <a id="_valuejson"></a> `_valueJSON` | `string` | [src/runtime/vue/hydration.ts:18](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L18) |
 
-***
-
-### ConvexApi
-
-```ts
-type ConvexApi = Record<string, Record<string, unknown>>;
-```
-
-Defined in: [src/runtime/vue/provide.ts:9](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L9)
-
-The consumer's generated Convex `api` object (`#convex/api`). Its exact shape
-is app-specific, so it's kept loose here — composables and components cast the
-namespaces they consume (`api.billing`, `api.email`, …) to the precise
-`FunctionReference` types they expect.
-
 ## Variables
 
 ### Authenticated
@@ -2579,16 +2564,6 @@ async function onPick(event: Event) {
   <p v-if="error">{{ error.message }}</p>
 </template>
 ```
-
-***
-
-### ConvexApiKey
-
-```ts
-const ConvexApiKey: InjectionKey<ConvexApi>;
-```
-
-Defined in: [src/runtime/vue/provide.ts:12](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L12)
 
 ## Functions
 
@@ -3671,86 +3646,3 @@ const props = defineProps<{
 const tasks = usePreloadedQuery(props.preloaded)
 </script>
 ```
-
-***
-
-### provideConvexApi()
-
-```ts
-function provideConvexApi(api, app?): void;
-```
-
-Defined in: [src/runtime/vue/provide.ts:29](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L29)
-
-Make the generated Convex `api` available to every `nuxt-convex-module` composable
-and component, so `<CheckoutLink>`, `<CustomerPortalLink>`, `useConvexNamespace()`,
-… work with zero arguments.
-
-The packaged Nuxt plugin calls this automatically with `#convex/api`. Call it
-yourself (e.g. with a custom `api`) only to override that default — pass the
-Nuxt `vueApp` so the binding is available during SSR too:
-
-```ts
-export default defineNuxtPlugin((nuxtApp) => {
-  provideConvexApi(api, nuxtApp.vueApp)
-})
-```
-
-#### Parameters
-
-| Parameter | Type |
-| ------ | ------ |
-| `api` | [`ConvexApi`](#convexapi) |
-| `app?` | `App`\<`any`\> |
-
-#### Returns
-
-`void`
-
-***
-
-### useConvexApi()
-
-```ts
-function useConvexApi(): ConvexApi | undefined;
-```
-
-Defined in: [src/runtime/vue/provide.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L39)
-
-The injected generated `api`, or `undefined` when it hasn't been provided
-(e.g. outside a setup context, or before Convex codegen has run). Prefer
-[useConvexNamespace](#useconvexnamespace) for feature access.
-
-#### Returns
-
-[`ConvexApi`](#convexapi) \| `undefined`
-
-***
-
-### useConvexNamespace()
-
-```ts
-function useConvexNamespace<T>(name): T | undefined;
-```
-
-Defined in: [src/runtime/vue/provide.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/provide.ts#L51)
-
-The named function group from the generated `api` (e.g. `'polar'`), or
-`undefined` when that group isn't scaffolded — letting the feature degrade
-to a graceful no-op rather than throwing.
-
-#### Type Parameters
-
-| Type Parameter | Default type | Description |
-| ------ | ------ | ------ |
-| `T` | `Record`\<`string`, `unknown`\> | The expected shape of the namespace's function references. |
-
-#### Parameters
-
-| Parameter | Type |
-| ------ | ------ |
-| `name` | `string` |
-
-#### Returns
-
-`T` \| `undefined`
