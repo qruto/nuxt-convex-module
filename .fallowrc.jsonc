@@ -47,9 +47,11 @@
     // also seeded by the nuxt plugin as an auto-import source; the other public
     // barrels have in-repo consumers and are unaffected.
     { "file": "src/runtime/vue/index.ts", "exports": ["*"] },
-    // Reached through the vitest `#imports` alias by the runtime under test
-    // (vitest.config.ts declares it per project; the plugin reads top-level only).
-    { "file": "test/helpers/nuxt-imports.ts", "exports": ["useRuntimeConfig"] }
+    // Reached through the vitest `#imports` and `nuxt/server` aliases by the
+    // runtime under test (vitest.config.ts declares them per project; the plugin
+    // reads top-level only).
+    { "file": "test/helpers/nuxt-imports.ts", "exports": ["useRuntimeConfig"] },
+    { "file": "test/helpers/nuxt-server.ts", "exports": ["*"] }
   ],
 
   // Test doubles whose members are invoked through an interface or a patched

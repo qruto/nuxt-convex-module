@@ -193,7 +193,7 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `{ children: ReactNode }` typing | Nothing — Vue components accept a default slot implicitly; do **not** add `slots: SlotsType<…>` declarations |
 | Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
 | Framework-qualified names (`NextjsOptions`, `convexBetterAuthNextJs`) | Substitute the framework part only: `NuxtOptions`, `convexBetterAuthNuxt` |
-| Ambient per-request context (`next/headers` + `React.cache`) | Explicit H3 `event` parameter (Nitro has no ambient request context) |
+| Ambient per-request context (`next/headers` + `React.cache`) | Explicit `event` parameter, the `nuxt/server` event or the h3 one (Nitro has no ambient request context) |
 | `React.cache` per-request memoization | Memoize on `event.context` (see `convexAuth`'s token cache) |
 | `fetchAccessToken` identity change between renders (re-auth trigger) | Pass the fetcher as a `Ref`/`ComputedRef` whose identity changes (or bump the port-only `authVersion` key) |
 

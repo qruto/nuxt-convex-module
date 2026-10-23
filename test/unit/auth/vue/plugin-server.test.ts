@@ -11,15 +11,15 @@ const convexAuth = vi.fn(() => ({ getToken }))
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
 
 const state = { value: null as string | null }
-const setHeader = vi.fn()
-const event = { node: { res: { setHeader } } }
+const event = {}
+const cacheControl = { value: undefined as unknown }
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useRuntimeConfig: () => ({ public: { convex: { url: 'https://example.convex.cloud' } } }),
   useState: () => state,
   useRequestEvent: () => event,
+  useResponseHeader: () => cacheControl,
 }))
-vi.mock('h3', () => ({ setResponseHeader: (_event: unknown, name: string, value: string) => setHeader(name, value) }))
 
 const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.server')).default as unknown as
   (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void } }) => Promise<unknown>
@@ -31,6 +31,6 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
     expect(provide).toHaveBeenCalledTimes(2)
     expect(convexAuth).toHaveBeenCalledWith(event)
     expect(state.value).toBe('jwt')
-    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'private, no-store')
+    expect(cacheControl.value).toBe('private, no-store')
   })
 })

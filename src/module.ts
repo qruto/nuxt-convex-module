@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addServerPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addPluginTemplate, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
@@ -155,10 +155,9 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'convex',
     // Surfaced by Nuxt DevTools and the nuxt/modules registry.
     docs: 'https://nuxt-convex-module.dev',
-    // `moduleDependencies` (below) is a Nuxt >= 4.1 feature — fail fast with a
-    // clear kit error on older Nuxt instead of silently skipping nuxt-security.
+    // The server code is written against `nuxt/server`, which ships in 4.6.
     compatibility: {
-      nuxt: '>=4.1.0',
+      nuxt: '>=4.6.0',
     },
   },
   defaults: {
@@ -368,10 +367,10 @@ function resolveSecurityState(nuxt: Nuxt, explicit: boolean | undefined): Return
  * runtime config rather than fixed at build time.
  */
 function registerSecurity(resolver: Resolver): void {
-  // Deprecated in kit 4.6 for `addNitroPlugin`, which only exists from 4.6.
-  // Switch when the Nuxt floor reaches 4.6.
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  addServerPlugin(resolver.resolve('./runtime/nuxt/security'))
+  // A Nitro plugin, since `nuxt/server` has no plugin API. It imports only
+  // `nuxt/server`, so one file serves both Nitro majors.
+  const plugin = resolver.resolve('./runtime/nuxt/security')
+  addNitroPlugin({ nitro2: plugin, nitro3: plugin })
 }
 
 /**
@@ -610,7 +609,7 @@ function registerBetterAuth(resolver: Resolver, authRoute: string, autoImports: 
 
   addServerHandler({
     route: `${authRoute}/**`,
-    handler: resolver.resolve('./runtime/better-auth/nuxt/proxy'),
+    handler: { nuxt: resolver.resolve('./runtime/better-auth/nuxt/proxy') },
   })
   // The proxy forwards live session/token traffic — never cache it, and keep it
   // out of any prerender pass. The `security` rules harden the same route under

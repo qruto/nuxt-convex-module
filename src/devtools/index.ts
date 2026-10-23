@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
-import { extname, join } from 'node:path'
+import { extname, resolve, sep } from 'node:path'
 import type { Nuxt } from '@nuxt/schema'
-import type { Resolver } from '@nuxt/kit'
+import { addDevServerHandler, runWithNuxtContext, type Resolver } from '@nuxt/kit'
 import type { ModuleCustomTab, NuxtDevtoolsServerContext } from '@nuxt/devtools-kit/types'
-import { defineEventHandler, serveStatic, setResponseHeader } from 'h3'
 import {
   DEVTOOLS_UI_LOCAL_PORT,
   DEVTOOLS_UI_ROUTE,
@@ -22,6 +21,41 @@ const CONTENT_TYPES: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.json': 'application/json',
+}
+
+/**
+ * Serve one file of the built panel. A dev-server handler is mounted at its own
+ * route, so the panel is reachable whatever the app's `baseURL`; `req.url` is
+ * the full URL on every server builder. Never cached, as sirv's dev mode did:
+ * the panel's asset names can stay the same across module versions while their
+ * content changes.
+ *
+ * Exported for tests.
+ * @internal
+ */
+export async function servePanel(request: Request, root: string): Promise<Response> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response(null, { status: 405, headers: { allow: 'GET, HEAD' } })
+  }
+  let path: string
+  try {
+    path = decodeURIComponent(new URL(request.url).pathname)
+  }
+  catch {
+    return new Response(null, { status: 400 })
+  }
+  if (path.startsWith(DEVTOOLS_UI_ROUTE)) path = path.slice(DEVTOOLS_UI_ROUTE.length)
+  const file = resolve(root, `.${path === '' || path === '/' ? '/index.html' : path}`)
+  // A `..` segment or an absolute path never reaches past the panel's folder.
+  const stats = file.startsWith(root + sep) ? await stat(file).catch(() => undefined) : undefined
+  if (!stats?.isFile()) return new Response(null, { status: 404 })
+  return new Response(request.method === 'HEAD' ? null : await readFile(file), {
+    headers: {
+      'content-type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream',
+      'content-length': String(stats.size),
+      'cache-control': 'no-store',
+    },
+  })
 }
 
 /**
@@ -43,27 +77,11 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
   const devtoolsClientPath = resolver.resolve('./devtools-client')
 
   if (existsSync(devtoolsClientPath)) {
-    // What kit's `addDevServerHandler` does, on the `nuxt` this receives. A
-    // dev-server handler is mounted at its own route, so the panel is reachable
-    // whatever the app's `baseURL`. `serveStatic` turns away any path with a
-    // `..` segment before it reaches the file system.
-    nuxt.options.devServerHandlers.push({
-      route: DEVTOOLS_UI_ROUTE,
-      handler: defineEventHandler((event) => {
-        // Never cached, as sirv's dev mode did: the panel's asset names can
-        // stay the same across module versions while their content changes.
-        setResponseHeader(event, 'cache-control', 'no-store')
-        return serveStatic(event, {
-          getContents: id => readFile(join(devtoolsClientPath, id)),
-          getMeta: async (id) => {
-            const stats = await stat(join(devtoolsClientPath, id)).catch(() => undefined)
-            if (stats?.isFile()) {
-              return { type: CONTENT_TYPES[extname(id)], size: stats.size, mtime: stats.mtimeMs }
-            }
-          },
-        })
-      }),
-    })
+    // On the `nuxt` this receives: the module imported this file after an await.
+    runWithNuxtContext(nuxt, () => addDevServerHandler({
+      route: `${DEVTOOLS_UI_ROUTE}/**`,
+      handler: { nuxt: event => servePanel(event.req, devtoolsClientPath) },
+    }))
   }
   else {
     nuxt.hook('vite:extendConfig', (config) => {

@@ -6,12 +6,12 @@
  * `shared/` because the plugin is Nitro code: the server project includes
  * `shared/**\/*.d.ts` but not `app/types`.
  */
-import type { H3Event } from 'h3'
+import type { queryCollection } from '@nuxt/content/server'
 
 declare module 'nitropack/types' {
   interface NitroRuntimeHooks {
     'nuxt-og-image:context': (ctx: {
-      e: H3Event
+      e: Parameters<typeof queryCollection>[0]
       basePath: string
       options: { component?: string, props?: Record<string, unknown> }
     }) => void | Promise<void>

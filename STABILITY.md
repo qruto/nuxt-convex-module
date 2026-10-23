@@ -55,7 +55,7 @@ baselines.
 
 ## Supported versions
 
-Nuxt `>=4.1.0` and Node `>=24.11.0`, plus these `peerDependencies` ranges — every one but `vue`
+Nuxt `>=4.6.0` and Node `>=24.11.0`, plus these `peerDependencies` ranges — every one but `vue`
 and `convex` is optional, needed only by the integration it powers:
 
 | Package | Range |

@@ -3,7 +3,7 @@
 // The `convex-auth` middleware's server half, kept out of middleware.ts. Nuxt
 // lazy-loads a named middleware as a whole module, so anything middleware.ts
 // exports reaches the browser with everything it imports. Here, `serverGuard`
-// and its `./server` import (h3, jose, ConvexHttpClient) leave the client
+// and its `./server` import (jose, ConvexHttpClient) leave the client
 // bundle once `import.meta.server` folds the only call site away.
 import { navigateTo, useNuxtApp, useRequestEvent } from '#app'
 import { convexAuth } from './server'

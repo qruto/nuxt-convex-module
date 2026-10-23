@@ -14,7 +14,7 @@ vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useRuntimeConfig: () => ({ public: { convex: { url: 'https://example.convex.cloud' } } }),
   useState: () => state,
-  useRequestEvent: () => ({ node: { res: { setHeader: vi.fn() } } }),
+  useRequestEvent: () => ({}),
 }))
 
 const setup = (await import('../../src/runtime/better-auth/vue/plugin.server')).default as unknown as

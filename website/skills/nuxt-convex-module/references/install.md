@@ -15,7 +15,7 @@ Follow these steps in order. Every command runs without prompts, so you can run 
 
    `npx convex` below is the project's own `convex`. Run it as that column says, not with `dlx`, which fetches a separate copy.
 
-2. **Versions.** The module needs Nuxt ≥ 4.1.0 and Node ≥ 24.11.0. Check `node -v` and the `nuxt` version in `package.json`. If either is lower, stop and tell the user; don't upgrade Nuxt on your own.
+2. **Versions.** The module needs Nuxt ≥ 4.6.0 and Node ≥ 24.11.0. Check `node -v` and the `nuxt` version in `package.json`. If either is lower, stop and tell the user; don't upgrade Nuxt on your own.
 3. **What is already there.**
    - `nuxt-convex-module` in `package.json` and in `modules` in `nuxt.config.ts`: already installed, go to step 2.
    - A `convex/` folder or `convex.json`: the project already has Convex functions. Keep them.

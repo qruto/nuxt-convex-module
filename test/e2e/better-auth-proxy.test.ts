@@ -1,7 +1,8 @@
 // PARITY: A-14
+import { request } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { setup, fetch } from '@nuxt/test-utils/e2e'
+import { setup, fetch, url } from '@nuxt/test-utils/e2e'
 import { startConvexStub } from './helpers/convex-stub'
 
 // Full build + serve of the `better-auth` fixture: the `/api/auth/**`
@@ -83,6 +84,21 @@ describe('better-auth proxy', () => {
     const response = await fetch('/api/auth/sign-in/email', { method: 'DELETE' })
 
     expect(response.status).toBe(405)
+    expect(stub.requests).toHaveLength(0)
+  })
+
+  // Sent raw: `fetch` would fold the dot segments before they leave the test.
+  it.each(['/api/auth/../../secret', '/api/auth/%2e%2e/%2e%2e/secret'])('refuses the traversal %s without reaching the deployment', async (path) => {
+    stub.requests.length = 0
+    const { hostname, port } = new URL(url('/'))
+    const status = await new Promise<number>((resolve, reject) => {
+      request({ hostname, port, path }, (res) => {
+        res.resume()
+        resolve(res.statusCode!)
+      }).on('error', reject).end()
+    })
+
+    expect(status).toBe(400)
     expect(stub.requests).toHaveLength(0)
   })
 })

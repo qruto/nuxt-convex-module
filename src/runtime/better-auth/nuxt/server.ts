@@ -1,15 +1,14 @@
 /**
  * Server-side Better Auth + Convex integration for Nuxt.
  *
- * Provides {@link convexAuth} for Nuxt server handlers: it takes the H3
- * `H3Event` every Nuxt server route, API handler and server middleware
- * receives, and returns a request-scoped, authenticated Convex client.
+ * Provides {@link convexAuth} for Nuxt server handlers: it takes the event
+ * every Nuxt server route, API handler and server middleware receives, and
+ * returns a request-scoped, authenticated Convex client.
  *
  * @module better-auth/server
  */
 
-import type { H3Event } from 'h3'
-import { getRequestHeaders, toWebRequest } from 'h3'
+import type { RequestEvent } from 'nuxt/schema'
 import { getToken } from '@convex-dev/better-auth/utils'
 import type { GetTokenOptions } from '@convex-dev/better-auth/utils'
 import type {
@@ -119,11 +118,35 @@ const handler = async (request: Request, siteUrl: string) => {
   })
 }
 
+/**
+ * The server event {@link convexAuth} reads: the one `defineEventHandler` from
+ * `nuxt/server` passes, whose `req` is a web `Request`, or the h3 event a
+ * Nuxt 4 route defined with the auto-imported `defineEventHandler`, and
+ * `useRequestEvent()` during SSR, still pass, which carries `headers`.
+ *
+ * @public
+ */
+export type ConvexAuthEvent
+  = Pick<RequestEvent, 'req' | 'context'>
+    | { headers: Headers, context: Record<string, unknown> }
+
+/** The event's web `Request`, when it has one. */
+const requestOf = (event: ConvexAuthEvent) =>
+  'req' in event && event.req instanceof Request ? event.req : undefined
+
 // Nuxt server routes use a single event handler rather than Next's
 // `{ GET, POST }` route-handler pair, so the Nuxt analog of `nextJsHandler`
-// returns one thunk over the H3 event.
-const nuxtHandler = (event: H3Event, siteUrl: string) => () =>
-  handler(toWebRequest(event), siteUrl)
+// returns one thunk over the event.
+const nuxtHandler = (event: ConvexAuthEvent, siteUrl: string) => () => {
+  const request = requestOf(event)
+  if (!request) {
+    throw new Error(
+      '[nuxt-convex-module] convexAuth(event).handler() needs the event `defineEventHandler` '
+      + 'from `nuxt/server` passes, whose `req` is a web Request.',
+    )
+  }
+  return handler(request, siteUrl)
+}
 
 // `Record<string, never>` inlines upstream's `EmptyObject` — upstream imports
 // it from `convex-helpers`, which is not a dependency of this package.
@@ -199,7 +222,7 @@ export interface ConvexAuthService {
 /**
  * Create a per-request Better Auth + Convex helper for Nuxt server code.
  *
- * Adapts the Better Auth + Convex server helper pattern to H3 events.
+ * Adapts the Better Auth + Convex server helper pattern to Nuxt server events.
  *
  * Call once at the top of a server route / event handler and destructure the
  * helpers you need. The auth token is fetched at most once per request — the
@@ -228,12 +251,12 @@ export interface ConvexAuthService {
  * })
  * ```
  *
- * @param event - The H3 event from a Nuxt server route or middleware.
+ * @param event - The event from a Nuxt server route or middleware, or `useRequestEvent()` during SSR. See {@link ConvexAuthEvent}.
  * @param opts  - Optional {@link ConvexAuthOptions}.
  *
  * @public
  */
-export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuthService {
+export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): ConvexAuthService {
   // PARITY: N-09
   // Upstream requires `opts.convexSiteUrl`; Nuxt auto-provides it from runtime
   // config / env when the override is omitted.
@@ -245,7 +268,7 @@ export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuth
 
   // Per-REQUEST token cache — memoized on `event.context` (keyed by site URL
   // and token endpoint) so separate `convexAuth(event)` instances share one
-  // fetch, the H3 analog of upstream wrapping `getToken` in `React.cache` on
+  // fetch, the Nitro analog of upstream wrapping `getToken` in `React.cache` on
   // a module-level singleton. The promise is cached (deduping concurrent
   // callers, and caching rejections for the request like `React.cache` does);
   // a forced refresh overwrites the shared entry.
@@ -259,8 +282,7 @@ export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuth
     const cached = tokenCache[cacheKey]
     if (cached && !forceRefresh) return cached
 
-    const headers = getRequestHeaders(event)
-    const mutableHeaders = new Headers(headers as Record<string, string>)
+    const mutableHeaders = new Headers(requestOf(event)?.headers ?? (event as { headers: Headers }).headers)
     mutableHeaders.delete('content-length')
     mutableHeaders.delete('transfer-encoding')
     mutableHeaders.set('accept-encoding', 'identity')
@@ -353,7 +375,7 @@ export function convexAuth(event: H3Event, opts?: ConvexAuthOptions): ConvexAuth
  * for `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs` (framework
  * suffix `NextJs` → `Nuxt`). Unlike upstream's module-level factory (which
  * reads request state ambiently via `next/headers`), Nitro has no ambient
- * per-request context, so the H3 `event` is passed explicitly.
+ * per-request context, so the `event` is passed explicitly.
  *
  * @public
  */
