@@ -6,9 +6,10 @@ description: >-
   lands, when bumping a pinned baseline, when porting an upstream change into
   the Vue/Nuxt runtime, when adding a Vue-only extension or a deliberate
   divergence, or when auditing whether PARITY.md still describes the source
-  tree. Covers locating the upstream repository, diffing mapped paths between
-  two tags, classifying each hunk, applying the React to Vue translation, and
-  updating every place a baseline version is stated.
+  tree, or when a new Nuxt minor lands and the repository's Nuxt line has to
+  move. Covers diffing an upstream release with `pnpm parity:diff`, classifying
+  each hunk, applying the React to Vue translation, updating every place a
+  baseline version is stated, and moving the Nuxt line.
 license: MIT
 ---
 
@@ -43,76 +44,51 @@ entry in §1 (*Not ported*) or §3 saying it was decided deliberately.
 
 ## Job 1 — sync an upstream release / bump a baseline
 
+The usual trigger is Dependabot's `upstream` group PR. A new `convex` or `@convex-dev/*`
+release fails `test/unit/package-contract.test.ts` there ("the installed package is exactly
+the pinned baseline"). Finish the sync on that PR's branch.
+
 ### 1. Read the current baseline
 
-[`PARITY.md` §1](../../../PARITY.md#1-what-is-ported) gives the pinned version, the upstream
-repository and its tag format:
-
-| Tier | Baseline | Repository | Tag format |
-|---|---|---|---|
-| Convex's own client | `convex` | `get-convex/convex-js` | `npm/<version>` |
-| Component | `@convex-dev/better-auth` | `get-convex/better-auth` | `v<version>` |
-| Component | `@convex-dev/polar` | `get-convex/polar` | `v<version>` |
+[`PARITY.md` §1](../../../PARITY.md#1-what-is-ported) gives the pinned version per tier:
+`convex` (repository `convex/convex-js`, tags `npm/<version>`), `@convex-dev/better-auth`
+(`convex/better-auth`, `v<version>`) and `@convex-dev/polar` (`convex/polar`, `v<version>`).
 
 **Sync one tier at a time.** A `convex` release moves one baseline covering all four of its
 entry points; a component release moves only that component's. Bumping one never implies
-re-verifying the others — the version sites in step 5 are per-baseline too.
+re-verifying the others — the version sites in step 4 are per-baseline too.
 
-### 2. Get the upstream checkout
-
-If you already have one, use it. Otherwise clone somewhere outside this repo:
+### 2. Diff the release
 
 ```bash
-git clone --filter=blob:none https://github.com/get-convex/convex-js.git
-git -C convex-js fetch --tags
+pnpm parity:diff convex                 # baseline → latest on npm
+pnpm parity:diff better-auth 0.13.0     # baseline → a given version
+pnpm parity:diff polar 0.10.0 0.9.2     # any two versions
 ```
 
-Use explicit HTTPS URLs — an SSH remote will fail in a non-interactive session. Set a variable
-for the rest of this job:
+[`scripts/parity-diff.mjs`](../../../scripts/parity-diff.mjs) prints the commit list (the *why*,
+which decides how to classify a hunk), then the diff. It reads the baseline from
+`website/app/utils/upstream-baselines.ts`, clones the upstream once over HTTPS into
+`node_modules/.cache/upstream/` (or uses `UPSTREAM_DIR`), and holds the path list per tier.
 
-```bash
-UPSTREAM=/path/to/convex-js
-```
-
-### 3. Diff the mapped paths — plus the ones the port re-implements
-
-The mapped paths come from [`PARITY.md` §1, *File by file*](../../../PARITY.md#file-by-file). Diffing the whole
-repo buries the signal in build config and internal churn, but diffing *only* the mapped paths
-misses a real category: upstream code the port **re-implements** rather than mirrors. Those
-files are not in the map — there is no Vue file that corresponds to them — yet a fix in one can
-still imply a fix here.
-
-For `convex` that means `src/browser/sync`, home of `PaginatedQueryClient`
-([X-05](../../../PARITY.md#x-05--paginatedqueryclient)), whose page-management logic
-`use-paginated-query.ts` re-implements. Diffing without it would have missed convex 1.43.0's
-`7ceee3e` entirely.
-
-```bash
-# convex — mapped entry points, then the re-implemented internals
-git -C "$UPSTREAM" diff npm/1.45.0 npm/1.46.0 -- \
-  src/react src/nextjs src/react-clerk src/react-auth0
-git -C "$UPSTREAM" diff npm/1.45.0 npm/1.46.0 -- src/browser/sync
-
-# @convex-dev/better-auth
-git -C "$UPSTREAM" diff v0.12.5 v0.13.0 -- src/react src/nextjs src/client
-
-# @convex-dev/polar
-git -C "$UPSTREAM" diff v0.9.2 v0.10.0 -- src/react
-```
-
-Read the commit list too — it explains *why* a hunk exists, which decides how to classify it:
-
-```bash
-git -C "$UPSTREAM" log --oneline npm/1.45.0..npm/1.46.0 -- \
-  src/react src/nextjs src/react-clerk src/react-auth0 src/browser/sync
-```
+The path list is the mapped entry points from
+[`PARITY.md` §1, *File by file*](../../../PARITY.md#file-by-file) **plus** the code the port
+re-implements or reaches into. Those files have no Vue counterpart, yet a fix in one can still
+imply a fix here. For `convex` that is `src/browser/sync`, home of `PaginatedQueryClient`
+([X-05](../../../PARITY.md#x-05--paginatedqueryclient)): diffing without it would have missed
+1.43.0's `7ceee3e`. For `@convex-dev/better-auth` it is the two plugin clients under
+`src/plugins/`, which `src/client/plugins` only re-exports. When the port starts to mirror or
+reach a new upstream file, add it to `TIERS` in the script.
 
 A `src/browser/sync` hunk is rarely a port. Usually it either does not touch behaviour the
 composable layer reproduces, or it fixes a bug the Vue translation already rules out — in which
 case it becomes a [§3.4](../../../PARITY.md#34-upstream-fixes-the-translation-already-rules-out) row plus a
 pinning test, not a code change. Deciding that is the point of looking.
 
-### 4. Classify every hunk
+Also check `npm view <package>@<version> exports` against the previous version: a new entry
+point is a scope decision (step 3's last row).
+
+### 3. Classify every hunk
 
 | Hunk is… | Do |
 |---|---|
@@ -126,36 +102,34 @@ pinning test, not a code change. Deciding that is the point of looking.
 The fourth row is the one people get wrong. Two of the last three convex releases landed
 entirely in that category.
 
-### 5. Move the version everywhere it is stated
+### 4. Move the version everywhere it is stated
 
-Three places, listed in [`PARITY.md` §4](../../../PARITY.md#on-every-baseline-bump):
+- The devDependency in `package.json` (and `website/package.json` for `convex` and
+  `@convex-dev/polar`), plus the lockfile. `package-contract.test.ts` holds the installed
+  version to the baseline.
+- The three baseline sites in [`PARITY.md` §4](../../../PARITY.md#on-every-baseline-bump).
+  `test/unit/upstream-baselines.test.ts` fails if they drift apart; keep §1's row shape.
+- The `convex@<version>` citations in PARITY.md §3, once you have checked they still describe
+  upstream.
+- **If a peer range moves**, every site in
+  [§4's *Move a peer range*](../../../PARITY.md#on-every-baseline-bump) paragraph moves with it.
+  Raising a floor is a major release.
 
-1. `PARITY.md`'s pinned-baselines table — **keep the row shape**, a test parses it
-2. `website/app/utils/upstream-baselines.ts`
-3. `website/content/3.components/1.index.md` — last cell of each component row
+### 5. Record what happened
 
-`test/unit/upstream-baselines.test.ts` fails if any drift apart.
+- Add a row to [`PARITY.md` §4, *History*](../../../PARITY.md#history): date, package,
+  from → to, the PR number, and what was ported (including "nothing").
+- The PR title is the squash subject, so its type follows
+  [§4's release mapping](../../../PARITY.md#4-keeping-parity): `chore(parity): track <package>
+  <version>` when nothing reaches the public surface, `feat(parity):` for a public addition,
+  `feat(parity)!:` when a peer floor rises (#61 is the model). The body names each upstream
+  commit ported or deliberately skipped, and why.
 
-### 6. Record what happened
+### 6. Run the gate
 
-- Add a row to [`PARITY.md` §4, *History*](../../../PARITY.md#history) — date, package,
-  from → to, and what was ported (including "nothing").
-- If a peer range moved, mirror it in `package.json` **and** `.github/dependabot.yml`.
-- Commit as `chore(parity): track <package> <version>`, and describe each upstream commit
-  ported or deliberately skipped in the body. Past syncs (`8a5db10`) are the model.
-
-### 7. Run the gate
-
-```bash
-pnpm dev:prepare    # build the module stub + prepare Nuxt
-pnpm lint
-pnpm test:types     # vue-tsc (lib + website)
-pnpm test           # vitest: unit + nuxt projects
-pnpm test:quality   # fallow: unused exports, duplication, file-health
-```
-
-See [`references/sync-checklist.md`](references/sync-checklist.md) for the same sequence as a
-tickable list.
+The full gate in [`AGENTS.md`](../../../AGENTS.md#verification).
+[`references/sync-checklist.md`](references/sync-checklist.md) has the whole job as a tickable
+list.
 
 ---
 
@@ -205,6 +179,36 @@ Before writing one, ask whether it is really a `D-*`:
 
 ---
 
+## Job 4 — move to a new Nuxt minor
+
+Nuxt is not ported code, so nothing here touches PARITY.md. Two lines move independently:
+
+- **What users may run** is the module's floor, `meta.compatibility.nuxt` in `src/module.ts`.
+  The Monday CI run installs the starter and the playground without a lockfile, builds and
+  serves them, so a new Nuxt meets the module there first. A failure files the `ci: weekly
+  drift` issue. Fix the module so that it works on the new minor, and keep the floor.
+- **What this repository develops on** is the pnpm catalog `nuxt` in `pnpm-workspace.yaml`.
+  Move it, `@nuxt/schema` and the website's Nuxt-family packages together, or the tree splits
+  across two Nuxt and two Vue versions (`pnpm why -r vue` shows one version afterwards; `pnpm
+  dedupe` usually fixes a split). Keep the `@nuxt/kit` *dependency* range at the floor's line:
+  it is what consumers install.
+
+Steps for the second line:
+
+1. Name the packages: `pnpm add -D -w @nuxt/schema@^<v>`, `pnpm --filter
+   nuxt-convex-module-website add docus@^<v>`, then `pnpm update -r nuxt @nuxt/kit`. A blanket
+   `pnpm update -r` fails under `minimumReleaseAgeStrict`.
+2. If `pnpm install` stops on `trustPolicy: no-downgrade`, find out why before excluding
+   anything: a publisher that changed its release approval is not a takeover, but check.
+3. Drop any Dependabot `ignore` entry that held the minor, with its comment.
+4. Run the full gate, `pnpm test:e2e`, and the CI workflow by hand (`gh workflow run ci.yml`).
+5. If the floor itself moves: `src/module.ts`, `STABILITY.md`, the installation page and the
+   `compatibility.nuxt` of `modules/nuxt-convex-module.yml` in nuxt/modules. That is a major
+   release.
+
+
+---
+
 ## Red flags
 
 Changes that read as cleanups and quietly break parity. If a diff contains one of these,
@@ -237,9 +241,11 @@ stop and check PARITY.md:
 
 ## Auditing without a release
 
-To check the manifest still describes the tree:
+To check the manifest still describes the tree (`upstream-baselines.test.ts` resolves through
+`website/.nuxt`, so prepare first on a fresh clone):
 
 ```bash
+pnpm dev:prepare
 pnpm vitest --project unit --run test/unit/parity-manifest.test.ts test/unit/upstream-baselines.test.ts
 ```
 

@@ -548,7 +548,7 @@ export default defineAppConfig({
     titleTemplate: '%s · Nuxt Convex',
     title: 'Nuxt Convex',
     description:
-      'The Nuxt module for Convex — reactive live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same client runs standalone in any Vue app.',
+      'Convex backend integration for Nuxt with live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same client runs standalone in any Vue app.',
   },
 
   header: {

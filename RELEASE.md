@@ -56,6 +56,10 @@ shows up before yours does. It also runs every Monday on its own.
    gh attestation verify nuxt-convex-module-<version>.tgz --owner qruto   # verifies the local file against the attestation
    ```
 
+7. **Expect pnpm users to lag a day.** pnpm's default `minimumReleaseAge` is one day, so a new
+   app made with pnpm (the starter template included) installs the previous version for 24 hours.
+   Nothing to do; it is the answer when someone reports the old version right after a release.
+
 ## What runs
 
 ```mermaid
@@ -268,6 +272,10 @@ write access to the repo.
 
 - **Mondays, grouped.** Non-major npm updates come as one PR, Actions bumps as another. Dependabot
   doesn't group majors; run `pnpm bump` for those (`taze major -w`).
+- **The ported upstreams get their own PR.** A new `convex`, `@convex-dev/better-auth` or
+  `@convex-dev/polar` release fails CI until the parity sync lands on that PR's branch (the
+  [`upstream-parity`](./website/skills/upstream-parity/SKILL.md) skill, Job 1). Its own group keeps
+  it from holding the other updates back.
 - **The cooldown is one day wider than pnpm's.** Dependabot waits 2 days, pnpm's
   `minimumReleaseAge` is 24 h (`pnpm-workspace.yaml`). That way Dependabot never proposes a
   version pnpm will refuse to install. Security updates skip the wait on purpose.
@@ -284,7 +292,7 @@ write access to the repo.
 
 ## Checks that don't run on commits
 
-Everything on a schedule lives in [weekly.yml](./.github/workflows/weekly.yml). None of it can
+The scheduled checks live in [weekly.yml](./.github/workflows/weekly.yml). None of them can
 block a merge — a scheduled check that fails a pull request blames whoever happened to open it.
 These jobs are there to catch things changing outside the repository:
 
@@ -298,6 +306,10 @@ These jobs are there to catch things changing outside the repository:
 
 `report` exists because a failed scheduled run only emails whoever last edited the cron. That's
 the wrong person soon enough, and nobody at all once the mail gets filtered.
+
+[`CI`](./.github/workflows/ci.yml) also runs every Monday on `main`. Its consumer smoke tests install
+the newest Nuxt and Convex without a lockfile, so a new release that breaks a fresh app fails
+there first. Its own `report` job files that on the same `ci: weekly drift` issue.
 
 Two more checks live outside this repo's workflow files:
 

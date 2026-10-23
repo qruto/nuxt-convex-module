@@ -9,8 +9,8 @@ import { describe, expect, it } from 'vitest'
 // tree by construction: a new runtime file, a moved path, a divergence marker
 // with no entry, or an entry citing a test that no longer exists all fail here.
 //
-// Version-string consistency across PARITY.md, the README and the docs site is
-// the neighbouring `upstream-baselines.test.ts`.
+// Version-string consistency across PARITY.md and the docs site is the
+// neighbouring `upstream-baselines.test.ts`.
 
 const root = (path: string) => fileURLToPath(new URL(`../../${path}`, import.meta.url))
 const read = (path: string) => readFileSync(root(path), 'utf8')

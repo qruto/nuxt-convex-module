@@ -33,7 +33,7 @@ describe('upstream baselines', () => {
   it.each(Object.entries(upstreamBaselines))(
     'matches PARITY.md’s pinned baseline for %s',
     (_key, baseline) => {
-      // e.g. "| `convex` (`/react`, …) | **1.45.0** | Verified … |"
+      // e.g. "| `convex` (`/react`, …) | **1.47.0** | tag `npm/1.47.0` in … |"
       const row = PARITY.split('\n').find(
         line => line.startsWith(`| \`${baseline.package}\``),
       )
