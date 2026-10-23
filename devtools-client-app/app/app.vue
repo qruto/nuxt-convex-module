@@ -24,7 +24,7 @@ const active = ref<(typeof tabs)[number]['id']>('connection')
         :aria-current="active === tab.id || undefined"
         @click="active = tab.id"
       >
-        <NIcon :icon="tab.icon" />
+        <div class="n-icon" :class="tab.icon" />
         {{ tab.label }}
         <NBadge
           v-if="tab.id === 'queries' && state.queries.length"

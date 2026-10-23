@@ -3,8 +3,10 @@ import { readFile, stat } from 'node:fs/promises'
 import { extname, resolve, sep } from 'node:path'
 import type { Nuxt } from '@nuxt/schema'
 import { addDevServerHandler, runWithNuxtContext, type Resolver } from '@nuxt/kit'
-import type { ModuleCustomTab, NuxtDevtoolsServerContext } from '@nuxt/devtools-kit/types'
+import type { ModuleCustomTab, NuxtDevtoolsInfo, NuxtDevtoolsServerContext } from '@nuxt/devtools-kit/types'
+import type { ViteDevToolsNodeContext } from '@vitejs/devtools-kit'
 import {
+  DEVTOOLS_DOCK_PARAM,
   DEVTOOLS_UI_LOCAL_PORT,
   DEVTOOLS_UI_ROUTE,
   RPC_NAMESPACE,
@@ -65,7 +67,8 @@ export async function servePanel(request: Request, root: string): Promise<Respon
  *   package, or proxied to the `pnpm dev:devtools-client` dev server while
  *   developing this module (the `./devtools-client` dir doesn't exist next to
  *   the stub);
- * - register the iframe tab;
+ * - register the panel: a dock in the Nuxt group of Vite DevTools on Nuxt
+ *   DevTools 4, an iframe tab on 3;
  * - expose the server-side RPC (build-time info + function-source lookup —
  *   live client state reaches the panel through the in-page bridge instead).
  *
@@ -99,18 +102,29 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
     })
   }
 
-  // DevTools sets `nuxt.devtools` before it calls this hook.
-  nuxt.hook('devtools:initialized', () => {
+  const functions: ServerFunctions = {
+    getInfo: () => info,
+    resolveFunctionSource: udfPath => resolveFunctionSource(info.rootDir, info.functionsDir, udfPath),
+  }
+
+  // Both majors call this with their version once modules are set up, before
+  // any tab is collected. v4 also calls `devtools:ready` once Vite DevTools
+  // connects; there the v3 APIs below still work, but only through shims that
+  // print deprecation warnings.
+  let viteDevtools = false
+  nuxt.hook('devtools:initialized', ({ version }: NuxtDevtoolsInfo) => {
+    viteDevtools = Number.parseInt(version) >= 4
+    if (viteDevtools) return
+    // DevTools sets `nuxt.devtools` before it calls this hook.
     const devtools = (nuxt as Nuxt & { devtools?: NuxtDevtoolsServerContext }).devtools
-    devtools?.extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
-      getInfo: () => info,
-      resolveFunctionSource: udfPath => resolveFunctionSource(info.rootDir, info.functionsDir, udfPath),
-    })
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- DevTools 3's only RPC API; 4 returned above
+    devtools?.extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, functions)
   })
 
   nuxt.hook('devtools:customTabs', (tabs: ModuleCustomTab[]) => {
+    if (viteDevtools) return
     tabs.push({
-      name: 'nuxt-convex-module',
+      name: RPC_NAMESPACE,
       title: 'Convex',
       icon: `${DEVTOOLS_UI_ROUTE}/icon.svg`,
       view: {
@@ -118,5 +132,22 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
         src: DEVTOOLS_UI_ROUTE,
       },
     })
+  })
+
+  nuxt.hook('devtools:ready', (ctx: ViteDevToolsNodeContext) => {
+    ctx.docks.register({
+      id: RPC_NAMESPACE,
+      title: 'Convex',
+      icon: `${DEVTOOLS_UI_ROUTE}/icon.svg`,
+      type: 'iframe',
+      url: `${DEVTOOLS_UI_ROUTE}/?${DEVTOOLS_DOCK_PARAM}`,
+      // `NUXT_DEVTOOLS_GROUP_ID`: the kit is a type-only dependency.
+      groupId: 'nuxt',
+      category: 'modules',
+    })
+    // Registered as `nuxt-convex-module:<name>`, the names v3 gives them too.
+    const { rpc } = ctx.scope(RPC_NAMESPACE)
+    rpc.register({ name: 'getInfo', type: 'query', handler: functions.getInfo })
+    rpc.register({ name: 'resolveFunctionSource', type: 'query', handler: functions.resolveFunctionSource })
   })
 }

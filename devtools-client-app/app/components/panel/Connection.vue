@@ -59,7 +59,7 @@ const stats = computed(() => [
         target="_blank"
         class="ml-auto flex items-center gap-1"
       >
-        <NIcon icon="carbon-launch" /> Convex dashboard
+        <div class="n-icon carbon-launch" /> Convex dashboard
       </NLink>
     </NCard>
 
