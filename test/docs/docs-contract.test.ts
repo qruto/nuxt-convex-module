@@ -258,6 +258,16 @@ describe('README', () => {
     expect(README).not.toContain('](./website/content/')
     for (const src of README.matchAll(/(?:srcset|src)="([^"]+)"/g)) expect(src[1], 'npm does not rewrite relative image sources').toMatch(/^https:\/\//)
   })
+
+  // nuxt.com renders the README with comark, which drops a line break inside
+  // a paragraph instead of turning it into a space: "pagination,\nfile" shows
+  // as "pagination,file". GitHub and npm hide this, so every prose line has to
+  // be a whole paragraph or list item.
+  it('keeps every paragraph on one line', () => {
+    const prose = README.replace(/^```[\s\S]+?^```/gm, '').replace(/^(?:\[[^\]]+\]:|<!--).*$/gm, '').split('\n')
+    const wrapped = prose.filter((line, i) => /^[^\s#|>-]/.test(line) && /^[^\s#|>`-]/.test(prose[i + 1] ?? ''))
+    expect(wrapped, 'a paragraph continues on the next line').toEqual([])
+  })
 })
 
 describe('installation page', () => {
