@@ -15,12 +15,32 @@ export interface Registration {
 
 export type Integration = 'core' | 'betterAuth' | 'clerk' | 'auth0' | 'polar'
 
-/** The `convex.autoImports` option: every name, only the `Convex`-marked ones, or none. */
+/** The `convex.autoImports` option: every name, every name prefixed with `Convex`, or none. */
 export type AutoImports = boolean | 'prefixed'
 
-/** Whether `name` is auto-imported under `mode`: every name under `true`, only names carrying `Convex` under `'prefixed'`, none under `false`. */
-export function isAutoImported(name: string, mode: AutoImports): boolean {
-  return mode === true || (mode === 'prefixed' && /convex/i.test(name))
+/**
+ * The name `'prefixed'` gives `name`, as the Nuxt module author guide asks: a
+ * name already carrying `Convex` keeps it, a component or type gains it in
+ * front (`<Authenticated>` → `<ConvexAuthenticated>`), and a function gains it
+ * after its first word (`fetchQuery` → `fetchConvexQuery`,
+ * `usePreloadedQuery` → `useConvexPreloadedQuery`).
+ */
+function prefixedName(name: string): string {
+  if (/convex/i.test(name)) return name
+  return /^[A-Z]/.test(name) ? `Convex${name}` : name.replace(/[A-Z]/, letter => `Convex${letter}`)
+}
+
+/**
+ * The name `mode` auto-imports `name` under, or `undefined` when it skips it:
+ * every name as it is under `true`, its {@link prefixedName} under
+ * `'prefixed'`, none under `false`. Under `'prefixed'` a bare name whose
+ * prefixed twin is registered as well (`useQuery`, `useConvexQuery`) is left
+ * to the twin.
+ */
+export function autoImportedAs(name: string, mode: AutoImports, registered: readonly string[]): string | undefined {
+  if (mode !== 'prefixed') return mode ? name : undefined
+  const prefixed = prefixedName(name)
+  return prefixed !== name && registered.includes(prefixed) ? undefined : prefixed
 }
 
 const vue = (file: string) => `runtime/vue/${file}`

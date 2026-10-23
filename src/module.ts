@@ -7,7 +7,7 @@ import { deploymentEnv, formatStartupSummary, integrationWarnings, isDeclaredDep
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isAutoImported, type AutoImports, type Integration, type Registration } from './registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, autoImportedAs, type AutoImports, type Integration, type Registration } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -106,10 +106,11 @@ export interface ModuleOptions {
    * Which names are auto-imported. `true` registers every composable, component
    * and Nitro helper under its upstream name (`useQuery`, `<Authenticated>`,
    * `fetchQuery`) and, where one exists, its prefixed twin (`useConvexQuery`).
-   * `'prefixed'` registers only names carrying `Convex` (`useConvexQuery`,
-   * `<ConvexImage>`, `provideConvexAuth`, `convexAuth`, …) so a bare name never
-   * collides with another module's; the rest stay importable from the subpath
-   * exports. `false` auto-imports nothing.
+   * `'prefixed'` registers every one of them with `Convex` in its name, as the
+   * Nuxt module author guide asks (`useConvexQuery`, `<ConvexAuthenticated>`,
+   * `fetchConvexQuery`, `useConvexBetterAuth`, …), so a bare name never
+   * collides with another module's; the upstream names stay importable from
+   * the subpath exports. `false` auto-imports nothing.
    */
   autoImports?: AutoImports
   /** Route the Better Auth same-origin proxy is mounted at. Defaults to `/api/auth`. */
@@ -517,20 +518,22 @@ function registerAuthComponents(resolver: Resolver, autoImports: AutoImports): v
 
 /** `addImports` + `addServerImports` for everything an integration registers that `autoImports` keeps. */
 function registerIntegrationImports(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
-  const kept = (entries: Registration[]) => entries
-    .filter(entry => isAutoImported(entry.name, autoImports))
-    .map(entry => ({ ...entry, from: resolver.resolve(`./${entry.from}`) }))
+  const kept = (entries: Registration[]) => entries.flatMap((entry) => {
+    const as = autoImportedAs(entry.name, autoImports, entries.map(e => e.name))
+    return as ? [{ ...entry, as, from: resolver.resolve(`./${entry.from}`) }] : []
+  })
   const app = kept(APP_IMPORTS[integration])
   const server = kept(SERVER_IMPORTS[integration])
   if (app.length > 0) addImports(app)
   if (server.length > 0) addServerImports(server)
 }
 
-/** `addComponent` for everything an integration registers that `autoImports` keeps; the name is the export. */
+/** `addComponent` for everything an integration registers that `autoImports` keeps, under the name it keeps it as. */
 function registerComponents(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
-  for (const { name, from } of APP_COMPONENTS[integration]) {
-    if (!isAutoImported(name, autoImports)) continue
-    addComponent({ name, filePath: resolver.resolve(`./${from}`), export: name })
+  const entries = APP_COMPONENTS[integration]
+  for (const { name, from } of entries) {
+    const as = autoImportedAs(name, autoImports, entries.map(e => e.name))
+    if (as) addComponent({ name: as, filePath: resolver.resolve(`./${from}`), export: name })
   }
 }
 
