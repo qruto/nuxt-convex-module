@@ -265,7 +265,10 @@ describe('README', () => {
   // be a whole paragraph or list item.
   it('keeps every paragraph on one line', () => {
     const prose = README.replace(/^```[\s\S]+?^```/gm, '').replace(/^\[[^\]]+\]:.*$/gm, '').split('\n')
-    const wrapped = prose.filter((line, i) => /^[^\s#|>-]/.test(line) && /^[^\s#|>`-]/.test(prose[i + 1] ?? ''))
+    // Blank, indented, heading, table, quote and list lines are blocks of
+    // their own; any other line is paragraph text.
+    const block = /^(?:$|[\s#|>]|[-*+]\s|\d+[.)]\s)/
+    const wrapped = prose.filter((line, i) => !block.test(line) && !block.test(prose[i + 1] ?? ''))
     expect(wrapped, 'a paragraph continues on the next line').toEqual([])
   })
 })
