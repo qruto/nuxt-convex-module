@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="560" height="200" viewBox="0 0 560 200" fill="none" role="img" aria-label="nuxt-convex-module — the Convex module for Nuxt">
-  <style>.wordmark{fill:#1f2328}.cross{stroke:#1f2328}@media (prefers-color-scheme:dark){.wordmark{fill:#f0f6fc}.cross{stroke:#f0f6fc}}</style>
+  <style>.wordmark{fill:#1f2328}.cross{stroke:#1f2328}@media (prefers-color-scheme:dark){.wordmark{fill:#f0f6fc}.cross{stroke:#f0f6fc}.wordmark,.cross{filter:drop-shadow(0 0 .5px #1f2328) drop-shadow(0 0 .5px #1f2328)}}</style>
   <defs>
     <radialGradient id="wash-nuxt" cx="0.5" cy="0.5" r="0.5">
       <stop offset="0" stop-color="#00DC82" stop-opacity="0.16" />
