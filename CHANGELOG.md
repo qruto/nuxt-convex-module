@@ -1,5 +1,54 @@
 # Changelog
 
+## v0.12.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.11.0...v0.12.0)
+
+### 🚀 Enhancements
+
+- ⚠️  Require Nuxt 4.6 and run the server code on nuxt/server ([#92](https://github.com/qruto/nuxt-convex-module/pull/92))
+- ⚠️  Simplify the public surface ([#93](https://github.com/qruto/nuxt-convex-module/pull/93))
+- Warn when the app calls another deployment than convex dev ([#100](https://github.com/qruto/nuxt-convex-module/pull/100))
+- Run the Convex panel as a Vite DevTools dock on Nuxt DevTools 4 ([#99](https://github.com/qruto/nuxt-convex-module/pull/99))
+
+### 📖 Documentation
+
+- Draw the README's npm and GitHub links as single images ([#101](https://github.com/qruto/nuxt-convex-module/pull/101))
+- Store a small file from a mutation ([#102](https://github.com/qruto/nuxt-convex-module/pull/102))
+
+### 🏡 Chore
+
+- Track convex 1.47 and nuxt 4.6, adopt the registry description ([#87](https://github.com/qruto/nuxt-convex-module/pull/87))
+- Accept the Nuxt route-rules advisory osv.dev misreads ([#98](https://github.com/qruto/nuxt-convex-module/pull/98))
+
+#### Dependencies
+
+- Patch zod and ip-address, accept zod 3 in the osv scan ([#97](https://github.com/qruto/nuxt-convex-module/pull/97))
+- Bump convex from 1.47.0 to 1.48.0 in the upstream group across 1 directory ([#95](https://github.com/qruto/nuxt-convex-module/pull/95))
+- Bump markdown-it ([#96](https://github.com/qruto/nuxt-convex-module/pull/96))
+- Bump the all-non-major group across 1 directory with 17 updates ([#94](https://github.com/qruto/nuxt-convex-module/pull/94))
+
+#### Dev dependencies
+
+- Bump happy-dom from 20.14.5 to 21.0.4 ([#85](https://github.com/qruto/nuxt-convex-module/pull/85))
+
+### 🤖 CI
+
+- Serve an app with every integration in the consumer smoke test ([#88](https://github.com/qruto/nuxt-convex-module/pull/88))
+
+#### Dependencies
+
+- Bump the actions group across 2 directories with 9 updates ([#89](https://github.com/qruto/nuxt-convex-module/pull/89))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Require Nuxt 4.6 and run the server code on nuxt/server ([#92](https://github.com/qruto/nuxt-convex-module/pull/92))
+- ⚠️  Simplify the public surface ([#93](https://github.com/qruto/nuxt-convex-module/pull/93))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.11.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.10.0...v0.11.0)
