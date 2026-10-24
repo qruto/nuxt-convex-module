@@ -6,6 +6,12 @@ export const RPC_NAMESPACE = 'nuxt-convex-module'
 /** Route the panel iframe is served under (a dev-server handler when built, a proxy in dev). */
 export const DEVTOOLS_UI_ROUTE = '/__nuxt-convex-module'
 
+/**
+ * Query parameter on the panel URL when Nuxt DevTools 4 mounts it as a Vite
+ * DevTools dock, so the panel knows to connect on its own.
+ */
+export const DEVTOOLS_DOCK_PARAM = 'dock'
+
 /** Port `pnpm dev:devtools-client` runs the panel dev server on (3300 is nuxt/fonts'). */
 export const DEVTOOLS_UI_LOCAL_PORT = 3630
 

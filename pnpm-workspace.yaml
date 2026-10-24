@@ -81,6 +81,11 @@ trustPolicyExclude:
 # lockfile already resolves elsewhere (no new code enters the tree), and lists
 # the condition for removing it.
 overrides:
+  # Nuxt 4 still ships Nuxt DevTools 3; v4 runs on Vite DevTools, and this
+  # override is how an app opts in (devtools.nuxt.com). The module registers
+  # the Convex panel for both, and the website and panel app develop against v4.
+  # Remove when Nuxt ships v4 itself (Nuxt 5).
+  '@nuxt/devtools': 4.0.0-beta.7
   # fontless@0.2.1 (latest; via @nuxt/fonts and nuxt-og-image) pins esbuild
   # ^0.27.0, in range for GHSA-g7r4-m6w7-qqqr (dev-server file read on Windows,
   # fixed in 0.28.1). fontless only imports `transform`, stable across 0.x.

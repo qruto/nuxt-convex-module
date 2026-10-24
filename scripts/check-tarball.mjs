@@ -257,12 +257,14 @@ try {
   // ── Size ──────────────────────────────────────────
   //
   // Every install downloads all of it, so it has a ceiling: a little above
-  // what 0.11.0 measured (454 KB, 102 files). What grows quietly here is the
-  // DevTools panel (a router or duplicate HTML pages coming back) and a
-  // declaration that spells out a dependency's types instead of naming them.
-  // Raise the ceiling in the change that explains the growth.
+  // what the DevTools 4 panel measured (554 KB, 102 files; 0.11.0 was 454 KB).
+  // That move added the Vite DevTools RPC client (63 KB, loaded only when the
+  // panel runs as a dock) and the v4 UI kit's icon loader with DOMPurify. What
+  // grows quietly here is the DevTools panel (a router or duplicate HTML pages
+  // coming back) and a declaration that spells out a dependency's types instead
+  // of naming them. Raise the ceiling in the change that explains the growth.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 480_000
+  const MAX_BYTES = 580_000
   const MAX_FILES = 110
   let bytes = 0
   let count = 0
