@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.12.1
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.0...v0.12.1)
+
+### 📖 Documentation
+
+- Drop the README images 0.11 used ([#104](https://github.com/qruto/nuxt-convex-module/pull/104))
+- Theme the README wordmark and use plain links ([#106](https://github.com/qruto/nuxt-convex-module/pull/106))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump body-parser ([#105](https://github.com/qruto/nuxt-convex-module/pull/105))
+- Dedupe qs ([#107](https://github.com/qruto/nuxt-convex-module/pull/107))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.11.0...v0.12.0)
