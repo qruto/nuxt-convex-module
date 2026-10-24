@@ -1,5 +1,64 @@
 # Changelog
 
+## v0.12.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.11.0...v0.12.0)
+
+### 🚀 Enhancements
+
+- ⚠️  Require Nuxt 4.6 and run the server code on nuxt/server ([#92](https://github.com/qruto/nuxt-convex-module/pull/92))
+- ⚠️  Simplify the public surface ([#93](https://github.com/qruto/nuxt-convex-module/pull/93))
+- Warn when the app calls another deployment than convex dev ([#100](https://github.com/qruto/nuxt-convex-module/pull/100))
+- Run the Convex panel as a Vite DevTools dock on Nuxt DevTools 4 ([#99](https://github.com/qruto/nuxt-convex-module/pull/99))
+
+### 📖 Documentation
+
+- Draw the README's npm and GitHub links as single images ([#101](https://github.com/qruto/nuxt-convex-module/pull/101))
+- Store a small file from a mutation ([#102](https://github.com/qruto/nuxt-convex-module/pull/102))
+
+### 🏡 Chore
+
+- Track convex 1.47 and nuxt 4.6, adopt the registry description ([#87](https://github.com/qruto/nuxt-convex-module/pull/87))
+- Accept the Nuxt route-rules advisory osv.dev misreads ([#98](https://github.com/qruto/nuxt-convex-module/pull/98))
+
+#### Dependencies
+
+- Patch zod and ip-address, accept zod 3 in the osv scan ([#97](https://github.com/qruto/nuxt-convex-module/pull/97))
+- Bump convex from 1.47.0 to 1.48.0 in the upstream group across 1 directory ([#95](https://github.com/qruto/nuxt-convex-module/pull/95))
+- Bump markdown-it ([#96](https://github.com/qruto/nuxt-convex-module/pull/96))
+- Bump the all-non-major group across 1 directory with 17 updates ([#94](https://github.com/qruto/nuxt-convex-module/pull/94))
+
+#### Dev dependencies
+
+- Bump happy-dom from 20.14.5 to 21.0.4 ([#85](https://github.com/qruto/nuxt-convex-module/pull/85))
+
+### 🤖 CI
+
+- Serve an app with every integration in the consumer smoke test ([#88](https://github.com/qruto/nuxt-convex-module/pull/88))
+
+#### Dependencies
+
+- Bump the actions group across 2 directories with 9 updates ([#89](https://github.com/qruto/nuxt-convex-module/pull/89))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Require Nuxt 4.6 and run the server code on nuxt/server ([#92](https://github.com/qruto/nuxt-convex-module/pull/92))
+- ⚠️  Simplify the public surface ([#93](https://github.com/qruto/nuxt-convex-module/pull/93))
+
+### ⬆️ Upgrading from 0.11
+
+- **Nuxt 4.6 or newer.** The module's server code now runs on `nuxt/server`, which ships in Nuxt 4.6, and `h3` is no longer a dependency. Moving within Nuxt 4 needs no code changes. Apps that can't move yet stay on 0.11.
+- **Polar components take the API as a prop**, as `@convex-dev/polar/react` does: `<CheckoutLink :polar-api="api.billing">` and `<CustomerPortalLink :polar-api="api.billing">`. `provideConvexApi`, `useConvexApi`, `useConvexNamespace`, `ConvexApiKey` and `ConvexApi` are removed, along with the plugin that provided them. Import `api` from `#convex/api` where you need it.
+- **`convex.authRoute` is now `convex.betterAuth.authRoute`.** The old key logs an error naming the new one.
+- **`NUXT_CONVEX_SITE_URL` is no longer read.** Use `NUXT_PUBLIC_CONVEX_SITE_URL` or `convex.siteUrl`.
+- **`convexAuth(event)` takes a `ConvexAuthEvent`**: the `nuxt/server` event, or the h3 event Nuxt 4 routes and `useRequestEvent()` pass. Existing calls keep working; `handler()` needs the `nuxt/server` event.
+- **`autoImports: 'prefixed'` now prefixes every name.** Components and types gain `Convex` in front (`<ConvexAuthenticated>`), functions after their first word (`useConvexPreloadedQuery`, `fetchConvexQuery`, `uploadConvexFile`). The default mode is unchanged.
+- **Peer ranges are capped:** `@clerk/vue` and `@auth0/auth0-vue` at `^2.0.0`, `nuxt-security` at `^2.6.0`, `@polar-sh/checkout` at `^0.4.0`.
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.11.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.10.0...v0.11.0)
