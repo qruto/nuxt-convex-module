@@ -206,8 +206,8 @@ describe('auth/nuxt/server', () => {
     const proxiedHeaders = proxiedInit.headers as Headers
     expect(proxiedUrl).toBe('https://example.convex.site/api/auth/session?foo=bar')
     expect(proxiedHeaders.get('host')).toBe('example.convex.site')
-    expect(proxiedHeaders.get('x-forwarded-host')).toBe('app.example.com')
-    expect(proxiedHeaders.get('x-forwarded-proto')).toBe('https')
+    expect(proxiedHeaders.get('x-forwarded-host')).toBeNull()
+    expect(proxiedHeaders.get('x-forwarded-proto')).toBeNull()
     expect(proxiedHeaders.get('x-better-auth-forwarded-host')).toBe('app.example.com')
     expect(proxiedHeaders.get('x-better-auth-forwarded-proto')).toBe('https')
   })

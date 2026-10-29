@@ -195,11 +195,13 @@ was decided:
   any HTTP action on the deployment, through the app's origin, with its cookies. Next.js
   normalises paths before routing, which is why upstream's handler never sees one. **Fixed:** the
   proxy refuses a request whose normalised path differs from the routed one (400).
-- **Proxy forwarded host.** `x-forwarded-host` / `x-better-auth-forwarded-host` carry the
-  incoming `Host`, exactly as upstream's `convexBetterAuthNextJs` does. A spoofed `Host` reaches
-  Better Auth on the Convex side as the request origin. **Accepted, with the upstream mitigation:**
-  set `baseURL` and `trustedOrigins` in the Convex-side Better Auth config, as its docs require.
-  The response relay is verbatim (`Set-Cookie`, `Location`); the origin it relays from is pinned
+- **Proxy forwarded host.** `x-better-auth-forwarded-host` / `-proto` carry the incoming `Host`
+  and protocol, exactly as upstream's `convexBetterAuthNextJs` does. Since
+  `@convex-dev/better-auth` 0.12.6 neither stamps `x-forwarded-host` / `-proto`, and the Convex
+  side restores the original host only when `trustedOrigins` lists it exactly
+  (GHSA-pgx2-m66h-x29f). **Mitigated upstream:** run 0.12.6 or later on the deployment, and set
+  `baseURL` and `trustedOrigins` in the Convex-side Better Auth config, with the app's origin
+  written out, not matched by a wildcard. The response relay is verbatim (`Set-Cookie`, `Location`); the origin it relays from is pinned
   by config, so nothing foreign is relayed.
 - **Cross-domain tokens.** `crossDomainCallbackRoute` is off by default, matching upstream: a
   fresh token completes sign-in on whatever page receives it. **Accepted as upstream's design;**

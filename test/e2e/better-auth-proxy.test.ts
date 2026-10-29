@@ -38,10 +38,11 @@ describe('better-auth proxy', () => {
     const forwarded = stub.requests.find(r => r.url === '/api/auth/get-session')
     expect(forwarded).toBeDefined()
     expect(forwarded!.method).toBe('GET')
-    // Auth cookies ride through; Better Auth forwarding headers are stamped.
+    // Auth cookies ride through; only the Better Auth forwarding headers are stamped.
     expect(forwarded!.headers.cookie).toBe('session=xyz')
     expect(forwarded!.headers['x-better-auth-forwarded-proto']).toBe('http')
-    expect(forwarded!.headers['x-forwarded-host']).toBeTruthy()
+    expect(forwarded!.headers['x-better-auth-forwarded-host']).toBeTruthy()
+    expect(forwarded!.headers['x-forwarded-host']).toBeUndefined()
   })
 
   it('forwards a POST body verbatim', async () => {
