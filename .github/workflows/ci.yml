@@ -49,7 +49,6 @@ jobs:
       pull-requests: read
     outputs:
       src: ${{ steps.filter.outputs.src }}
-      website: ${{ steps.filter.outputs.website }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -59,10 +58,8 @@ jobs:
         if: github.event_name == 'pull_request'
         id: filter
         with:
-          # `&shared` / `*shared` is a YAML anchor, and this action resolves
-          # it. Paths that both filters need are written once, in one place.
           filters: |
-            shared: &shared
+            src:
               - 'src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -71,11 +68,6 @@ jobs:
               - '.nuxtrc'
               - '.github/workflows/ci.yml'
               - '.github/actions/**'
-            website:
-              - *shared
-              - 'website/**'
-            src:
-              - *shared
               # The DevTools panel ships with the package: `build` generates
               # it into dist/devtools-client, which `files: ["dist"]`
               # publishes. Leave it out here and a change to the panel skips
@@ -121,11 +113,29 @@ jobs:
         run: pnpm run lint
 
       # Type-checks what gets published: the module and its Convex code. The
-      # website and DevTools apps have their own jobs, and the root tsconfig
-      # excludes them.
+      # website gets the next step, `pack` builds the DevTools app, and the
+      # root tsconfig excludes both.
       - name: Type check
         if: ${{ !cancelled() }}
         run: pnpm run typecheck
+
+      # The docs site is the only place in this repository that calls the public
+      # composables from real Vue components — `useAsyncQuery`, `useMutation`,
+      # the Better Auth components. So it is the only check of their types
+      # against real usage rather than against tests written next to them.
+      #
+      # Type-check only, no `nuxt build`. That command prints "Build complete!"
+      # and then never exits (measured: still alive minutes after finishing), so
+      # a step running it would hang until the timeout and fail for no useful
+      # reason. Vercel does the production build and reports its own check,
+      # outside this aggregate like every other third-party service.
+      #
+      # `nuxt typecheck` prepares the site itself, so the `lib` setup above is
+      # enough. It used to be a job of its own, which spent most of its minute
+      # on setup.
+      - name: Type check the docs site
+        if: ${{ !cancelled() }}
+        run: pnpm exec nuxt typecheck website
 
       # Conventional Commits, on pull requests only. The local commit-msg hook
       # is faster, but `--no-verify` skips it, so this is the check that holds.
@@ -243,6 +253,11 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run test:security
 
+  # The unit tests on both legs. The Linux leg also runs the end-to-end suite,
+  # which builds the fixture apps with @nuxt/test-utils/e2e and runs the module
+  # against a real Nitro server — SSR data, auto-imports, CSP headers, the
+  # Better Auth proxy. It shares this job's install rather than paying for one
+  # of its own, which took longer than the suite.
   test:
     needs: changes
     if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.src == 'true' }}
@@ -260,6 +275,17 @@ jobs:
         # `lts/-1` is not an option: engines.node is >=24.11.0, above it.
         node: [lts]
     steps:
+      # Records what the job talks to over the network, without blocking it.
+      # Only where code from the pull request is built and run with network
+      # access: harden-runner is itself a third-party action, so it is worth
+      # adding where there is untrusted code to watch, and nowhere else. Here
+      # that is the Linux leg, which builds and serves the e2e fixtures.
+      - name: Harden runner
+        if: runner.os == 'Linux'
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -281,8 +307,10 @@ jobs:
 
       # Handed to the `coverage` job, which holds the upload credential. This
       # job runs code from the pull request, so it must never hold one itself.
+      # Uploaded before the end-to-end tests, because their run writes its own
+      # test-report.junit.xml over the unit tests' one.
       - name: Upload coverage artifact
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' }}
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage
@@ -292,42 +320,19 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # End-to-end: builds the fixture apps with @nuxt/test-utils/e2e and runs the
-  # module against a real Nitro server — SSR data, auto-imports, CSP headers,
-  # the Better Auth proxy.
-  e2e:
-    needs: changes
-    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.src == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      # Records what the job talks to over the network, without blocking it.
-      # Only on the jobs that build and run code from the pull request:
-      # harden-runner is itself a third-party action, so it is worth adding
-      # where there is untrusted code to watch, and nowhere else.
-      - name: Harden runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
-        with:
-          egress-policy: audit
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup
-        with:
-          prepare: lib
-
       # test/e2e/hydration.test.ts boots the client bundle in a real browser.
       # Chromium comes from playwright-core's own installer, pinned by the
       # lockfile's playwright-core version; `--with-deps` adds the system
       # libraries the runner image lacks.
+      #
+      # This step and the next carry `!cancelled()`, so a unit-test failure
+      # does not hide an end-to-end one: one push reports both.
       - name: Install Chromium
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: pnpm exec playwright-core install --with-deps chromium
 
       - name: End-to-end tests
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: pnpm run test:e2e
 
   # Checks the package a consumer would actually get. Builds the real tarball
@@ -471,37 +476,6 @@ jobs:
           fi
           npx --yes npm@11.17.0 audit signatures
 
-  # The docs site is the only place in this repository that calls the public
-  # composables from real Vue components — `useAsyncQuery`, `useMutation`, the
-  # Better Auth components. So it is the only check of their types against real
-  # usage rather than against tests written next to them.
-  #
-  # Type-check only, no `nuxt build`. That command prints "Build complete!" and
-  # then never exits (measured: still alive minutes after finishing), so a step
-  # running it would hang until the timeout and fail for no useful reason.
-  # Vercel does the production build and reports its own check, outside this
-  # aggregate like every other third-party service.
-  website:
-    needs: changes
-    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.website == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup
-        with:
-          prepare: lib
-
-      # `nuxt typecheck` prepares the site itself, so `lib` above is enough:
-      # the module needs its stub and types built, nothing more.
-      - name: Type check the docs site
-        run: pnpm exec nuxt typecheck website
-
   # Looks at the dependencies a pull request adds or changes, and fails on a
   # known CVE or a package GitHub has flagged as malicious. pnpm's cooldown only
   # delays a new version; it never looks at what is inside it.
@@ -582,8 +556,7 @@ jobs:
   # The one required status check, and the only name the branch ruleset knows.
   # Every job above reports into it, so adding, renaming or splitting a job never
   # means editing the ruleset. `skipped` counts as a pass: `dependency-review` is
-  # skipped on pushes, and `test`/`e2e`/`pack` are skipped when no source
-  # changed.
+  # skipped on pushes, and `test`/`pack` are skipped when no source changed.
   all-checks:
     name: All checks passed
     if: ${{ always() }}
@@ -595,9 +568,7 @@ jobs:
       - changes
       - static
       - test
-      - e2e
       - pack
-      - website
       - dependency-review
     runs-on: ubuntu-latest
     timeout-minutes: 5
