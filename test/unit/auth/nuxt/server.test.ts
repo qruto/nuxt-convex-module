@@ -337,6 +337,10 @@ describe('auth/nuxt/server', () => {
       'transfer-encoding': 'chunked',
       'connection': 'keep-alive, x-leg',
       'keep-alive': 'timeout=5',
+      'proxy-connection': 'keep-alive',
+      'te': 'trailers',
+      'trailer': 'x-checksum',
+      'upgrade': 'websocket',
       'x-leg': 'upstream-only',
       'content-type': 'application/json',
       'location': '/after',
@@ -349,7 +353,7 @@ describe('auth/nuxt/server', () => {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
-    for (const name of ['transfer-encoding', 'connection', 'keep-alive', 'x-leg']) expect(response.headers.get(name), name).toBeNull()
+    for (const name of ['transfer-encoding', 'connection', 'keep-alive', 'proxy-connection', 'te', 'trailer', 'upgrade', 'x-leg']) expect(response.headers.get(name), name).toBeNull()
     expect(response.headers.get('content-type')).toBe('application/json')
     expect(response.headers.get('location')).toBe('/after')
     expect(response.headers.getSetCookie()).toEqual(['a=1; Path=/', 'b=2; Path=/'])
