@@ -268,12 +268,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows is here because the module does real path work — alias maps,
-        # watcher path normalization — and those bugs only reach Windows users.
-        os: [ubuntu-latest, windows-latest]
-        # `lts` tracks the current LTS line, so a new one needs no bump here.
-        # `lts/-1` is not an option: engines.node is >=24.11.0, above it.
-        node: [lts]
+        include:
+          # The oldest Node that `engines` allows, so nothing newer slips into
+          # the module unnoticed. On Linux, where the end-to-end suite runs too,
+          # so the floor also gets real Nitro builds and SSR.
+          - os: ubuntu-latest
+            node: engines
+          # Windows is here because the module does real path work — alias maps,
+          # watcher path normalization — and those bugs only reach Windows users.
+          # `lts` tracks the newest LTS line, so a new one needs no bump here.
+          - os: windows-latest
+            node: lts
     steps:
       # Records what the job talks to over the network, without blocking it.
       # Only where code from the pull request is built and run with network
@@ -290,6 +295,21 @@ jobs:
         with:
           persist-credentials: false
 
+      # Read from package.json, so the floor tested is always the one
+      # published: `>=24.11.0` becomes `node@24.11.0`. pnpm takes an exact
+      # version. Anything but a plain `>=x.y.z` fails here, because pnpm would
+      # resolve a range to its newest match and quietly test something else.
+      - name: Read the Node floor
+        id: floor
+        if: matrix.node == 'engines'
+        run: |
+          floor=$(jq -r '.engines.node | ltrimstr(">=")' package.json)
+          if ! [[ $floor =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::engines.node is not a plain '>=x.y.z' floor; teach this step to read it."
+            exit 1
+          fi
+          echo "runtime=node@$floor" >> "$GITHUB_OUTPUT"
+
       # `full`, not `lib`: test/unit/upstream-baselines.test.ts imports a file
       # from website/, which oxc resolves through
       # website/.nuxt/tsconfig.app.json — and only `nuxt prepare website`
@@ -298,7 +318,7 @@ jobs:
       # Each leg saves its own store on main, because each runs its own runtime.
       - uses: ./.github/actions/setup
         with:
-          runtime: node@${{ matrix.node }}
+          runtime: ${{ steps.floor.outputs.runtime || format('node@{0}', matrix.node) }}
           prepare: full
           save-cache: ${{ github.ref == 'refs/heads/main' }}
 
