@@ -447,7 +447,10 @@ jobs:
             npm install --no-audit --no-fund "$TARBALL" && npm run build || return 1
             PORT=$port node .output/server/index.mjs > server.log 2>&1 &
             server=$!
-            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 30 --retry-connrefused --retry-delay 1 "http://localhost:$port/" || true)
+            # Each try is capped at 10 s, and all of them at 2 minutes: a
+            # server that accepts the connection and never answers should fail
+            # here, not hold the job until its timeout.
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --retry 30 --retry-max-time 120 --retry-connrefused --retry-delay 1 "http://localhost:$port/" || true)
             kill "$server" 2> /dev/null || true
             wait "$server" || true
             if [ "$code" != 200 ] || grep -q 'Cannot find module' server.log; then
