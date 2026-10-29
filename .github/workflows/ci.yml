@@ -203,75 +203,45 @@ jobs:
         if: ${{ !cancelled() }}
         uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b # v1.51.1
 
-      # ── fallow runs last, and nothing runs after it ──────────────────────
-      #
-      # The fallow action expects to be used without a node setup step. It does
-      # its own `npm install -g` and then calls a bare `fallow`, trusting the
-      # runner's npm to have put it on PATH. There is no input to point it at a
-      # binary, so this step is the only way in.
-      #
-      # That does not work here, because `pnpm/setup` owns the runtime and
-      # creates no global shims. Deleting this step and pushing produced exactly
-      # that: "Installed fallow unknown version", then "fallow: command not
-      # found", and a failed job.
-      #
-      # Pointing it at the lockfile's copy is better anyway. package.json pins
-      # `fallow` to an exact version, so CI runs the same build as .githooks,
-      # under Dependabot, the cooldown and pnpm's trust policy. The action's own
-      # global install fetches the MUSL build, which could not have run on this
-      # glibc runner even if PATH had found it. Its signature check still runs,
-      # against the binary that actually executes.
-      #
-      # `$GITHUB_PATH` prepends, for every later step in the job — which is what
-      # zizmor's `github-env` audit flags. It is ignored rather than fixed
-      # because the two steps that need it are the last two. Keep it that way: a
-      # step added below would inherit a PATH where 40-odd project binaries
-      # shadow the system's.
-      #
-      # `!cancelled()` for the same reason every gate above carries it, and this
-      # step is not a gate. Without it the implicit `success()` skips it as soon
-      # as anything earlier fails — and the two fallow steps below, which DO run
-      # after a failure, then call a bare `fallow` that is not on PATH. Both
-      # would report `command not found`, burying the real failure under two
-      # invented ones.
-      - name: Put project binaries on PATH
-        if: ${{ !cancelled() }}
-        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH" # zizmor: ignore[github-env]
-
       # Dead code, unused exports and dependencies, duplication, complexity.
-      # Through the action rather than the CLI for two things the CLI cannot do:
-      # it works out the PR base itself, and it verifies the binary's signature.
-      #
-      # Its `comment`, `review-comments` and `sarif` outputs stay off. Each one
-      # wants `pull-requests: write`, `checks: write` or `security-events: write`
-      # on a job that runs code from the pull request, and a failing job with the
-      # findings in its log already says the same thing.
+      # The same commands the git hooks run, from the lockfile's copy of fallow:
+      # package.json pins it exactly, so CI runs the same build as .githooks,
+      # under Dependabot, the cooldown and pnpm's trust policy. Its npm wrapper
+      # checks the binary's Ed25519 signature and SHA-256 digest before running
+      # it, and refuses to run a binary that fails the check.
       #
       # On a pull request it looks only at the changed files, and fails on any
-      # finding in them (`audit.gate` in .fallowrc.jsonc). On a push to main it runs over
-      # everything, because a scoped audit passes on a config edit that strands
-      # a file elsewhere.
+      # finding in them (`audit.gate` in .fallowrc.jsonc). The base is the PR's,
+      # which the full-history checkout above already has. On a push to main it
+      # runs over everything, because a scoped audit passes on a config edit
+      # that strands a file elsewhere.
+      #
+      # Not through the fallow-rs/fallow action. It wrapped ~2 s of analysis in
+      # ~40 s of cache steps, and the CLI now does both things it was here for:
+      # finding the PR base and verifying the binary.
       #
       # Must run after the setup step's `dev:prepare`: without `dist/` the
       # tsconfig chain does not resolve and fallow sees a different module
       # graph.
       - name: Quality (fallow)
         if: ${{ !cancelled() }}
-        uses: fallow-rs/fallow@6605f96806787f85124bfc144124ff7e44733b06 # v3.34.1
-        with:
-          command: ${{ github.event_name == 'pull_request' && 'audit' || '' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            pnpm exec fallow audit --base "$BASE_SHA"
+          else
+            pnpm run test:quality
+          fi
 
       # A separate command, because fallow keeps security candidates out of
       # both the default run and the audit gate — neither would ever report one.
-      # `auto-changed-since: false` so a candidate in an untouched file still
+      # It scans the whole project, so a candidate in an untouched file still
       # fails the job. The scan takes ~0.14s and the repo is at zero findings,
       # so there is no backlog to grandfather in.
       - name: Security candidates (fallow)
         if: ${{ !cancelled() }}
-        uses: fallow-rs/fallow@6605f96806787f85124bfc144124ff7e44733b06 # v3.34.1
-        with:
-          command: security
-          auto-changed-since: false
+        run: pnpm run test:security
 
   test:
     needs: changes
