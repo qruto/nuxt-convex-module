@@ -187,7 +187,7 @@
     "check:consumer-types": "node scripts/check-consumer-types.mjs"
   },
   "dependencies": {
-    "@nuxt/kit": "^4.6.2",
+    "@nuxt/kit": "^4.6.3",
     "std-env": "^4.2.0"
   },
   "peerDependencies": {
@@ -237,7 +237,7 @@
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/eslint-config": "^1.17.0",
     "@nuxt/module-builder": "^1.0.3",
-    "@nuxt/schema": "^4.6.2",
+    "@nuxt/schema": "^4.6.3",
     "@nuxt/test-utils": "^4.3.4",
     "@polar-sh/checkout": "^0.4.3",
     "@types/node": "^26.6.5",
