@@ -109,9 +109,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # Saves the Linux `node@lts` store on main, the one `pack` and Preview
+      # restore too. This job runs on every merge, docs-only ones included.
       - uses: ./.github/actions/setup
         with:
           prepare: lib
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Lint
         if: ${{ !cancelled() }}
@@ -295,10 +298,13 @@ jobs:
       # from website/, which oxc resolves through
       # website/.nuxt/tsconfig.app.json — and only `nuxt prepare website`
       # generates that.
+      #
+      # Each leg saves its own store on main, because each runs its own runtime.
       - uses: ./.github/actions/setup
         with:
           runtime: node@${{ matrix.node }}
           prepare: full
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Test
         run: pnpm run test:coverage
