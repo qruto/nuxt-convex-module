@@ -569,11 +569,14 @@ jobs:
   # downloads with gpg, which the slim image is not documented to ship.
   coverage:
     needs: test
-    # Skipped whenever `test` is, since there would be no artifact to upload.
-    # `!cancelled()` on its own is not enough: a skipped `test` would leave this
-    # job downloading an artifact that was never produced, and failing for a
-    # confusing reason.
-    if: ${{ !cancelled() && needs.test.result == 'success' }}
+    # Runs whenever `test` ran, failures included: a failing run's JUnit report
+    # is what Codecov's flaky-test detection needs. Skipped whenever `test` is,
+    # since there would be no artifact to upload. `!cancelled()` on its own is
+    # not enough: a skipped `test` would leave this job downloading an artifact
+    # that was never produced, and failing for a confusing reason. A `test` run
+    # that failed before uploading one fails this job too, which blocks nothing:
+    # `All checks passed` does not wait for it.
+    if: ${{ !cancelled() && needs.test.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
