@@ -23,6 +23,9 @@ extend-exclude = [
 ]
 
 [default.extend-words]
+# `HPE_CLOSED_CONNECTION` and the other llhttp parser errors Node reports carry
+# this prefix (HTTP Parser Error); PARITY.md quotes one.
+HPE = "HPE"
 # `mis-subscribe`, `mis-subscribing` — a hyphenated prefix, not a truncated
 # "miss". Used deliberately in the parity notes and the client's guard comments.
 mis = "mis"
