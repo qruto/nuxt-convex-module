@@ -146,7 +146,7 @@ describe('setupDevtools', () => {
     const { hooks, nuxt, resolver } = fakeEnv(join(base, 'stub-build'))
 
     setupDevtools(resolver as never, nuxt as never, info)
-    hooks.get('devtools:initialized')!({ version: '4.0.0-beta.7', packagePath: '' })
+    hooks.get('devtools:initialized')!({ version: '4.0.0', packagePath: '' })
 
     // The v3 APIs would only reach v4 through its deprecation shims.
     expect(nuxt.devtools.extendServerRpc).not.toHaveBeenCalled()
