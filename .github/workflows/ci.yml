@@ -343,13 +343,17 @@ jobs:
       # test/e2e/hydration.test.ts boots the client bundle in a real browser.
       # Chromium comes from playwright-core's own installer, pinned by the
       # lockfile's playwright-core version; `--with-deps` adds the system
-      # libraries the runner image lacks.
+      # libraries the runner image lacks. `--only-shell`, because
+      # @nuxt/test-utils launches headless with no `channel`, which runs
+      # Chromium's headless shell: the full browser would be downloaded and
+      # never started. Not cached, as Playwright's CI guide advises: restoring
+      # takes about as long as downloading.
       #
       # This step and the next carry `!cancelled()`, so a unit-test failure
       # does not hide an end-to-end one: one push reports both.
       - name: Install Chromium
         if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: pnpm exec playwright-core install --with-deps chromium
+        run: pnpm exec playwright-core install --with-deps --only-shell chromium
 
       - name: End-to-end tests
         if: ${{ !cancelled() && runner.os == 'Linux' }}
