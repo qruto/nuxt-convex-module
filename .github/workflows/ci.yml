@@ -284,10 +284,12 @@ jobs:
       # Records what the job talks to over the network, without blocking it.
       # Only where code from the pull request is built and run with network
       # access: harden-runner is itself a third-party action, so it is worth
-      # adding where there is untrusted code to watch, and nowhere else. Here
-      # that is the Linux leg, which builds and serves the e2e fixtures.
+      # adding where there is untrusted code to watch, and nowhere else. Both
+      # legs run the pull request's tests, and the Linux leg also builds and
+      # serves the e2e fixtures. Both legs, too, because a step-level `if:`
+      # would not stop it: the action's pre and post steps run regardless, and
+      # on Windows they install and run its agent.
       - name: Harden runner
-        if: runner.os == 'Linux'
         uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           egress-policy: audit
