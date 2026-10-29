@@ -253,10 +253,12 @@ anyway. (No CI job runs `git commit` — the release commit is made through GitH
 never see it.)
 
 **What the hooks cannot cover.** These stay CI's alone, so a green push is not a promise of a
-green pipeline: the `e2e` job (builds fixture apps, minutes; `pnpm test:e2e` runs it locally once
-`pnpm exec playwright-core install chromium` has fetched the browser the hydration test drives), `pack` (tarball, `publint`,
-`attw`, and a real npm consumer install), `dependency-review` and the workflow lint, which need
-GitHub, the Windows leg of the test matrix, and the coverage thresholds.
+green pipeline: the end-to-end suite on the Linux leg of `test` (builds fixture apps, minutes;
+`pnpm test:e2e` runs it locally once `pnpm exec playwright-core install chromium` has fetched the
+browser the hydration test drives), `pack` (tarball, `publint`, `attw`, and real npm and pnpm
+consumer installs), `dependency-review` and the workflow lint, which need GitHub, the Windows leg
+of the test matrix, the oldest Node that `engines` allows (the Linux leg runs on it), and the
+coverage thresholds.
 
 ## Releasing
 
