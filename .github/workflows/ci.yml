@@ -41,19 +41,20 @@ jobs:
   # Works out which of the expensive jobs a pull request needs. Anywhere else —
   # a push to main, the weekly run, a run by hand — they all run anyway: that
   # costs one full run per merge, and a green main is worth the minutes.
+  #
+  # `ubuntu-slim` is one vCPU in a container: enough for a job that calls an
+  # API or runs a few lines of shell, on a quarter of the machine
+  # `ubuntu-latest` takes. The other jobs that only do that use it too.
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
-      contents: read
       pull-requests: read
     outputs:
       src: ${{ steps.filter.outputs.src }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
+      # No checkout: on a pull request the filter reads the changed files
+      # through the REST API, and anywhere else it does not run.
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         if: github.event_name == 'pull_request'
         id: filter
@@ -546,7 +547,7 @@ jobs:
   # compare on a push. It installs nothing, so no code from the PR runs here.
   dependency-review:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     permissions:
       contents: read
@@ -563,6 +564,9 @@ jobs:
   # The only job that holds the coverage upload credential. It downloads an
   # artifact and installs nothing, so no code from the pull request ever runs
   # beside it.
+  #
+  # `ubuntu-latest` rather than `ubuntu-slim`: codecov-action checks the CLI it
+  # downloads with gpg, which the slim image is not documented to ship.
   coverage:
     needs: test
     # Skipped whenever `test` is, since there would be no artifact to upload.
@@ -632,7 +636,7 @@ jobs:
       - test
       - pack
       - dependency-review
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions: {}
     steps:
@@ -658,7 +662,7 @@ jobs:
   report:
     needs: all-checks
     if: ${{ always() && github.event_name == 'schedule' && needs.all-checks.result == 'failure' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
       issues: write
