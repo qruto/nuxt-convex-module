@@ -638,7 +638,7 @@ so none can be "restored" by syncing.
 ##### A-15 — Nuxt DevTools panel
 
 - **Port** · `src/runtime/devtools/**`, `src/devtools/**`, `devtools-client-app/`
-- **Pinned by** · `test/unit/devtools-bridge.test.ts`, `test/unit/devtools-setup.test.ts`, `test/unit/devtools-function-source.test.ts`
+- **Pinned by** · `test/unit/devtools-bridge.test.ts`, `test/unit/devtools-dock-client.test.ts`, `test/unit/devtools-setup.test.ts`, `test/unit/devtools-function-source.test.ts`
 - **On sync** · the bridge reads client internals — see [§4](#4-keeping-parity)
 - **Why** · dev-only query/mutation inspection. `runtime/devtools/bridge.ts` deliberately observes
   `ConvexVueClient` from the *outside* so `vue/client.ts` stays byte-diffable.

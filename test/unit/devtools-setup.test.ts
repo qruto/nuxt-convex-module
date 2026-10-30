@@ -17,13 +17,21 @@ const { setupDevtools } = await import('../../src/devtools/index')
 
 const base = mkdtempSync(join(tmpdir(), 'convex-devtools-'))
 afterAll(() => rmSync(base, { recursive: true, force: true }))
+// The stub build carries the runtime as `.ts`; the dock imports it by file name.
+const dockClient = join(base, 'stub-build', 'runtime', 'devtools', 'dock-client.ts')
+mkdirSync(join(dockClient, '..'), { recursive: true })
+writeFileSync(dockClient, 'export default () => {}')
+// How Vite addresses that file: forward slashes, and one slash after `@fs`
+// whether the path is `/tmp/…` or `C:\Users\…`.
+const dockClientFs = `@fs/${dockClient.replaceAll('\\', '/')}`.replace('@fs//', '@fs/')
 beforeEach(() => addDevServerHandler.mockClear())
 
-function fakeEnv(resolverBase: string) {
+function fakeEnv(resolverBase: string, baseURL = '/') {
   const hooks = new Map<string, (arg?: unknown) => unknown>()
   const nuxt = {
     hook: vi.fn((name: string, fn: (arg?: unknown) => unknown) => hooks.set(name, fn)),
     devtools: { extendServerRpc: vi.fn() },
+    options: { app: { baseURL, buildAssetsDir: '/_nuxt/' } },
   }
   const resolver = { resolve: (path: string) => join(resolverBase, path) }
   return { hooks, nuxt, resolver }
@@ -164,10 +172,23 @@ describe('setupDevtools', () => {
       type: 'iframe',
       url: `${DEVTOOLS_UI_ROUTE}/?${DEVTOOLS_DOCK_PARAM}`,
       groupId: 'nuxt',
+      // Imported through Nuxt's Vite dev server, which serves under `/_nuxt/`.
+      clientScript: { importFrom: `/_nuxt/${dockClientFs}`, eager: true },
     }))
     expect(scope).toHaveBeenCalledWith(RPC_NAMESPACE)
     const handlers = Object.fromEntries(register.mock.calls.map(([fn]) => [fn.name, fn.handler]))
     expect(Object.keys(handlers)).toEqual(['getInfo', 'resolveFunctionSource'])
     expect(handlers.getInfo()).toBe(info)
+  })
+
+  it('serves the dock client script under the app base URL', () => {
+    const { hooks, nuxt, resolver } = fakeEnv(join(base, 'stub-build'), '/app/')
+
+    setupDevtools(resolver as never, nuxt as never, info)
+    const docks = { register: vi.fn() }
+    hooks.get('devtools:ready')!({ docks, scope: () => ({ rpc: { register: vi.fn() } }) })
+
+    expect(docks.register.mock.calls[0]![0].clientScript.importFrom)
+      .toBe(`/app/_nuxt/${dockClientFs}`)
   })
 })

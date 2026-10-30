@@ -135,6 +135,13 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
   })
 
   nuxt.hook('devtools:ready', (ctx: ViteDevToolsNodeContext) => {
+    // Served by Nuxt's Vite dev server, under its base, like any app module.
+    // `/@fs/` needs the file's extension: `.js` when built, `.ts` under the stub.
+    const { baseURL, buildAssetsDir } = nuxt.options.app
+    const dockClient = ['.js', '.ts']
+      .map(extension => resolver.resolve(`./runtime/devtools/dock-client${extension}`))
+      .find(path => existsSync(path))
+      ?.replaceAll('\\', '/')
     ctx.docks.register({
       id: RPC_NAMESPACE,
       title: 'Convex',
@@ -144,6 +151,13 @@ export function setupDevtools(resolver: Resolver, nuxt: Nuxt, info: DevtoolsServ
       // `NUXT_DEVTOOLS_GROUP_ID`: the kit is a type-only dependency.
       groupId: 'nuxt',
       category: 'modules',
+      // Badges the dock with the client's health before the panel is opened.
+      clientScript: dockClient
+        ? {
+            importFrom: `${baseURL}/${buildAssetsDir}/@fs/${dockClient}`.replaceAll(/\/{2,}/g, '/'),
+            eager: true,
+          }
+        : undefined,
     })
     // Registered as `nuxt-convex-module:<name>`, the names v3 gives them too.
     const { rpc } = ctx.scope(RPC_NAMESPACE)
