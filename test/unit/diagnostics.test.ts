@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveIntegrationState } from '../../src/options'
+import { clientDependencies, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveIntegrationState } from '../../src/options'
 import { hasGeneratedApi } from '../../src/functions-dir'
 
 describe('resolveIntegrationState', () => {
@@ -144,5 +144,35 @@ describe('integrationWarnings', () => {
     ])
     expect(integrationWarnings(flags({ polar: true }), everything)).toEqual([])
     expect(integrationWarnings(flags({ polar: false }), missing)).toEqual([])
+  })
+})
+
+describe('clientDependencies', () => {
+  const flags = (on: Partial<Record<'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
+    ({ betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
+  const everything = () => true
+
+  it('lists only Convex when no integration is on', () => {
+    expect(clientDependencies(flags({}), everything)).toEqual(['convex/browser', 'convex/server', 'convex/values'])
+  })
+
+  it('adds what each enabled integration imports on the client', () => {
+    expect(clientDependencies(flags({ betterAuth: true, clerk: true, auth0: true, polar: true, security: true }), everything)).toEqual([
+      'convex/browser',
+      'convex/server',
+      'convex/values',
+      '@convex-dev/better-auth/client/plugins',
+      'better-auth/vue',
+      '@clerk/vue',
+      '@auth0/auth0-vue',
+      '@polar-sh/checkout/embed',
+    ])
+  })
+
+  it('leaves out an entry whose package is not installed', () => {
+    const checked: string[] = []
+    const missing = (pkg: string) => checked.push(pkg) > 0 && pkg !== '@polar-sh/checkout'
+    expect(clientDependencies(flags({ polar: true }), missing)).not.toContain('@polar-sh/checkout/embed')
+    expect(checked).toEqual(['convex', 'convex', 'convex', '@polar-sh/checkout'])
   })
 })

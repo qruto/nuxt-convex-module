@@ -219,6 +219,31 @@ export function integrationWarnings(
 }
 
 /**
+ * The packages the client runtime imports, for Vite to pre-bundle in dev.
+ * Vite does not crawl the runtime, so it finds these on the first page load
+ * and reloads the page once. Only the enabled integrations' entries are
+ * listed, and only those whose package is installed: an optional peer such
+ * as `@polar-sh/checkout` may be missing, and an entry Vite cannot resolve
+ * makes Nuxt print a warning. Every one is a peer, so it resolves from the
+ * app's root and needs no `nuxt-convex-module > ` prefix.
+ */
+export function clientDependencies(
+  flags: IntegrationFlags,
+  isInstalled: (pkg: string) => boolean,
+): string[] {
+  const entries = [
+    'convex/browser',
+    'convex/server',
+    'convex/values',
+    ...(flags.betterAuth ? ['@convex-dev/better-auth/client/plugins', 'better-auth/vue'] : []),
+    ...(flags.clerk ? ['@clerk/vue'] : []),
+    ...(flags.auth0 ? ['@auth0/auth0-vue'] : []),
+    ...(flags.polar ? ['@polar-sh/checkout/embed'] : []),
+  ]
+  return entries.filter(entry => isInstalled(entry.split('/').slice(0, entry.startsWith('@') ? 2 : 1).join('/')))
+}
+
+/**
  * The dev-mode one-line startup summary: resolved deployment URL, functions
  * directory, and which opt-in integrations are active.
  */

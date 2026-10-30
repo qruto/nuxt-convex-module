@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { clientDependencies, deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
@@ -328,6 +328,13 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
 
   const flags = { betterAuth, clerk, auth0, polar, security }
   for (const message of integrationWarnings(flags, pkg => isPackageInstalled(pkg, rootDir))) logger.warn(message)
+  if (nuxt.options.dev) {
+    nuxt.options.vite.optimizeDeps ??= {}
+    nuxt.options.vite.optimizeDeps.include = [
+      ...(nuxt.options.vite.optimizeDeps.include ?? []),
+      ...clientDependencies(flags, pkg => isPackageInstalled(pkg, rootDir)),
+    ]
+  }
   return flags
 }
 
@@ -479,9 +486,10 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
 /**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
  * server routes import `#convex/api` too): `any`-typed placeholders until
- * `convex dev` emits the generated `api`. Re-rendered by
- * {@link watchConvexCodegen} the moment codegen lands, which is also when the
- * one-shot onboarding notice confirms it.
+ * `convex dev` emits the generated `api`. `dependsOn` re-renders it when a
+ * `_generated/api` file changes (the directory is watched by
+ * {@link watchConvexCodegen}) and on no other save. That re-render is also
+ * when the one-shot onboarding notice confirms codegen.
  */
 function registerConvexTypeFallback(nuxt: Nuxt): void {
   const functionsDir = resolveFunctionsDir(nuxt.options.rootDir)
@@ -503,6 +511,7 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
       }
       return convexTypeFallbackContents(generated, functionsDir)
     },
+    dependsOn: change => change.path.replace(/\\/g, '/').includes('_generated/api'),
   }, { nuxt: true, nitro: true })
 }
 

@@ -104,6 +104,17 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(r.options.vite.resolve?.dedupe).toContain('convex')
   })
 
+  // `convex dev` writing `_generated/api` retires the placeholder types without
+  // a restart; any other save leaves the template alone.
+  it('re-renders the codegen fallback types on a _generated/api change only', () => {
+    const template = r.options.build.templates.find(t => t.filename === 'types/nuxt-convex-module-api-fallback.d.ts')
+    const dependsOn = template?.dependsOn as (change: { event: 'change', path: string }) => boolean
+    expect(dependsOn({ event: 'change', path: `${fixture}/convex/_generated/api.js` })).toBe(true)
+    expect(dependsOn({ event: 'change', path: 'C:\\app\\convex\\_generated\\api.js' })).toBe(true)
+    expect(dependsOn({ event: 'change', path: `${fixture}/app/app.vue` })).toBe(false)
+    expect(dependsOn({ event: 'change', path: `${fixture}/convex/messages.ts` })).toBe(false)
+  })
+
   it('publishes the five runtime-config keys', () => {
     expect(r.options.runtimeConfig.public.convex).toEqual({
       url: 'https://example.convex.cloud',
