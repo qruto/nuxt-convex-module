@@ -26,12 +26,18 @@ on:
     - cron: '41 5 * * 1' # Mondays
   workflow_dispatch:
 
-# Cancel superseded runs on a pull request, never on main. `head_ref` is empty on
-# a push, so cancelling there would put every merge in one group, and two merges
-# in quick succession would kill the first run. `Release` will not tag a commit
-# whose ci run was cancelled, so that commit could never be released.
+# Cancel superseded runs on a pull request, never on main. `Release` will not
+# tag a commit whose ci run was cancelled, so that commit could never be
+# released.
+#
+# So every run that is not a pull request's gets a group of its own (`head_ref`
+# is empty there). Sharing one group per branch was not enough, even without
+# `cancel-in-progress`: a group keeps one running and one pending run, and a
+# newer pending run cancels the older one. Four merges within two minutes left
+# the middle two without a CI run: each was cancelled before any job started
+# (#110 and #116, 2026-10-30).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # No permissions by default. Each job asks for what it needs.
