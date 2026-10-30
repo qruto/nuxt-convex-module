@@ -1,5 +1,65 @@
 # Changelog
 
+## v0.12.2
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.1...v0.12.2)
+
+### 🚀 Enhancements
+
+#### DevTools
+
+- Show Convex health on the DevTools 4 dock ([#119](https://github.com/qruto/nuxt-convex-module/pull/119))
+
+### 🔥 Performance
+
+#### Module
+
+- Pre-bundle convex deps and scope codegen template rebuilds ([#120](https://github.com/qruto/nuxt-convex-module/pull/120))
+
+### 🩹 Fixes
+
+#### Better Auth
+
+- Drop hop-by-hop headers from the proxied auth response ([#114](https://github.com/qruto/nuxt-convex-module/pull/114))
+
+#### CI
+
+- Never cancel a CI run on main ([#123](https://github.com/qruto/nuxt-convex-module/pull/123))
+
+#### Dependencies
+
+- Move vulnerable transitive packages to patched releases ([#125](https://github.com/qruto/nuxt-convex-module/pull/125))
+
+#### Parity
+
+- Track @convex-dev/better-auth 0.12.6 ([#117](https://github.com/qruto/nuxt-convex-module/pull/117))
+
+### 📖 Documentation
+
+- Drop the README link images ([#109](https://github.com/qruto/nuxt-convex-module/pull/109))
+- Explain why q leaves convex dev running ([#110](https://github.com/qruto/nuxt-convex-module/pull/110))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump nuxt to 4.6.3 ([#116](https://github.com/qruto/nuxt-convex-module/pull/116))
+- Bump the security group across 1 directory with 2 updates ([#122](https://github.com/qruto/nuxt-convex-module/pull/122))
+- Move Nuxt DevTools to 4.0.0 stable ([#118](https://github.com/qruto/nuxt-convex-module/pull/118))
+- Bump the all-non-major group across 1 directory with 9 updates ([#124](https://github.com/qruto/nuxt-convex-module/pull/124))
+
+### 🤖 CI
+
+- Cut runner time and test the Node floor ([#115](https://github.com/qruto/nuxt-convex-module/pull/115))
+
+#### Dependencies
+
+- Bump the actions group across 1 directory with 3 updates ([#121](https://github.com/qruto/nuxt-convex-module/pull/121))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.1
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.0...v0.12.1)
