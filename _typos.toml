@@ -29,3 +29,8 @@ mis = "mis"
 # Both spellings are standard; "unparseable" is the one this codebase uses, and
 # the one TypeScript's own diagnostics use.
 unparseable = "unparseable"
+
+[default.extend-identifiers]
+# The llhttp parser error Node reports (HTTP Parser Error); PARITY.md quotes it.
+# Allowed whole, so a bare `HPE` elsewhere is still checked.
+HPE_CLOSED_CONNECTION = "HPE_CLOSED_CONNECTION"

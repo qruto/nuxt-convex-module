@@ -63,6 +63,15 @@ const parseConvexSiteUrl = (url: string | undefined) => {
   return url
 }
 
+/** The headers that describe one connection, never relayed (RFC 9110 §7.6.1). */
+const HOP_BY_HOP = ['connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'te', 'trailer', 'upgrade']
+
+/** The hop-by-hop headers of a response: the fixed set, and any its `Connection` names. */
+function hopByHopHeaders(headers: Headers): string[] {
+  const named = (headers.get('connection') ?? '').split(',').map(name => name.trim().toLowerCase()).filter(Boolean)
+  return [...new Set([...HOP_BY_HOP, ...named])]
+}
+
 const handler = async (request: Request, siteUrl: string) => {
   const requestUrl = new URL(request.url)
   // String concatenation like upstream — `new URL(path, base)` would drop a
@@ -76,8 +85,6 @@ const handler = async (request: Request, siteUrl: string) => {
   headers.delete('connection')
   headers.set('accept-encoding', 'application/json')
   headers.set('host', new URL(siteUrl).host)
-  headers.set('x-forwarded-host', requestUrl.host)
-  headers.set('x-forwarded-proto', requestUrl.protocol.replace(/:$/, ''))
   headers.set('x-better-auth-forwarded-host', requestUrl.host)
   headers.set('x-better-auth-forwarded-proto', requestUrl.protocol.replace(/:$/, ''))
 
@@ -105,12 +112,19 @@ const handler = async (request: Request, siteUrl: string) => {
   // `fetch` transparently decompresses the upstream body but leaves the
   // `Content-Encoding`/`Content-Length` headers untouched. Forwarding those
   // verbatim makes the browser try to decode an already-decoded body
-  // (`ERR_CONTENT_DECODING_FAILED`), so drop them before relaying. Every
-  // other header is preserved — `Set-Cookie` (the auth session cookies, kept
-  // as separate entries) and `Location` (manual redirects) included.
+  // (`ERR_CONTENT_DECODING_FAILED`), so drop them before relaying. The
+  // upstream connection's hop-by-hop headers go too (RFC 9110 §7.6.1):
+  // `Transfer-Encoding`/`Connection` describe the Convex leg, not the reply
+  // Nitro writes. In `nuxt dev`, a relayed `Connection: keep-alive` on a
+  // `Connection: close` request leaves the worker's socket open but no longer
+  // read, so the dev proxy's keep-alive pool reuses it and gets a 400.
+  // Every other header is preserved — `Set-Cookie` (the auth session
+  // cookies, kept as separate entries) and `Location` (manual redirects)
+  // included.
   const responseHeaders = new Headers(response.headers)
   responseHeaders.delete('content-encoding')
   responseHeaders.delete('content-length')
+  for (const name of hopByHopHeaders(response.headers)) responseHeaders.delete(name)
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

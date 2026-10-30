@@ -206,8 +206,8 @@ describe('auth/nuxt/server', () => {
     const proxiedHeaders = proxiedInit.headers as Headers
     expect(proxiedUrl).toBe('https://example.convex.site/api/auth/session?foo=bar')
     expect(proxiedHeaders.get('host')).toBe('example.convex.site')
-    expect(proxiedHeaders.get('x-forwarded-host')).toBe('app.example.com')
-    expect(proxiedHeaders.get('x-forwarded-proto')).toBe('https')
+    expect(proxiedHeaders.get('x-forwarded-host')).toBeNull()
+    expect(proxiedHeaders.get('x-forwarded-proto')).toBeNull()
     expect(proxiedHeaders.get('x-better-auth-forwarded-host')).toBe('app.example.com')
     expect(proxiedHeaders.get('x-better-auth-forwarded-proto')).toBe('https')
   })
@@ -323,6 +323,42 @@ describe('auth/nuxt/server', () => {
     expect(response.headers.get('content-length')).toBeNull()
     expect(response.headers.get('content-type')).toBe('application/json')
     expect(await response.text()).toBe('{"user":null}')
+  })
+
+  it('drops the upstream connection\'s hop-by-hop headers from the proxied response, and keeps the rest', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/convex/token', {
+      headers: { cookie: 'session=abc' },
+    }))
+    // What Convex's edge answers: its own chunked keep-alive leg, which a
+    // reverse proxy in front of the app must not see on the reply Nitro writes.
+    const upstream = new Headers({
+      'transfer-encoding': 'chunked',
+      'connection': 'keep-alive, x-leg',
+      'keep-alive': 'timeout=5',
+      'proxy-connection': 'keep-alive',
+      'te': 'trailers',
+      'trailer': 'x-checksum',
+      'upgrade': 'websocket',
+      'x-leg': 'upstream-only',
+      'content-type': 'application/json',
+      'location': '/after',
+    })
+    upstream.append('set-cookie', 'a=1; Path=/')
+    upstream.append('set-cookie', 'b=2; Path=/')
+    mockFetch.mockResolvedValue(new Response('{"token":null}', { status: 401, headers: upstream }))
+
+    const response = await convexAuth(event(), {
+      convexSiteUrl: 'https://example.convex.site',
+    }).handler()
+
+    for (const name of ['transfer-encoding', 'connection', 'keep-alive', 'proxy-connection', 'te', 'trailer', 'upgrade', 'x-leg']) expect(response.headers.get(name), name).toBeNull()
+    expect(response.headers.get('content-type')).toBe('application/json')
+    expect(response.headers.get('location')).toBe('/after')
+    expect(response.headers.getSetCookie()).toEqual(['a=1; Path=/', 'b=2; Path=/'])
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"token":null}')
   })
 
   it('throws when the Convex site URL is not set anywhere', async () => {
