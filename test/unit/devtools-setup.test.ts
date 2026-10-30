@@ -21,6 +21,9 @@ afterAll(() => rmSync(base, { recursive: true, force: true }))
 const dockClient = join(base, 'stub-build', 'runtime', 'devtools', 'dock-client.ts')
 mkdirSync(join(dockClient, '..'), { recursive: true })
 writeFileSync(dockClient, 'export default () => {}')
+// How Vite addresses that file: forward slashes, and one slash after `@fs`
+// whether the path is `/tmp/…` or `C:\Users\…`.
+const dockClientFs = `@fs/${dockClient.replaceAll('\\', '/')}`.replace('@fs//', '@fs/')
 beforeEach(() => addDevServerHandler.mockClear())
 
 function fakeEnv(resolverBase: string, baseURL = '/') {
@@ -170,7 +173,7 @@ describe('setupDevtools', () => {
       url: `${DEVTOOLS_UI_ROUTE}/?${DEVTOOLS_DOCK_PARAM}`,
       groupId: 'nuxt',
       // Imported through Nuxt's Vite dev server, which serves under `/_nuxt/`.
-      clientScript: { importFrom: `/_nuxt/@fs${dockClient}`, eager: true },
+      clientScript: { importFrom: `/_nuxt/${dockClientFs}`, eager: true },
     }))
     expect(scope).toHaveBeenCalledWith(RPC_NAMESPACE)
     const handlers = Object.fromEntries(register.mock.calls.map(([fn]) => [fn.name, fn.handler]))
@@ -186,6 +189,6 @@ describe('setupDevtools', () => {
     hooks.get('devtools:ready')!({ docks, scope: () => ({ rpc: { register: vi.fn() } }) })
 
     expect(docks.register.mock.calls[0]![0].clientScript.importFrom)
-      .toBe(`/app/_nuxt/@fs${dockClient}`)
+      .toBe(`/app/_nuxt/${dockClientFs}`)
   })
 })
