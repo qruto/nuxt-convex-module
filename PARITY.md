@@ -302,17 +302,24 @@ for free — removing one would break the behaviour, not restore it.
   `cachedToken !== null` would strand the user as authenticated. And Better Auth session data
   without a nested `session` object still means signed in, which `session?.session` misses.
 
-##### D-04 — stale `Content-Encoding` / `Content-Length` are stripped from the proxied response
+##### D-04 — stale `Content-Encoding` / `Content-Length` and hop-by-hop headers are stripped from the proxied response
 
-- **Kind** · undici decompresses transparently but leaves the headers describing the compressed body
+- **Kind** · undici decompresses transparently but leaves the headers describing the compressed body;
+  the upstream connection's hop-by-hop headers describe the Convex leg, not the relayed reply
 - **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/index.ts` — `return fetch(nextUrl, init)`
 - **Port** · [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts) — `handler`
 - **Pinned by** · `test/unit/auth/nuxt/server.test.ts` — "strips stale content-encoding/length
-  from the proxied response"
-- **On sync** · keep; forwarding those two headers verbatim is a correctness bug here
-- **Why** · relaying them makes the browser decode an already-decoded response
-  (`ERR_CONTENT_DECODING_FAILED`). Every other header is preserved, `Set-Cookie` and `Location`
-  included.
+  from the proxied response" and "drops the upstream connection's hop-by-hop headers from the proxied
+  response, and keeps the rest"
+- **On sync** · keep; forwarding these headers verbatim is a correctness bug here
+- **Why** · relaying the encoding headers makes the browser decode an already-decoded response
+  (`ERR_CONTENT_DECODING_FAILED`). Relaying the hop-by-hop headers (RFC 9110 §7.6.1 forbids a
+  proxy to) broke every second `/api/auth/*` request in `nuxt dev` when the client sends
+  `Connection: close`, as portless always does. Convex's `Connection: keep-alive` keeps the Nitro
+  worker's socket open after Node has stopped reading it, Nitro's dev proxy reuses that socket from
+  its keep-alive pool, and the worker answers 400 (`HPE_CLOSED_CONNECTION`). The fixed hop-by-hop
+  set and any header the upstream `Connection` names are dropped. Every other header is preserved,
+  `Set-Cookie` and `Location` included.
 
 #### Consequences of an unimportable upstream internal
 

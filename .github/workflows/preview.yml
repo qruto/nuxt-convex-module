@@ -8,13 +8,34 @@ name: Preview
 # in a real Nuxt app straight from the PR comment.
 # Auth is handled by the pkg.pr.new GitHub App installed on the repository;
 # the workflow token needs no extra permissions.
+#
+# Only when something that goes into the package or the template changed: a
+# docs-only change has nothing new to install. A workflow-level `paths:`
+# filter is safe here, though ci.yml's header forbids one there. Preview is not
+# a required check, so a run that never starts leaves nothing "Expected —
+# waiting for status" behind. `&package` is a YAML anchor, so the list is
+# written once.
 on:
   push:
     branches:
       - main
+    paths: &package
+      - 'src/**'
+      - 'devtools-client-app/**'
+      - 'examples/playground/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'patches/**'
+      - 'build.config.ts'
+      - 'tsconfig*.json'
+      - '.nuxtrc'
+      - '.github/workflows/preview.yml'
+      - '.github/actions/**'
   pull_request:
     branches:
       - main
+    paths: *package
 
 # Superseded pull request runs are cancelled, pushes to main are not — same
 # reason as ci.yml. Here it matters less (a cancelled preview only means a
