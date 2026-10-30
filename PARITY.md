@@ -14,7 +14,7 @@ are in [AGENTS.md](./AGENTS.md).
 | Upstream package | Baseline version | Diffed against |
 |---|---|---|
 | `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.48.0** | tag `npm/1.48.0` in [convex/convex-js](https://github.com/convex/convex-js) |
-| `@convex-dev/better-auth` | **0.12.5** | tag `v0.12.5` in [convex/better-auth](https://github.com/convex/better-auth) |
+| `@convex-dev/better-auth` | **0.12.6** | tag `v0.12.6` in [convex/better-auth](https://github.com/convex/better-auth) |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
@@ -293,7 +293,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-03 — `isAuthenticated` settles to signed-out without a re-render
 
 - **Kind** · no re-render between a session settling and the cache-clearing effect
-- **Upstream** · `@convex-dev/better-auth@0.12.5` `react/index.tsx` — `Boolean(session?.session) || cachedToken !== null`
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `react/index.tsx` — `Boolean(session?.session) || cachedToken !== null`
 - **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
 - **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "treats a settled missing session as
   unauthenticated even with a stale cached token"
@@ -306,7 +306,7 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · undici decompresses transparently but leaves the headers describing the compressed body;
   the upstream connection's hop-by-hop headers describe the Convex leg, not the relayed reply
-- **Upstream** · `@convex-dev/better-auth@0.12.5` `nextjs/index.ts` — `return fetch(nextUrl, init)`
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/index.ts` — `return fetch(nextUrl, init)`
 - **Port** · [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts) — `handler`
 - **Pinned by** · `test/unit/auth/nuxt/server.test.ts` — "strips stale content-encoding/length
   from the proxied response" and "drops the upstream connection's hop-by-hop headers from the proxied
@@ -366,7 +366,7 @@ fixes one, drop the entry rather than reverting.
 ##### D-08 — the JWT cache retries on auth errors; upstream retries on non-auth errors
 
 - **Kind** · inverted predicate
-- **Upstream** · `@convex-dev/better-auth@0.12.5` `nextjs/index.ts` — `callWithToken`
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/index.ts` — `callWithToken`
 - **Port** · [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
 - **Pinned by** · `test/unit/auth/nuxt/server.test.ts` — "refreshes the token once when jwt cache
   marks the first error as auth-related", "rethrows non-auth errors without refreshing even
@@ -417,7 +417,7 @@ is that the declaration now matches what actually happens.
 ##### D-11 — `usePreloadedAuthQuery` declares `| null | undefined`
 
 - **Kind** · declaration widened to match runtime
-- **Upstream** · `@convex-dev/better-auth@0.12.5` `nextjs/client.tsx` — declares `| null`
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/client.tsx` — declares `| null`
 - **Port** · [`better-auth/vue/hydration.ts`](./src/runtime/better-auth/vue/hydration.ts)
 - **Pinned by** · `test/nuxt/preload-hydration.test.ts` — "keeps auth-preloaded data while auth
   loads, then clears for unauthenticated users"
@@ -743,7 +743,7 @@ upstream change is noticed:
 `peerDependencies`, the [`STABILITY.md`](./STABILITY.md) table and the installation page's
 range table; `test/docs/docs-contract.test.ts` holds the last two to the first. A `convex` floor
 also moves in `website/package.json`, `templates/starter` and `examples/playground`. A range
-held by an add-on's own peer has a Dependabot ignore too: `@convex-dev/better-auth@0.12.5` peers
+held by an add-on's own peer has a Dependabot ignore too: `@convex-dev/better-auth@0.12.6` peers
 `better-auth >=1.6.11 <1.7.0`, and `.github/dependabot.yml` holds Dependabot below 1.7. Both
 move only when the add-on's own peer range does.
 
@@ -755,6 +755,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-10-29 | `@convex-dev/better-auth` | 0.12.5 → 0.12.6 | #117 | Security release (`37ed22f`, GHSA-pgx2-m66h-x29f). Ported: the proxy no longer stamps `x-forwarded-host` / `x-forwarded-proto`, only the `x-better-auth-forwarded-*` pair, which the Convex side now restores only for hosts listed exactly in `trustedOrigins`. The release's other fix, one-time tokens only for trusted-origin redirects (GHSA-j8qq-g9pm-v3c2), is server-side; the client plugins are unchanged |
 | 2026-10-23 | `convex` | 1.47.0 → 1.48.0 | #95 | Nothing: the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` and `src/common` are unchanged, as are the package exports; the release touches the CLI and the server `ctx` APIs. Diffed from the npm tarballs' `src/`, as upstream had not pushed tag `npm/1.48.0` |
 | 2026-10-19 | `convex` | 1.46.0 → 1.47.0 | #87 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`; the published client `dist` is byte-identical |
 | 2026-10-01 | `convex` | 1.45.0 → 1.46.0 | #61 | `99b33c1`, types only: every hook, client method and Nitro helper also accepts a `FunctionReference_future`, re-exported (A-05), and `useAsyncQuery` widens with `useQuery`. The `convex` peer floor moves to `^1.46.0`, the first version that ships the type |
