@@ -1,6 +1,6 @@
 import type { FunctionReference } from 'convex/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetNuxtRuntimeConfigForTests, setNuxtRuntimeConfigForTests } from '../../../helpers/nuxt-imports'
+import { resetNuxtRuntimeConfigForTests, runtimeConfigEvents, setNuxtRuntimeConfigForTests } from '../../../helpers/nuxt-imports'
 
 const {
   mockFetch,
@@ -442,5 +442,41 @@ describe('auth/nuxt/server', () => {
     await convexAuth(event()).getToken()
 
     expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://public-runtime.convex.site')
+  })
+
+  it('reads the site URL from the request\'s own config', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: 'https://public-runtime.convex.site' } } })
+    mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
+    const request = event()
+
+    await convexAuth(request).getToken()
+
+    expect(runtimeConfigEvents).toContain(request)
+  })
+
+  it('falls back to NUXT_PUBLIC_CONVEX_SITE_URL when the runtime config holds an empty site URL', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    // A value never set reaches the runtime config as ''.
+    setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: '' } } })
+    process.env.NUXT_PUBLIC_CONVEX_SITE_URL = 'https://from-env.convex.site'
+    mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
+
+    await convexAuth(event()).getToken()
+
+    expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://from-env.convex.site')
+  })
+
+  it('fetches the token under the app\'s auth route', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: 'https://public-runtime.convex.site', authRoute: '/auth' } } })
+    mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
+
+    await convexAuth(event()).getToken()
+    // An explicit `basePath` still wins.
+    await convexAuth(event(), { basePath: '/custom' }).getToken()
+
+    expect(mockGetToken.mock.calls[0]?.[2]).toMatchObject({ basePath: '/auth' })
+    expect(mockGetToken.mock.calls[1]?.[2]).toMatchObject({ basePath: '/custom' })
   })
 })

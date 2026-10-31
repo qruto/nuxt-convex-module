@@ -342,6 +342,26 @@ for free — removing one would break the behaviour, not restore it.
   server render disposes kept one listener per call, for good. A server render reads the same
   pending state from a ref of its own.
 
+##### D-14 — a server render opens no WebSocket, and its client is closed after the request
+
+- **Kind** · a Nitro process renders every request with a client of its own; React renders one app
+- **Upstream** · `convex@1.48.0` `react/client.ts` — `connectionState()` reads `this.sync`, which
+  creates the WebSocket client
+- **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `connectionState()`;
+  [`nuxt/config.ts`](./src/runtime/nuxt/config.ts) — `closeAfterRender`, called by
+  [`vue/plugin.ts`](./src/runtime/vue/plugin.ts) and
+  [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts)
+- **Pinned by** · `test/unit-server/ssr-convex-client.test.ts`, `test/e2e/basic.test.ts` —
+  "server-renders the connection state without opening a socket"
+- **On sync** · keep both
+- **Why** · `useConvexConnectionState()` reads the state once during setup (D-01 keeps that read),
+  and upstream's `connectionState()` creates the sync client to answer, which connects from its
+  constructor. Each server render then opened a WebSocket to the deployment, and nothing closed
+  the per-request client, so the sockets stayed open: memory and connections grew with traffic,
+  and `nuxt generate` could not exit. A server render now reports a connection not yet made, the
+  state the browser's client starts in, and each request's client is closed once the page is
+  rendered or the request fails.
+
 #### Consequences of an unimportable upstream internal
 
 All three follow from `PaginatedQueryClient` being unreachable ([X-05](#x-05--paginatedqueryclient)).

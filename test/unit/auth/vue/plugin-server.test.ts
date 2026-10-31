@@ -22,12 +22,12 @@ vi.mock('#app', () => ({
 }))
 
 const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.server')).default as unknown as
-  (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void } }) => Promise<unknown>
+  (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void }, hook: (name: string, fn: () => void) => void }) => Promise<unknown>
 
 describe('better-auth server plugin on an ordinary SSR request', () => {
   it('provides the client and the auth stub, prefetches the token and forbids caching the response', async () => {
     const provide = vi.fn()
-    await setup({ vueApp: { provide } })
+    await setup({ vueApp: { provide }, hook: vi.fn() })
     expect(provide).toHaveBeenCalledTimes(3)
     expect(convexAuth).toHaveBeenCalledWith(event)
     expect(state.value).toBe('jwt')
