@@ -1,5 +1,6 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app'
 import { ConvexVueClient, ConvexClientKey } from './client'
+import { closeAfterRender } from '../nuxt/config'
 
 /**
  * Base Convex client bootstrap.
@@ -15,7 +16,8 @@ import { ConvexVueClient, ConvexClientKey } from './client'
  * those instead of this one — see `registerIntegrations` in `src/module.ts`.
  *
  * The WebSocket opens lazily on the first subscription; on the server the
- * preloaded-query helpers short-circuit, so no socket is opened during SSR.
+ * preloaded-query helpers short-circuit, so no socket is opened during SSR,
+ * and a server render's client is closed when its request is done.
  */
 export default defineNuxtPlugin({
   name: 'nuxt-convex-module:client',
@@ -31,6 +33,8 @@ export default defineNuxtPlugin({
 
     const client = new ConvexVueClient(url)
     nuxtApp.vueApp.provide(ConvexClientKey, client)
+    // PARITY: D-14
+    if (import.meta.server) closeAfterRender(nuxtApp, client)
 
     // No teardown on `beforeunload` — upstream never closes the client there.
     // The event is cancelable: it fires BEFORE the user answers the

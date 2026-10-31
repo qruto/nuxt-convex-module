@@ -8,6 +8,22 @@ import { useRuntimeConfig } from '#imports'
  */
 export const CONVEX_INITIAL_TOKEN_KEY = 'convex:initialToken'
 
+/**
+ * Close a server render's Convex client once its request is done, rendered
+ * or failed. Anything that opened the client's connection during the render
+ * would otherwise leave a WebSocket open from the server, one per request.
+ *
+ * @internal
+ */
+export function closeAfterRender(
+  nuxtApp: { hook: (name: 'app:rendered' | 'app:error', fn: () => void) => unknown },
+  client: { close: () => Promise<void> },
+): void {
+  const close = () => void client.close()
+  nuxtApp.hook('app:rendered', close)
+  nuxtApp.hook('app:error', close)
+}
+
 type ConvexRuntimeConfig = {
   public?: {
     convex?: {

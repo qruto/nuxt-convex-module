@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
-import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
+import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
 
@@ -59,6 +59,8 @@ export default defineNuxtPlugin({
     const ssrClient = url ? new ConvexVueClient(url) : undefined
     if (ssrClient) {
       nuxtApp.vueApp.provide(ConvexClientKey, ssrClient)
+      // PARITY: D-14
+      closeAfterRender(nuxtApp, ssrClient)
     }
 
     // Provide a stub auth state for SSR so components calling `useConvexAuth`

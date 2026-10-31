@@ -178,6 +178,20 @@ interface SyncClientWithInternals extends BaseConvexClient {
   localQueryLogs(udfPath: string, args?: Record<string, Value>): string[] | undefined
 }
 
+/** The state of a client that has not connected yet: what a server render reports. */
+function notConnected(): ConnectionState {
+  return {
+    hasInflightRequests: false,
+    isWebSocketConnected: false,
+    timeOfOldestInflightRequest: null,
+    hasEverConnected: false,
+    connectionCount: 0,
+    connectionRetries: 0,
+    inflightMutations: 0,
+    inflightActions: 0,
+  }
+}
+
 /**
  * A Convex client for use within Vue.
  *
@@ -557,6 +571,10 @@ export class ConvexVueClient {
    * @experimental May change in a minor release — see STABILITY.md.
    */
   connectionState(): ConnectionState {
+    // PARITY: D-14
+    // A server render has no connection to report, and asking the sync client
+    // for one would open a WebSocket from the server for every request.
+    if (import.meta.server && !this.cachedSync) return notConnected()
     return this.sync.connectionState()
   }
 
