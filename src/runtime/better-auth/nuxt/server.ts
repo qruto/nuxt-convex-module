@@ -273,12 +273,18 @@ export interface ConvexAuthService {
 export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): ConvexAuthService {
   // PARITY: N-09
   // Upstream requires `opts.convexSiteUrl`; Nuxt auto-provides it from runtime
-  // config / env when the override is omitted.
+  // config / env when the override is omitted: the request's own config, and
+  // `||` because the config holds '' for a URL never set.
+  const config = getConvexRuntimeConfig(event)
   const siteUrl = parseConvexSiteUrl(
     opts?.convexSiteUrl
-    ?? getConvexRuntimeConfig().siteUrl
-    ?? process.env.NUXT_PUBLIC_CONVEX_SITE_URL,
+    || config.siteUrl
+    || process.env.NUXT_PUBLIC_CONVEX_SITE_URL,
   )
+  // The token endpoint sits under the app's auth route, which the same-origin
+  // proxy forwards to the deployment unchanged: `/api/auth` unless
+  // `convex.betterAuth.authRoute` moved it.
+  const basePath = opts?.basePath ?? config.authRoute
 
   // Per-REQUEST token cache — memoized on `event.context` (keyed by site URL
   // and token endpoint) so separate `convexAuth(event)` instances share one
@@ -287,7 +293,7 @@ export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): Co
   // callers, and caching rejections for the request like `React.cache` does);
   // a forced refresh overwrites the shared entry.
   type TokenResult = Awaited<ReturnType<typeof getToken>>
-  const cacheKey = `__nuxtConvexToken:${siteUrl}|${opts?.basePath ?? ''}`
+  const cacheKey = `__nuxtConvexToken:${siteUrl}|${basePath ?? ''}`
   const tokenCache = event.context as Record<string, Promise<TokenResult> | undefined>
 
   const cachedGetToken = (
@@ -300,7 +306,7 @@ export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): Co
     mutableHeaders.delete('content-length')
     mutableHeaders.delete('transfer-encoding')
     mutableHeaders.set('accept-encoding', 'identity')
-    const promise = getToken(siteUrl, mutableHeaders, { ...opts, forceRefresh })
+    const promise = getToken(siteUrl, mutableHeaders, { ...opts, basePath, forceRefresh })
     tokenCache[cacheKey] = promise
     return promise
   }
