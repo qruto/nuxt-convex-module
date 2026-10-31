@@ -1,5 +1,5 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, effectScope, hasInjectionContext, inject, shallowRef, type ComputedRef } from 'vue'
+import { computed, effectScope, hasInjectionContext, inject, shallowRef, type ComputedRef, type EffectScope } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
 import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, PENDING_AUTH_VERSION, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
@@ -45,10 +45,12 @@ const serverSession = () => shallowRef({
 // outside a component, such as the `convex-auth` middleware on each guarded
 // navigation.
 let browserSession: BetterAuthSession | undefined
+let browserSessionScope: EffectScope | undefined
 
 const useClientSession = (): BetterAuthSession => {
   if (import.meta.server) return serverSession()
-  return browserSession ??= effectScope(true).run(() => authClient.useSession())!
+  browserSessionScope ??= effectScope(true)
+  return browserSession ??= browserSessionScope.run(() => authClient.useSession())!
 }
 
 // Read off `AuthClient`, so the published type follows the app's own client
@@ -187,5 +189,7 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
 export function __resetUseBetterAuthForTests() {
   Object.assign(browserStore, createBetterAuthTokenStore(), { cachedToken: browserStore.cachedToken })
   browserStore.cachedToken.value = null
+  browserSessionScope?.stop()
+  browserSessionScope = undefined
   browserSession = undefined
 }
