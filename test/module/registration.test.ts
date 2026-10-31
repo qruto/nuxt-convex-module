@@ -121,6 +121,7 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
       siteUrl: 'https://example.convex.site',
       crossDomainCallbackRoute: '',
       loginPath: '/login',
+      authRoute: '/api/auth',
     })
     expect(r.options.runtimeConfig.convex).toBeUndefined()
   })

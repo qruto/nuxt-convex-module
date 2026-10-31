@@ -145,6 +145,7 @@ declare module '@nuxt/schema' {
       siteUrl: string
       crossDomainCallbackRoute: string
       loginPath: string
+      authRoute: string
     }
   }
 }
@@ -210,6 +211,9 @@ export default defineNuxtModule<ModuleOptions>({
     for (const message of diagnostics.errors) logger.error(message)
     for (const message of diagnostics.warnings) logger.warn(message)
     nuxt.options.runtimeConfig.public.convex.loginPath = diagnostics.loginPath
+    // Read by `convexAuth` for the deployment's token endpoint, which sits
+    // under the same route the proxy serves.
+    nuxt.options.runtimeConfig.public.convex.authRoute = diagnostics.authRoute
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
     // prefix of `#convex/auth-client`, so the auth-client alias must be

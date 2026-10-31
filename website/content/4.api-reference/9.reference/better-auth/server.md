@@ -86,7 +86,7 @@ an optional override for the Convex site URL.
 const convexBetterAuthNuxt: (event, opts?) => ConvexAuthService = convexAuth;
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:396](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L396)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:402](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L402)
 
 Upstream-named alias of [convexAuth](#convexauth) — the mechanical rename target
 for `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs` (framework

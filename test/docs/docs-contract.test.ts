@@ -66,7 +66,7 @@ describe('runtime config', () => {
   const snake = (key: string) => key.replace(/[A-Z]/g, c => `_${c}`).toUpperCase()
 
   it('reads the augmentation', () => {
-    expect(new Set(keys)).toEqual(new Set(['url', 'siteUrl', 'crossDomainCallbackRoute', 'loginPath']))
+    expect(new Set(keys)).toEqual(new Set(['url', 'siteUrl', 'crossDomainCallbackRoute', 'loginPath', 'authRoute']))
   })
 
   it.each([...new Set(keys)])('`%s` and its override are on the configuration page', (key) => {
