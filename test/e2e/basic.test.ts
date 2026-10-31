@@ -27,6 +27,16 @@ describe('basic fixture', () => {
     expect(html).toContain('<h1>basic</h1>')
   })
 
+  it('server-renders the connection state without opening a socket', async () => {
+    const before = stub.connections
+    for (let i = 0; i < 3; i++) {
+      expect(await $fetch('/')).toContain('not-connected')
+    }
+    // Give a socket the server opened time to reach the stub.
+    await new Promise(resolve => setTimeout(resolve, 500))
+    expect(stub.connections).toBe(before)
+  })
+
   it('auto-imports resolve: useQuery renders its SSR loading state', async () => {
     const html = await $fetch('/')
     // Plain `useQuery` must render undefined during SSR (no server WebSocket,

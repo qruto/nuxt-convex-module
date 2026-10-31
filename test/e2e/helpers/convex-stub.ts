@@ -19,6 +19,8 @@ export interface ConvexStub {
   subscriptions: Array<{ queryId: number, udfPath: string }>
   /** Push a new value to every live subscription, as a Convex `Transition`. */
   push: (value: unknown) => void
+  /** How many sync WebSockets have connected so far, closed ones included. */
+  readonly connections: number
   close: () => Promise<void>
 }
 
@@ -88,8 +90,10 @@ export function startConvexStub(options: { queryValue?: unknown } = {}): Promise
     }))
   }
 
+  let connections = 0
   const wss = new WebSocketServer({ noServer: true })
   wss.on('connection', (socket) => {
+    connections += 1
     sockets.add(socket)
     socket.on('close', () => sockets.delete(socket))
     socket.on('message', (raw) => {
@@ -117,6 +121,9 @@ export function startConvexStub(options: { queryValue?: unknown } = {}): Promise
         subscriptions,
         push: (value) => {
           for (const socket of sockets) transition(socket, subscriptions, value)
+        },
+        get connections() {
+          return connections
         },
         close: async () => {
           for (const socket of sockets) socket.terminate()
