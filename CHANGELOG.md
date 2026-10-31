@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.12.3
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.2...v0.12.3)
+
+### 🩹 Fixes
+
+- Open no WebSocket from a server render, and close its client ([#129](https://github.com/qruto/nuxt-convex-module/pull/129))
+
+#### Better Auth
+
+- Fetch the server's token under the app's auth route ([#130](https://github.com/qruto/nuxt-convex-module/pull/130))
+- Render a signed-in visitor as signed in on the server ([#128](https://github.com/qruto/nuxt-convex-module/pull/128))
+
+### 📖 Documentation
+
+#### Better Auth
+
+- Document workarounds for the 1.6 advisories ([#126](https://github.com/qruto/nuxt-convex-module/pull/126))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.2
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.1...v0.12.2)
