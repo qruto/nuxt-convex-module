@@ -4,7 +4,7 @@ import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
-import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } from './use-better-auth'
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } from './token-store'
 
 /**
  * Prefetch the Convex JWT for SSR and stash it in `initialToken`.

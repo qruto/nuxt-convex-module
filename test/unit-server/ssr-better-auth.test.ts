@@ -11,12 +11,8 @@ vi.mock('#convex/auth-client', () => ({
   authClient: { useSession, convex: { token: vi.fn() } },
 }))
 
-const {
-  BetterAuthTokenStoreKey,
-  createBetterAuthTokenStore,
-  seedInitialToken,
-  useBetterAuth,
-} = await import('../../src/runtime/better-auth/vue/use-better-auth')
+const { useBetterAuth } = await import('../../src/runtime/better-auth/vue/use-better-auth')
+const { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } = await import('../../src/runtime/better-auth/vue/token-store')
 
 /** `useBetterAuth()` inside an app that provides `store`, as a request's server plugin does. */
 function inRequest(store: ReturnType<typeof createBetterAuthTokenStore>) {

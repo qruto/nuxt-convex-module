@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The ordinary SSR request: a visitor, so the Better Auth server plugin
 // prefetches the Convex JWT into the initial-token state the client plugin
@@ -9,6 +9,12 @@ import { describe, expect, it, vi } from 'vitest'
 const getToken = vi.fn(async () => 'jwt')
 const convexAuth = vi.fn(() => ({ getToken }))
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
+
+// The plugin runs on every server render, so it must not load the app's auth
+// client: one with browser-only top-level code would fail every page.
+vi.mock('#convex/auth-client', () => {
+  throw new Error('the server plugin imported #convex/auth-client')
+})
 
 const state = { value: null as string | null }
 const event = {}
@@ -25,6 +31,11 @@ const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.serv
   (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void }, hook: (name: string, fn: () => void) => void }) => Promise<unknown>
 
 describe('better-auth server plugin on an ordinary SSR request', () => {
+  beforeEach(() => {
+    state.value = null
+    vi.clearAllMocks()
+  })
+
   it('provides the client and the auth stub, prefetches the token and forbids caching the response', async () => {
     const provide = vi.fn()
     await setup({ vueApp: { provide }, hook: vi.fn() })
@@ -36,8 +47,9 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
 
   it('hands the prefetched token to the token store of this request', async () => {
     const provide = vi.fn()
-    await setup({ vueApp: { provide } })
-    const { BetterAuthTokenStoreKey } = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+    await setup({ vueApp: { provide }, hook: vi.fn() })
+    expect(getToken).toHaveBeenCalledTimes(1)
+    const { BetterAuthTokenStoreKey } = await import('../../../../src/runtime/better-auth/vue/token-store')
     const store = provide.mock.calls.find(([key]) => key === BetterAuthTokenStoreKey)?.[1]
     expect(store.cachedToken.value).toBe('jwt')
     expect(store.initialTokenUsed).toBe(true)

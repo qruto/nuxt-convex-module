@@ -1,50 +1,7 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, effectScope, hasInjectionContext, inject, ref, shallowRef, type ComputedRef, type InjectionKey, type Ref } from 'vue'
+import { computed, effectScope, hasInjectionContext, inject, shallowRef, type ComputedRef } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
-
-/**
- * The Convex token state behind `useBetterAuth()`, shared by every call in one
- * app: the cached JWT and the fetch in flight, so concurrent
- * `fetchAccessToken()` callers share the same Better Auth round-trip.
- *
- * @internal
- */
-export interface BetterAuthTokenStore {
-  cachedToken: Ref<string | null>
-  cachedTokenVersion: string | null
-  pendingToken: Promise<string | null> | null
-  pendingTokenVersion: string | null
-  initialTokenUsed: boolean
-}
-
-/** A store with no token yet. @internal */
-export function createBetterAuthTokenStore(): BetterAuthTokenStore {
-  return {
-    cachedToken: ref(null),
-    cachedTokenVersion: null,
-    pendingToken: null,
-    pendingTokenVersion: null,
-    initialTokenUsed: false,
-  }
-}
-
-/** The key the server plugin provides each request's store under. @internal */
-export const BetterAuthTokenStoreKey: InjectionKey<BetterAuthTokenStore> = Symbol('BetterAuthTokenStore')
-
-const PENDING_AUTH_VERSION = '__pending__'
-
-/**
- * Hand a store its prefetched token, once per store: the token covers the gap
- * until the session loads, so the first render reads signed-in.
- *
- * @internal
- */
-export function seedInitialToken(store: BetterAuthTokenStore, initialToken: string | null | undefined): void {
-  if (store.initialTokenUsed || !initialToken) return
-  store.cachedToken.value = initialToken
-  store.cachedTokenVersion = PENDING_AUTH_VERSION
-  store.initialTokenUsed = true
-}
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, PENDING_AUTH_VERSION, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
 // The browser runs one app, so its store lives at module scope.
 const browserStore = createBetterAuthTokenStore()
