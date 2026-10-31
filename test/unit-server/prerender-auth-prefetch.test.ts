@@ -21,10 +21,10 @@ const setup = (await import('../../src/runtime/better-auth/vue/plugin.server')).
   (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void }, hook: (name: string, fn: () => void) => void }) => Promise<unknown>
 
 describe('better-auth server plugin while prerendering', () => {
-  it('provides the client and the auth stub but never prefetches a token', async () => {
+  it('provides the client, the auth stub and the token store but never prefetches a token', async () => {
     const provide = vi.fn()
     await setup({ vueApp: { provide }, hook: vi.fn() })
-    expect(provide).toHaveBeenCalledTimes(2)
+    expect(provide).toHaveBeenCalledTimes(3)
     expect(convexAuth).not.toHaveBeenCalled()
     expect(state.value).toBeNull()
   })

@@ -1,20 +1,21 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, ref, type ComputedRef } from 'vue'
+import { computed, effectScope, hasInjectionContext, inject, shallowRef, type ComputedRef, type EffectScope } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, PENDING_AUTH_VERSION, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
-/**
- * Module-level state, shared across all `useBetterAuth()` calls in the Nuxt app.
- *
- * The cached JWT and in-flight token promise are kept at module scope so
- * concurrent `fetchAccessToken()` callers share the same Better Auth round-trip.
- */
-const cachedToken = ref<string | null>(null)
-let cachedTokenVersion: string | null = null
-let pendingToken: Promise<string | null> | null = null
-let pendingTokenVersion: string | null = null
-let initialTokenUsed = false
+// The browser runs one app, so its store lives at module scope.
+const browserStore = createBetterAuthTokenStore()
 
-const PENDING_AUTH_VERSION = '__pending__'
+// PARITY: D-13
+// Upstream keeps the token in React state, one per provider, so each server
+// render starts from its own `initialToken`. A Nitro process renders every
+// visitor's request with this one module, so a server render takes the store
+// its request's plugin provided, and a call outside any app gets a store of
+// its own: never one another visitor's render can read.
+function useTokenStore(): BetterAuthTokenStore {
+  if (!import.meta.server) return browserStore
+  return (hasInjectionContext() ? inject(BetterAuthTokenStoreKey, null) : null) ?? createBetterAuthTokenStore()
+}
 
 type BetterAuthSessionData = {
   session?: {
@@ -25,7 +26,32 @@ type BetterAuthSessionData = {
   } | null
 } | null
 
-const useClientSession = () => authClient.useSession()
+// PARITY: D-13
+// On the server Better Auth's session store never fetches, so it reads
+// pending for the whole render. It is also one store for every request, and
+// `useStore` subscribes to it in a scope no server render disposes: one
+// listener kept for good per call. A server render reads the same pending
+// state from a ref of its own instead.
+const serverSession = () => shallowRef({
+  data: null,
+  error: null,
+  isPending: true,
+  isRefetching: false,
+  refetch: async () => {},
+}) as unknown as BetterAuthSession
+
+// The browser's session ref, subscribed once for the app's lifetime in a scope
+// of its own. Subscribing per call left a listener behind on every call made
+// outside a component, such as the `convex-auth` middleware on each guarded
+// navigation.
+let browserSession: BetterAuthSession | undefined
+let browserSessionScope: EffectScope | undefined
+
+const useClientSession = (): BetterAuthSession => {
+  if (import.meta.server) return serverSession()
+  browserSessionScope ??= effectScope(true)
+  return browserSession ??= browserSessionScope.run(() => authClient.useSession())!
+}
 
 // Read off `AuthClient`, so the published type follows the app's own client
 // through `#convex/auth-client`; `typeof useClientSession` would freeze the
@@ -79,11 +105,9 @@ export interface UseBetterAuthReturn {
  * @public
  */
 export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn {
-  if (!initialTokenUsed && initialToken) {
-    cachedToken.value = initialToken
-    cachedTokenVersion = PENDING_AUTH_VERSION
-    initialTokenUsed = true
-  }
+  const store = useTokenStore()
+  seedInitialToken(store, initialToken)
+  const { cachedToken } = store
 
   const session = useClientSession()
   const client = authClient
@@ -104,39 +128,39 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // signed-out, so drop the cached token instead of fetching a new one.
     if (version === null) {
       cachedToken.value = null
-      cachedTokenVersion = null
-      pendingToken = null
-      pendingTokenVersion = null
+      store.cachedTokenVersion = null
+      store.pendingToken = null
+      store.pendingTokenVersion = null
       return null
     }
 
     // The trailing version checks replace upstream's `[sessionId]` callback
     // deps: a cache entry from another session never satisfies this caller.
-    if (cachedToken.value && !forceRefreshToken && cachedTokenVersion === version) {
+    if (cachedToken.value && !forceRefreshToken && store.cachedTokenVersion === version) {
       return cachedToken.value
     }
-    if (!forceRefreshToken && pendingToken && pendingTokenVersion === version) {
-      return pendingToken
+    if (!forceRefreshToken && store.pendingToken && store.pendingTokenVersion === version) {
+      return store.pendingToken
     }
-    pendingTokenVersion = version
-    pendingToken = client.convex
+    store.pendingTokenVersion = version
+    const pending = store.pendingToken = client.convex
       .token({ fetchOptions: { throw: false } })
       .then(({ data }) => {
         const token = data?.token || null
         cachedToken.value = token
-        cachedTokenVersion = version
+        store.cachedTokenVersion = version
         return token
       })
       .catch(() => {
         cachedToken.value = null
-        cachedTokenVersion = version
+        store.cachedTokenVersion = version
         return null
       })
       .finally(() => {
-        pendingToken = null
-        pendingTokenVersion = null
+        store.pendingToken = null
+        store.pendingTokenVersion = null
       })
-    return pendingToken
+    return pending
   }
 
   return {
@@ -163,9 +187,9 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
 
 /** Reset module-level token cache — intended for tests only. @internal */
 export function __resetUseBetterAuthForTests() {
-  cachedToken.value = null
-  cachedTokenVersion = null
-  pendingToken = null
-  pendingTokenVersion = null
-  initialTokenUsed = false
+  Object.assign(browserStore, createBetterAuthTokenStore(), { cachedToken: browserStore.cachedToken })
+  browserStore.cachedToken.value = null
+  browserSessionScope?.stop()
+  browserSessionScope = undefined
+  browserSession = undefined
 }
