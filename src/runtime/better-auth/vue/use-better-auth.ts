@@ -1,5 +1,5 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, hasInjectionContext, inject, ref, shallowRef, type ComputedRef, type InjectionKey, type Ref } from 'vue'
+import { computed, effectScope, hasInjectionContext, inject, ref, shallowRef, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
 
 /**
@@ -83,7 +83,16 @@ const serverSession = () => shallowRef({
   refetch: async () => {},
 }) as unknown as BetterAuthSession
 
-const useClientSession = (): BetterAuthSession => import.meta.server ? serverSession() : authClient.useSession()
+// The browser's session ref, subscribed once for the app's lifetime in a scope
+// of its own. Subscribing per call left a listener behind on every call made
+// outside a component, such as the `convex-auth` middleware on each guarded
+// navigation.
+let browserSession: BetterAuthSession | undefined
+
+const useClientSession = (): BetterAuthSession => {
+  if (import.meta.server) return serverSession()
+  return browserSession ??= effectScope(true).run(() => authClient.useSession())!
+}
 
 // Read off `AuthClient`, so the published type follows the app's own client
 // through `#convex/auth-client`; `typeof useClientSession` would freeze the
@@ -221,4 +230,5 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
 export function __resetUseBetterAuthForTests() {
   Object.assign(browserStore, createBetterAuthTokenStore(), { cachedToken: browserStore.cachedToken })
   browserStore.cachedToken.value = null
+  browserSession = undefined
 }

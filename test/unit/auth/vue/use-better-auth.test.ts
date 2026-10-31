@@ -166,4 +166,17 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-2')
     expect(tokenMock).toHaveBeenCalledTimes(2)
   })
+
+  it('subscribes to the session store once for the app, however many calls read it', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const useSession = vi.spyOn(mockAuthClient, 'useSession')
+
+    // Calls outside any component, as a route middleware makes on each navigation.
+    const first = useBetterAuth()
+    const second = useBetterAuth()
+
+    expect(useSession).toHaveBeenCalledTimes(1)
+    expect(second.session).toBe(first.session)
+    useSession.mockRestore()
+  })
 })
