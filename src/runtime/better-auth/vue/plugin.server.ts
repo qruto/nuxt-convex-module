@@ -4,6 +4,7 @@ import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } from './use-better-auth'
 
 /**
  * Prefetch the Convex JWT for SSR and stash it in `initialToken`.
@@ -50,6 +51,13 @@ export default defineNuxtPlugin({
   async setup(nuxtApp) {
     const initialToken = useState<string | null>(CONVEX_INITIAL_TOKEN_KEY, () => null)
 
+    // PARITY: D-13
+    // This request's own token store for `useBetterAuth()`, seeded below with
+    // the prefetched token: a signed-in visitor's render reads signed-in, as the
+    // browser does from the same token, and no other visitor's render sees it.
+    const tokenStore = createBetterAuthTokenStore()
+    nuxtApp.vueApp.provide(BetterAuthTokenStoreKey, tokenStore)
+
     // Provide a Convex client on SSR so composables like `useMutation` /
     // `useAction` that call `useConvex()` during component setup don't throw.
     // The WebSocket is opened lazily on first subscription — `usePreloadedQuery`
@@ -79,6 +87,7 @@ export default defineNuxtPlugin({
     if (event && !import.meta.prerender) {
       // Taken before the await: the Nuxt context it needs is gone after it.
       await prefetchAuthToken(event, initialToken, useResponseHeader('Cache-Control'))
+      seedInitialToken(tokenStore, initialToken.value)
     }
   },
 })

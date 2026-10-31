@@ -1,20 +1,64 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, ref, type ComputedRef } from 'vue'
+import { computed, hasInjectionContext, inject, ref, shallowRef, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
 
 /**
- * Module-level state, shared across all `useBetterAuth()` calls in the Nuxt app.
+ * The Convex token state behind `useBetterAuth()`, shared by every call in one
+ * app: the cached JWT and the fetch in flight, so concurrent
+ * `fetchAccessToken()` callers share the same Better Auth round-trip.
  *
- * The cached JWT and in-flight token promise are kept at module scope so
- * concurrent `fetchAccessToken()` callers share the same Better Auth round-trip.
+ * @internal
  */
-const cachedToken = ref<string | null>(null)
-let cachedTokenVersion: string | null = null
-let pendingToken: Promise<string | null> | null = null
-let pendingTokenVersion: string | null = null
-let initialTokenUsed = false
+export interface BetterAuthTokenStore {
+  cachedToken: Ref<string | null>
+  cachedTokenVersion: string | null
+  pendingToken: Promise<string | null> | null
+  pendingTokenVersion: string | null
+  initialTokenUsed: boolean
+}
+
+/** A store with no token yet. @internal */
+export function createBetterAuthTokenStore(): BetterAuthTokenStore {
+  return {
+    cachedToken: ref(null),
+    cachedTokenVersion: null,
+    pendingToken: null,
+    pendingTokenVersion: null,
+    initialTokenUsed: false,
+  }
+}
+
+/** The key the server plugin provides each request's store under. @internal */
+export const BetterAuthTokenStoreKey: InjectionKey<BetterAuthTokenStore> = Symbol('BetterAuthTokenStore')
 
 const PENDING_AUTH_VERSION = '__pending__'
+
+/**
+ * Hand a store its prefetched token, once per store: the token covers the gap
+ * until the session loads, so the first render reads signed-in.
+ *
+ * @internal
+ */
+export function seedInitialToken(store: BetterAuthTokenStore, initialToken: string | null | undefined): void {
+  if (store.initialTokenUsed || !initialToken) return
+  store.cachedToken.value = initialToken
+  store.cachedTokenVersion = PENDING_AUTH_VERSION
+  store.initialTokenUsed = true
+}
+
+// The browser runs one app, so its store lives at module scope.
+const browserStore = createBetterAuthTokenStore()
+
+// PARITY: D-13
+// Upstream keeps the token in React state, one per provider, so each server
+// render starts from its own `initialToken`. A Nitro process renders every
+// visitor's request with this one module, so a server render takes the store
+// its request's plugin provided, and a call outside any app gets a store of
+// its own: never one another visitor's render can read.
+function useTokenStore(): BetterAuthTokenStore {
+  if (!import.meta.server) return browserStore
+  return (hasInjectionContext() ? inject(BetterAuthTokenStoreKey, null) : null) ?? createBetterAuthTokenStore()
+}
 
 type BetterAuthSessionData = {
   session?: {
@@ -25,7 +69,21 @@ type BetterAuthSessionData = {
   } | null
 } | null
 
-const useClientSession = () => authClient.useSession()
+// PARITY: D-13
+// On the server Better Auth's session store never fetches, so it reads
+// pending for the whole render. It is also one store for every request, and
+// `useStore` subscribes to it in a scope no server render disposes: one
+// listener kept for good per call. A server render reads the same pending
+// state from a ref of its own instead.
+const serverSession = () => shallowRef({
+  data: null,
+  error: null,
+  isPending: true,
+  isRefetching: false,
+  refetch: async () => {},
+}) as unknown as BetterAuthSession
+
+const useClientSession = (): BetterAuthSession => import.meta.server ? serverSession() : authClient.useSession()
 
 // Read off `AuthClient`, so the published type follows the app's own client
 // through `#convex/auth-client`; `typeof useClientSession` would freeze the
@@ -79,11 +137,9 @@ export interface UseBetterAuthReturn {
  * @public
  */
 export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn {
-  if (!initialTokenUsed && initialToken) {
-    cachedToken.value = initialToken
-    cachedTokenVersion = PENDING_AUTH_VERSION
-    initialTokenUsed = true
-  }
+  const store = useTokenStore()
+  seedInitialToken(store, initialToken)
+  const { cachedToken } = store
 
   const session = useClientSession()
   const client = authClient
@@ -104,39 +160,39 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // signed-out, so drop the cached token instead of fetching a new one.
     if (version === null) {
       cachedToken.value = null
-      cachedTokenVersion = null
-      pendingToken = null
-      pendingTokenVersion = null
+      store.cachedTokenVersion = null
+      store.pendingToken = null
+      store.pendingTokenVersion = null
       return null
     }
 
     // The trailing version checks replace upstream's `[sessionId]` callback
     // deps: a cache entry from another session never satisfies this caller.
-    if (cachedToken.value && !forceRefreshToken && cachedTokenVersion === version) {
+    if (cachedToken.value && !forceRefreshToken && store.cachedTokenVersion === version) {
       return cachedToken.value
     }
-    if (!forceRefreshToken && pendingToken && pendingTokenVersion === version) {
-      return pendingToken
+    if (!forceRefreshToken && store.pendingToken && store.pendingTokenVersion === version) {
+      return store.pendingToken
     }
-    pendingTokenVersion = version
-    pendingToken = client.convex
+    store.pendingTokenVersion = version
+    const pending = store.pendingToken = client.convex
       .token({ fetchOptions: { throw: false } })
       .then(({ data }) => {
         const token = data?.token || null
         cachedToken.value = token
-        cachedTokenVersion = version
+        store.cachedTokenVersion = version
         return token
       })
       .catch(() => {
         cachedToken.value = null
-        cachedTokenVersion = version
+        store.cachedTokenVersion = version
         return null
       })
       .finally(() => {
-        pendingToken = null
-        pendingTokenVersion = null
+        store.pendingToken = null
+        store.pendingTokenVersion = null
       })
-    return pendingToken
+    return pending
   }
 
   return {
@@ -163,9 +219,6 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
 
 /** Reset module-level token cache — intended for tests only. @internal */
 export function __resetUseBetterAuthForTests() {
-  cachedToken.value = null
-  cachedTokenVersion = null
-  pendingToken = null
-  pendingTokenVersion = null
-  initialTokenUsed = false
+  Object.assign(browserStore, createBetterAuthTokenStore(), { cachedToken: browserStore.cachedToken })
+  browserStore.cachedToken.value = null
 }

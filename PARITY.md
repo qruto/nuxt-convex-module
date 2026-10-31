@@ -321,6 +321,27 @@ for free — removing one would break the behaviour, not restore it.
   set and any header the upstream `Connection` names are dropped. Every other header is preserved,
   `Set-Cookie` and `Location` included.
 
+##### D-13 — a server render reads its own token store and a pending session
+
+- **Kind** · React state is per render; a Vue composable's module scope is per Nitro process
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `react/index.tsx` — `useState(initialToken)` inside
+  `useUseAuthFromBetterAuth`, and better-auth's `useSession()` store
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts) —
+  `useTokenStore`, `serverSession`; [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts)
+  provides each request's store and seeds it with the prefetched token
+- **Pinned by** · `test/unit-server/ssr-better-auth.test.ts`, `test/unit/auth/vue/plugin-server.test.ts` —
+  "hands the prefetched token to the token store of this request", `test/e2e/ssr-auth.test.ts`
+- **On sync** · keep; port changes to how upstream seeds or clears its token into the store
+- **Why** · upstream's provider holds the prefetched token in state of its own, so a signed-in
+  visitor's server render already reads authenticated. Kept at module scope, the token could not
+  reach a server render without reaching every visitor's, so the server rendered signed-in visitors
+  as loading while the browser hydrated them signed in: a hydration mismatch Vue leaves in the DOM.
+  The browser runs one app, so its store stays at module scope; each server request gets its own.
+  Better Auth's session store never fetches on the server, so it reads pending for the whole
+  render, but it is one store for every request, and subscribing to it in a component scope no
+  server render disposes kept one listener per call, for good. A server render reads the same
+  pending state from a ref of its own.
+
 #### Consequences of an unimportable upstream internal
 
 All three follow from `PaginatedQueryClient` being unreachable ([X-05](#x-05--paginatedqueryclient)).

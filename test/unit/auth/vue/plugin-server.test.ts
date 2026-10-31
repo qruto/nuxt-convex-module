@@ -28,9 +28,18 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
   it('provides the client and the auth stub, prefetches the token and forbids caching the response', async () => {
     const provide = vi.fn()
     await setup({ vueApp: { provide } })
-    expect(provide).toHaveBeenCalledTimes(2)
+    expect(provide).toHaveBeenCalledTimes(3)
     expect(convexAuth).toHaveBeenCalledWith(event)
     expect(state.value).toBe('jwt')
     expect(cacheControl.value).toBe('private, no-store')
+  })
+
+  it('hands the prefetched token to the token store of this request', async () => {
+    const provide = vi.fn()
+    await setup({ vueApp: { provide } })
+    const { BetterAuthTokenStoreKey } = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+    const store = provide.mock.calls.find(([key]) => key === BetterAuthTokenStoreKey)?.[1]
+    expect(store.cachedToken.value).toBe('jwt')
+    expect(store.initialTokenUsed).toBe(true)
   })
 })

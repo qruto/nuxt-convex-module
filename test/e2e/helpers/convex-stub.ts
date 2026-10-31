@@ -3,6 +3,9 @@ import type { AddressInfo } from 'node:net'
 import { WebSocketServer, type WebSocket } from 'ws'
 import { encodeU64LE, type ClientMessage } from '../../helpers/in_memory_web_socket'
 
+/** The Convex JWT the stub's token endpoint issues to a signed-in request. */
+const STUB_TOKEN = 'stub-convex-jwt'
+
 export interface RecordedRequest {
   method: string
   url: string
@@ -58,6 +61,14 @@ export function startConvexStub(options: { queryValue?: unknown } = {}): Promise
           value: options.queryValue ?? 'stub-value',
           logLines: [],
         }))
+        return
+      }
+
+      // Better Auth's Convex token endpoint: a token for a request carrying the
+      // session cookie this stub hands out below, `null` for one without.
+      if (req.url === '/api/auth/convex/token') {
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ token: req.headers.cookie?.includes('stub-session=') ? STUB_TOKEN : null }))
         return
       }
 
