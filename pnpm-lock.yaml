@@ -104,7 +104,7 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2(magicast@0.5.5)
       convex:
-        specifier: ^1.48.0
+        specifier: ^1.49.0
         version: 1.49.0(react@19.2.8)
       eslint:
         specifier: ^10.13.0
@@ -191,7 +191,7 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3(@stripe/react-stripe-js@5.6.1(@stripe/stripe-js@8.11.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@stripe/stripe-js@8.11.0)(react@19.2.8)
       convex:
-        specifier: ^1.48.0
+        specifier: ^1.49.0
         version: 1.49.0(react@19.2.8)
       docus:
         specifier: ^5.15.0
