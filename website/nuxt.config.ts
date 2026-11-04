@@ -177,14 +177,7 @@ export default defineNuxtConfig({
     // nothing listens on, killing HMR and Nuxt DevTools (its RPC rides the
     // same hot channel → "Disconnected from Server").
     'vite:extendConfig'(config, { isClient }) {
-      if (!config.server) return
-      if (!isClient) {
-        // The SSR vite-node server has HMR disabled but still opens a WebSocket
-        // on the default 24678 unless `ws` is turned off explicitly — turn it
-        // off so parallel Nuxt dev servers don't fight over that port.
-        config.server.ws = false
-        return
-      }
+      if (!config.server || !isClient) return
       // Let Vite's watcher see `content/`. @nuxt/content appends `content/**`
       // to `nuxt.options.ignore`, which Nuxt hands straight to Vite as
       // `server.watch.ignored` — so Vite never reports a markdown edit, and
