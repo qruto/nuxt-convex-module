@@ -160,7 +160,8 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
 
     orgId.value = 'org-2'
     await nextTick()
-    expect(client.clearAuth).not.toHaveBeenCalled()
+    await nextTick()
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
     expect(client.setAuth).toHaveBeenCalledTimes(2)
 
     wrapper.unmount()
@@ -194,7 +195,8 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
 
     sessionId.value = 'sess-2'
     await nextTick()
-    expect(client.clearAuth).not.toHaveBeenCalled()
+    await nextTick()
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
     expect(client.setAuth).toHaveBeenCalledTimes(2)
 
     wrapper.unmount()

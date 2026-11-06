@@ -91,12 +91,47 @@ export interface ConvexAuthProviderOptions {
     /**
      * Alternative re-authentication trigger for providers that hand out a
      * stable fetcher function: when this value changes, auth state transitions
-     * back to loading and `fetchAccessToken` is called again against the new
-     * auth context. `undefined` means the provider does not know the context
-     * yet, so the first value it learns is no change.
+     * back to loading, `clearAuth` runs, and `fetchAccessToken` is called
+     * again against the new auth context. `undefined` means the provider does
+     * not know the context yet, so the first value it learns is no change.
      */
     authVersion?: MaybeRefOrGetter<unknown>
   }
+}
+
+/** The clear each client still owes, and the registration waiting behind it. */
+const pendingClears = new WeakMap<IConvexVueClient, { start: (() => void) | null }>()
+
+/**
+ * Clear auth once this flush is over.
+ *
+ * PARITY: D-15
+ * `clearAuth` makes the server re-run every subscribed query signed out, so it
+ * goes last, as upstream's last-child effect does: after the queries gated on
+ * `isAuthenticated` have left. A registration made meanwhile waits behind it,
+ * on this client whichever auth state made it, or the clear would wipe it.
+ */
+function clearAuthLast(client: IConvexVueClient, ended: () => void): void {
+  const pending = pendingClears.get(client)
+  if (pending) {
+    if (pending.start === ended) {
+      pending.start = null
+    }
+    return
+  }
+  const clear: { start: (() => void) | null } = { start: null }
+  pendingClears.set(client, clear)
+  void nextTick(() => {
+    pendingClears.delete(client)
+    try {
+      client.clearAuth()
+    }
+    catch {
+      // Closed right after the scope stopped: nothing is left to clear.
+      return
+    }
+    clear.start?.()
+  })
 }
 
 /**
@@ -226,7 +261,6 @@ export function createConvexAuthState(
     // is one such read, and re-registering on every refresh would make the sync
     // client drop the reauthentication an `AuthError` started, its socket
     // stopped for good.
-    let isRegistered = false
     watch(
       [
         // The loading flag is here only so auth re-registers when it flips,
@@ -254,12 +288,11 @@ export function createConvexAuthState(
         if (import.meta.server) {
           return
         }
-        isRegistered = authenticated
         if (!authenticated) {
           return
         }
         let isThisEffectRelevant = true
-        client.setAuth(
+        const start = () => client.setAuth(
           fetchToken,
           (convexReportsIsAuthenticated) => {
             if (isThisEffectRelevant) {
@@ -274,9 +307,15 @@ export function createConvexAuthState(
             }
           },
         )
+        const pending = pendingClears.get(client)
+        if (pending) {
+          pending.start = start
+        }
+        else {
+          start()
+        }
         onCleanup(() => {
           isThisEffectRelevant = false
-          isRegistered = false
           // Set state back to loading in case this is a transition from one
           // fetchToken function to another which signals a new auth context,
           // e.g. a new orgId from Clerk. Auth context changes like this
@@ -285,16 +324,7 @@ export function createConvexAuthState(
           // then this null value will be overridden to false.
           isConvexAuthenticated.value = null
           isRefreshing.value = false
-          // PARITY: D-15
-          // `clearAuth` makes the server re-run every subscribed query signed
-          // out, so it goes last, as upstream's last-child effect does: after
-          // this flush, once the queries gated on `isAuthenticated` have left.
-          // A new registration skips it: `setAuth` replaces the token.
-          void nextTick(() => {
-            if (!isRegistered) {
-              client.clearAuth()
-            }
-          })
+          clearAuthLast(client, start)
         })
       },
       { immediate: true },

@@ -102,6 +102,45 @@ describe('createScopedConvexAuthState', () => {
   // that is a property worth pinning: rebuilding the object (or swapping in
   // fresh computeds) on each auth transition would silently reintroduce the
   // churn upstream fixed, and break consumers that captured the object.
+  // PARITY: D-15
+  it('lets a client close right after its scope stops', async () => {
+    const client = {
+      setAuth: vi.fn(),
+      clearAuth: vi.fn(() => {
+        throw new Error('ConvexVueClient has already been closed.')
+      }),
+    }
+    const { scope } = createScopedConvexAuthState({
+      client: client as never,
+      useAuth: () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken: async () => 'token' }),
+    })
+
+    scope.stop()
+    await nextTick()
+    await nextTick()
+
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds a new state on the same client until the old one has cleared', async () => {
+    const order: string[] = []
+    const client = {
+      setAuth: vi.fn(() => void order.push('setAuth')),
+      clearAuth: vi.fn(() => void order.push('clearAuth')),
+    }
+    const useAuth = () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken: async () => 'token' })
+    const first = createScopedConvexAuthState({ client: client as never, useAuth })
+
+    first.scope.stop()
+    const second = createScopedConvexAuthState({ client: client as never, useAuth })
+    await nextTick()
+    await nextTick()
+
+    expect(order).toEqual(['setAuth', 'clearAuth', 'setAuth'])
+    second.scope.stop()
+    await nextTick()
+  })
+
   it('keeps the state object and its computed refs referentially stable across auth transitions', async () => {
     const isLoading = ref(false)
     const isAuthenticated = ref(true)

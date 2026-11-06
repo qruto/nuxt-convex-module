@@ -424,8 +424,9 @@ describe('ConvexAuthState', () => {
 
     authVersion.value = 'session-2'
     await nextTick()
+    await nextTick()
 
-    expect(client.clearAuth).not.toHaveBeenCalled()
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
     expect(client.setAuth).toHaveBeenCalledTimes(2)
 
     wrapper.unmount()
@@ -468,8 +469,9 @@ describe('ConvexAuthState', () => {
     const newFetcher: AuthTokenFetcher = vi.fn(async () => 'token-b')
     fetchAccessToken.value = newFetcher
     await nextTick()
+    await nextTick()
 
-    expect(client.clearAuth).not.toHaveBeenCalled()
+    expect(client.clearAuth).toHaveBeenCalledTimes(1)
     expect(client.setAuth).toHaveBeenCalledTimes(2)
     expect(vi.mocked(client.setAuth).mock.calls[1]![0]).toBe(newFetcher)
 

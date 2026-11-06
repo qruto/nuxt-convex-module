@@ -1,7 +1,7 @@
 // PARITY: D-15
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeFunctionReference } from 'convex/server'
-import { createRenderer, nextTick, shallowRef, watch } from 'vue'
+import { createRenderer, shallowRef, watch } from 'vue'
 import { nodeWebSocket, withInMemoryWebSocket, type InMemoryWebSocketTest } from '../../helpers/in_memory_web_socket'
 import { serveQueries } from '../../helpers/fake-deployment'
 import { silentConnectLogger } from '../../helpers/silent-logger'
@@ -91,7 +91,6 @@ async function hydrate(address: string, options: { lifetime?: number, leeway?: n
       stopWatching()
       app.unmount()
       scope.stop()
-      await nextTick()
       await client.close()
     },
   }
@@ -138,6 +137,9 @@ describe('auth over a socket with live queries', () => {
       await vi.waitFor(() => expect(tokenMock.mock.calls.length).toBeGreaterThan(1), { timeout: 2000 })
       await quiet()
 
+      const refreshed = await tokenMock.mock.results.at(-1)!.value
+      expect(deployment.tokens).toContain(refreshed.data.token)
+      expect(deployment.subscribed()).toBe(QUERIES.length)
       expect(deployment.signedOutRuns()).toEqual([])
       expect(page.gateChanges).toEqual([true])
       await page.close()
@@ -160,7 +162,7 @@ describe('auth over a socket with live queries', () => {
     })
   })
 
-  it('moves to another session without signing the connection out', async () => {
+  it('moves to another session with no query running signed out', async () => {
     await withDeployment(async ({ address }, deployment) => {
       const page = await hydrate(address)
       session.value = signedIn('session-1', 'user-1')
@@ -173,7 +175,40 @@ describe('auth over a socket with live queries', () => {
       await vi.waitFor(() => expect(page.state.isAuthenticated.value).toBe(true))
       await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
 
-      expect(deployment.frames).not.toContain('Authenticate(None)')
+      expect(deployment.signedOutRuns()).toEqual([])
+      await page.close()
+    })
+  })
+
+  it('leaves no identity on the server when the new session gets no token', async () => {
+    await withDeployment(async ({ address }, deployment) => {
+      const page = await hydrate(address)
+      session.value = signedIn('session-1', 'user-1')
+      await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
+      await quiet()
+
+      tokenMock.mockImplementation(async () => ({ data: null }))
+      session.value = signedIn('session-2', 'user-2')
+      await vi.waitFor(() => expect(deployment.identity()).toBeNull())
+      await quiet()
+
+      expect(deployment.identity()).toBeNull()
+      expect(page.state.isAuthenticated.value).toBe(false)
+      expect(deployment.signedOutRuns()).toEqual([])
+      await page.close()
+    })
+  })
+
+  it('ends on the token of the user the session settles to', async () => {
+    await withDeployment(async ({ address }, deployment) => {
+      tokenMock.mockImplementation(async () => ({ data: { token: token('user-2') } }))
+      const page = await hydrate(address)
+      await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
+
+      session.value = signedIn('session-2', 'user-2')
+      await vi.waitFor(() => expect(deployment.identity()).toBe('user-2'))
+      await quiet()
+
       expect(deployment.signedOutRuns()).toEqual([])
       await page.close()
     })
@@ -185,12 +220,14 @@ describe('auth over a socket with live queries', () => {
       session.value = signedIn('session-1', 'user-1')
       await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
       await quiet()
+      const rejected = deployment.tokens.at(-1)
 
       deployment.expireToken()
 
       await vi.waitFor(() => expect(deployment.connections()).toBe(2), { timeout: 2000 })
       await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
       expect(deployment.identity()).toBe('user-1')
+      expect(deployment.tokens.at(-1)).not.toBe(rejected)
       expect(page.state.isAuthenticated.value).toBe(true)
       await page.close()
     })

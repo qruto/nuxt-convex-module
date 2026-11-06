@@ -363,22 +363,21 @@ for free — removing one would break the behaviour, not restore it.
   state the browser's client starts in, and each request's client is closed once the page is
   rendered or the request fails.
 
-##### D-15 — `clearAuth` waits for the flush, and a new registration skips it
+##### D-15 — `clearAuth` and the next `setAuth` wait for the flush
 
 - **Kind** · a Vue watcher has no first-child and last-child effect order
 - **Upstream** · `convex@1.49.0` `react/ConvexAuthState.tsx` — `ConvexAuthStateFirstEffect`,
   `ConvexAuthStateLastEffect`
-- **Port** · [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts) — `createConvexAuthState`
+- **Port** · [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts) — `clearAuthLast`
 - **Pinned by** · `test/nuxt/vue/convex-auth-state.test.ts` — "clears auth after the queries gated on
   it have left", `test/unit/vue/auth-over-socket.test.ts`
 - **On sync** · keep; port changes to what the effects depend on
 - **Why** · `clearAuth` makes the server re-run every subscribed query signed out, so upstream runs
   it from a last child, after its siblings' queries unsubscribe. A watcher can't sit after its
-  children: it runs first, so the port waits for the flush instead. Upstream also clears before
-  `setAuth` when the auth context changes. The queries gated on `isAuthenticated` only leave after
-  that flush, and `setAuth` pauses the socket, so here the server would run them signed out. The
-  port skips the clear, because `setAuth` replaces the token and the paused socket keeps anything
-  from running under the old one.
+  children: it runs first, so the port waits for the flush, and a registration made in that flush
+  waits behind the clear, in upstream's order. Don't skip the clear to save the wait: `setAuth`
+  pauses the socket, and if the new token never comes, a clear sent while paused is dropped and
+  the server keeps the old identity.
 
 #### Consequences of an unimportable upstream internal
 

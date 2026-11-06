@@ -13,11 +13,13 @@ const subjectOf = (token: string): string =>
  * a query with no identity fails, as a query that needs a user does.
  *
  * `frames` is what reached the server, in order: `Authenticate(user-1)`,
- * `Authenticate(None)`, `+path` and `-path`. `runs` is every query execution.
+ * `Authenticate(None)`, `+path` and `-path`. `runs` is every query execution,
+ * and `tokens` every token received.
  */
 export function serveQueries({ receive, send, close }: Socket) {
   const frames: string[] = []
   const runs: Array<{ path: string, as: string | null }> = []
+  const tokens: string[] = []
   const queries = new Map<number, Subscription>()
   let version = { querySet: 0, identity: 0, ts: 0 }
   let identity: string | null = null
@@ -44,6 +46,7 @@ export function serveQueries({ receive, send, close }: Socket) {
     if (message.type === 'Authenticate') {
       const { value, baseVersion } = message as { value?: string, baseVersion: number }
       identity = value ? subjectOf(value) : null
+      if (value) tokens.push(value)
       next.identity = baseVersion + 1
       frames.push(`Authenticate(${identity ?? 'None'})`)
       modifications.push(...[...queries.values()].map(run))
@@ -79,6 +82,7 @@ export function serveQueries({ receive, send, close }: Socket) {
   return {
     frames,
     runs,
+    tokens,
     /** The queries that ran with nobody signed in. */
     signedOutRuns: () => runs.filter(entry => entry.as === null),
     connections: () => connections,
