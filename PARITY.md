@@ -402,7 +402,7 @@ upstream routes through that client has to land somewhere else here.
 
 #### Upstream defects not carried over
 
-Upstream is wrong here, so the port does not copy it. Both must survive a sync; if upstream
+Upstream is wrong here, so the port does not copy it. Each must survive a sync; if upstream
 fixes one, drop the entry rather than reverting.
 
 ##### D-08 — the JWT cache retries on auth errors; upstream retries on non-auth errors
@@ -418,6 +418,21 @@ fixes one, drop the entry rather than reverting.
   rethrows on auth errors and retries the ones a fresh token cannot help. The port retries
   exactly when the cached JWT is rejected as an auth error, which is what `isAuthError` exists
   for.
+
+##### D-16 — a failed token refresh keeps the token it would have replaced
+
+- **Kind** · a transient failure read as a signed-out session
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `react/index.tsx` — `fetchAccessToken`
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "keeps the token when a refresh fails
+  with the session still standing", "drops the token when the server says the session is gone",
+  "never answers a failed refresh with another session's token"
+- **On sync** · keep; if upstream handles failed fetches, compare before dropping the entry
+- **Why** · upstream turns every failed fetch into `null`, and on `null` the sync client signs a live
+  connection out and never retries, so one failed request leaves the page without Convex auth until a
+  reload. Only a 401 says the session is gone. Any other failure returns the current session's token:
+  the client sees no new token and keeps running, and a fresh one is fetched when the server rejects
+  it at expiry.
 
 ##### D-09 — `window.open` gains `noopener`
 
