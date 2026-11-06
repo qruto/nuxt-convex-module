@@ -1,5 +1,5 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, effectScope, inject, provide, ref, toValue, unref, watch, watchEffect, type ComputedRef, type EffectScope, type InjectionKey, type MaybeRef, type MaybeRefOrGetter } from 'vue'
+import { computed, effectScope, inject, nextTick, provide, ref, toValue, unref, watch, type ComputedRef, type EffectScope, type InjectionKey, type MaybeRef, type MaybeRefOrGetter } from 'vue'
 
 // PARITY: A-10
 // Mirrors upstream's `IConvexReactClient` — just describe the interface enough
@@ -91,8 +91,9 @@ export interface ConvexAuthProviderOptions {
     /**
      * Alternative re-authentication trigger for providers that hand out a
      * stable fetcher function: when this value changes, auth state transitions
-     * back to loading, `clearAuth` runs, and `fetchAccessToken` is called
-     * again against the new auth context.
+     * back to loading and `fetchAccessToken` is called again against the new
+     * auth context. `undefined` means the provider does not know the context
+     * yet, so the first value it learns is no change.
      */
     authVersion?: MaybeRefOrGetter<unknown>
   }
@@ -205,35 +206,59 @@ export function createConvexAuthState(
       { immediate: true },
     )
 
+    // Counts the changes of auth context. A version the provider has only now
+    // learned is the context it already had: a Better Auth session settling on
+    // a page seeded with a server token must keep that token.
+    const authContext = ref(0)
+    watch(
+      () => toValue(authVersion),
+      (_version, previous) => {
+        if (previous !== undefined) authContext.value++
+      },
+    )
+
     // Set auth on the Convex client when authenticated. Merges upstream's
-    // `ConvexAuthStateFirstEffect` and `ConvexAuthStateLastEffect` (their
-    // first/last-child ordering guarantees relative to sibling components'
-    // query subscriptions have no Vue watcher-scheduling equivalent).
-    watchEffect((onCleanup) => {
-      // PARITY: D-01
-      // Upstream runs this in a passive effect (useEffect), which React never
-      // executes during SSR. Vue *does* run a watchEffect body once during SSR
-      // setup — and `onCleanup` never fires there — so `setAuth` would lazily
-      // instantiate the sync client and open a WebSocket on the server that
-      // nothing ever closes, once per request. Mirror the SSR short-circuit in
-      // `use-queries.ts`; the reconciliation watcher above still runs so SSR
-      // renders `isLoading: true`.
-      if (import.meta.server) {
-        return
-      }
-      let isThisEffectRelevant = true
-      // The loading flag is read only for dependency tracking (the effect
-      // re-registers when it flips, mirroring upstream's effect deps) — it
-      // must not gate `setAuth`: a provider may report a cached session
-      // (authenticated) while still revalidating (loading), and upstream
-      // authenticates the client immediately in that window.
-      void toValue(authProviderLoading)
-      void toValue(authVersion)
-      // Unwrapping here (not outside the effect) tracks the ref, so a new
-      // fetcher identity re-registers auth — upstream's effect re-running when
-      // `fetchAccessToken` changes between renders.
-      const fetchToken = unref(fetchAccessToken)
-      if (toValue(authProviderAuthenticated)) {
+    // `ConvexAuthStateFirstEffect` and `ConvexAuthStateLastEffect`.
+    //
+    // A `watch` with its sources spelled out, like upstream's effect deps, not
+    // a `watchEffect`: `client.setAuth` runs the fetcher synchronously, so an
+    // effect would also track what the fetcher reads. Better Auth's token cache
+    // is one such read, and re-registering on every refresh would make the sync
+    // client drop the reauthentication an `AuthError` started, its socket
+    // stopped for good.
+    let isRegistered = false
+    watch(
+      [
+        // The loading flag is here only so auth re-registers when it flips,
+        // mirroring upstream's effect deps. It must not gate `setAuth`: a
+        // provider may report a cached session (authenticated) while still
+        // revalidating (loading), and upstream authenticates the client
+        // immediately in that window.
+        () => toValue(authProviderLoading),
+        authContext,
+        // Unwrapping here tracks the ref, so a new fetcher identity
+        // re-registers auth: upstream's effect re-running when
+        // `fetchAccessToken` changes between renders.
+        () => unref(fetchAccessToken),
+        () => toValue(authProviderAuthenticated),
+      ] as const,
+      ([, , fetchToken, authenticated], _previous, onCleanup) => {
+        // PARITY: D-01
+        // Upstream runs this in a passive effect (useEffect), which React never
+        // executes during SSR. Vue *does* run a watcher once during SSR setup,
+        // and `onCleanup` never fires there, so `setAuth` would lazily
+        // instantiate the sync client and open a WebSocket on the server that
+        // nothing ever closes, once per request. Mirror the SSR short-circuit
+        // in `use-queries.ts`; the reconciliation watcher above still runs so
+        // SSR renders `isLoading: true`.
+        if (import.meta.server) {
+          return
+        }
+        isRegistered = authenticated
+        if (!authenticated) {
+          return
+        }
+        let isThisEffectRelevant = true
         client.setAuth(
           fetchToken,
           (convexReportsIsAuthenticated) => {
@@ -251,8 +276,7 @@ export function createConvexAuthState(
         )
         onCleanup(() => {
           isThisEffectRelevant = false
-
-          client.clearAuth()
+          isRegistered = false
           // Set state back to loading in case this is a transition from one
           // fetchToken function to another which signals a new auth context,
           // e.g. a new orgId from Clerk. Auth context changes like this
@@ -261,9 +285,20 @@ export function createConvexAuthState(
           // then this null value will be overridden to false.
           isConvexAuthenticated.value = null
           isRefreshing.value = false
+          // PARITY: D-15
+          // `clearAuth` makes the server re-run every subscribed query signed
+          // out, so it goes last, as upstream's last-child effect does: after
+          // this flush, once the queries gated on `isAuthenticated` have left.
+          // A new registration skips it: `setAuth` replaces the token.
+          void nextTick(() => {
+            if (!isRegistered) {
+              client.clearAuth()
+            }
+          })
         })
-      }
-    })
+      },
+      { immediate: true },
+    )
   }
 
   if (scope) {

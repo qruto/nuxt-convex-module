@@ -80,8 +80,8 @@ export interface UseBetterAuthReturn {
   session: BetterAuthSession
   /** The current user, or `null` when signed out / still loading. */
   user: ComputedRef<BetterAuthUser | null>
-  /** The session id (or user id); changes when the signed-in identity changes. */
-  authVersion: ComputedRef<string | null>
+  /** The session id (or user id), `null` when signed out, `undefined` until the session settles. */
+  authVersion: ComputedRef<string | null | undefined>
 }
 
 /**
@@ -112,12 +112,15 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   const session = useClientSession()
   const client = authClient
 
-  const authVersion = computed<string | null>(() => {
+  // `undefined` while the session is pending: nothing is known yet, and the
+  // session that settles is the one a seeded token was minted for.
+  const authVersion = computed<string | null | undefined>(() => {
     const data = session.value.data as BetterAuthSessionData | undefined
-    return data?.session?.id ?? data?.user?.id ?? null
+    const id = data?.session?.id ?? data?.user?.id ?? null
+    return id === null && session.value.isPending ? undefined : id
   })
 
-  const currentAuthVersion = () => authVersion.value ?? (session.value.isPending ? PENDING_AUTH_VERSION : null)
+  const currentAuthVersion = () => authVersion.value === undefined ? PENDING_AUTH_VERSION : authVersion.value
 
   const fetchAccessToken: AuthTokenFetcher = async ({
     forceRefreshToken = false,

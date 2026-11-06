@@ -363,6 +363,23 @@ for free — removing one would break the behaviour, not restore it.
   state the browser's client starts in, and each request's client is closed once the page is
   rendered or the request fails.
 
+##### D-15 — `clearAuth` waits for the flush, and a new registration skips it
+
+- **Kind** · a Vue watcher has no first-child and last-child effect order
+- **Upstream** · `convex@1.49.0` `react/ConvexAuthState.tsx` — `ConvexAuthStateFirstEffect`,
+  `ConvexAuthStateLastEffect`
+- **Port** · [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts) — `createConvexAuthState`
+- **Pinned by** · `test/nuxt/vue/convex-auth-state.test.ts` — "clears auth after the queries gated on
+  it have left", `test/unit/vue/auth-over-socket.test.ts`
+- **On sync** · keep; port changes to what the effects depend on
+- **Why** · `clearAuth` makes the server re-run every subscribed query signed out, so upstream runs
+  it from a last child, after its siblings' queries unsubscribe. A watcher can't sit after its
+  children: it runs first, so the port waits for the flush instead. Upstream also clears before
+  `setAuth` when the auth context changes. The queries gated on `isAuthenticated` only leave after
+  that flush, and `setAuth` pauses the socket, so here the server would run them signed out. The
+  port skips the clear, because `setAuth` replaces the token and the paused socket keeps anything
+  from running under the old one.
+
 #### Consequences of an unimportable upstream internal
 
 All three follow from `PaginatedQueryClient` being unreachable ([X-05](#x-05--paginatedqueryclient)).
@@ -529,8 +546,8 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
 - **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts`
 - **Why** · beyond upstream's `{ isLoading, isAuthenticated, fetchAccessToken }`, the service
-  exposes the raw `client`, the `session` ref, a `user` computed and an `authVersion` computed,
-  plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
+  exposes the raw `client`, the `session` ref, a `user` computed and an `authVersion` computed
+  (`undefined` until the session settles, so the settling re-registers nothing), plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
   passkeys, …) are deliberately **not** wrapped — like upstream, they are called on the app's
   own `authClient` (exposed as `client`), typed by whatever plugins that client installs.
 

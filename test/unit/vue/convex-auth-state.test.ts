@@ -83,6 +83,7 @@ describe('createScopedConvexAuthState', () => {
     // Stopping the scope runs the setAuth cleanup (clearAuth + reset to
     // loading)…
     scope.stop()
+    await nextTick()
     expect(client.clearAuth).toHaveBeenCalledTimes(1)
     expect(state.isLoading.value).toBe(true)
 

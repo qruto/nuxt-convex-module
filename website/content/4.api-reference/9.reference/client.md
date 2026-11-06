@@ -2604,7 +2604,7 @@ The current [ConvexAuthState](#convexauthstate).
 function provideConvexAuth(options): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:132](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L132)
+Defined in: [src/runtime/vue/auth/index.ts:133](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L133)
 
 A replacement for the plain Convex client provide (upstream's
 `ConvexProvider`) which additionally provides [ConvexAuthState](#convexauthstate) to
@@ -2651,7 +2651,7 @@ const authState = provideConvexAuth({ client, useAuth })
 function createConvexAuthState(options, scope?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:149](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L149)
+Defined in: [src/runtime/vue/auth/index.ts:150](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L150)
 
 Build reactive [ConvexAuthState](#convexauthstate) and wire watchers between the
 external auth provider and the Convex client, without calling `provide()` —
@@ -2685,7 +2685,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:301](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L301)
+Defined in: [src/runtime/vue/auth/index.ts:336](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L336)
 
 Create a fresh `EffectScope` and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2707,8 +2707,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:303](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L303) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:303](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L303) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:338](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L338) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:338](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L338) |
 
 ***
 
