@@ -8,7 +8,7 @@ const sessionRef = ref<{ data: unknown, isPending: boolean }>({
 })
 
 const tokenMock = vi.fn<
-  (opts: { fetchOptions: { throw: boolean } }) => Promise<{ data?: { token?: string | null } | null }>
+  (opts: { fetchOptions: { throw: boolean } }) => Promise<{ data?: { token?: string | null } | null, error?: { status: number } | null }>
 >()
 
 // `useBetterAuth` only consumes the session and the Convex token plugin — auth
@@ -83,6 +83,56 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     const { fetchAccessToken, isAuthenticated } = useBetterAuth()
     expect(await fetchAccessToken({ forceRefreshToken: false })).toBeNull()
     expect(isAuthenticated.value).toBe(false)
+  })
+
+  // PARITY: D-16
+  it('keeps the token when a refresh fails with the session still standing', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    const { fetchAccessToken } = useBetterAuth()
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-a' } })
+    await fetchAccessToken({ forceRefreshToken: false })
+
+    tokenMock.mockResolvedValueOnce({ data: null, error: { status: 502 } })
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBe('token-a')
+
+    tokenMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBe('token-a')
+
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-b' } })
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBe('token-b')
+  })
+
+  it('keeps a seeded server token through a failed refresh once the session settles', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const { fetchAccessToken } = useBetterAuth('server-token')
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+
+    tokenMock.mockResolvedValueOnce({ data: null, error: { status: 503 } })
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBe('server-token')
+  })
+
+  it('drops the token when the server says the session is gone', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    const { fetchAccessToken } = useBetterAuth()
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-a' } })
+    await fetchAccessToken({ forceRefreshToken: false })
+
+    tokenMock.mockResolvedValueOnce({ data: null, error: { status: 401 } })
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBeNull()
+  })
+
+  it('never answers a failed refresh with another session\'s token', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    const { fetchAccessToken } = useBetterAuth()
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-a' } })
+    await fetchAccessToken({ forceRefreshToken: false })
+
+    sessionRef.value = { data: { session: { id: 'session-2' } }, isPending: false }
+    tokenMock.mockResolvedValueOnce({ data: null, error: { status: 502 } })
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBeNull()
   })
 
   it('reflects session state for isAuthenticated / isLoading', async () => {
