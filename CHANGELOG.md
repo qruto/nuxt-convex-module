@@ -1,5 +1,73 @@
 # Changelog
 
+## v0.13.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.3...v0.13.0)
+
+### 🚀 Enhancements
+
+#### Parity
+
+- ⚠️  Track @convex-dev/better-auth 0.13.0 and Better Auth 1.7 ([#142](https://github.com/qruto/nuxt-convex-module/pull/142))
+
+### 🩹 Fixes
+
+- Stop reporting a failed server read once the live query has a value ([#137](https://github.com/qruto/nuxt-convex-module/pull/137))
+- Stop reporting a failed server read once the live page arrives ([#138](https://github.com/qruto/nuxt-convex-module/pull/138))
+
+#### Better Auth
+
+- Keep the token when a refresh fails ([#136](https://github.com/qruto/nuxt-convex-module/pull/136))
+
+#### Auth
+
+- Keep a live connection signed in across auth changes ([#135](https://github.com/qruto/nuxt-convex-module/pull/135))
+
+#### Polar
+
+- ⚠️  Raise the @polar-sh/checkout peer to ^0.6.0 ([#144](https://github.com/qruto/nuxt-convex-module/pull/144))
+
+#### Security
+
+- Keep what default-src allowed in the directives the module writes ([#141](https://github.com/qruto/nuxt-convex-module/pull/141))
+- Turn off the limiter, the upgrade and HSTS on nuxt dev ([#145](https://github.com/qruto/nuxt-convex-module/pull/145))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump the all-non-major group with 11 updates ([#133](https://github.com/qruto/nuxt-convex-module/pull/133))
+
+#### Parity
+
+- Track convex 1.49.0 ([#132](https://github.com/qruto/nuxt-convex-module/pull/132))
+- Record upstream bug fixes as F-* entries ([#139](https://github.com/qruto/nuxt-convex-module/pull/139))
+
+#### Website
+
+- Drop the dev server's port 24678 workaround ([#134](https://github.com/qruto/nuxt-convex-module/pull/134))
+
+### 🤖 CI
+
+#### Dependencies
+
+- Bump the actions group across 1 directory with 2 updates ([#143](https://github.com/qruto/nuxt-convex-module/pull/143))
+
+#### ⚠️ Breaking Changes
+
+- **parity:** ⚠️  Track @convex-dev/better-auth 0.13.0 and Better Auth 1.7 ([#142](https://github.com/qruto/nuxt-convex-module/pull/142))
+- **polar:** ⚠️  Raise the @polar-sh/checkout peer to ^0.6.0 ([#144](https://github.com/qruto/nuxt-convex-module/pull/144))
+
+### ⬆️ Upgrading from 0.12
+
+- **Better Auth 1.7 and `@convex-dev/better-auth` 0.13.** Install `@convex-dev/better-auth@~0.13.0 better-auth@~1.7.16`. Every 1.6 release carries GHSA-965c-763c-88jm (critical), GHSA-r4xp-prcw-77qf and GHSA-q84f-53jg-9ppm (high), and GHSA-44jh-23m7-hpcf (low).
+- **Convex side.** Follow the add-on's [upgrade guide](https://labs.convex.dev/better-auth/upgrading/from-0-12). Local Install apps need the new `consumeOne` and `incrementOne` adapter exports and a regenerated schema. Nothing changes in `nuxt.config.ts`.
+- **Polar.** Apps with the Polar integration need `@polar-sh/checkout@^0.6.0`. The embedded checkout works the same way.
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.3
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.2...v0.12.3)
