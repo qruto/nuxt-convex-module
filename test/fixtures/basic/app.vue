@@ -12,6 +12,9 @@
     <div data-test="async-status">
       {{ status }}
     </div>
+    <div data-test="async-error">
+      {{ error?.message ?? 'no-error' }}
+    </div>
     <!-- Read during SSR too: the server must not open a socket for it. -->
     <div data-test="connection">
       {{ connection.isWebSocketConnected ? 'connected' : 'not-connected' }}
@@ -22,6 +25,6 @@
 <script setup>
 // Everything here is auto-imported — that's part of what the e2e asserts.
 const tasks = useQuery('tasks:list', {})
-const { data: greeting, status } = useAsyncQuery('greetings:get', {}, { key: 'e2e:greeting' })
+const { data: greeting, status, error } = useAsyncQuery('greetings:get', {}, { key: 'e2e:greeting' })
 const connection = useConvexConnectionState()
 </script>
