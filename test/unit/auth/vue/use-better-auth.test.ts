@@ -147,6 +147,18 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBeNull()
   })
 
+  it('never answers a failed refresh with a page token that belongs to another user', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const jwt = `header.${Buffer.from(JSON.stringify({ sub: 'user-1' })).toString('base64url')}.signature`
+    const { isLoading, fetchAccessToken } = useBetterAuth(jwt)
+
+    sessionRef.value = { data: { session: { id: 'session-2' }, user: { id: 'user-2' } }, isPending: false }
+    tokenMock.mockRejectedValue(new Error('offline'))
+
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBeNull()
+    expect(isLoading.value).toBe(false)
+  })
+
   it('reflects session state for isAuthenticated / isLoading', async () => {
     const { useBetterAuth } = await loadUseAuth()
     sessionRef.value = { data: { user: { id: '1' } }, isPending: false }
@@ -233,18 +245,6 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
 
     tokenMock.mockResolvedValue({ data: { token: jwt } })
     await fetchAccessToken({ forceRefreshToken: false })
-    expect(isLoading.value).toBe(false)
-  })
-
-  it('never answers a failed refresh with a page token that belongs to another user', async () => {
-    const { useBetterAuth } = await loadUseAuth()
-    const jwt = `header.${Buffer.from(JSON.stringify({ sub: 'user-1' })).toString('base64url')}.signature`
-    const { isLoading, fetchAccessToken } = useBetterAuth(jwt)
-
-    sessionRef.value = { data: { session: { id: 'session-2' }, user: { id: 'user-2' } }, isPending: false }
-    tokenMock.mockRejectedValue(new Error('offline'))
-
-    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBeNull()
     expect(isLoading.value).toBe(false)
   })
 
