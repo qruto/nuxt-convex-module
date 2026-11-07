@@ -29,7 +29,7 @@ full, always part of the module, and covered by the one `convex` baseline.
 
 | Upstream entry point | Ported to | Status |
 |---|---|---|
-| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07, D-12 |
+| [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07, F-03 |
 | [`convex/nextjs`](https://docs.convex.dev/client/react/nextjs/server-rendering) — `fetchQuery` / `fetchMutation` / `fetchAction`, `preloadQuery` | `src/runtime/nuxt/index.ts` | Complete + additive · D-10 |
 | [`convex/react-clerk`](https://docs.convex.dev/auth/clerk) — the official Clerk adapter | `src/runtime/clerk/vue/index.ts` | Complete |
 | [`convex/react-auth0`](https://docs.convex.dev/auth/auth0) — the official Auth0 adapter | `src/runtime/auth0/vue/index.ts` | Complete |
@@ -44,18 +44,19 @@ when the component is installed, and each sits on **its own** baseline.
 
 | Upstream | Ported to | Status |
 |---|---|---|
-| `@convex-dev/better-auth` — `react` client | `src/runtime/better-auth/vue/**` | Complete + additive · D-03, D-11 |
-| `@convex-dev/better-auth` — `nextjs` server helpers | `src/runtime/better-auth/nuxt/**` | Complete + additive · D-04, D-08 |
+| `@convex-dev/better-auth` — `react` client | `src/runtime/better-auth/vue/**` | Complete + additive · D-03, F-04 |
+| `@convex-dev/better-auth` — `nextjs` server helpers | `src/runtime/better-auth/nuxt/**` | Complete + additive · D-04, F-01 |
 | `@convex-dev/better-auth` — client plugins (`convexClient`, `crossDomainClient`) | imported as-is from `@convex-dev/better-auth/client/plugins` | Reused, never reimplemented |
 | `@convex-dev/better-auth` — `react-start` | — | Out of scope (X-02) |
-| `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · D-09 |
+| `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
 **Status** · *Complete*: the whole public surface, same names, same arguments, same return
 shapes; the only differences are shape changes [§2.2](#22-translation-rules) sanctions.
 *+ additive*: plus Vue/Nuxt extras upstream lacks ([§3.3](#33-port-only-additions-a-)); nothing
 upstream ships is missing or renamed. *D-nn*: the port deliberately *behaves* differently
-there, each explained in [§3.2](#32-behaviour-d-).
+there, each explained in [§3.2](#32-behaviour-d-). *F-nn*: the port fixes an upstream bug there,
+each explained in [§3.5](#35-upstream-bugs-fixed-in-the-port-f-).
 
 ### Not ported (`X-*`)
 
@@ -223,22 +224,24 @@ What makes the contract a property of the repo rather than a promise:
 | Guard | Fails when |
 |---|---|
 | `test/unit/upstream-baselines.test.ts` | a baseline bump misses one of the three version sites ([§4](#4-keeping-parity)) |
-| `test/unit/parity-manifest.test.ts` | this file stops describing the source tree — a runtime file with no row, a mapped path that no longer exists, a `PARITY:` marker with no entry, a `D-*` entry with no marker, a cited test that is gone |
+| `test/unit/parity-manifest.test.ts` | this file stops describing the source tree — a runtime file with no row, a mapped path that no longer exists, a `PARITY:` marker with no entry, a `D-*` or `F-*` entry with no marker, a cited test that is gone |
 | `test/unit/devtools-bridge.test.ts` | an upstream sync renames a client internal the DevTools bridge reads |
 
 ---
 
 ## 3. Where the port bends
 
-Every deliberate difference from upstream has a stable ID here, a `PARITY: <ID>` comment marker
-at the source site, and a named test that pins it. Entries are grouped by *kind* of difference,
-because that is what decides how to treat one on a sync.
+Every deliberate difference from upstream, and every upstream bug the port fixes, has a stable
+ID here, a `PARITY: <ID>` comment marker at the source site, and a named test that pins it.
+Entries are grouped by *kind*, because that is what decides how to treat one on a sync.
 
 - **`N-*` — naming and shape.** Vue expresses the same thing differently; behaviour is
   unchanged. Each cites the [§2.2](#22-translation-rules) rule that sanctions it.
 - **`D-*` — behaviour.** The port deliberately does something upstream does not. Each says why,
   and what to do on the next sync.
 - **`A-*` — port-only additions.** No upstream origin. Strictly additive; never "sync away".
+- **`F-*` — upstream bugs fixed.** Upstream's code is wrong, and the port does the correct thing.
+  Each links its upstream report; the entry goes away once upstream ships the fix.
 
 ### 3.1 Naming and shape (`N-*`)
 
@@ -416,62 +419,6 @@ upstream routes through that client has to land somewhere else here.
   is what makes the port immune to the upstream bug fixed in 1.43.0
   ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)).
 
-#### Upstream defects not carried over
-
-Upstream is wrong here, so the port does not copy it. Each must survive a sync; if upstream
-fixes one, drop the entry rather than reverting.
-
-##### D-08 — the JWT cache retries on auth errors; upstream retries on non-auth errors
-
-- **Kind** · inverted predicate
-- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/index.ts` — `callWithToken`
-- **Port** · [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
-- **Pinned by** · `test/unit/auth/nuxt/server.test.ts` — "refreshes the token once when jwt cache
-  marks the first error as auth-related", "rethrows non-auth errors without refreshing even
-  when the jwt cache is enabled"
-- **On sync** · do **not** sync the condition back
-- **Why** · upstream force-refreshes only when `jwtCache.isAuthError(error)` is **false** — it
-  rethrows on auth errors and retries the ones a fresh token cannot help. The port retries
-  exactly when the cached JWT is rejected as an auth error, which is what `isAuthError` exists
-  for.
-
-##### D-16 — a failed token refresh keeps the token it would have replaced
-
-- **Kind** · a transient failure read as a signed-out session
-- **Upstream** · `@convex-dev/better-auth@0.12.6` `react/index.tsx` — `fetchAccessToken`
-- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
-- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "keeps the token when a refresh fails
-  with the session still standing", "drops the token when the server says the session is gone",
-  "never answers a failed refresh with another session's token"
-- **On sync** · keep; if upstream handles failed fetches, compare before dropping the entry
-- **Why** · upstream turns every failed fetch into `null`, and on `null` the sync client signs a live
-  connection out and never retries, so one failed request leaves the page without Convex auth until a
-  reload. Only a 401 says the session is gone. Any other failure returns the current session's token:
-  the client sees no new token and keeps running, and a fresh one is fetched when the server rejects
-  it at expiry.
-
-##### D-09 — `window.open` gains `noopener`
-
-- **Kind** · security gap
-- **Upstream** · `@convex-dev/polar@0.9.2` `react/index.tsx` — `window.open(url, '_blank')`
-- **Port** · [`polar/vue/components.ts`](./src/runtime/polar/vue/components.ts) — `CheckoutLink`
-- **Pinned by** · `test/nuxt/billing-components.test.ts`
-- **On sync** · keep the third argument
-- **Why** · unlike `<a target="_blank">`, `window.open` keeps `window.opener` live, letting the
-  checkout tab navigate the opener. The forced `null` return is unused, so there is no cost.
-  Not an open redirect: `url` is the app's own Convex action response.
-
-##### D-12 — `usePaginatedQuery` throws the missing-client error
-
-- **Kind** · missing guard
-- **Upstream** · `convex@1.49.0` `react/use_paginated_query.ts` — `useConvex().logger`
-- **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
-- **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
-- **On sync** · keep
-- **Why** · without a provider, upstream dereferences `undefined` and the user reads a raw
-  `TypeError`. Every other hook here throws the descriptive `Could not find Convex client!`
-  message; this was the one that did not.
-
 #### Type and signature refinements
 
 Declaration-level only. Code written against upstream's signature keeps compiling; what changes
@@ -486,18 +433,6 @@ is that the declaration now matches what actually happens.
 - **On sync** · keep the subclass; the **message text is the contract** and stays verbatim
 - **Why** · `TypeError` is the accurate type and satisfies `unicorn/prefer-type-error`;
   `instanceof Error` still holds, so upstream-written `catch` blocks are unaffected.
-
-##### D-11 — `usePreloadedAuthQuery` declares `| null | undefined`
-
-- **Kind** · declaration widened to match runtime
-- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/client.tsx` — declares `| null`
-- **Port** · [`better-auth/vue/hydration.ts`](./src/runtime/better-auth/vue/hydration.ts)
-- **Pinned by** · `test/nuxt/preload-hydration.test.ts` — "keeps auth-preloaded data while auth
-  loads, then clears for unauthenticated users"
-- **On sync** · keep the wider declaration
-- **Why** · upstream declares `| null` but yields `undefined` at runtime for unauthenticated
-  users. Declaring both keeps code annotated against upstream compiling *and* matches what
-  actually arrives.
 
 ### 3.3 Port-only additions (`A-*`)
 
@@ -751,6 +686,84 @@ reintroduce the bug. **Do not re-litigate.**
 | `convex` 1.43.0 — `PaginatedQueryClient.splitPaginatedQueryPage` restarted the first half of a split page from `cursor: null`, duplicating items when a non-first page split | `7ceee3e` | The port's `splitQuery` inherits the split page's own cursor (D-07) | `test/nuxt/use-paginated-query.test.ts` — "splits a non-first page from that page's own cursor, not the start of the list" |
 | `convex` 1.44.0 — `ConvexProviderWithAuth`'s context value wrapped in `useMemo` | `b96ea1b` | The port builds the state object once per `createConvexAuthState` call and carries reactivity in `ComputedRef`s, so its identity is already stable; the named locals mirror upstream's memo inputs for diffability | `test/unit/vue/convex-auth-state.test.ts` — "keeps the state object and its computed refs referentially stable across auth transitions" |
 | `convex` 1.42.2 — `ConvexProviderWithClerk` ignored org-change deps `[orgId, orgRole, sessionId]` | — | The port's `authVersion` key (N-13) already keyed on those three values | `test/nuxt/auth/vue/clerk.test.ts` |
+
+### 3.5 Upstream bugs fixed in the port (`F-*`)
+
+Upstream's code is wrong here, so the port does the correct thing instead of copying the bug.
+These are fixes, not differences in behaviour. Each entry says what the bug is, how the port
+fixes it, and where it was reported. When upstream ships its fix, sync it and delete the entry
+and its marker.
+
+#### F-01 — the JWT cache retries on auth errors; upstream retries on non-auth errors
+
+- **Kind** · inverted condition
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/index.ts` — `callWithToken`
+- **Port** · [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
+- **Pinned by** · `test/unit/auth/nuxt/server.test.ts` — "refreshes the token once when jwt cache
+  marks the first error as auth-related", "rethrows non-auth errors without refreshing even
+  when the jwt cache is enabled"
+- **Reported** · [convex/better-auth#440](https://github.com/convex/better-auth/pull/440)
+- **On sync** · do **not** sync the condition back
+- **Why** · with `jwtCache` enabled, a call uses the JWT cached in a cookie. When Convex rejects
+  that token with an auth error, the call should refresh the token once and retry. Upstream's
+  condition is inverted: it rethrows the auth error, and it refreshes and re-runs the call on
+  every other error, where a new token cannot help. The port retries exactly when
+  `jwtCache.isAuthError(error)` is true.
+
+#### F-02 — `window.open` gains `noopener`
+
+- **Kind** · security gap
+- **Upstream** · `@convex-dev/polar@0.9.2` `react/index.tsx` — `window.open(url, '_blank')`
+- **Port** · [`polar/vue/components.ts`](./src/runtime/polar/vue/components.ts) — `CheckoutLink`
+- **Pinned by** · `test/nuxt/billing-components.test.ts`
+- **Reported** · [convex/polar#93](https://github.com/convex/polar/pull/93)
+- **On sync** · keep the third argument
+- **Why** · unlike `<a target="_blank">`, `window.open` keeps `window.opener` live, so the
+  checkout tab could navigate the app's tab. The forced `null` return is unused, so the fix
+  costs nothing. Not an open redirect: `url` is the app's own Convex action response.
+
+#### F-03 — `usePaginatedQuery` throws the missing-client error
+
+- **Kind** · missing guard
+- **Upstream** · `convex@1.49.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
+- **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
+- **Reported** · [convex/convex-js#214](https://github.com/convex/convex-js/pull/214)
+- **On sync** · keep
+- **Why** · without a provider, upstream reads `.logger` from `undefined`, so the user gets
+  `TypeError: Cannot read properties of undefined (reading 'logger')`. Every other hook throws
+  `Could not find Convex client!` with its own name; this one did not.
+
+#### F-04 — `usePreloadedAuthQuery` declares the `undefined` it returns
+
+- **Kind** · wrong return type
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `nextjs/client.tsx` — declares `| null`
+- **Port** · [`better-auth/vue/hydration.ts`](./src/runtime/better-auth/vue/hydration.ts)
+- **Pinned by** · `test/nuxt/preload-hydration.test.ts` — "keeps auth-preloaded data while auth
+  loads, then clears for unauthenticated users"
+- **Reported** · [convex/better-auth#441](https://github.com/convex/better-auth/pull/441)
+- **On sync** · keep `| null | undefined` until upstream declares `| undefined`, then take
+  upstream's type
+- **Why** · for a visitor who is not signed in, the query is skipped and the hook returns
+  `undefined`, never `null`. A `result === null` check never matches, and TypeScript does not
+  warn. Declaring both keeps code written against upstream compiling and matches what arrives.
+
+#### F-05 — a failed token refresh keeps the token it would have replaced
+
+- **Kind** · a transient failure read as a signed-out session
+- **Upstream** · `@convex-dev/better-auth@0.12.6` `react/index.tsx` — `fetchAccessToken`
+- **Port** · [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts)
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "keeps the token when a refresh fails
+  with the session still standing", "drops the token when the server says the session is gone",
+  "never answers a failed refresh with another session's token", "never answers a failed refresh
+  with a page token that belongs to another user"
+- **Reported** · not yet
+- **On sync** · keep; if upstream handles failed fetches, compare before dropping the entry
+- **Why** · upstream turns every failed fetch into `null`, and on `null` the sync client signs a live
+  connection out and never retries, so one failed request leaves the page without Convex auth until a
+  reload. Only a 401 says the session is gone. Any other failure returns the current session's token:
+  the client sees no new token and keeps running, and a fresh one is fetched when the server rejects
+  it at expiry.
 
 ---
 

@@ -3,9 +3,9 @@ import { computed, ref, watch, type ComputedRef, type MaybeRefOrGetter } from 'v
 import { useConvexAuth } from '../../vue/auth/index'
 import { usePreloadedPayload, useReactiveQuery, type Preloaded } from '../../vue/hydration'
 
-// PARITY: D-11
-// The declared return adds `| undefined`: the live query yields `undefined`
-// while loading/skipped (upstream's narrower declaration returns the same values).
+// PARITY: F-04
+// Fixes an upstream bug: upstream declares `| null`, but the live query yields
+// `undefined` while it loads or is skipped. The declared return adds `| undefined`.
 const useConvexPreloadedQuery = <Query extends FunctionReference<'query'>>(
   preloadedQuery: MaybeRefOrGetter<Preloaded<Query>>,
   { requireAuth = true }: { requireAuth?: boolean } = {},

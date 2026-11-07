@@ -128,10 +128,8 @@ describe('auth/nuxt/server', () => {
     expect(() => convexAuth(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()).toThrow(/nuxt\/server/)
   })
 
-  // Asserts the port's deliberate inversion of upstream v0.12.5's
-  // `callWithToken` predicate (upstream rethrows on auth errors — a bug; see
-  // the comment in server.ts and PARITY.md's D-08 entry).
-  // A future upstream sync must not "fix" this back.
+  // PARITY: F-01 — upstream's `callWithToken` rethrows auth errors and retries
+  // every other error. A future upstream sync must not bring that back.
   it('refreshes the token once when jwt cache marks the first error as auth-related', async () => {
     const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')

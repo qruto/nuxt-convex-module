@@ -82,14 +82,14 @@ describe('parity manifest — file map', () => {
 })
 
 describe('parity manifest — divergence ledger', () => {
-  /** `##### D-08 — the JWT cache retries …` → `D-08`. */
-  const entryIds = [...PARITY.matchAll(/^#{4,5} ([NDAX]-\d{2}) —/gm)].map(match => match[1]!)
+  /** `#### F-01 — the JWT cache retries …` → `F-01`. */
+  const entryIds = [...PARITY.matchAll(/^#{4,5} ([NDAFX]-\d{2}) —/gm)].map(match => match[1]!)
   /** `| <a id="n-01"></a>**N-01** | …` → `N-01`. */
-  const tableIds = [...PARITY.matchAll(/\*\*([NDAX]-\d{2})\*\*/g)].map(match => match[1]!)
+  const tableIds = [...PARITY.matchAll(/\*\*([NDAFX]-\d{2})\*\*/g)].map(match => match[1]!)
   const declaredIds = new Set([...entryIds, ...tableIds])
 
   it('declares entries in every category', () => {
-    for (const prefix of ['N', 'D', 'A', 'X']) {
+    for (const prefix of ['N', 'D', 'A', 'F', 'X']) {
       expect(
         [...declaredIds].some(id => id.startsWith(prefix)),
         `PARITY.md declares no ${prefix}-* entries`,
@@ -109,7 +109,7 @@ describe('parity manifest — divergence ledger', () => {
   const markers = (() => {
     const found: Array<[file: string, id: string]> = []
     for (const file of runtimeFiles('src')) {
-      for (const match of read(file).matchAll(/PARITY: ([NDAX]-\d{2})/g)) {
+      for (const match of read(file).matchAll(/PARITY: ([NDAFX]-\d{2})/g)) {
         found.push([file, match[1]!])
       }
     }
@@ -127,10 +127,10 @@ describe('parity manifest — divergence ledger', () => {
     ).toBe(true)
   })
 
-  // Behavioural divergences are point changes: each must be findable from the
-  // code, not only from the manifest.
+  // Behavioural divergences and upstream bug fixes are point changes: each must
+  // be findable from the code, not only from the manifest.
   const markedIds = new Set(markers.map(([, id]) => id))
-  it.each(entryIds.filter(id => id.startsWith('D-')))(
+  it.each(entryIds.filter(id => /^[DF]-/.test(id)))(
     'marks %s at its source site',
     (id) => {
       expect(
@@ -164,7 +164,7 @@ describe('parity manifest — cited tests', () => {
   // "Pinned by" line, or an identifier the title or "Port" line names. Without
   // this, an entry can cite a test that never touches the divergence and the
   // gate is satisfied by a file name.
-  const entries = [...PARITY.matchAll(/^#{4,5} ([NDAX]-\d{2}) — (.*)\n([\s\S]*?)(?=^#{3,5} |(?![\s\S]))/gm)]
+  const entries = [...PARITY.matchAll(/^#{4,5} ([NDAFX]-\d{2}) — (.*)\n([\s\S]*?)(?=^#{3,5} |(?![\s\S]))/gm)]
     .map(([, id, title, body]) => {
       const pinned = body!.match(/\*\*Pinned by\*\* · (.*?)(?=\n- \*\*|\n\n|$)/s)?.[1] ?? ''
       const port = body!.match(/\*\*Port\*\* · (.*?)(?=\n- \*\*|\n\n|$)/s)?.[1] ?? ''

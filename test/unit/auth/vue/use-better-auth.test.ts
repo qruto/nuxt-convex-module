@@ -97,7 +97,7 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     expect(isAuthenticated.value).toBe(false)
   })
 
-  // PARITY: D-16
+  // PARITY: F-05
   it('keeps the token when a refresh fails with the session still standing', async () => {
     const { useBetterAuth } = await loadUseAuth()
     sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }

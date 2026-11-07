@@ -166,10 +166,11 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     if (!forceRefreshToken && store.pendingToken && store.pendingTokenVersion === version) {
       return store.pendingToken
     }
-    // PARITY: D-16
-    // Only a 401 says the session is gone. Any other failure keeps this
-    // session's token: on `null` the sync client signs a live connection out
-    // and never retries, while the same token leaves it running until expiry.
+    // PARITY: F-05
+    // Fixes an upstream bug: upstream answers every failed fetch with `null`, and
+    // on `null` the sync client signs a live connection out and never retries.
+    // Only a 401 says the session is gone. Any other failure keeps this session's
+    // token, which leaves the connection running until expiry.
     const afterFailure = () => {
       if (cachedToken.value && !holdsAnotherUsersToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
         return cachedToken.value

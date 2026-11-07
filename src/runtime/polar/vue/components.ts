@@ -177,10 +177,10 @@ export const CheckoutLink = /* @__PURE__ */ defineComponent({
           await PolarEmbedCheckout.create(url, { theme: props.theme })
         }
         else {
-          // PARITY: D-09
-          // `noopener` is a deliberate divergence from upstream's bare
-          // `window.open(url, '_blank')`: unlike `<a target="_blank">`, `window.open`
-          // keeps `window.opener` live, letting the checkout tab navigate this one.
+          // PARITY: F-02
+          // Fixes an upstream bug: upstream calls `window.open(url, '_blank')`.
+          // Unlike `<a target="_blank">`, `window.open` keeps `window.opener` live,
+          // so the checkout tab could navigate this one. `noopener` cuts that link.
           // The forced `null` return is unused here.
           // Not an open redirect: `url` is this app's own Convex action response
           // (polarApi/api.billing), never request or location input.
