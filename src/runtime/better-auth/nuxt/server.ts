@@ -322,13 +322,11 @@ export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): Co
       return await fn(token?.token)
     }
     catch (error) {
-      // PARITY: D-08
-      // Intentional divergence from upstream v0.12.5 `callWithToken`, whose
-      // predicate is inverted (it rethrows on auth errors and retries
-      // non-auth errors — almost certainly an upstream bug). We retry with a
-      // force-refreshed token exactly when the cached JWT is rejected as an
-      // auth error, which is what the JWT cache's `isAuthError` option
-      // exists for. Documented in PARITY.md; do not "sync" back.
+      // PARITY: F-01
+      // Fixes an upstream bug: upstream's `callWithToken` condition is inverted.
+      // It rethrows auth errors and retries every other error. Here a cached
+      // token rejected with an auth error is refreshed once and the call
+      // retried. Do not sync upstream's condition back.
       if (
         !opts?.jwtCache?.enabled
         || token.isFresh

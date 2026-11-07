@@ -261,7 +261,7 @@ function usePaginatedQueryInternal<Query extends PaginatedQueryReference>(
       `\`options.initialNumItems\` must be a positive number. Received \`${initialOptions?.initialNumItems}\`.`,
     )
   }
-  // PARITY: D-12
+  // PARITY: F-03
   const convex = useConvexOrThrow('usePaginatedQuery')
   const logger = convex.logger
 

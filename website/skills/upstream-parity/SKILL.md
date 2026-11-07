@@ -174,8 +174,11 @@ Before writing one, ask whether it is really a `D-*`:
 - Purely *additional* surface → `A-*`, under whichever §3.3 group it fits: *ergonomics*,
   *wiring and plumbing*, *security guards*, *tooling*.
 - Actually different *behaviour* → `D-*`, under its §3.2 group: *forced by the Vue/Nitro runtime*,
-  *consequences of an unimportable upstream internal*, *upstream defects not carried over*, or
-  *type and signature refinements*. If none fits, that is worth a new group, not a stretched one.
+  *consequences of an unimportable upstream internal*, or *type and signature refinements*. If
+  none fits, that is worth a new group, not a stretched one.
+- Upstream's code is *wrong* and the port does the correct thing → an `F-*` entry in
+  [§3.5](../../../PARITY.md#35-upstream-bugs-fixed-in-the-port-f-), not a `D-*`. A fix is not a
+  difference in behaviour. Add a **Reported** line with the upstream issue or pull request.
 
 ---
 
@@ -219,12 +222,12 @@ stop and check PARITY.md:
 - **"Fixing" `ConvexVueClient.watchPaginatedQuery`** to return a watch. It throws by design
   ([D-05](../../../PARITY.md#d-05--watchpaginatedquery-throws-instead-of-returning-a-watch)).
 - **Restoring upstream's `callWithToken` predicate.** Upstream's is inverted
-  ([D-08](../../../PARITY.md#d-08--the-jwt-cache-retries-on-auth-errors-upstream-retries-on-non-auth-errors)).
+  ([F-01](../../../PARITY.md#f-01--the-jwt-cache-retries-on-auth-errors-upstream-retries-on-non-auth-errors)).
 - **Tidying away `xssValidator: false`** in `AUTH_PROXY_SECURITY_RULES`. It is a correctness
   fix, not hardening — without it, credentials containing `<` or `>` get a 400 before reaching
   Better Auth ([A-14](../../../PARITY.md#a-14--the-auth-proxy-route-and-its-security-rules)).
 - **Dropping `noopener`** from Polar's `window.open`
-  ([D-09](../../../PARITY.md#d-09--windowopen-gains-noopener)).
+  ([F-02](../../../PARITY.md#f-02--windowopen-gains-noopener)).
 - **Removing an `import.meta.server` short-circuit** as dead code. Each one preserves an
   upstream invariant React gets for free ([D-01](../../../PARITY.md#d-01--subscriptions-and-setauth-are-skipped-during-ssr)).
 - **Hardcoding the Better Auth client back to `./client`.** The runtime resolves the app's own

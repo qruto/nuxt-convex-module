@@ -82,7 +82,7 @@ describe('useConvex', () => {
 })
 
 describe('usePaginatedQuery', () => {
-  // PARITY: D-12 — upstream dereferences `useConvex().logger` and throws a raw TypeError here.
+  // PARITY: F-03 — upstream dereferences `useConvex().logger` and throws a raw TypeError here.
   it('throws the per-composable missing-client error without a provider', async () => {
     const Wrapper = defineComponent({
       setup() {
