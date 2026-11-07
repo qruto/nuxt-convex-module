@@ -36,6 +36,18 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     tokenMock.mockReset()
   })
 
+  it('reads authVersion as unknown until the session settles', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const { authVersion } = useBetterAuth()
+    expect(authVersion.value).toBeUndefined()
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: '1' } }, isPending: false }
+    expect(authVersion.value).toBe('session-1')
+
+    sessionRef.value = { data: null, isPending: false }
+    expect(authVersion.value).toBeNull()
+  })
+
   it('exposes the Better Auth client and session from one service', async () => {
     const { useBetterAuth } = await loadUseAuth()
 
