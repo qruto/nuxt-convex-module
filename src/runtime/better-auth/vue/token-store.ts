@@ -17,6 +17,8 @@ export interface BetterAuthTokenStore {
   pendingToken: Promise<string | null> | null
   pendingTokenVersion: string | null
   initialTokenUsed: boolean
+  /** The session the prefetched token names, when it names one. */
+  initialTokenSessionId: string | undefined
 }
 
 /** A store with no token yet. @internal */
@@ -27,6 +29,7 @@ export function createBetterAuthTokenStore(): BetterAuthTokenStore {
     pendingToken: null,
     pendingTokenVersion: null,
     initialTokenUsed: false,
+    initialTokenSessionId: undefined,
   }
 }
 
@@ -35,6 +38,23 @@ export const BetterAuthTokenStoreKey: InjectionKey<BetterAuthTokenStore> = Symbo
 
 /** The version a token holds while the session is still loading. @internal */
 export const PENDING_AUTH_VERSION = '__pending__'
+
+/** A JWT's claims, or `undefined` for a token this can't read. @internal */
+export function readTokenClaims(token: string): { sub?: string, sessionId?: unknown } | undefined {
+  try {
+    const payload = token.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(payload)) ?? undefined
+  }
+  catch {
+    return undefined
+  }
+}
+
+// Convex JWTs minted by the convex plugin carry the Better Auth session id.
+const getTokenSessionId = (token: string) => {
+  const sessionId = readTokenClaims(token)?.sessionId
+  return typeof sessionId === 'string' ? sessionId : undefined
+}
 
 /**
  * Hand a store its prefetched token, once per store: the token covers the gap
@@ -46,5 +66,14 @@ export function seedInitialToken(store: BetterAuthTokenStore, initialToken: stri
   if (store.initialTokenUsed || !initialToken) return
   store.cachedToken.value = initialToken
   store.cachedTokenVersion = PENDING_AUTH_VERSION
+  store.initialTokenSessionId = getTokenSessionId(initialToken)
   store.initialTokenUsed = true
+}
+
+/** Forget the token, and any fetch in flight, once the session is gone. @internal */
+export function clearToken(store: BetterAuthTokenStore): void {
+  store.cachedToken.value = null
+  store.cachedTokenVersion = null
+  store.pendingToken = null
+  store.pendingTokenVersion = null
 }

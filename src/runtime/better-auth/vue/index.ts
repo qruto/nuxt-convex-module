@@ -11,7 +11,7 @@ export { useBetterAuth, type UseBetterAuthReturn, type BetterAuthSession, type B
 // through the same alias keeps a single client instance across the app.
 export { authClient, type AuthClient } from '#convex/auth-client'
 export { usePreloadedAuthQuery } from './hydration'
-export { consumeCrossDomainOneTimeToken, type ConsumeCrossDomainOneTimeTokenOptions } from './cross-domain'
+export { consumeCrossDomainOneTimeToken, type AuthClientWithCrossDomain, type ConsumeCrossDomainOneTimeTokenOptions } from './cross-domain'
 export { resolveAuthRedirect } from './redirect'
 export { AuthBoundary } from './auth-boundary'
 

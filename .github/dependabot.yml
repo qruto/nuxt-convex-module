@@ -23,15 +23,15 @@ updates:
         - '@nuxtjs/*'
         - convex
         - '@convex-dev/*'
-    # `@convex-dev/better-auth` accepts `better-auth: ">=1.6.11 <1.7.0"`, and
-    # this package mirrors it as `~1.6.11` — the same set of versions, written
-    # the way installed-check normalises to. A 1.7.x bump counts as a minor
+    # `@convex-dev/better-auth` accepts `better-auth: ">=1.7.16 <1.8.0"`, and
+    # this package mirrors it as `~1.7.16` — the same set of versions, written
+    # the way installed-check normalises to. A 1.8.x bump counts as a minor
     # update, so without this the group below would propose one that the add-on
-    # then rejects at install time. Drop this entry when @convex-dev/better-auth
-    # supports better-auth 1.7 (and widen the peer range with it).
+    # then rejects at install time. Move this entry when @convex-dev/better-auth
+    # supports better-auth 1.8 (and move the peer range with it).
     ignore:
       - dependency-name: better-auth
-        versions: ['>=1.7.0']
+        versions: ['>=1.8.0']
     # A dependency joins the first group it matches. The upstreams the runtime
     # ports get their own group: a new release fails package-contract.test.ts
     # until the parity sync lands on that PR's branch (the upstream-parity

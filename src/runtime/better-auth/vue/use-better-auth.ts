@@ -1,7 +1,7 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, effectScope, hasInjectionContext, inject, shallowRef, triggerRef, type ComputedRef, type EffectScope } from 'vue'
+import { computed, effectScope, hasInjectionContext, inject, shallowRef, triggerRef, watch, type ComputedRef, type EffectScope } from 'vue'
 import { authClient, type AuthClient } from '#convex/auth-client'
-import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, PENDING_AUTH_VERSION, seedInitialToken, type BetterAuthTokenStore } from './token-store'
+import { BetterAuthTokenStoreKey, clearToken, createBetterAuthTokenStore, PENDING_AUTH_VERSION, readTokenClaims, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
 // The browser runs one app, so its store lives at module scope.
 const browserStore = createBetterAuthTokenStore()
@@ -15,17 +15,6 @@ const browserStore = createBetterAuthTokenStore()
 function useTokenStore(): BetterAuthTokenStore {
   if (!import.meta.server) return browserStore
   return (hasInjectionContext() ? inject(BetterAuthTokenStoreKey, null) : null) ?? createBetterAuthTokenStore()
-}
-
-/** A JWT's `sub`, or `undefined` for a token this can't read. */
-function tokenSubject(token: string): string | undefined {
-  try {
-    const payload = token.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
-    return JSON.parse(atob(payload)).sub
-  }
-  catch {
-    return undefined
-  }
 }
 
 type BetterAuthSessionData = {
@@ -61,7 +50,17 @@ let browserSessionScope: EffectScope | undefined
 const useClientSession = (): BetterAuthSession => {
   if (import.meta.server) return serverSession()
   browserSessionScope ??= effectScope(true)
-  return browserSession ??= browserSessionScope.run(() => authClient.useSession())!
+  return browserSession ??= browserSessionScope.run(() => {
+    const session = authClient.useSession()
+    // Maps upstream's `useEffect` that drops the SSR token once the session
+    // loads. Better Auth reads pending again when a signed-out session
+    // refetches, so a token left here would read as signed in. Only the
+    // signed-out case: a signed-in session keeps its token.
+    watch(session, ({ data, isPending }) => {
+      if (!data && !isPending) clearToken(browserStore)
+    }, { flush: 'sync' })
+    return session
+  })!
 }
 
 // Read off `AuthClient`, so the published type follows the app's own client
@@ -78,7 +77,7 @@ export interface UseBetterAuthReturn {
   // Upstream's `useAuthFromBetterAuth` return shape, in upstream order.
   /** `true` until the session is known and no prefetched token covers the gap, or while a token from another user is replaced. */
   isLoading: ComputedRef<boolean>
-  /** `true` when Better Auth reports a session, or a token is cached while it reloads. */
+  /** `true` when Better Auth reports a session, or the prefetched token covers the session loading. */
   isAuthenticated: ComputedRef<boolean>
   /** Convex's token fetcher: the Better Auth JWT for the current session, or `null`. */
   fetchAccessToken: AuthTokenFetcher
@@ -134,14 +133,20 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   const currentAuthVersion = () => authVersion.value === undefined ? PENDING_AUTH_VERSION : authVersion.value
 
   // A token from before the session settled belongs to whoever the server saw.
-  // If another user signed in during the load, the session settles to them, and
-  // the connection must not stay on the old token until its next refresh.
-  const holdsAnotherUsersToken = computed(() => {
+  // If another session started during the load, the session settles to it, and
+  // the connection must not stay on the old token until its next refresh. The
+  // token names its session; a token that doesn't is compared by user.
+  const holdsAnotherSessionsToken = computed(() => {
     const data = session.value.data as BetterAuthSessionData | undefined
-    if (!data?.user?.id || !cachedToken.value || store.cachedTokenVersion !== PENDING_AUTH_VERSION) return false
-    const subject = tokenSubject(cachedToken.value)
-    return subject !== undefined && subject !== data.user.id
+    if (!data || !cachedToken.value || store.cachedTokenVersion !== PENDING_AUTH_VERSION) return false
+    if (store.initialTokenSessionId && data.session?.id) return store.initialTokenSessionId !== data.session.id
+    const subject = readTokenClaims(cachedToken.value)?.sub
+    return !!data.user?.id && subject !== undefined && subject !== data.user.id
   })
+
+  // The token standing in for a session that hasn't loaded. Maps upstream's
+  // `isSsrTokenActive`: a token fetched for a past session never counts.
+  const isServerTokenActive = () => session.value.isPending && cachedToken.value !== null && store.cachedTokenVersion === PENDING_AUTH_VERSION
 
   const fetchAccessToken: AuthTokenFetcher = async ({
     forceRefreshToken = false,
@@ -151,20 +156,27 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // Maps upstream's cache-clearing `useEffect`: the session settled to
     // signed-out, so drop the cached token instead of fetching a new one.
     if (version === null) {
-      cachedToken.value = null
-      store.cachedTokenVersion = null
-      store.pendingToken = null
-      store.pendingTokenVersion = null
+      clearToken(store)
       return null
     }
 
-    // The trailing version checks replace upstream's `[sessionId]` callback
-    // deps: a cache entry from another session never satisfies this caller.
-    if (cachedToken.value && !forceRefreshToken && store.cachedTokenVersion === version) {
-      return cachedToken.value
+    // The session the prefetched token names has settled: it is that session's
+    // token, as upstream's cache entry is from the moment it is seeded.
+    if (store.cachedTokenVersion === PENDING_AUTH_VERSION && store.initialTokenSessionId === version) {
+      store.cachedTokenVersion = version
     }
-    if (!forceRefreshToken && store.pendingToken && store.pendingTokenVersion === version) {
-      return store.pendingToken
+
+    // The version checks replace upstream's `[sessionId]` callback deps: an
+    // entry from another session never satisfies this caller.
+    if (!forceRefreshToken) {
+      // Prefer an in-flight request, which may be refreshing a rejected token,
+      // over the cached token.
+      if (store.pendingToken && store.pendingTokenVersion === version) {
+        return store.pendingToken
+      }
+      if (cachedToken.value && store.cachedTokenVersion === version) {
+        return cachedToken.value
+      }
     }
     // PARITY: F-05
     // Fixes an upstream bug: upstream answers every failed fetch with `null`, and
@@ -172,44 +184,53 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // Only a 401 says the session is gone. Any other failure keeps this session's
     // token, which leaves the connection running until expiry.
     const afterFailure = () => {
-      if (cachedToken.value && !holdsAnotherUsersToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
+      if (cachedToken.value && !holdsAnotherSessionsToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
         return cachedToken.value
       }
-      cachedToken.value = null
-      store.cachedTokenVersion = version
+      if (isLatest()) {
+        cachedToken.value = null
+        store.cachedTokenVersion = version
+      }
       return null
     }
     store.pendingTokenVersion = version
-    const pending = store.pendingToken = client.convex
+    // PARITY: D-16
+    // Only the latest request writes the cache: a newer one replaced this one,
+    // or the session ended while it was in flight.
+    const isLatest = () => store.pendingToken === pending
+    const pending: Promise<string | null> = store.pendingToken = client.convex
       .token({ fetchOptions: { throw: false } })
       .then(({ data, error }) => {
         if (error && error.status !== 401) {
           return afterFailure()
         }
         const token = data?.token || null
-        store.cachedTokenVersion = version
-        cachedToken.value = token
-        // Tokens minted in the same second are identical, and the version moved.
-        triggerRef(cachedToken)
+        if (isLatest()) {
+          store.cachedTokenVersion = version
+          cachedToken.value = token
+          // Tokens minted in the same second are identical, and the version moved.
+          triggerRef(cachedToken)
+        }
         return token
       })
       .catch(afterFailure)
       .finally(() => {
-        store.pendingToken = null
-        store.pendingTokenVersion = null
+        if (isLatest()) {
+          store.pendingToken = null
+          store.pendingTokenVersion = null
+        }
       })
     return pending
   }
 
   return {
-    isLoading: computed(() => (session.value.isPending && !cachedToken.value) || holdsAnotherUsersToken.value),
+    isLoading: computed(() => (session.value.isPending && !isServerTokenActive()) || holdsAnotherSessionsToken.value),
     // PARITY: D-03
-    // Diverges from upstream's `Boolean(session?.session) || cachedToken !== null`:
-    // a settled signed-out session must read unauthenticated immediately (Vue has
-    // no re-render to run upstream's cache-clearing effect first), and Better Auth
-    // session data without a nested `session` still counts as signed in.
+    // Diverges from upstream's `Boolean(session?.session) || isSsrTokenActive`:
+    // Better Auth session data without a nested `session` still counts as
+    // signed in.
     isAuthenticated: computed(
-      () => !!session.value.data || (session.value.isPending && cachedToken.value !== null),
+      () => !!session.value.data || isServerTokenActive(),
     ),
     fetchAccessToken,
     // PARITY: A-06 — Vue-only service extensions.

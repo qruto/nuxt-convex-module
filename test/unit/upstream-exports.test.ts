@@ -61,3 +61,26 @@ describe('upstream export surface', () => {
     ).toEqual({ added: [], removed: [] })
   })
 })
+
+// `authClient.convex.token()` and `getToken` from `@convex-dev/better-auth/utils`
+// reach these by path, which 0.13.0 kept while it renamed the endpoint keys.
+describe('upstream plugin endpoints', () => {
+  it('serves the Convex token under the key and path the port calls', async () => {
+    const { convex } = await import('@convex-dev/better-auth/plugins')
+    const { endpoints } = convex({ authConfig: { providers: [{ applicationID: 'convex', domain: 'https://example.convex.site' }] } })
+
+    expect(endpoints).toEqual(expect.objectContaining({
+      getConvexToken: expect.anything(),
+      getConvexJwks: expect.anything(),
+      getConvexOpenIdConfig: expect.anything(),
+    }))
+    expect(endpoints.getConvexToken.path).toBe('/convex/token')
+  })
+
+  it('verifies a cross-domain one-time token under the key and path the port calls', async () => {
+    const { crossDomain } = await import('@convex-dev/better-auth/plugins')
+    const { endpoints } = crossDomain({ siteUrl: 'https://app.example.com' })
+
+    expect(endpoints.verifyCrossDomainOneTimeToken.path).toBe('/cross-domain/one-time-token/verify')
+  })
+})

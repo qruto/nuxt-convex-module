@@ -32,7 +32,7 @@ export const upstreamBaselines = {
   },
   'better-auth': {
     package: '@convex-dev/better-auth',
-    version: '0.12.6',
+    version: '0.13.0',
     entries: 'react + nextjs + client plugins',
   },
   'polar': {

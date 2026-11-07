@@ -106,7 +106,7 @@ const ENTRY: Record<string, Entry> = {
       'AuthBoundary', 'authClient', 'consumeCrossDomainOneTimeToken', 'convexClient', 'crossDomainClient',
       'resolveAuthRedirect', 'useBetterAuth', 'usePreloadedAuthQuery',
     ],
-    types: ['AuthClient', 'BetterAuthSession', 'BetterAuthUser', 'ConsumeCrossDomainOneTimeTokenOptions', 'UseBetterAuthReturn'],
+    types: ['AuthClient', 'AuthClientWithCrossDomain', 'BetterAuthSession', 'BetterAuthUser', 'ConsumeCrossDomainOneTimeTokenOptions', 'UseBetterAuthReturn'],
   },
   './better-auth/vue': { source: 'src/runtime/better-auth/vue/index.ts', aliasOf: './better-auth/client', values: [], types: [] },
   './better-auth/server': {
