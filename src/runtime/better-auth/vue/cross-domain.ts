@@ -1,10 +1,15 @@
 import { authClient } from '#convex/auth-client'
 
-// The aliased client's type only reflects the plugins the app installed (the
-// bundled default omits `crossDomainClient()`), so describe the cross-domain
-// additions locally — the Vue analog of upstream's
-// `authClient as AuthClientWithPlugins<PluginsWithCrossDomain>` cast target.
-type AuthClientWithCrossDomain = typeof authClient & {
+/**
+ * An {@link AuthClient} that also includes the `crossDomainClient()` plugin.
+ *
+ * The aliased client's type only reflects the plugins the app installed (the
+ * bundled default omits `crossDomainClient()`), so this describes the
+ * cross-domain additions itself.
+ *
+ * @public
+ */
+export type AuthClientWithCrossDomain = typeof authClient & {
   // `updateSession` is a top-level action contributed by the cross-domain
   // client plugin's `getActions` (not namespaced under `crossDomain`), matching
   // `convex/react`'s `authClientWithCrossDomain.updateSession()`.

@@ -210,6 +210,23 @@ describe('auth/nuxt/server', () => {
     expect(proxiedHeaders.get('x-better-auth-forwarded-proto')).toBe('https')
   })
 
+  it('drops x-forwarded-* headers the request arrived with', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+
+    mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/session', {
+      headers: { 'x-forwarded-host': 'evil.example', 'x-forwarded-proto': 'http' },
+    }))
+    mockFetch.mockResolvedValue(new Response('ok'))
+
+    await convexAuth(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()
+
+    const [, proxiedInit] = mockFetch.mock.calls[0] as [string, RequestInit]
+    const proxiedHeaders = proxiedInit.headers as Headers
+    expect(proxiedHeaders.get('x-forwarded-host')).toBeNull()
+    expect(proxiedHeaders.get('x-forwarded-proto')).toBeNull()
+    expect(proxiedHeaders.get('x-better-auth-forwarded-host')).toBe('app.example.com')
+  })
+
   it('strips hop-by-hop headers from the forwarded request', async () => {
     const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
 

@@ -12,7 +12,7 @@ Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `i
 ## Better Auth
 
 ```bash
-npm i @convex-dev/better-auth@~0.12.0 better-auth@~1.6.11
+npm i @convex-dev/better-auth@~0.13.0 better-auth@~1.7.16
 ```
 
 **What the module adds on its own:**
@@ -25,7 +25,7 @@ npm i @convex-dev/better-auth@~0.12.0 better-auth@~1.6.11
 
 **Nuxt config.** Nothing is required. `NUXT_PUBLIC_CONVEX_SITE_URL` must reach a production build; in development the `CONVEX_SITE_URL` in `.env.local` is enough. Options live under `convex.betterAuth` (`authClient`, `loginPath`, `crossDomainCallbackRoute`).
 
-**Convex side** (`@convex-dev/better-auth` 0.12). The files, as in the component's guide at https://labs.convex.dev/better-auth:
+**Convex side** (`@convex-dev/better-auth` 0.13). The files, as in the component's guide at https://labs.convex.dev/better-auth:
 
 1. `convex/convex.config.ts`:
 

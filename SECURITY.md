@@ -199,7 +199,7 @@ was decided:
   and protocol, exactly as upstream's `convexBetterAuthNextJs` does. Since
   `@convex-dev/better-auth` 0.12.6 neither stamps `x-forwarded-host` / `-proto`, and the Convex
   side restores the original host only when `trustedOrigins` lists it exactly
-  (GHSA-pgx2-m66h-x29f). **Mitigated upstream:** run 0.12.6 or later on the deployment, and set
+  (GHSA-pgx2-m66h-x29f). Since 0.13.0 both also drop any such headers the request arrived with. **Mitigated upstream:** run 0.12.6 or later on the deployment, and set
   `baseURL` and `trustedOrigins` in the Convex-side Better Auth config, with the app's origin
   written out, not matched by a wildcard. The response relay is verbatim (`Set-Cookie`, `Location`); the origin it relays from is pinned
   by config, so nothing foreign is relayed.

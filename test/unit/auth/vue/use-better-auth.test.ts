@@ -30,6 +30,8 @@ async function loadUseAuth() {
   return mod
 }
 
+const jwt = (claims: Record<string, string>) => `header.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.signature`
+
 describe('useBetterAuth (Better Auth + Convex)', () => {
   beforeEach(() => {
     sessionRef.value = { data: null, isPending: true }
@@ -246,6 +248,107 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     tokenMock.mockResolvedValue({ data: { token: jwt } })
     await fetchAccessToken({ forceRefreshToken: false })
     expect(isLoading.value).toBe(false)
+  })
+
+  it('does not bring a token back when a signed-out session refetches', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const { isAuthenticated, fetchAccessToken } = useBetterAuth('server-token')
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    sessionRef.value = { data: null, isPending: false }
+
+    // Better Auth reads pending again on a refetch while `data` is null.
+    sessionRef.value = { data: null, isPending: true }
+
+    expect(isAuthenticated.value).toBe(false)
+    tokenMock.mockResolvedValue({ data: null, error: { status: 401 } })
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBeNull()
+  })
+
+  it('trusts a server token once the session it names settles', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const token = jwt({ sub: 'user-1', sessionId: 'session-1' })
+    const { isLoading, fetchAccessToken } = useBetterAuth(token)
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+
+    expect(isLoading.value).toBe(false)
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBe(token)
+    expect(tokenMock).not.toHaveBeenCalled()
+  })
+
+  it('does not trust a server token from another session of the same user', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const token = jwt({ sub: 'user-1', sessionId: 'session-1' })
+    const { isLoading, fetchAccessToken } = useBetterAuth(token)
+
+    sessionRef.value = { data: { session: { id: 'session-2' }, user: { id: 'user-1' } }, isPending: false }
+    expect(isLoading.value).toBe(true)
+
+    tokenMock.mockRejectedValueOnce(new Error('offline'))
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBeNull()
+
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-b' } })
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBe('token-b')
+    expect(isLoading.value).toBe(false)
+  })
+
+  it('answers with a refresh in flight rather than the token it replaces', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    const { fetchAccessToken } = useBetterAuth()
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-a' } })
+    await fetchAccessToken({ forceRefreshToken: false })
+
+    tokenMock.mockResolvedValueOnce({ data: { token: 'token-b' } })
+    const refresh = fetchAccessToken({ forceRefreshToken: true })
+
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBe('token-b')
+    await refresh
+    expect(tokenMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps sharing the newest request when an older one finishes first', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    sessionRef.value = { data: { session: { id: 'session-1' } }, isPending: false }
+    const { fetchAccessToken } = useBetterAuth()
+    let finishOlder!: (value: { data: { token: string } }) => void
+    let finishNewer!: (value: { data: { token: string } }) => void
+    tokenMock.mockReturnValueOnce(new Promise((resolve) => {
+      finishOlder = resolve
+    }))
+    tokenMock.mockReturnValueOnce(new Promise((resolve) => {
+      finishNewer = resolve
+    }))
+
+    const older = fetchAccessToken({ forceRefreshToken: true })
+    const newer = fetchAccessToken({ forceRefreshToken: true })
+    finishOlder({ data: { token: 'token-old' } })
+    await older
+
+    const shared = fetchAccessToken({ forceRefreshToken: false })
+    finishNewer({ data: { token: 'token-new' } })
+
+    await expect(shared).resolves.toBe('token-new')
+    await expect(newer).resolves.toBe('token-new')
+    expect(tokenMock).toHaveBeenCalledTimes(2)
+  })
+
+  // PARITY: D-16
+  it('ignores a token that arrives after the session signed out', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const { isAuthenticated, fetchAccessToken } = useBetterAuth('server-token')
+    let finish!: (value: { data: { token: string } }) => void
+    tokenMock.mockReturnValueOnce(new Promise((resolve) => {
+      finish = resolve
+    }))
+    const inFlight = fetchAccessToken({ forceRefreshToken: true })
+
+    sessionRef.value = { data: null, isPending: false }
+    finish({ data: { token: 'late-token' } })
+    await inFlight
+
+    sessionRef.value = { data: null, isPending: true }
+    expect(isAuthenticated.value).toBe(false)
   })
 
   it('exposes the session user and returns null when signed out', async () => {
