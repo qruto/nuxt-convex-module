@@ -1,5 +1,67 @@
 # Changelog
 
+## v0.13.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.3...v0.13.0)
+
+### 🚀 Enhancements
+
+#### Parity
+
+- ⚠️  Track @convex-dev/better-auth 0.13.0 and Better Auth 1.7 ([#142](https://github.com/qruto/nuxt-convex-module/pull/142))
+
+### 🩹 Fixes
+
+- Stop reporting a failed server read once the live query has a value ([#137](https://github.com/qruto/nuxt-convex-module/pull/137))
+- Stop reporting a failed server read once the live page arrives ([#138](https://github.com/qruto/nuxt-convex-module/pull/138))
+
+#### Better Auth
+
+- Keep the token when a refresh fails ([#136](https://github.com/qruto/nuxt-convex-module/pull/136))
+
+#### Auth
+
+- Keep a live connection signed in across auth changes ([#135](https://github.com/qruto/nuxt-convex-module/pull/135))
+
+#### Polar
+
+- ⚠️  Raise the @polar-sh/checkout peer to ^0.6.0 ([#144](https://github.com/qruto/nuxt-convex-module/pull/144))
+
+#### Security
+
+- Keep what default-src allowed in the directives the module writes ([#141](https://github.com/qruto/nuxt-convex-module/pull/141))
+- Turn off the limiter, the upgrade and HSTS on nuxt dev ([#145](https://github.com/qruto/nuxt-convex-module/pull/145))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump the all-non-major group with 11 updates ([#133](https://github.com/qruto/nuxt-convex-module/pull/133))
+
+#### Parity
+
+- Track convex 1.49.0 ([#132](https://github.com/qruto/nuxt-convex-module/pull/132))
+- Record upstream bug fixes as F-* entries ([#139](https://github.com/qruto/nuxt-convex-module/pull/139))
+
+#### Website
+
+- Drop the dev server's port 24678 workaround ([#134](https://github.com/qruto/nuxt-convex-module/pull/134))
+
+### 🤖 CI
+
+#### Dependencies
+
+- Bump the actions group across 1 directory with 2 updates ([#143](https://github.com/qruto/nuxt-convex-module/pull/143))
+
+#### ⚠️ Breaking Changes
+
+- **parity:** ⚠️  Track @convex-dev/better-auth 0.13.0 and Better Auth 1.7 ([#142](https://github.com/qruto/nuxt-convex-module/pull/142))
+- **polar:** ⚠️  Raise the @polar-sh/checkout peer to ^0.6.0 ([#144](https://github.com/qruto/nuxt-convex-module/pull/144))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.3
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.2...v0.12.3)
