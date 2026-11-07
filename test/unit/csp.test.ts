@@ -159,6 +159,23 @@ describe('applyConvexSecurityDefaults', () => {
     expect(cspOf(rules)['connect-src']).toBeUndefined()
   })
 
+  it('leaves a directive the app turned off with false, which nuxt-security omits from the header', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'connect-src': false,
+          'media-src': false,
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    const csp = cspOf(rules)
+    expect(csp['connect-src']).toBe(false)
+    expect(csp['media-src']).toBe(false)
+    expect(csp['img-src']).toEqual(['\'self\'', 'data:', ...resourceSrc])
+  })
+
   it('does not duplicate origins already present', () => {
     const rules: SecurityRules = {
       headers: {

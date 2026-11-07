@@ -104,10 +104,11 @@ export function applyConvexSecurityDefaults(
  * fallback. With no additions the directive is left entirely untouched —
  * materializing the baseline alone would *create* a restriction where
  * nuxt-security's defaults leave the directive open (how `connect-src` stays
- * HMR-safe in dev).
+ * HMR-safe in dev). So is one the app set to `false`, which nuxt-security
+ * leaves out of the header.
  */
 function tightenDirective(csp: Record<string, unknown>, name: string, baseline: string[], additions: string[]): void {
-  if (additions.length === 0) return
+  if (additions.length === 0 || csp[name] === false) return
   const existing = sourcesOf(csp[name]) ?? [...baseline, ...inheritedSources(csp)]
   csp[name] = uniq([...existing, ...additions])
 }
