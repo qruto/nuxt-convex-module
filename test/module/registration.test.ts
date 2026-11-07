@@ -1,4 +1,4 @@
-// PARITY: A-01, A-09
+// PARITY: A-01, A-09, A-11
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { sep } from 'node:path'
@@ -254,4 +254,61 @@ describe('with a custom authRoute and auth client', () => {
     expect(r.options.routeRules?.['/auth/**']).toMatchObject({ cache: false })
     expect(r.options.alias['#convex/auth-client']?.split(sep).join('/')).toMatch(/registration\/auth-client$/)
   })
+})
+
+describe('nuxt-security\'s defaults', () => {
+  type Security = { rateLimiter: unknown, headers: { strictTransportSecurity: unknown, contentSecurityPolicy: Record<string, unknown> } }
+
+  async function bootOf(dev: boolean, overrides: { convex?: Record<string, unknown>, security?: Record<string, unknown> } = {}, configFile?: string): Promise<Nuxt> {
+    const nuxt = await loadNuxt({
+      cwd: fixture,
+      dev,
+      ready: true,
+      configFile,
+      overrides: { ...overrides, convex: { devScript: false, ...overrides.convex } } as never,
+    })
+    await nuxt.close()
+    return nuxt
+  }
+
+  const securityOf = async (...args: Parameters<typeof bootOf>) => (await bootOf(...args)).options.security as unknown as Security
+
+  it('turns off the limiter, the upgrade and HSTS on nuxt dev', async () => {
+    const { rateLimiter, headers } = await securityOf(true)
+    expect(rateLimiter).toBe(false)
+    expect(headers.strictTransportSecurity).toBe(false)
+    expect(headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(false)
+  }, 60_000)
+
+  it('turns them off when the app lists nuxt-security ahead of this module', async () => {
+    const { options } = await bootOf(true, {}, 'nuxt.security-first.config')
+    expect(options.modules[0]).toBe('nuxt-security')
+    const { rateLimiter, headers } = options.security as unknown as Security
+    expect(rateLimiter).toBe(false)
+    expect(headers.strictTransportSecurity).toBe(false)
+    expect(headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(false)
+  }, 60_000)
+
+  it('keeps all three in a production build', async () => {
+    const { rateLimiter, headers } = await securityOf(false)
+    expect(rateLimiter).toMatchObject({ tokensPerInterval: 150 })
+    expect(headers.strictTransportSecurity).toMatchObject({ includeSubdomains: true })
+    expect(headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(true)
+  }, 60_000)
+
+  it('lets a value of the app win on nuxt dev', async () => {
+    const { rateLimiter, headers } = await securityOf(true, { security: { rateLimiter: { tokensPerInterval: 10, interval: 1000 } } })
+    expect(rateLimiter).toMatchObject({ tokensPerInterval: 10 })
+    expect(headers.strictTransportSecurity).toBe(false)
+  }, 60_000)
+
+  it('lets each header of the app win on nuxt dev, the other staying off', async () => {
+    const hsts = await securityOf(true, { security: { headers: { strictTransportSecurity: { maxAge: 60 } } } })
+    expect(hsts.headers.strictTransportSecurity).toMatchObject({ maxAge: 60 })
+    expect(hsts.headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(false)
+
+    const upgrade = await securityOf(true, { security: { headers: { contentSecurityPolicy: { 'upgrade-insecure-requests': true } } } })
+    expect(upgrade.headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(true)
+    expect(upgrade.headers.strictTransportSecurity).toBe(false)
+  }, 60_000)
 })

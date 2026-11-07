@@ -590,11 +590,12 @@ so none can be "restored" by syncing.
 ##### A-11 — Convex-aware CSP and `nuxt-security` route rules
 
 - **Port** · [`nuxt/csp.ts`](./src/runtime/nuxt/csp.ts), [`nuxt/security.ts`](./src/runtime/nuxt/security.ts)
-- **Pinned by** · `test/unit/csp.test.ts`, `test/unit/security-plugin.test.ts`, `test/e2e/security-off.test.ts`
+- **Pinned by** · `test/unit/csp.test.ts`, `test/unit/security-plugin.test.ts`, `test/module/registration.test.ts`, `test/e2e/security-off.test.ts`
 - **Why** · Convex needs its deployment origin in `connect-src` and its storage origin in the
   resource directives, or a default `nuxt-security` CSP silently breaks the app. `csp.ts` holds
   import-free pure helpers; `security.ts` is the Nitro plugin merging them into `nuxt-security`'s
-  route rules. Registered only when the app has `nuxt-security` installed.
+  route rules. Registered only when the app has `nuxt-security` installed. `module.ts` also gives
+  `nuxt-security` defaults for `nuxt dev`, which keep a local server working.
 
 ##### A-12 — `convex-auth` route middleware and its redirect guard
 
