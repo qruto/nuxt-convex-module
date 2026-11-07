@@ -546,7 +546,8 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts`
 - **Why** · beyond upstream's `{ isLoading, isAuthenticated, fetchAccessToken }`, the service
   exposes the raw `client`, the `session` ref, a `user` computed and an `authVersion` computed
-  (`undefined` until the session settles, so the settling re-registers nothing), plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
+  (`undefined` until the session settles, so the settling re-registers nothing; `isLoading` flips
+  instead if the page's token turns out to be another user's), plus the `BetterAuthUser` / `UseBetterAuthReturn` / `BetterAuthSession` types. Auth *flows* (sign-in/out, OTP,
   passkeys, …) are deliberately **not** wrapped — like upstream, they are called on the app's
   own `authClient` (exposed as `client`), typed by whatever plugins that client installs.
 

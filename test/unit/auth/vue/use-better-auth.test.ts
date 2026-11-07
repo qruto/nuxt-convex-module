@@ -144,6 +144,48 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     expect(tokenMock).toHaveBeenCalledTimes(1)
   })
 
+  it('reads loading while a token from before the session belongs to another user', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const jwt = (sub: string) => `header.${Buffer.from(JSON.stringify({ sub })).toString('base64url')}.signature`
+    const { isLoading, fetchAccessToken } = useBetterAuth(jwt('user-1'))
+    expect(isLoading.value).toBe(false)
+
+    sessionRef.value = { data: { session: { id: 'session-2' }, user: { id: 'user-2' } }, isPending: false }
+    expect(isLoading.value).toBe(true)
+
+    tokenMock.mockResolvedValue({ data: { token: jwt('user-2') } })
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBe(jwt('user-2'))
+    expect(isLoading.value).toBe(false)
+  })
+
+  it('reads the settled session as loaded when the token is that user\'s or unreadable', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const jwt = `header.${Buffer.from(JSON.stringify({ sub: 'user-1' })).toString('base64url')}.signature`
+    const { isLoading } = useBetterAuth(jwt)
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    expect(isLoading.value).toBe(false)
+
+    const { useBetterAuth: again } = await loadUseAuth()
+    sessionRef.value = { data: null, isPending: true }
+    const opaque = again('opaque-token')
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    expect(opaque.isLoading.value).toBe(false)
+  })
+
+  it('stops reading loading when the fetch brings the same token under a custom subject', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const jwt = `header.${Buffer.from(JSON.stringify({ sub: 'custom-subject' })).toString('base64url')}.signature`
+    const { isLoading, fetchAccessToken } = useBetterAuth(jwt)
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    expect(isLoading.value).toBe(true)
+
+    tokenMock.mockResolvedValue({ data: { token: jwt } })
+    await fetchAccessToken({ forceRefreshToken: false })
+    expect(isLoading.value).toBe(false)
+  })
+
   it('exposes the session user and returns null when signed out', async () => {
     const { useBetterAuth } = await loadUseAuth()
     const sessionUser = { id: 'user-1', email: 'user@example.com', name: 'User One' }

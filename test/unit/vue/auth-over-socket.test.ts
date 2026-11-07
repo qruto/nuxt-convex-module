@@ -214,6 +214,25 @@ describe('auth over a socket with live queries', () => {
     })
   })
 
+  it('moves to the settled user when the page holds another user\'s token', async () => {
+    await withDeployment(async ({ address }, deployment) => {
+      const page = await hydrate(address)
+      await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
+      await quiet()
+      expect(deployment.identity()).toBe('user-1')
+
+      tokenMock.mockImplementation(async () => ({ data: { token: token('user-2') } }))
+      session.value = signedIn('session-2', 'user-2')
+      await vi.waitFor(() => expect(deployment.identity()).toBe('user-2'))
+      await vi.waitFor(() => expect(deployment.subscribed()).toBe(QUERIES.length))
+      await quiet()
+
+      expect(deployment.signedOutRuns()).toEqual([])
+      expect(page.state.isAuthenticated.value).toBe(true)
+      await page.close()
+    })
+  })
+
   it('comes back after the server rejects an expired token', async () => {
     await withDeployment(async ({ address }, deployment) => {
       const page = await hydrate(address)
