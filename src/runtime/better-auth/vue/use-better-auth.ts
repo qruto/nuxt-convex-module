@@ -171,7 +171,7 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // session's token: on `null` the sync client signs a live connection out
     // and never retries, while the same token leaves it running until expiry.
     const afterFailure = () => {
-      if (cachedToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
+      if (cachedToken.value && !holdsAnotherUsersToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
         return cachedToken.value
       }
       cachedToken.value = null
