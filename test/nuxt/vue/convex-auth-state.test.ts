@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { defineComponent, h, nextTick, ref, watch } from 'vue'
 import type { AuthTokenFetcher } from 'convex/browser'
 import { provideConvexAuth, useConvexAuth, type IConvexVueClient } from '../../../src/runtime/vue/auth'
 import type { ConvexVueClient } from '../../../src/runtime/vue/client'
@@ -56,6 +56,7 @@ describe('ConvexAuthState', () => {
     expect(wrapper.text()).toBe('Authenticated')
 
     wrapper.unmount()
+    await nextTick()
     expect(client.clearAuth).toHaveBeenCalledTimes(1)
   })
 
@@ -211,6 +212,7 @@ describe('ConvexAuthState', () => {
     isAuthenticated.value = false
     await nextTick()
     expect(wrapper.text()).toBe('Unauthenticated')
+    await nextTick()
     expect(client.clearAuth).toHaveBeenCalledTimes(1)
 
     wrapper.unmount()
@@ -277,6 +279,119 @@ describe('ConvexAuthState', () => {
     wrapper.unmount()
   })
 
+  // `client.setAuth` runs the fetcher synchronously. Whatever it reads must not
+  // re-register auth: with Better Auth's token cache, that was every refresh.
+  it('leaves Convex auth alone when state the fetcher reads changes', async () => {
+    const cachedToken = ref('token-a')
+    const fetchAccessToken: AuthTokenFetcher = vi.fn(async () => cachedToken.value)
+    const client = {
+      setAuth: vi.fn((fetcher: AuthTokenFetcher) => void fetcher({ forceRefreshToken: false })),
+      clearAuth: vi.fn(),
+    } as unknown as ConvexVueClient
+
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuth({
+          client,
+          useAuth: () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken }),
+        })
+        return () => h('div', 'auth')
+      },
+    })
+
+    const wrapper = await mountSuspended(Wrapper)
+    expect(client.setAuth).toHaveBeenCalledTimes(1)
+
+    cachedToken.value = 'token-b'
+    await nextTick()
+    await nextTick()
+
+    expect(client.setAuth).toHaveBeenCalledTimes(1)
+    expect(client.clearAuth).not.toHaveBeenCalled()
+
+    wrapper.unmount()
+  })
+
+  // A pending Better Auth session settling on a page seeded with a server token.
+  it('leaves Convex auth alone when the provider learns the version it already had', async () => {
+    const authVersion = ref<string | undefined>(undefined)
+    const fetchAccessToken: AuthTokenFetcher = vi.fn(async () => 'token')
+    const client = { setAuth: vi.fn(), clearAuth: vi.fn() } as unknown as ConvexVueClient
+
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuth({
+          client,
+          useAuth: () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken, authVersion }),
+        })
+        return () => h('div', 'auth')
+      },
+    })
+
+    const wrapper = await mountSuspended(Wrapper)
+    authVersion.value = 'session-1'
+    await nextTick()
+    await nextTick()
+
+    expect(client.setAuth).toHaveBeenCalledTimes(1)
+    expect(client.clearAuth).not.toHaveBeenCalled()
+
+    authVersion.value = 'session-2'
+    await nextTick()
+    await nextTick()
+
+    expect(client.setAuth).toHaveBeenCalledTimes(2)
+
+    wrapper.unmount()
+  })
+
+  // PARITY: D-15
+  // Upstream's last-child effect: `clearAuth` makes the server re-run every
+  // subscribed query signed out, so the gated queries have to leave first.
+  it('clears auth after the queries gated on it have left', async () => {
+    const order: string[] = []
+    const isAuthenticated = ref(true)
+    const fetchAccessToken: AuthTokenFetcher = vi.fn(async () => 'token')
+    let onAuthChange: ((isAuthenticated: boolean) => void) | undefined
+    const client = {
+      setAuth: vi.fn((_fetcher: AuthTokenFetcher, onChange: (value: boolean) => void) => {
+        onAuthChange = onChange
+      }),
+      clearAuth: vi.fn(() => order.push('clearAuth')),
+    } as unknown as ConvexVueClient
+
+    const Query = defineComponent({
+      setup() {
+        const state = useConvexAuth()
+        watch(state.isAuthenticated, (signedIn) => {
+          if (!signedIn) order.push('unsubscribe')
+        })
+        return () => h('div')
+      },
+    })
+    const Wrapper = defineComponent({
+      setup() {
+        provideConvexAuth({
+          client,
+          useAuth: () => ({ isLoading: ref(false), isAuthenticated, fetchAccessToken }),
+        })
+        return () => h(Query)
+      },
+    })
+
+    const wrapper = await mountSuspended(Wrapper)
+    onAuthChange?.(true)
+    await nextTick()
+
+    isAuthenticated.value = false
+    await nextTick()
+    await nextTick()
+
+    expect(order).toEqual(['unsubscribe', 'clearAuth'])
+
+    wrapper.unmount()
+  })
+
   it('re-registers Convex auth when the auth context changes', async () => {
     const isLoading = ref(false)
     const isAuthenticated = ref(true)
@@ -308,6 +423,7 @@ describe('ConvexAuthState', () => {
     expect(client.setAuth).toHaveBeenCalledTimes(1)
 
     authVersion.value = 'session-2'
+    await nextTick()
     await nextTick()
 
     expect(client.clearAuth).toHaveBeenCalledTimes(1)
@@ -352,6 +468,7 @@ describe('ConvexAuthState', () => {
 
     const newFetcher: AuthTokenFetcher = vi.fn(async () => 'token-b')
     fetchAccessToken.value = newFetcher
+    await nextTick()
     await nextTick()
 
     expect(client.clearAuth).toHaveBeenCalledTimes(1)
