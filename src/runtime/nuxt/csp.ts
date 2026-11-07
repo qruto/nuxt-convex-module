@@ -71,7 +71,8 @@ export function convexResourceSrc(url?: string, siteUrl?: string): string[] {
  *
  * For each directive we keep any value the user already set and *append* the
  * Convex origins, so consumers extend (add their own third parties) rather than
- * fight the defaults, and the Convex origins are always present. A user who sets
+ * fight the defaults, and the Convex origins are always present. That covers a
+ * directive the user left to `default-src`, whose places carry over. A user who sets
  * `contentSecurityPolicy: false` (CSP disabled) is left untouched, as is a rule
  * set with nothing to add (no Convex URL).
  */
@@ -97,20 +98,31 @@ export function applyConvexSecurityDefaults(
 }
 
 /**
- * Set a CSP directive to the union of its existing value (or `baseline` if it
- * was unset) and `additions`, deduplicated and order-preserving. nuxt-security
- * accepts a directive as an array or a space-separated string; both are read.
- * With no additions the directive is left entirely untouched — materializing
- * the baseline alone would *create* a restriction where nuxt-security's
- * defaults leave the directive open (how `connect-src` stays HMR-safe in dev).
+ * Set a CSP directive to the union of its existing value and `additions`,
+ * deduplicated and order-preserving. An unset directive starts from `baseline`
+ * and what it inherited from `default-src`, since writing it ends the browser's
+ * fallback. With no additions the directive is left entirely untouched —
+ * materializing the baseline alone would *create* a restriction where
+ * nuxt-security's defaults leave the directive open (how `connect-src` stays
+ * HMR-safe in dev).
  */
 function tightenDirective(csp: Record<string, unknown>, name: string, baseline: string[], additions: string[]): void {
   if (additions.length === 0) return
-  const current = csp[name]
-  const existing = Array.isArray(current)
-    ? current as string[]
-    : typeof current === 'string'
-      ? current.split(/\s+/).filter(Boolean)
-      : baseline
+  const existing = sourcesOf(csp[name]) ?? [...baseline, ...inheritedSources(csp)]
   csp[name] = uniq([...existing, ...additions])
+}
+
+/** A directive's sources, from the array or the space-separated string nuxt-security accepts; `undefined` when unset. */
+function sourcesOf(value: unknown): string[] | undefined {
+  if (Array.isArray(value)) return value as string[]
+  return typeof value === 'string' ? value.split(/\s+/).filter(Boolean) : undefined
+}
+
+/**
+ * The places `default-src` allows: `'self'`, hosts and schemes. Its other
+ * quoted sources stay behind: `'none'` can't stand beside a source, and
+ * keywords, nonces and hashes say nothing about where a request may go.
+ */
+function inheritedSources(csp: Record<string, unknown>): string[] {
+  return (sourcesOf(csp['default-src']) ?? []).filter(source => source === '\'self\'' || !source.startsWith('\''))
 }
