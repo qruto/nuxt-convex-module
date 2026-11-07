@@ -90,6 +90,92 @@ describe('applyConvexSecurityDefaults', () => {
     expect(cspOf(rules)['connect-src']).toEqual(['\'self\'', 'https://api.example.com', ...connectSrc])
   })
 
+  it('keeps what default-src allowed in each directive it writes, which ends the fallback', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'default-src': ['\'self\'', 'https://api.example.com'],
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    const csp = cspOf(rules)
+    expect(csp['connect-src']).toEqual(['\'self\'', 'https://api.example.com', ...connectSrc])
+    expect(csp['img-src']).toEqual(['\'self\'', 'data:', 'https://api.example.com', ...resourceSrc])
+    expect(csp['media-src']).toEqual(['\'self\'', 'https://api.example.com', ...resourceSrc])
+  })
+
+  it('reads a default-src written as a space-separated string', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'default-src': '\'self\' https://api.example.com',
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    expect(cspOf(rules)['connect-src']).toEqual(['\'self\'', 'https://api.example.com', ...connectSrc])
+  })
+
+  it('takes only places from default-src: its keywords, nonces and hashes stay behind', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'default-src': ['\'none\'', '\'unsafe-inline\'', '\'nonce-abc\'', '\'sha256-abc=\'', 'https:'],
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    expect(cspOf(rules)['connect-src']).toEqual(['\'self\'', 'https:', ...connectSrc])
+  })
+
+  it('reads default-src only for a directive the app left unset', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'default-src': ['\'self\'', 'https://api.example.com'],
+          'connect-src': ['\'self\''],
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    expect(cspOf(rules)['connect-src']).toEqual(['\'self\'', ...connectSrc])
+  })
+
+  it('leaves connect-src on the fallback when there is nothing to add to it', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'default-src': ['\'self\'', 'https://api.example.com'],
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, [], resourceSrc)
+
+    expect(cspOf(rules)['connect-src']).toBeUndefined()
+  })
+
+  it('leaves a directive the app turned off with false, which nuxt-security omits from the header', () => {
+    const rules: SecurityRules = {
+      headers: {
+        contentSecurityPolicy: {
+          'connect-src': false,
+          'media-src': false,
+        },
+      },
+    }
+    applyConvexSecurityDefaults(rules, connectSrc, resourceSrc)
+
+    const csp = cspOf(rules)
+    expect(csp['connect-src']).toBe(false)
+    expect(csp['media-src']).toBe(false)
+    expect(csp['img-src']).toEqual(['\'self\'', 'data:', ...resourceSrc])
+  })
+
   it('does not duplicate origins already present', () => {
     const rules: SecurityRules = {
       headers: {
