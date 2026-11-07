@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { anyApi, type FunctionArgs, type FunctionReference } from 'convex/server'
 import { defineComponent, h, nextTick, provide, ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { useNuxtApp } from '#app'
+import { createError, useNuxtApp } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../src/runtime/vue/client'
 import {
   defaultAsyncPaginatedQueryKey,
@@ -74,6 +74,29 @@ async function mount(
   })
   const mounted = await mountSuspended(Wrapper)
   return { mounted, result }
+}
+
+/**
+ * Run `setupFn` as it runs after a failed server read: Nuxt hydrates the failure
+ * from `payload._errors` and keeps it instead of fetching again. This
+ * environment is not hydrating, so both are set for the setup and put back.
+ */
+function afterFailedServerRead(key: string, setupFn: () => AsyncPaginatedQueryReturn<Row>) {
+  return () => {
+    const nuxtApp = useNuxtApp()
+    const { isHydrating } = nuxtApp
+    const { serverRendered } = nuxtApp.payload
+    nuxtApp.payload._errors[key] = createError('server read failed')
+    nuxtApp.isHydrating = true
+    nuxtApp.payload.serverRendered = true
+    try {
+      return setupFn()
+    }
+    finally {
+      nuxtApp.isHydrating = isHydrating
+      nuxtApp.payload.serverRendered = serverRendered
+    }
+  }
 }
 
 describe('useAsyncPaginatedQuery', () => {
@@ -151,6 +174,53 @@ describe('useAsyncPaginatedQuery', () => {
     expect(() => result.results.value).not.toThrow()
     expect(result.error.value?.message).toBe('boom')
     expect(result.results.value).toStrictEqual([])
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('stops reporting a failed server read once the live page arrives', async () => {
+    const client = testClient()
+    const watchQuery = vi.spyOn(client, 'watchQuery')
+    const key = 'async-paginated:recovered'
+
+    const { mounted, result } = await mount(client, afterFailedServerRead(
+      key,
+      () => useAsyncPaginatedQuery(queryRef, {}, { initialNumItems: 2, key }),
+    ))
+    await result
+    expect(result.error.value?.message).toBe('server read failed')
+
+    seedPage(client, subscribedArgs(watchQuery), [{ _id: '1', body: 'live' }], true)
+    await nextTick()
+
+    expect(result.results.value).toStrictEqual([{ _id: '1', body: 'live' }])
+    expect(result.error.value).toBeNull()
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('reports a live error after a failed server read', async () => {
+    const client = testClient()
+    const watchQuery = vi.spyOn(client, 'watchQuery')
+    const key = 'async-paginated:live-error'
+
+    const { mounted, result } = await mount(client, afterFailedServerRead(
+      key,
+      () => useAsyncPaginatedQuery(queryRef, {}, { initialNumItems: 2, key }),
+    ))
+    await result
+
+    const args = subscribedArgs(watchQuery)
+    void client.mutation(mutationRef, {}, {
+      optimisticUpdate: (localStore) => {
+        localStore.setQuery(queryRef, args, new Error('boom') as never)
+      },
+    })
+    await nextTick()
+
+    expect(result.error.value?.message).toBe('boom')
 
     mounted.unmount()
     await client.close()

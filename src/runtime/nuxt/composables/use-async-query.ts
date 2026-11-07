@@ -89,7 +89,10 @@ export interface AsyncQueryReturn<T> extends PromiseLike<AsyncQueryData<T>> {
    * nothing has loaded (or while skipped).
    */
   data: ComputedRef<T | undefined>
-  /** The initial-fetch or live-subscription error, `null` when none. */
+  /**
+   * The initial-fetch or live-subscription error, `null` when none. A failed
+   * initial fetch stops counting once the live subscription has a value.
+   */
   error: ComputedRef<Error | null>
   /**
    * Initial-fetch status. Live pushes don't churn it: once data exists it
@@ -253,9 +256,15 @@ export function useAsyncQuery<Query extends FunctionReference<'query'> | Functio
   const data = computed<FunctionReturnType<Query> | undefined>(() =>
     liveValue.value !== undefined ? liveValue.value : payloadValue.value,
   )
-  const error = computed<Error | null>(
-    () => liveError.value ?? asyncData.error.value ?? null,
-  )
+  // Hydration restores a failed server read into `asyncData.error` and nothing
+  // clears it there, so `error` lets go of it where `data` and `status` do:
+  // once the live query has a value.
+  const error = computed<Error | null>(() => {
+    if (liveError.value) {
+      return liveError.value
+    }
+    return liveValue.value !== undefined ? null : asyncData.error.value ?? null
+  })
   const status = computed<AsyncQueryStatus>(() => {
     if (liveError.value) {
       return 'error'

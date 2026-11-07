@@ -96,7 +96,7 @@ fields plus the `error` and `refresh` of the Nuxt data contract.
 | <a id="results"></a> `results` | `ComputedRef`\<`Item`[]\> | The rows: the server-rendered first page until the live subscription delivers its own, then every loaded page, live. The server page is shown for the initial args only — after an args change the list is empty until the new first page arrives. | [src/runtime/nuxt/composables/use-async-paginated-query.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L49) |
 | <a id="status"></a> `status` | `ComputedRef`\<`"LoadingFirstPage"` \| `"CanLoadMore"` \| `"LoadingMore"` \| `"Exhausted"`\> | `usePaginatedQuery`'s status. Before the live subscription has its first page it is derived from the server page: `'CanLoadMore'` or `'Exhausted'`. | [src/runtime/nuxt/composables/use-async-paginated-query.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L54) |
 | <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | `true` while no page — server or live — is available yet, or more rows are loading. | [src/runtime/nuxt/composables/use-async-paginated-query.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L56) |
-| <a id="error"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The SSR fetch error or the live subscription's, `null` when none. Never thrown. | [src/runtime/nuxt/composables/use-async-paginated-query.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L58) |
+| <a id="error"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The live subscription's error, or the SSR fetch error until the live query has a page; `null` when none. Never thrown. | [src/runtime/nuxt/composables/use-async-paginated-query.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L58) |
 | <a id="loadmore"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more rows. Takes effect once the live subscription has its first page (`status` no longer derived from the server page). | [src/runtime/nuxt/composables/use-async-paginated-query.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L63) |
 | <a id="refresh"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the server-side first-page fetch (client-side it is a no-op — the subscription is live). | [src/runtime/nuxt/composables/use-async-paginated-query.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L65) |
 
@@ -127,7 +127,7 @@ the refs of [AsyncPaginatedQueryData](#asyncpaginatedquerydata).
 | <a id="results-1"></a> `results` | `ComputedRef`\<`Item`[]\> | The rows: the server-rendered first page until the live subscription delivers its own, then every loaded page, live. The server page is shown for the initial args only — after an args change the list is empty until the new first page arrives. | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`results`](#results) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L49) |
 | <a id="status-1"></a> `status` | `ComputedRef`\<`"LoadingFirstPage"` \| `"CanLoadMore"` \| `"LoadingMore"` \| `"Exhausted"`\> | `usePaginatedQuery`'s status. Before the live subscription has its first page it is derived from the server page: `'CanLoadMore'` or `'Exhausted'`. | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`status`](#status) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L54) |
 | <a id="isloading-1"></a> `isLoading` | `ComputedRef`\<`boolean`\> | `true` while no page — server or live — is available yet, or more rows are loading. | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`isLoading`](#isloading) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L56) |
-| <a id="error-1"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The SSR fetch error or the live subscription's, `null` when none. Never thrown. | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`error`](#error) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L58) |
+| <a id="error-1"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The live subscription's error, or the SSR fetch error until the live query has a page; `null` when none. Never thrown. | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`error`](#error) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L58) |
 | <a id="loadmore-1"></a> `loadMore` | (`numItems`) => `void` | Fetch `numItems` more rows. Takes effect once the live subscription has its first page (`status` no longer derived from the server page). | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`loadMore`](#loadmore) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L63) |
 | <a id="refresh-1"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the server-side first-page fetch (client-side it is a no-op — the subscription is live). | [`AsyncPaginatedQueryData`](#asyncpaginatedquerydata).[`refresh`](#refresh) | [src/runtime/nuxt/composables/use-async-paginated-query.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L65) |
 
@@ -210,9 +210,9 @@ useAsyncQuery(...)` blocks until the initial fetch settles, like
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
 | <a id="data"></a> `data` | `ComputedRef`\<`T` \| `undefined`\> | The query result: the server-fetched value first, replaced by the live subscription's value once the client receives one. `undefined` while nothing has loaded (or while skipped). | [src/runtime/nuxt/composables/use-async-query.ts:91](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L91) |
-| <a id="error-2"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The initial-fetch or live-subscription error, `null` when none. | [src/runtime/nuxt/composables/use-async-query.ts:93](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L93) |
-| <a id="status-2"></a> `status` | `ComputedRef`\<[`AsyncQueryStatus`](#asyncquerystatus)\> | Initial-fetch status. Live pushes don't churn it: once data exists it stays `'success'` unless the live subscription errors. | [src/runtime/nuxt/composables/use-async-query.ts:98](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L98) |
-| <a id="refresh-2"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the one-shot fetch. With a live subscription (`live: true`) the server already pushes updates, so this is mainly for retrying after an error; with `live: false` it is the way to get fresh data. | [src/runtime/nuxt/composables/use-async-query.ts:104](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L104) |
+| <a id="error-2"></a> `error` | `ComputedRef`\<`Error` \| `null`\> | The initial-fetch or live-subscription error, `null` when none. A failed initial fetch stops counting once the live subscription has a value. | [src/runtime/nuxt/composables/use-async-query.ts:96](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L96) |
+| <a id="status-2"></a> `status` | `ComputedRef`\<[`AsyncQueryStatus`](#asyncquerystatus)\> | Initial-fetch status. Live pushes don't churn it: once data exists it stays `'success'` unless the live subscription errors. | [src/runtime/nuxt/composables/use-async-query.ts:101](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L101) |
+| <a id="refresh-2"></a> `refresh` | (`opts?`) => `Promise`\<`void`\> | Re-run the one-shot fetch. With a live subscription (`live: true`) the server already pushes updates, so this is mainly for retrying after an error; with `live: false` it is the way to get fresh data. | [src/runtime/nuxt/composables/use-async-query.ts:107](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L107) |
 
 #### Methods
 
@@ -271,7 +271,7 @@ Request status of a [useAsyncQuery](#useasyncquery) call — mirrors Nuxt's
 type AsyncQueryData<T> = Pick<AsyncQueryReturn<T>, "data" | "error" | "status" | "refresh">;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:113](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L113)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:116](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L116)
 
 The reactive half of [AsyncQueryReturn](#asyncqueryreturn) — what `await useAsyncQuery(...)`
 resolves to, and the shape to annotate a value passed on from the call site.
@@ -290,7 +290,7 @@ resolves to, and the shape to annotate a value passed on from the call site.
 const useConvexAsyncPaginatedQuery: <Query>(query, args, options) => AsyncPaginatedQueryReturn<PaginatedQueryItem<Query>> = useAsyncPaginatedQuery;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-paginated-query.ts:237](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L237)
+Defined in: [src/runtime/nuxt/composables/use-async-paginated-query.ts:242](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-paginated-query.ts#L242)
 
 A paginated Convex query the Nuxt way: the first page is fetched during SSR
 and hydrated from the payload, then [usePaginatedQuery](/api-reference/reference/client#usepaginatedquery) takes over on
@@ -343,7 +343,7 @@ server page only matters for the first paint.
 const useConvexAsyncQuery: <Query>(query, args?, options) => AsyncQueryReturn<FunctionReturnType<Query>> = useAsyncQuery;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:317](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L317)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:326](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L326)
 
 Load a Convex query the Nuxt way: fetched on the server during SSR,
 hydrated through the Nuxt payload, then seamlessly upgraded to a live
@@ -466,7 +466,7 @@ function useAsyncQuery<Query>(
 ): AsyncQueryReturn<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/nuxt/composables/use-async-query.ts:160](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L160)
+Defined in: [src/runtime/nuxt/composables/use-async-query.ts:163](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/composables/use-async-query.ts#L163)
 
 Load a Convex query the Nuxt way: fetched on the server during SSR,
 hydrated through the Nuxt payload, then seamlessly upgraded to a live
