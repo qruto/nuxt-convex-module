@@ -1,4 +1,4 @@
-// PARITY: A-01, A-09
+// PARITY: A-01, A-09, A-11
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { sep } from 'node:path'
@@ -254,4 +254,39 @@ describe('with a custom authRoute and auth client', () => {
     expect(r.options.routeRules?.['/auth/**']).toMatchObject({ cache: false })
     expect(r.options.alias['#convex/auth-client']?.split(sep).join('/')).toMatch(/registration\/auth-client$/)
   })
+})
+
+describe('nuxt-security\'s defaults', () => {
+  type Security = { rateLimiter: unknown, headers: { strictTransportSecurity: unknown, contentSecurityPolicy: Record<string, unknown> } }
+
+  async function securityOf(dev: boolean, overrides: { convex?: Record<string, unknown>, security?: Record<string, unknown> } = {}): Promise<Security> {
+    const nuxt = await loadNuxt({
+      cwd: fixture,
+      dev,
+      ready: true,
+      overrides: { ...overrides, convex: { devScript: false, ...overrides.convex } } as never,
+    })
+    await nuxt.close()
+    return nuxt.options.security as unknown as Security
+  }
+
+  it('turns off the limiter, the upgrade and HSTS on nuxt dev', async () => {
+    const { rateLimiter, headers } = await securityOf(true)
+    expect(rateLimiter).toBe(false)
+    expect(headers.strictTransportSecurity).toBe(false)
+    expect(headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(false)
+  }, 60_000)
+
+  it('keeps all three in a production build', async () => {
+    const { rateLimiter, headers } = await securityOf(false)
+    expect(rateLimiter).toMatchObject({ tokensPerInterval: 150 })
+    expect(headers.strictTransportSecurity).toMatchObject({ includeSubdomains: true })
+    expect(headers.contentSecurityPolicy['upgrade-insecure-requests']).toBe(true)
+  }, 60_000)
+
+  it('lets a value of the app win on nuxt dev', async () => {
+    const { rateLimiter, headers } = await securityOf(true, { security: { rateLimiter: { tokensPerInterval: 10, interval: 1000 } } })
+    expect(rateLimiter).toMatchObject({ tokensPerInterval: 10 })
+    expect(headers.strictTransportSecurity).toBe(false)
+  }, 60_000)
 })

@@ -174,7 +174,7 @@ export default defineNuxtModule<ModuleOptions>({
   // is declared otherwise: kit fails the build resolving an absent package.
   moduleDependencies: (nuxt): ModuleDependencies => (
     resolveSecurityState(nuxt, readSecurityOption(nuxt)).enabled
-      ? { 'nuxt-security': {} }
+      ? { 'nuxt-security': nuxt.options.dev ? { defaults: DEV_SECURITY_DEFAULTS } : {} }
       : {}
   ),
   async setup(options, nuxt) {
@@ -341,6 +341,20 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   }
   return flags
 }
+
+/**
+ * What `nuxt dev` turns off in nuxt-security, under the app's own options.
+ * Every reload and DevTools probe counts against the limiter, whose 429s read
+ * as page failures, and on a plain-http dev port Safari obeys the other two
+ * for localhost, so every asset goes to https:// and fails.
+ */
+const DEV_SECURITY_DEFAULTS = {
+  rateLimiter: false,
+  headers: {
+    contentSecurityPolicy: { 'upgrade-insecure-requests': false },
+    strictTransportSecurity: false,
+  },
+} as const
 
 /** The raw `convex.security` option — read before module options are resolved. */
 function readSecurityOption(nuxt: Nuxt): boolean | undefined {
