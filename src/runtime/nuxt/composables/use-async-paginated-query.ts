@@ -54,7 +54,7 @@ export interface AsyncPaginatedQueryData<Item> {
   status: ComputedRef<PaginationStatus>
   /** `true` while no page — server or live — is available yet, or more rows are loading. */
   isLoading: ComputedRef<boolean>
-  /** The SSR fetch error or the live subscription's, `null` when none. Never thrown. */
+  /** The live subscription's error, or the SSR fetch error until the live query has a page; `null` when none. Never thrown. */
   error: ComputedRef<Error | null>
   /**
    * Fetch `numItems` more rows. Takes effect once the live subscription has
@@ -209,9 +209,14 @@ export function useAsyncPaginatedQuery<Query extends PaginatedQueryReference>(
     return 'LoadingFirstPage'
   })
   const isLoading = computed(() => status.value === 'LoadingFirstPage' || status.value === 'LoadingMore')
-  const error = computed<Error | null>(
-    () => liveState.value?.error ?? clientError.value ?? asyncData.error.value ?? null,
-  )
+  // Hydration restores a failed server read into `asyncData.error` and nothing
+  // clears it there, so `error` lets go of it where `results` and `status` do:
+  // once the live query has a page.
+  const error = computed<Error | null>(() => {
+    const liveError = liveState.value?.error ?? clientError.value
+    if (liveError) return liveError
+    return liveHasPage.value ? null : asyncData.error.value ?? null
+  })
 
   const loadMore = (numItems: number) => {
     live?.loadMore(numItems)
