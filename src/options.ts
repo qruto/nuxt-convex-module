@@ -212,7 +212,7 @@ export function integrationWarnings(
   }
   if (flags.polar && !isInstalled('@polar-sh/checkout')) {
     warnings.push(
-      '`@convex-dev/polar` is installed but its peer `@polar-sh/checkout` is not — `<CheckoutLink>` imports it and the build fails the moment the component is used. Run `npm install @polar-sh/checkout@~0.4.0`.',
+      '`@convex-dev/polar` is installed but its peer `@polar-sh/checkout` is not — `<CheckoutLink>` imports it and the build fails the moment the component is used. Run `npm install @polar-sh/checkout@~0.6.0`.',
     )
   }
   return warnings
