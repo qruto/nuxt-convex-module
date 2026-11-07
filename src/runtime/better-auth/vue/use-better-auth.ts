@@ -166,10 +166,25 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     if (!forceRefreshToken && store.pendingToken && store.pendingTokenVersion === version) {
       return store.pendingToken
     }
+    // PARITY: D-16
+    // Only a 401 says the session is gone. Any other failure keeps this
+    // session's token: on `null` the sync client signs a live connection out
+    // and never retries, while the same token leaves it running until expiry.
+    const afterFailure = () => {
+      if (cachedToken.value && !holdsAnotherUsersToken.value && (store.cachedTokenVersion === version || store.cachedTokenVersion === PENDING_AUTH_VERSION)) {
+        return cachedToken.value
+      }
+      cachedToken.value = null
+      store.cachedTokenVersion = version
+      return null
+    }
     store.pendingTokenVersion = version
     const pending = store.pendingToken = client.convex
       .token({ fetchOptions: { throw: false } })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error && error.status !== 401) {
+          return afterFailure()
+        }
         const token = data?.token || null
         store.cachedTokenVersion = version
         cachedToken.value = token
@@ -177,11 +192,7 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
         triggerRef(cachedToken)
         return token
       })
-      .catch(() => {
-        cachedToken.value = null
-        store.cachedTokenVersion = version
-        return null
-      })
+      .catch(afterFailure)
       .finally(() => {
         store.pendingToken = null
         store.pendingTokenVersion = null
