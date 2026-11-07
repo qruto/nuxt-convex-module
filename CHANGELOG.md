@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.12.4
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.3...v0.12.4)
+
+### 🩹 Fixes
+
+- Stop reporting a failed server read once the live query has a value ([#137](https://github.com/qruto/nuxt-convex-module/pull/137))
+- Stop reporting a failed server read once the live page arrives ([#138](https://github.com/qruto/nuxt-convex-module/pull/138))
+
+#### Better Auth
+
+- Keep the token when a refresh fails ([#136](https://github.com/qruto/nuxt-convex-module/pull/136))
+
+#### Auth
+
+- Keep a live connection signed in across auth changes ([#135](https://github.com/qruto/nuxt-convex-module/pull/135))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump the all-non-major group with 11 updates ([#133](https://github.com/qruto/nuxt-convex-module/pull/133))
+
+#### Parity
+
+- Track convex 1.49.0 ([#132](https://github.com/qruto/nuxt-convex-module/pull/132))
+- Record upstream bug fixes as F-* entries ([#139](https://github.com/qruto/nuxt-convex-module/pull/139))
+
+#### Website
+
+- Drop the dev server's port 24678 workaround ([#134](https://github.com/qruto/nuxt-convex-module/pull/134))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.12.3
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.2...v0.12.3)
