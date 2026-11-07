@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { anyApi, type FunctionReference } from 'convex/server'
 import { defineComponent, h, nextTick, provide, ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { createError, useNuxtApp } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../src/runtime/vue/client'
 import { defaultAsyncQueryKey, useAsyncQuery, type AsyncQueryReturn } from '../../src/runtime/nuxt/composables/use-async-query'
 import { nodeWebSocket } from '../helpers/in_memory_web_socket'
@@ -55,6 +56,30 @@ async function mountAsyncQuery(
   })
   const mounted = await mountSuspended(Wrapper)
   return { mounted, result }
+}
+
+/**
+ * Runs `setupFn` the way the browser does after a server read failed: Nuxt
+ * hydrates the failure from `payload._errors` and, while hydrating, keeps it
+ * instead of fetching again. This environment is a client build that is not
+ * hydrating, so both are set for the setup and put back after it.
+ */
+function afterFailedServerRead(key: string, setupFn: () => AsyncQueryReturn<unknown>) {
+  return () => {
+    const nuxtApp = useNuxtApp()
+    const { isHydrating } = nuxtApp
+    const { serverRendered } = nuxtApp.payload
+    nuxtApp.payload._errors[key] = createError('server read failed')
+    nuxtApp.isHydrating = true
+    nuxtApp.payload.serverRendered = true
+    try {
+      return setupFn()
+    }
+    finally {
+      nuxtApp.isHydrating = isHydrating
+      nuxtApp.payload.serverRendered = serverRendered
+    }
+  }
 }
 
 describe('useAsyncQuery', () => {
@@ -158,6 +183,92 @@ describe('useAsyncQuery', () => {
     expect(String(result.error.value)).toContain('live boom')
     // asyncData still holds the fetched payload, which `data` falls back to.
     expect(result.data.value).toStrictEqual({ x: 1 })
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('stops reporting a failed server read once the live subscription has a value', async () => {
+    const client = testClient()
+    const key = 'async-query:ssr-failed'
+
+    const { mounted, result } = await mountAsyncQuery(client, afterFailedServerRead(key, () =>
+      useAsyncQuery(queryRef, { arg: 's' }, { key }),
+    ))
+    await nextTick()
+
+    // Before the subscription answers, the server's failure is all there is.
+    expect(result.data.value).toBeUndefined()
+    expect(result.status.value).toBe('error')
+    expect(String(result.error.value)).toContain('server read failed')
+
+    seed(client, { arg: 's' }, { x: 1 })
+    await nextTick()
+
+    expect(result.data.value).toStrictEqual({ x: 1 })
+    expect(result.status.value).toBe('success')
+    expect(result.error.value).toBeNull()
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('counts a live null as recovery from a failed server read', async () => {
+    const client = testClient()
+    const key = 'async-query:ssr-failed-null'
+
+    const { mounted, result } = await mountAsyncQuery(client, afterFailedServerRead(key, () =>
+      useAsyncQuery(queryRef, { arg: 'sn' }, { key }),
+    ))
+    await nextTick()
+
+    seed(client, { arg: 'sn' }, null)
+    await nextTick()
+
+    expect(result.data.value).toBeNull()
+    expect(result.status.value).toBe('success')
+    expect(result.error.value).toBeNull()
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('reports a live error that follows the recovery from a failed server read', async () => {
+    const client = testClient()
+    const key = 'async-query:ssr-failed-live-error'
+
+    const { mounted, result } = await mountAsyncQuery(client, afterFailedServerRead(key, () =>
+      useAsyncQuery(queryRef, { arg: 'se' }, { key }),
+    ))
+    await nextTick()
+
+    seed(client, { arg: 'se' }, { x: 1 })
+    await nextTick()
+    seed(client, { arg: 'se' }, new Error('live boom'))
+    await nextTick()
+
+    expect(result.status.value).toBe('error')
+    expect(String(result.error.value)).toContain('live boom')
+
+    mounted.unmount()
+    await client.close()
+  })
+
+  it('live: false keeps reporting a failed server read, with nothing to recover it', async () => {
+    const client = testClient()
+    const key = 'async-query:ssr-failed-not-live'
+
+    const { mounted, result } = await mountAsyncQuery(client, afterFailedServerRead(key, () =>
+      useAsyncQuery(queryRef, { arg: 'sl' }, { key, live: false }),
+    ))
+    await nextTick()
+
+    seed(client, { arg: 'sl' }, { x: 1 })
+    await nextTick()
+
+    expect(result.data.value).toBeUndefined()
+    expect(result.status.value).toBe('error')
+    expect(String(result.error.value)).toContain('server read failed')
 
     mounted.unmount()
     await client.close()

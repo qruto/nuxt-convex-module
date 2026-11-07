@@ -497,7 +497,8 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Port** · [`nuxt/composables/use-async-query.ts`](./src/runtime/nuxt/composables/use-async-query.ts)
   — `useAsyncQuery` / `useConvexAsyncQuery`, returning `{ data, error, status, refresh }`;
   exported from [`nuxt/app.ts`](./src/runtime/nuxt/app.ts) as the `nuxt-convex-module/app` subpath
-- **Pinned by** · `test/nuxt/use-async-query.test.ts`, `test/nuxt/public-surface.test.ts`
+- **Pinned by** · `test/nuxt/use-async-query.test.ts`, `test/nuxt/public-surface.test.ts`,
+  `test/e2e/hydration-recovery.test.ts`
 - **Why** · the Nuxt-idiomatic data layer: `useAsyncData`-style SSR fetch → payload hydration →
   live subscription upgrade. Lives under `runtime/nuxt/` (it imports `#app`) but deliberately
   **not** in the ported `nuxt/index.ts`, which maps file-for-file to `nextjs/index.ts` — hence

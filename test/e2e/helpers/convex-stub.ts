@@ -40,8 +40,11 @@ export interface ConvexStub {
  * `{ querySet, identity, ts }` exactly, or `RemoteQuerySet.transition`
  * throws — so `ts` advances by one per transition and `querySet` follows the
  * client's `newVersion`.
+ *
+ * `httpQueryError` fails the HTTP read with that message and leaves the sync
+ * protocol answering: a server render that fails and a browser that recovers.
  */
-export function startConvexStub(options: { queryValue?: unknown } = {}): Promise<ConvexStub> {
+export function startConvexStub(options: { queryValue?: unknown, httpQueryError?: string } = {}): Promise<ConvexStub> {
   const requests: RecordedRequest[] = []
 
   const server: Server = createServer((req, res) => {
@@ -56,13 +59,12 @@ export function startConvexStub(options: { queryValue?: unknown } = {}): Promise
       })
 
       if (req.url === '/api/query') {
-        // The shape `ConvexHttpClient` expects: { status, value, logLines }.
+        // The shapes `ConvexHttpClient` expects: { status, value, logLines }
+        // and { status, errorMessage, logLines }.
         res.writeHead(200, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({
-          status: 'success',
-          value: options.queryValue ?? 'stub-value',
-          logLines: [],
-        }))
+        res.end(JSON.stringify(options.httpQueryError === undefined
+          ? { status: 'success', value: options.queryValue ?? 'stub-value', logLines: [] }
+          : { status: 'error', errorMessage: options.httpQueryError, logLines: [] }))
         return
       }
 
