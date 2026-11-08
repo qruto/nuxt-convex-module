@@ -41,7 +41,10 @@ function name(error: Error, prefix: string): void {
   }
   if (error.message !== `${prefix}${original}`) return
   unnamed.set(error, { message: original, stack })
-  if (original && stack?.includes(original)) error.stack = stack.replace(original, () => error.message)
+  // Only the header V8 writes, `<name>: <message>`: a message such as
+  // `Error` also matches the name, and other engines' stacks carry no header.
+  const header = `${error.name}: ${original}`
+  if (original && stack?.startsWith(header)) error.stack = `${error.name}: ${error.message}${stack.slice(header.length)}`
 }
 
 /**

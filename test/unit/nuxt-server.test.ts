@@ -158,6 +158,15 @@ describe('Nuxt server utilities', () => {
       expect(thrown.stack?.split('\n')[0]).toBe(`Error: [CONVEX ${prefix}(tasks:list)] [Request ID: 1] Server Error`)
     })
 
+    it('rewrites the stack\'s header, not the first match of the message', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const thrown = new Error('Error')
+      mockQuery.mockRejectedValueOnce(thrown)
+
+      await expect(fetchQuery(mockFunctionReference<'query'>('tasks:list'), {})).rejects.toBe(thrown)
+      expect(thrown.stack?.split('\n')[0]).toBe('Error: [CONVEX Q(tasks:list)] Error')
+    })
+
     it('leaves an error that already names its function alone', async () => {
       const { fetchQuery } = await import('../../src/runtime/nuxt/index')
       const thrown = new Error('[CONVEX Q(other:fn)] boom')

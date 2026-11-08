@@ -466,7 +466,8 @@ What an error says, never what it is: the class, `data` and identity stay upstre
   [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
 - **Pinned by** · `test/unit/nuxt-server.test.ts` — "fetchQuery names the function in the error it rethrows,
   as the browser client does" (and its mutation and action rows), "leaves an error that already names
-  its function alone", "rethrows an error whose message cannot be written untouched", "rethrows a value
+  its function alone", "rewrites the stack's header, not the first match of the message", "rethrows an error whose
+  message cannot be written untouched", "rethrows a value
   that is not an Error untouched"; `test/unit/auth/nuxt/server.test.ts` — "checks for an auth error on the
   message without the function name"
 - **On sync** · keep; port changes to the calls, and drop the entry if `ConvexHttpClient` starts naming

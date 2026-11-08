@@ -405,12 +405,17 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-1' } })
     tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-2' } })
-    const useSession = vi.spyOn(mockAuthClient, 'useSession')
+    const nextSession = ref(sessionRef.value)
+    const useSession = vi.spyOn(mockAuthClient, 'useSession').mockReturnValueOnce(sessionRef as never).mockReturnValueOnce(nextSession as never)
 
     expect(await useBetterAuth().fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-1')
     resetBetterAuthState()
 
     expect(await useBetterAuth().fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-2')
+    // The old subscription is gone: its session signing out clears nothing.
+    sessionRef.value = { data: null, isPending: false }
+    expect(await useBetterAuth().fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-2')
+    expect(tokenMock).toHaveBeenCalledTimes(2)
     expect(useSession).toHaveBeenCalledTimes(2)
     useSession.mockRestore()
   })
