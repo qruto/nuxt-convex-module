@@ -26,10 +26,11 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/client` | `ConvexVueClient`, `ConvexClientKey`, every composable (`useQuery`, `useMutation`, `useAction`, pagination, upload, …), auth (`provideConvexAuth`, `useConvexAuth`, `<Authenticated>` …), `usePreloadedQuery`, and all public types |
 | `nuxt-convex-module/server` | Nitro/server: `fetchQuery`, `fetchMutation`, `fetchAction`, `preloadQuery`, `preloadedQueryResult` |
 | `nuxt-convex-module/app` | Nuxt app context: `useAsyncQuery`, `useAsyncPaginatedQuery` and their `useConvex*` twins, with the `AsyncQuery*` and `AsyncPaginatedQuery*` types |
+| `nuxt-convex-module/testing` | for your own tests: `resetBetterAuthState()`, which forgets the token cache and session subscription Better Auth keeps for the app's lifetime. Load it in `@nuxt/test-utils`' `nuxt` environment |
 | `nuxt-convex-module/clerk/client` | `provideConvexAuthFromClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/client` | `provideConvexAuthFromAuth0`, `<ConvexProviderWithAuth0>` |
 | `nuxt-convex-module/better-auth/client` | `useBetterAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
 | `nuxt-convex-module/better-auth/server` | Nitro/server: `convexAuth(event)` (auto-imported in server code; import explicitly for the `ConvexAuthOptions` / `ConvexAuthService` types) |
 | `nuxt-convex-module/polar/client` | `<CheckoutLink>`, `<CustomerPortalLink>` |
 
-The core, Clerk, Auth0 and Polar entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/server` and `/app` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.
+The core, Clerk, Auth0 and Polar entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/server`, `/app` and `/testing` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.

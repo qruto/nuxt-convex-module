@@ -147,7 +147,8 @@ export async function fetchQuery<Query extends FunctionReference<'query'> | Func
 ): Promise<FunctionReturnType<Query>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.query(query, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('query', query, client.query(query, fnArgs || {}))
 }
 
 /**
@@ -170,7 +171,8 @@ export async function fetchMutation<
 ): Promise<FunctionReturnType<Mutation>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.mutation(mutation, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('mutation', mutation, client.mutation(mutation, fnArgs || {}))
 }
 
 /**
@@ -191,7 +193,38 @@ export async function fetchAction<Action extends FunctionReference<'action'> | F
 ): Promise<FunctionReturnType<Action>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.action(action, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('action', action, client.action(action, fnArgs || {}))
+}
+
+// PARITY: D-17
+// The browser client names the function in every error it throws
+// (`[CONVEX M(billing:checkout)] …`, convex's `createHybridErrorStacktrace`);
+// `ConvexHttpClient` names none, so a failed server call says nothing about
+// which function it ran. Prefix the message in the browser's form, on the
+// error that was thrown: a `ConvexError` keeps its class and `data`, and
+// whoever reads it (`jwtCache.isAuthError` in `convexAuth`) gets the same
+// object. An error that already carries a prefix is left alone.
+const SOURCE_PREFIX = { query: 'Q', mutation: 'M', action: 'A' } as const
+
+async function withFunctionName<T>(
+  source: keyof typeof SOURCE_PREFIX,
+  reference: Parameters<typeof getFunctionName>[0],
+  call: Promise<T>,
+): Promise<T> {
+  try {
+    return await call
+  }
+  catch (error) {
+    if (error instanceof Error && !error.message.startsWith('[CONVEX ')) {
+      const original = error.message
+      // Read first: V8 formats the stack on first read, from the message as it is then.
+      const stack = error.stack
+      error.message = `[CONVEX ${SOURCE_PREFIX[source]}(${getFunctionName(reference)})] ${original}`
+      if (original && stack?.includes(original)) error.stack = stack.replace(original, () => error.message)
+    }
+    throw error
+  }
 }
 
 // The published `convex` types omit the internal `setFetchOptions` /

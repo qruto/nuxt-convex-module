@@ -43,6 +43,34 @@ export function autoImportedAs(name: string, mode: AutoImports, registered: read
   return prefixed !== name && registered.includes(prefixed) ? undefined : prefixed
 }
 
+/** The `convex.exclude` option: registered names to skip, each exact or a pattern. */
+export type ExcludedNames = ReadonlyArray<string | RegExp>
+
+/** How the module registers names: `convex.autoImports` and `convex.exclude` together. */
+export interface RegistrationPolicy {
+  autoImports: AutoImports
+  exclude: ExcludedNames
+}
+
+/** Whether `exclude` names `name`: equal to a string, or matched by a pattern. */
+export function isExcluded(name: string, exclude: ExcludedNames): boolean {
+  return exclude.some((rule) => {
+    if (typeof rule === 'string') return rule === name
+    // A `g` or `y` pattern keeps its position between calls; start each one fresh.
+    rule.lastIndex = 0
+    return rule.test(name)
+  })
+}
+
+/**
+ * The name `policy` registers `name` under, or `undefined` when it skips it:
+ * {@link autoImportedAs}, then {@link isExcluded} on the name the app would see.
+ */
+export function registeredAs(name: string, policy: RegistrationPolicy, registered: readonly string[]): string | undefined {
+  const as = autoImportedAs(name, policy.autoImports, registered)
+  return as === undefined || isExcluded(as, policy.exclude) ? undefined : as
+}
+
 const vue = (file: string) => `runtime/vue/${file}`
 const composable = (file: string) => vue(`composables/${file}`)
 const asyncQuery = 'runtime/nuxt/composables/use-async-query'

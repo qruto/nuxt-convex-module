@@ -7,7 +7,7 @@ import { clientDependencies, deploymentEnv, deploymentWarnings, formatStartupSum
 import { getConvexAliases } from './aliases'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
-import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, autoImportedAs, type AutoImports, type Integration, type Registration } from './registry'
+import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isExcluded, registeredAs, type AutoImports, type ExcludedNames, type Integration, type Registration, type RegistrationPolicy } from './registry'
 import { convexTypeFallbackContents } from './templates'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
@@ -120,6 +120,20 @@ export interface ModuleOptions {
    */
   autoImports?: AutoImports
   /**
+   * Names to leave unregistered, matched against the name the app would see
+   * (after `prefixed` renames it): app auto-imports, Nitro auto-imports,
+   * components and the `convex-auth` route middleware. A string matches one
+   * name exactly, a `RegExp` every name it matches. Everything stays
+   * importable from the subpath exports. Meant for a module that builds on
+   * this one and registers names of its own for the same things.
+   *
+   * @example
+   * ```ts
+   * convex: { exclude: [/^useConvex/, 'ConvexImage', 'convex-auth'] }
+   * ```
+   */
+  exclude?: ExcludedNames
+  /**
    * Convex panel in Nuxt DevTools (dev only): connection state, live query
    * subscriptions, auth state, and client logs. Enabled by default whenever
    * Nuxt DevTools is; set `false` to disable just the Convex tab.
@@ -223,10 +237,10 @@ export default defineNuxtModule<ModuleOptions>({
     registerConvexAliases(nuxt)
 
     registerConvexTypeFallback(nuxt)
-    const autoImports = options.autoImports ?? true
-    registerVueComposables(resolver, autoImports)
-    registerAuthComponents(resolver, autoImports)
-    const integrations = registerIntegrations(resolver, nuxt, options, autoImports, diagnostics.authRoute)
+    const policy: RegistrationPolicy = { autoImports: options.autoImports ?? true, exclude: options.exclude ?? [] }
+    registerVueComposables(resolver, policy)
+    registerAuthComponents(resolver, policy)
+    const integrations = registerIntegrations(resolver, nuxt, options, policy, diagnostics.authRoute)
     watchConvexCodegen(nuxt)
 
     if (nuxt.options.dev && options.devtools !== false && isDevtoolsUiEnabled(nuxt)) {
@@ -286,7 +300,7 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
  * `@convex-dev/polar` are separate upstream packages — here they light up
  * automatically so the consumer keeps a single `modules` entry.
  */
-function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, autoImports: AutoImports, authRoute: string): IntegrationFlags {
+function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions, policy: RegistrationPolicy, authRoute: string): IntegrationFlags {
   type Key = keyof IntegrationFlags & keyof ModuleOptions
   const report = (key: Key, pkg: string, state: ReturnType<typeof resolveIntegrationState>): boolean => {
     if (state.missingPackage) {
@@ -302,7 +316,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
-    registerBetterAuth(resolver, authRoute, autoImports)
+    registerBetterAuth(resolver, authRoute, policy)
   }
   else {
     // No auth integration manages the client — provide a base one so the data
@@ -312,17 +326,17 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
 
   const clerk = resolve('clerk', '@clerk/vue')
   if (clerk) {
-    registerClerk(resolver, autoImports)
+    registerClerk(resolver, policy)
   }
 
   const auth0 = resolve('auth0', '@auth0/auth0-vue')
   if (auth0) {
-    registerAuth0(resolver, autoImports)
+    registerAuth0(resolver, policy)
   }
 
   const polar = resolve('polar', '@convex-dev/polar')
   if (polar) {
-    registerPolarComponents(resolver, autoImports)
+    registerPolarComponents(resolver, policy)
   }
 
   const security = report('security', 'nuxt-security', resolveSecurityState(nuxt, options.security))
@@ -541,8 +555,8 @@ function registerConvexTypeFallback(nuxt: Nuxt): void {
  * registered by their auto-enabled integrations below. The lists are data in
  * `src/registry.ts`, where the docs gate reads them too.
  */
-function registerVueComposables(resolver: Resolver, autoImports: AutoImports): void {
-  registerIntegrationImports(resolver, 'core', autoImports)
+function registerVueComposables(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerIntegrationImports(resolver, 'core', policy)
 }
 
 /**
@@ -551,14 +565,14 @@ function registerVueComposables(resolver: Resolver, autoImports: AutoImports): v
  * `<AuthRefreshing>` straight into templates — mirroring the React
  * integration's exports.
  */
-function registerAuthComponents(resolver: Resolver, autoImports: AutoImports): void {
-  registerComponents(resolver, 'core', autoImports)
+function registerAuthComponents(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerComponents(resolver, 'core', policy)
 }
 
-/** `addImports` + `addServerImports` for everything an integration registers that `autoImports` keeps. */
-function registerIntegrationImports(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
+/** `addImports` + `addServerImports` for everything an integration registers that the policy keeps. */
+function registerIntegrationImports(resolver: Resolver, integration: Integration, policy: RegistrationPolicy): void {
   const kept = (entries: Registration[]) => entries.flatMap((entry) => {
-    const as = autoImportedAs(entry.name, autoImports, entries.map(e => e.name))
+    const as = registeredAs(entry.name, policy, entries.map(e => e.name))
     return as ? [{ ...entry, as, from: resolver.resolve(`./${entry.from}`) }] : []
   })
   const app = kept(APP_IMPORTS[integration])
@@ -567,11 +581,11 @@ function registerIntegrationImports(resolver: Resolver, integration: Integration
   if (server.length > 0) addServerImports(server)
 }
 
-/** `addComponent` for everything an integration registers that `autoImports` keeps, under the name it keeps it as. */
-function registerComponents(resolver: Resolver, integration: Integration, autoImports: AutoImports): void {
+/** `addComponent` for everything an integration registers that the policy keeps, under the name it keeps it as. */
+function registerComponents(resolver: Resolver, integration: Integration, policy: RegistrationPolicy): void {
   const entries = APP_COMPONENTS[integration]
   for (const { name, from } of entries) {
-    const as = autoImportedAs(name, autoImports, entries.map(e => e.name))
+    const as = registeredAs(name, policy, entries.map(e => e.name))
     if (as) addComponent({ name: as, filePath: resolver.resolve(`./${from}`), export: name })
   }
 }
@@ -611,12 +625,12 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
  * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
  * server helper.
  */
-function registerBetterAuth(resolver: Resolver, authRoute: string, autoImports: AutoImports): void {
+function registerBetterAuth(resolver: Resolver, authRoute: string, policy: RegistrationPolicy): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
 
-  registerIntegrationImports(resolver, 'betterAuth', autoImports)
-  registerComponents(resolver, 'betterAuth', autoImports)
+  registerIntegrationImports(resolver, 'betterAuth', policy)
+  registerComponents(resolver, 'betterAuth', policy)
 
   addServerHandler({
     route: `${authRoute}/**`,
@@ -630,11 +644,13 @@ function registerBetterAuth(resolver: Resolver, authRoute: string, autoImports: 
     prerender: false,
     security: AUTH_PROXY_SECURITY_RULES,
   })
-  addRouteMiddleware({
-    name: 'convex-auth',
-    path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
-    global: false,
-  })
+  if (!isExcluded('convex-auth', policy.exclude)) {
+    addRouteMiddleware({
+      name: 'convex-auth',
+      path: resolver.resolve('./runtime/better-auth/nuxt/middleware'),
+      global: false,
+    })
+  }
 }
 
 /**
@@ -651,9 +667,9 @@ function registerBaseConvexClient(resolver: Resolver): void {
  * `provideConvexAuthFromClerk` composable and the `<ConvexProviderWithClerk>`
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
-function registerClerk(resolver: Resolver, autoImports: AutoImports): void {
-  registerIntegrationImports(resolver, 'clerk', autoImports)
-  registerComponents(resolver, 'clerk', autoImports)
+function registerClerk(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerIntegrationImports(resolver, 'clerk', policy)
+  registerComponents(resolver, 'clerk', policy)
 }
 
 /**
@@ -661,15 +677,15 @@ function registerClerk(resolver: Resolver, autoImports: AutoImports): void {
  * `provideConvexAuthFromAuth0` composable and the `<ConvexProviderWithAuth0>`
  * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
  */
-function registerAuth0(resolver: Resolver, autoImports: AutoImports): void {
-  registerIntegrationImports(resolver, 'auth0', autoImports)
-  registerComponents(resolver, 'auth0', autoImports)
+function registerAuth0(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerIntegrationImports(resolver, 'auth0', policy)
+  registerComponents(resolver, 'auth0', policy)
 }
 
 /**
  * Register the Polar billing components (`<CheckoutLink>` / `<CustomerPortalLink>`,
  * Vue ports of `@convex-dev/polar/react`) as global components.
  */
-function registerPolarComponents(resolver: Resolver, autoImports: AutoImports): void {
-  registerComponents(resolver, 'polar', autoImports)
+function registerPolarComponents(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerComponents(resolver, 'polar', policy)
 }

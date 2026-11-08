@@ -172,7 +172,7 @@ A promise of the query's result.
 function fetchMutation<Mutation>(mutation, ...args): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:165](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L165)
+Defined in: [src/runtime/nuxt/index.ts:166](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L166)
 
 Execute a Convex mutation function.
 
@@ -203,7 +203,7 @@ A promise of the mutation's result.
 function fetchAction<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/nuxt/index.ts:188](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L188)
+Defined in: [src/runtime/nuxt/index.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/nuxt/index.ts#L190)
 
 Execute a Convex action function.
 

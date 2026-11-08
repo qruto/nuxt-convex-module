@@ -136,6 +136,45 @@ describe('Nuxt server utilities', () => {
     })
   })
 
+  // PARITY: D-17
+  describe('function names on errors', () => {
+    const calls = [
+      ['fetchQuery', mockQuery, 'Q'],
+      ['fetchMutation', mockMutation, 'M'],
+      ['fetchAction', mockAction, 'A'],
+    ] as const
+
+    it.each(calls)('%s names the function in the error it rethrows, as the browser client does', async (helper, mock, prefix) => {
+      const server = await import('../../src/runtime/nuxt/index')
+      const thrown = Object.assign(new Error('[Request ID: 1] Server Error\nUncaught Error: boom'), { data: { code: 'refused' } })
+      mock.mockRejectedValueOnce(thrown)
+
+      const failure = await (server[helper] as (ref: unknown, args: object) => Promise<unknown>)(mockFunctionReference('tasks:list'), {}).catch((error: unknown) => error)
+
+      // The same object: its class and `data` survive for whoever catches it.
+      expect(failure).toBe(thrown)
+      expect(thrown.message).toBe(`[CONVEX ${prefix}(tasks:list)] [Request ID: 1] Server Error\nUncaught Error: boom`)
+      expect(thrown.data).toEqual({ code: 'refused' })
+      expect(thrown.stack?.split('\n')[0]).toBe(`Error: [CONVEX ${prefix}(tasks:list)] [Request ID: 1] Server Error`)
+    })
+
+    it('leaves an error that already names its function alone', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const thrown = new Error('[CONVEX Q(other:fn)] boom')
+      mockQuery.mockRejectedValueOnce(thrown)
+
+      await expect(fetchQuery(mockFunctionReference<'query'>('tasks:list'), {})).rejects.toBe(thrown)
+      expect(thrown.message).toBe('[CONVEX Q(other:fn)] boom')
+    })
+
+    it('rethrows a value that is not an Error untouched', async () => {
+      const { fetchAction } = await import('../../src/runtime/nuxt/index')
+      mockAction.mockRejectedValueOnce('offline')
+
+      await expect(fetchAction(mockFunctionReference<'action'>('tasks:run'), {})).rejects.toBe('offline')
+    })
+  })
+
   describe('preloadQuery', () => {
     it('returns a Preloaded payload with JSON-encoded value', async () => {
       const { preloadQuery } = await import('../../src/runtime/nuxt/index')

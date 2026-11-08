@@ -18,5 +18,6 @@ seo:
 | [clerk/client](/api-reference/reference/clerk/client) | Vue login component for use with Clerk. |
 | [app](/api-reference/reference/app) | Composables that need the Nuxt app context (`#app`) — the half of the package that runs in a Nuxt app but not in plain Vue. |
 | [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |
+| [testing](/api-reference/reference/testing) | Helpers for an app's own tests, kept off the runtime entries. |
 | [polar/client](/api-reference/reference/polar/client) | Vue ports of `@convex-dev/polar/react`'s billing components — [CheckoutLink](/api-reference/reference/polar/client#checkoutlink) and [CustomerPortalLink](/api-reference/reference/polar/client#customerportallink). |
 | [client](/api-reference/reference/client) | Tools to integrate Convex into Vue applications. |

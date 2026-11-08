@@ -26,7 +26,7 @@ vi.mock('#convex/auth-client', () => ({
 
 async function loadUseAuth() {
   const mod = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
-  mod.__resetUseBetterAuthForTests()
+  mod.resetBetterAuthState()
   return mod
 }
 
@@ -397,5 +397,26 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     expect(useSession).toHaveBeenCalledTimes(1)
     expect(second.session).toBe(first.session)
     useSession.mockRestore()
+  })
+
+  it('forgets the cached token and the session subscription on resetBetterAuthState', async () => {
+    const { useBetterAuth } = await loadUseAuth()
+    const { resetBetterAuthState } = await import('../../../../src/runtime/nuxt/testing')
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-1' } })
+    tokenMock.mockResolvedValueOnce({ data: { token: 'jwt-2' } })
+    const useSession = vi.spyOn(mockAuthClient, 'useSession')
+
+    expect(await useBetterAuth().fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-1')
+    resetBetterAuthState()
+
+    expect(await useBetterAuth().fetchAccessToken({ forceRefreshToken: false })).toBe('jwt-2')
+    expect(useSession).toHaveBeenCalledTimes(2)
+    useSession.mockRestore()
+  })
+
+  it('keeps the old reset name, which test helpers reach by path, as the same function', async () => {
+    const mod = await loadUseAuth()
+    expect(mod.__resetUseBetterAuthForTests).toBe(mod.resetBetterAuthState)
   })
 })

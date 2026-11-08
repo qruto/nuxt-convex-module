@@ -100,6 +100,11 @@ const ENTRY: Record<string, Entry> = {
       'AsyncPaginatedQueryData', 'AsyncPaginatedQueryOptions', 'AsyncPaginatedQueryReturn',
     ],
   },
+  './testing': {
+    source: 'src/runtime/nuxt/testing.ts',
+    values: ['resetBetterAuthState'],
+    types: [],
+  },
   './better-auth/client': {
     source: 'src/runtime/better-auth/vue/index.ts',
     values: [
