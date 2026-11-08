@@ -32,7 +32,7 @@ afterEach(() => resetBetterAuthState())
 function resetBetterAuthState(): void;
 ```
 
-Defined in: [src/runtime/better-auth/vue/use-better-auth.ts:252](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/use-better-auth.ts#L252)
+Defined in: [src/runtime/better-auth/vue/use-better-auth.ts:380](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/use-better-auth.ts#L380)
 
 Forget what the Better Auth integration keeps for the app's lifetime: the
 browser's token cache and its session subscription. Published from

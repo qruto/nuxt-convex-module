@@ -72,6 +72,115 @@ describe('auth/vue/cross-domain', () => {
     expect(new URL(window.location.href).searchParams.get('next')).toBe('/dashboard')
   })
 
+  // PARITY: D-18 — the client is a chunk of its own now: the address must
+  // not carry the live token while it is fetched (`Referer`).
+  it('scrubs the token from the address before the client loads', async () => {
+    let seen = ''
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      seen = window.location.href
+      return { authClient: mockAuthClient }
+    })
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+
+      await consumeCrossDomainOneTimeToken()
+
+      expect(new URL(seen).searchParams.get('ott')).toBeNull()
+      expect(mockVerify).toHaveBeenCalledWith({ token: 'one-time-token' })
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
+  it.each([
+    ['throws', () => Promise.reject(new Error('offline'))],
+    ['answers with an error', () => Promise.resolve({ data: null, error: { status: 500 } })],
+  ])('keeps a kept token unexchanged when the session lookup %s', async (_name, lookup) => {
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+      await consumeCrossDomainOneTimeToken()
+
+      mockGetSession.mockImplementationOnce(lookup)
+      registerAuthClient(mockAuthClient as never)
+      await vi.waitFor(() => expect(warn).toHaveBeenCalledWith('[nuxt-convex-module] Failed to consume cross-domain one-time token:', expect.anything()))
+      expect(mockVerify).not.toHaveBeenCalled()
+    }
+    finally {
+      warn.mockRestore()
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
+  it('does not let a kept token replace a session started since', async () => {
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+      await consumeCrossDomainOneTimeToken()
+
+      // Signed in some other way before the client arrived.
+      mockGetSession.mockResolvedValueOnce({ data: { session: { id: 'newer' } } })
+      registerAuthClient(mockAuthClient as never)
+      await vi.waitFor(() => expect(mockGetSession).toHaveBeenCalledTimes(1))
+      await Promise.resolve()
+      expect(mockVerify).not.toHaveBeenCalled()
+      expect(mockUpdateSession).not.toHaveBeenCalled()
+    }
+    finally {
+      warn.mockRestore()
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
+  it('keeps the token when the client cannot load, and exchanges it once the client arrives', async () => {
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+
+      await consumeCrossDomainOneTimeToken()
+      expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
+      expect(mockVerify).not.toHaveBeenCalled()
+
+      // A later use brings the client, which finds no session: the token it
+      // kept is exchanged then.
+      mockGetSession.mockResolvedValueOnce({ data: null, error: null })
+      registerAuthClient(mockAuthClient as never)
+      await vi.waitFor(() => expect(mockUpdateSession).toHaveBeenCalledTimes(1))
+      expect(mockVerify).toHaveBeenCalledWith({ token: 'one-time-token' })
+    }
+    finally {
+      warn.mockRestore()
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
   it('warns, in dev, when the exchange completes with no callback route configured', async () => {
     const { consumeCrossDomainOneTimeToken } = await loadModule()
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})

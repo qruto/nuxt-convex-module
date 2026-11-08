@@ -44,7 +44,7 @@ export interface ConvexStub {
  * `httpQueryError` fails the HTTP read with that message and leaves the sync
  * protocol answering: a server render that fails and a browser that recovers.
  */
-export function startConvexStub(options: { queryValue?: unknown, httpQueryError?: string } = {}): Promise<ConvexStub> {
+export function startConvexStub(options: { queryValue?: unknown, httpQueryError?: string, sessions?: boolean } = {}): Promise<ConvexStub> {
   const requests: RecordedRequest[] = []
 
   const server: Server = createServer((req, res) => {
@@ -73,6 +73,16 @@ export function startConvexStub(options: { queryValue?: unknown, httpQueryError?
       if (req.url === '/api/auth/convex/token') {
         res.writeHead(200, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify({ token: req.headers.cookie?.includes('stub-session=') ? STUB_TOKEN : null }))
+        return
+      }
+
+      // With `sessions`, Better Auth's session endpoint answers for the cookie
+      // this stub hands out: a session for a request carrying it, `null`
+      // for one without. Without it, the endpoint echoes like every other.
+      if (options.sessions && req.url?.startsWith('/api/auth/get-session')) {
+        const signedIn = req.headers.cookie?.includes('stub-session=')
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify(signedIn ? { session: { id: 'session-1' }, user: { id: 'user-1', email: 'ada@example.com', name: 'Ada' } } : null))
         return
       }
 

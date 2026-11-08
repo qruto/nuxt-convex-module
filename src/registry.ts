@@ -120,6 +120,7 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
   ],
   betterAuth: [
     { name: 'useBetterAuth', from: 'runtime/better-auth/vue/use-better-auth' },
+    { name: 'loadAuthClient', from: 'runtime/better-auth/vue/auth-client-loader' },
     { name: 'usePreloadedAuthQuery', from: 'runtime/better-auth/vue/hydration' },
     { name: 'resolveAuthRedirect', from: 'runtime/better-auth/vue/redirect' },
   ],

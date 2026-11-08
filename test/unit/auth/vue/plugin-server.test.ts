@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // test/unit-server/prerender-auth-prefetch.test.ts — `import.meta.prerender`
 // is compile-time, and only that project compiles it truthy.
 
-const getToken = vi.fn(async () => 'jwt')
+const getToken = vi.fn(async (): Promise<string | null> => 'jwt')
 const convexAuth = vi.fn(() => ({ getToken }))
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
 
@@ -17,28 +17,44 @@ vi.mock('#convex/auth-client', () => {
 })
 
 const state = { value: null as string | null }
-const event = {}
+const noSession = { value: false }
+const requestHeaders: { cookie?: string } = {}
+let responseHeaders: Record<string, string> = {}
+// The request event as Nitro hands it to a render: its matched rules on
+// `context._nitro`, and `context.cache` when its cached handler renders.
+const event = {
+  path: '/',
+  context: {} as { _nitro?: { routeRules: Record<string, unknown> }, cache?: unknown },
+  node: { res: { getHeader: (name: string) => responseHeaders[name] } },
+}
 const cacheControl = { value: undefined as unknown }
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useRuntimeConfig: () => ({ public: { convex: { url: 'https://example.convex.cloud' } } }),
-  useState: () => state,
+  useState: (key: string) => key === 'convex:betterAuth:noSession' ? noSession : state,
   useRequestEvent: () => event,
+  useRequestHeaders: () => requestHeaders,
   useResponseHeader: () => cacheControl,
 }))
 
 const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.server')).default as unknown as
-  (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void }, hook: (name: string, fn: () => void) => void }) => Promise<unknown>
+  (nuxtApp: { vueApp: { provide: (key: unknown, value: unknown) => void }, hook: (name: string, fn: () => void) => void, hooks: { hook: (name: string, fn: () => void) => void } }) => Promise<unknown>
+
+/** The hooks a render registered, run as Nuxt would: `app:rendered` once the page has rendered. */
+const rendered: Array<() => void> = []
+const hooks = { hook: (name: string, fn: () => void) => name === 'app:rendered' && rendered.push(fn) }
 
 describe('better-auth server plugin on an ordinary SSR request', () => {
   beforeEach(() => {
     state.value = null
+    noSession.value = false
+    delete requestHeaders.cookie
     vi.clearAllMocks()
   })
 
   it('provides the client and the auth stub, prefetches the token and forbids caching the response', async () => {
     const provide = vi.fn()
-    await setup({ vueApp: { provide }, hook: vi.fn() })
+    await setup({ vueApp: { provide }, hook: vi.fn(), hooks })
     expect(provide).toHaveBeenCalledTimes(3)
     expect(convexAuth).toHaveBeenCalledWith(event)
     expect(state.value).toBe('jwt')
@@ -47,11 +63,133 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
 
   it('hands the prefetched token to the token store of this request', async () => {
     const provide = vi.fn()
-    await setup({ vueApp: { provide }, hook: vi.fn() })
+    await setup({ vueApp: { provide }, hook: vi.fn(), hooks })
     expect(getToken).toHaveBeenCalledTimes(1)
     const { BetterAuthTokenStoreKey } = await import('../../../../src/runtime/better-auth/vue/token-store')
     const store = provide.mock.calls.find(([key]) => key === BetterAuthTokenStoreKey)?.[1]
     expect(store.cachedToken.value).toBe('jwt')
     expect(store.initialTokenUsed).toBe(true)
+  })
+})
+
+// PARITY: D-18
+describe('the no-session flag the browser waits on', () => {
+  beforeEach(() => {
+    state.value = null
+    noSession.value = false
+    delete requestHeaders.cookie
+    event.context = {}
+    responseHeaders = {}
+    cacheControl.value = undefined
+  })
+
+  const run = async () => {
+    rendered.length = 0
+    await setup({ vueApp: { provide: vi.fn() }, hook: vi.fn(), hooks })
+    for (const fn of rendered) fn()
+  }
+
+  it('is set for a request with no session cookie that got no token', async () => {
+    getToken.mockResolvedValueOnce(null)
+    requestHeaders.cookie = 'theme=dark'
+    await run()
+    expect(noSession.value).toBe(true)
+  })
+
+  it('stays off for a request that carries a session cookie, under any prefix', async () => {
+    getToken.mockResolvedValueOnce(null)
+    requestHeaders.cookie = 'theme=dark; __Secure-my-app.session_token=abc'
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off for a signed-in request', async () => {
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  // PARITY: D-18 — Nitro's cached handler renders with no cookie, so every
+  // cached render looks signed out; its payload is served to everyone.
+  // Nitro's own shapes: `swr: 60` and `isr: 60` arrive normalised into
+  // `cache` (nitropack's route-rules normalisation), `isr` also kept on Vercel.
+  it.each([
+    ['swr', { swr: 60, cache: { swr: true, maxAge: 60 } }],
+    ['isr', { isr: 60, cache: { swr: true, maxAge: 60 } }],
+    ['cache', { cache: { maxAge: 60 } }],
+    ['prerender', { prerender: true }],
+  ])('stays off on a render a %s route rule may serve to others', async (_name, routeRules) => {
+    getToken.mockResolvedValueOnce(null)
+    event.context = { _nitro: { routeRules } }
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off on the render Nitro\'s cached handler makes', async () => {
+    getToken.mockResolvedValueOnce(null)
+    event.context = { _nitro: { routeRules: {} }, cache: { options: {} } }
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it.each([
+    ['Cache-Control', 'cache-control', 'public, s-maxage=600'],
+    ['Cache-Control with max-age alone', 'cache-control', 'max-age=60'],
+    ['CDN-Cache-Control', 'cdn-cache-control', 'max-age=600'],
+    ['Surrogate-Control', 'surrogate-control', 'max-age=600'],
+  ])('stays off on a render whose %s lets a shared cache keep it', async (_name, header, value) => {
+    getToken.mockResolvedValueOnce(null)
+    responseHeaders[header] = value
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('is taken back when the page sets a shared caching header as it renders', async () => {
+    getToken.mockResolvedValueOnce(null)
+    rendered.length = 0
+    await setup({ vueApp: { provide: vi.fn() }, hook: vi.fn(), hooks })
+    expect(noSession.value).toBe(true)
+
+    // Page setup, after the plugin ran: `useResponseHeader('Cache-Control')`.
+    responseHeaders['cache-control'] = 'public, s-maxage=600'
+    for (const fn of rendered) fn()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off on a route whose rules carry Nuxt\'s folded payload rule', async () => {
+    getToken.mockResolvedValueOnce(null)
+    event.context = { _nitro: { routeRules: { payload: true } } }
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off when a route rule sets a shared caching header', async () => {
+    getToken.mockResolvedValueOnce(null)
+    event.context = { _nitro: { routeRules: { headers: { 'Cache-Control': 's-maxage=60' } } } }
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off when the prefetch failed: the server could not tell', async () => {
+    getToken.mockRejectedValueOnce(new Error('deployment down'))
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await run()
+    expect(noSession.value).toBe(false)
+    warn.mockRestore()
+  })
+})
+
+describe('isSharedRender', () => {
+  it('reads Nitro\'s rules and the shared caching headers, and nothing else', async () => {
+    const { isSharedRender } = await import('../../../../src/runtime/better-auth/nuxt/shared-render')
+    expect(isSharedRender({})).toBe(false)
+    expect(isSharedRender({ routeRules: { cache: false }, headers: { 'cache-control': 'private, no-store' } })).toBe(false)
+    expect(isSharedRender({ routeRules: { ssr: true }, headers: { 'cache-control': 'private, max-age=60' } })).toBe(false)
+    expect(isSharedRender({ headers: { 'cache-control': 'no-cache' } })).toBe(false)
+    expect(isSharedRender({ headers: { 'cdn-cache-control': 'no-store' } })).toBe(false)
+    expect(isSharedRender({ routeRules: { cache: { swr: true, maxAge: 60 } } })).toBe(true)
+    expect(isSharedRender({ cache: { options: {} } })).toBe(true)
+    expect(isSharedRender({ headers: { 'cache-control': 'S-MAXAGE=60' } })).toBe(true)
+    expect(isSharedRender({ headers: { 'cache-control': ['public', 'max-age=60'] } })).toBe(true)
+    expect(isSharedRender({ headers: { 'cache-control': 'max-age=60' } })).toBe(true)
   })
 })

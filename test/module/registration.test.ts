@@ -115,13 +115,14 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(dependsOn({ event: 'change', path: `${fixture}/convex/messages.ts` })).toBe(false)
   })
 
-  it('publishes the five runtime-config keys', () => {
+  it('publishes the six runtime-config keys', () => {
     expect(r.options.runtimeConfig.public.convex).toEqual({
       url: 'https://example.convex.cloud',
       siteUrl: 'https://example.convex.site',
       crossDomainCallbackRoute: '',
       loginPath: '/login',
       authRoute: '/api/auth',
+      deferAuthClient: true,
     })
     expect(r.options.runtimeConfig.convex).toBeUndefined()
   })

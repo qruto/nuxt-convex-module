@@ -5,6 +5,7 @@ import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
 import { clientDependencies, deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
+import { keepAuthClientOffPrefetch, registerAuthClientOnEvaluation } from './auth-client-registration'
 import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
 import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isExcluded, registeredAs, type AutoImports, type ExcludedNames, type Integration, type Registration, type RegistrationPolicy } from './registry'
@@ -160,6 +161,8 @@ declare module '@nuxt/schema' {
       crossDomainCallbackRoute: string
       loginPath: string
       authRoute: string
+      /** Whether the browser may hold the Better Auth client back (PARITY D-18): only where the registration transform runs, on Vite. */
+      deferAuthClient: boolean
     }
   }
 }
@@ -228,12 +231,20 @@ export default defineNuxtModule<ModuleOptions>({
     // Read by `convexAuth` for the deployment's token endpoint, which sits
     // under the same route the proxy serves.
     nuxt.options.runtimeConfig.public.convex.authRoute = diagnostics.authRoute
+    // PARITY: D-18
+    // The client is held back only where a static import of it is seen
+    // (`registerAuthClientOnEvaluation`, a Vite transform). On webpack or
+    // rspack it loads at startup, as it did before.
+    nuxt.options.runtimeConfig.public.convex.deferAuthClient = nuxt.options.builder === '@nuxt/vite-builder'
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
     // prefix of `#convex/auth-client`, so the auth-client alias must be
     // registered BEFORE the functions-dir catch-all or it resolves to
     // `<functionsDir>/auth-client` (which doesn't exist).
     registerAuthClientAlias(resolver, nuxt, options)
+    // PARITY: D-18
+    keepAuthClientOffPrefetch(nuxt)
+    registerAuthClientOnEvaluation(resolver, nuxt)
     registerConvexAliases(nuxt)
 
     registerConvexTypeFallback(nuxt)
@@ -628,6 +639,11 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
 function registerBetterAuth(resolver: Resolver, authRoute: string, policy: RegistrationPolicy): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
+  // PARITY: D-18
+  // A no-session payload that ends up cacheable after it rendered varies on
+  // `Cookie`. It imports nothing from Nitro, so one file serves both majors.
+  const noSessionVary = resolver.resolve('./runtime/better-auth/nuxt/no-session-vary')
+  addNitroPlugin({ nitro2: noSessionVary, nitro3: noSessionVary })
 
   registerIntegrationImports(resolver, 'betterAuth', policy)
   registerComponents(resolver, 'betterAuth', policy)

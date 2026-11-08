@@ -36,6 +36,18 @@ export function createBetterAuthTokenStore(): BetterAuthTokenStore {
 /** The key the server plugin provides each request's store under. @internal */
 export const BetterAuthTokenStoreKey: InjectionKey<BetterAuthTokenStore> = Symbol('BetterAuthTokenStore')
 
+/**
+ * The payload key the server plugin sets when a request carried no Better
+ * Auth session at all, and the client may wait for a first use before it
+ * loads the Better Auth client. @internal
+ */
+export const NO_SESSION_KEY = 'convex:betterAuth:noSession'
+
+/** Whether a `Cookie` header carries a Better Auth session cookie, under any prefix. @internal */
+export function hasSessionCookie(cookie: string | undefined): boolean {
+  return !!cookie && cookie.split(';').some(pair => pair.split('=', 1)[0]!.trim().endsWith('session_token'))
+}
+
 /** The version a token holds while the session is still loading. @internal */
 export const PENDING_AUTH_VERSION = '__pending__'
 

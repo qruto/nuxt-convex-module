@@ -1,13 +1,15 @@
 import { computed } from 'vue'
-import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useResponseHeader } from '#app'
+import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
-import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } from './token-store'
+import { CACHING_HEADERS, isSharedRender, NO_SESSION_CONTEXT_KEY, type RenderContext } from '../nuxt/shared-render'
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, hasSessionCookie, NO_SESSION_KEY, seedInitialToken } from './token-store'
 
 /**
- * Prefetch the Convex JWT for SSR and stash it in `initialToken`.
+ * Prefetch the Convex JWT for SSR and stash it in `initialToken`. Resolves
+ * `true` once the deployment answered, `false` when the prefetch failed.
  *
  * Exported for unit tests.
  * @internal
@@ -16,7 +18,7 @@ export async function prefetchAuthToken(
   event: ReturnType<typeof useRequestEvent>,
   initialToken: ReturnType<typeof useState<string | null>>,
   cacheControl: { value: unknown },
-) {
+): Promise<boolean> {
   try {
     const token = await convexAuth(event!).getToken()
     initialToken.value = token ?? null
@@ -29,9 +31,21 @@ export async function prefetchAuthToken(
       // that a route with stricter needs can still override it.
       cacheControl.value = 'private, no-store'
     }
+    return true
   }
   catch (error) {
     console.warn('[nuxt-convex-module] Failed to prefetch auth token for SSR:', error)
+    return false
+  }
+}
+
+/** What `isSharedRender` reads off this request. */
+function renderContext(event: NonNullable<ReturnType<typeof useRequestEvent>>): RenderContext {
+  const context = event.context as { _nitro?: { routeRules?: Record<string, unknown> }, cache?: unknown }
+  return {
+    routeRules: context._nitro?.routeRules,
+    cache: context.cache,
+    headers: Object.fromEntries(CACHING_HEADERS.map(name => [name, event.node?.res?.getHeader?.(name)])),
   }
 }
 
@@ -88,8 +102,26 @@ export default defineNuxtPlugin({
     const event = useRequestEvent()
     if (event && !import.meta.prerender) {
       // Taken before the await: the Nuxt context it needs is gone after it.
-      await prefetchAuthToken(event, initialToken, useResponseHeader('Cache-Control'))
+      const cacheControl = useResponseHeader('Cache-Control')
+      const noSession = useState<boolean>(NO_SESSION_KEY, () => false)
+      const { cookie } = useRequestHeaders(['cookie'])
+      const answered = await prefetchAuthToken(event, initialToken, cacheControl)
       seedInitialToken(tokenStore, initialToken.value)
+      // PARITY: D-18
+      // No session cookie, and the deployment confirmed no token: the browser
+      // can wait for a first use before it downloads the Better Auth client.
+      // Never on a render other visitors may be served.
+      noSession.value = answered && !initialToken.value && !hasSessionCookie(cookie)
+        && !isSharedRender(renderContext(event))
+      // A page may set a caching header as it renders, after this plugin ran:
+      // check again once it has, before the payload is written.
+      nuxtApp.hooks.hook('app:rendered', () => {
+        if (noSession.value && isSharedRender(renderContext(event))) noSession.value = false
+        // For the response hook (`../nuxt/no-session-vary`): a header set after
+        // this, once the payload is written, cannot take the flag back.
+        const context = event.context as Record<string, unknown>
+        context[NO_SESSION_CONTEXT_KEY] = noSession.value
+      })
     }
   },
 })
