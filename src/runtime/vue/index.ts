@@ -159,6 +159,7 @@ export {
   type VueUploadQueue,
   type UseUploadQueueOptions,
   type UploadQueueItem,
+  type UploadItemStage,
   type UploadItemStatus,
   type EnqueueInput,
 } from './composables/use-upload-queue'

@@ -70,7 +70,7 @@ const analyze = useAction(api.analyze.text) // a plain async function, not react
 ## Files
 
 - `useUpload(api.files.generateUploadUrl)` → `upload(file)` resolves to the storage id, or `null` with the reason in `error`. It never throws.
-- `useUploadQueue(…)` for several files, `uploadFile({ url, file })` for a one-off.
+- `useUploadQueue(…)` for several files, `uploadFile({ url, file })` for a one-off. The queue's `prepare(file)` returns what is sent (shrink or re-encode there) and `after(storageId)` runs once it is stored (attach it there); a failed item has `refused` (the app said no, by default a `ConvexError`) or not (show a retry: `retry(id)`). A file `after` refused stays stored, its id on `item.storageId` in `onItemError`: delete it there if it should not stay.
 - `useStorageUrl(api.files.getUrl, storageId)` → the file URL; `<ConvexImage :get-url="api.files.getUrl" :storage-id="id">` renders it as an image.
 
 The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and a query returning `ctx.storage.getUrl(storageId)`.

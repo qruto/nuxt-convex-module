@@ -8,6 +8,7 @@ import type {
   GenerateUploadUrl,
   useUpload as useUploadReal,
 } from '../../src/runtime/vue/composables/use-upload'
+import type { useUploadQueue as useUploadQueueReal } from '../../src/runtime/vue/composables/use-upload-queue'
 import type {
   GetStorageUrl,
   useStorageUrl as useStorageUrlReal,
@@ -98,6 +99,7 @@ describe('uploadFile', () => {
 // Intentional noops, we're only testing types.
 const useUpload = (() => {}) as unknown as typeof useUploadReal
 const useStorageUrl = (() => {}) as unknown as typeof useStorageUrlReal
+const useUploadQueue = (() => ({ retry: () => {} })) as unknown as typeof useUploadQueueReal
 
 const generateUploadUrl = makeFunctionReference<'mutation', Record<string, never>, string>(
   'files:generateUploadUrl',
@@ -119,6 +121,31 @@ describe('useUpload types', () => {
 
     // @ts-expect-error a query reference is not a generateUploadUrl mutation
     useUpload(getUrl)
+  })
+})
+
+describe('useUploadQueue types', () => {
+  it('types the hooks and the item fields they read', () => {
+    const queue = useUploadQueue(generateUploadUrl, {
+      prepare: async (file, item, signal) => {
+        const stage: 'prepare' | 'upload' | 'after' | null = item.stage
+        void stage
+        void signal.aborted
+        return new Blob([await file.arrayBuffer()])
+      },
+      after: (storageId, item) => {
+        const id: GenericId<'_storage'> = storageId
+        const sent: Blob | null = item.prepared
+        void id
+        void sent
+      },
+      isRefusal: (error, item) => error.name === 'ConvexError' && !item.refused,
+    })
+    queue.retry()
+    queue.retry('upload-1')
+
+    // @ts-expect-error prepare returns what is sent: a Blob
+    useUploadQueue(generateUploadUrl, { prepare: () => 'not a blob' })
   })
 })
 
