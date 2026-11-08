@@ -244,11 +244,24 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   }
 }
 
-/** Reset module-level token cache — intended for tests only. @internal */
-export function __resetUseBetterAuthForTests() {
+/**
+ * Forget what the Better Auth integration keeps for the app's lifetime: the
+ * browser's token cache and its session subscription. Published from
+ * `nuxt-convex-module/testing`; call it between tests that sign in.
+ */
+export function resetBetterAuthState(): void {
   Object.assign(browserStore, createBetterAuthTokenStore(), { cachedToken: browserStore.cachedToken })
   browserStore.cachedToken.value = null
   browserSessionScope?.stop()
   browserSessionScope = undefined
   browserSession = undefined
 }
+
+/**
+ * The old name of {@link resetBetterAuthState}, which test helpers reached
+ * by this file's path before `nuxt-convex-module/testing` existed.
+ *
+ * @deprecated Import `resetBetterAuthState` from `nuxt-convex-module/testing`.
+ * @internal
+ */
+export const __resetUseBetterAuthForTests = resetBetterAuthState

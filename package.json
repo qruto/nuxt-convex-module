@@ -60,6 +60,10 @@
       "types": "./dist/runtime/nuxt/app.d.ts",
       "import": "./dist/runtime/nuxt/app.js"
     },
+    "./testing": {
+      "types": "./dist/runtime/nuxt/testing.d.ts",
+      "import": "./dist/runtime/nuxt/testing.js"
+    },
     "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
@@ -114,6 +118,9 @@
       ],
       "app": [
         "./dist/runtime/nuxt/app.d.ts"
+      ],
+      "testing": [
+        "./dist/runtime/nuxt/testing.d.ts"
       ],
       "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"

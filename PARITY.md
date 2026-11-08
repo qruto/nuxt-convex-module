@@ -30,7 +30,7 @@ full, always part of the module, and covered by the one `convex` baseline.
 | Upstream entry point | Ported to | Status |
 |---|---|---|
 | [`convex/react`](https://docs.convex.dev/client/react) — the client, every hook, auth state, helper components | `src/runtime/vue/**` | Complete + additive · D-01, D-02, D-05, D-06, D-07, F-03 |
-| [`convex/nextjs`](https://docs.convex.dev/client/react/nextjs/server-rendering) — `fetchQuery` / `fetchMutation` / `fetchAction`, `preloadQuery` | `src/runtime/nuxt/index.ts` | Complete + additive · D-10 |
+| [`convex/nextjs`](https://docs.convex.dev/client/react/nextjs/server-rendering) — `fetchQuery` / `fetchMutation` / `fetchAction`, `preloadQuery` | `src/runtime/nuxt/index.ts` | Complete + additive · D-10, D-17 |
 | [`convex/react-clerk`](https://docs.convex.dev/auth/clerk) — the official Clerk adapter | `src/runtime/clerk/vue/index.ts` | Complete |
 | [`convex/react-auth0`](https://docs.convex.dev/auth/auth0) — the official Auth0 adapter | `src/runtime/auth0/vue/index.ts` | Complete |
 | `convex/react-start` | — | Out of scope (X-02) |
@@ -45,7 +45,7 @@ when the component is installed, and each sits on **its own** baseline.
 | Upstream | Ported to | Status |
 |---|---|---|
 | `@convex-dev/better-auth` — `react` client | `src/runtime/better-auth/vue/**` | Complete + additive · D-03, F-04 |
-| `@convex-dev/better-auth` — `nextjs` server helpers | `src/runtime/better-auth/nuxt/**` | Complete + additive · D-04, F-01 |
+| `@convex-dev/better-auth` — `nextjs` server helpers | `src/runtime/better-auth/nuxt/**` | Complete + additive · D-04, D-17, F-01 |
 | `@convex-dev/better-auth` — client plugins (`convexClient`, `crossDomainClient`) | imported as-is from `@convex-dev/better-auth/client/plugins` | Reused, never reimplemented |
 | `@convex-dev/better-auth` — `react-start` | — | Out of scope (X-02) |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
@@ -143,6 +143,8 @@ source.
 | `vue/composables/{use-upload,use-upload-queue,use-storage-url}.ts` | file-storage helpers | A-02 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
 | `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
+| `nuxt/function-name.ts` | names the function in a server fetch error, and gives F-01's check the message without it | D-17 |
+| `nuxt/testing.ts` | the `nuxt-convex-module/testing` barrel: resets the state the Better Auth integration keeps for the app's lifetime, for an app's own tests | A-18 |
 | `nuxt/composables/use-async-paginated-query.ts` | `useAsyncPaginatedQuery` — the paginated `useAsyncQuery` | A-16 |
 | `vue/components/convex-image.ts` | `<ConvexImage>` over `useStorageUrl` | A-17 |
 | `nuxt/csp.ts`, `nuxt/security.ts` | Convex-aware CSP + `nuxt-security` route rules | A-11 |
@@ -450,6 +452,35 @@ is that the declaration now matches what actually happens.
 - **Why** · `TypeError` is the accurate type and satisfies `unicorn/prefer-type-error`;
   `instanceof Error` still holds, so upstream-written `catch` blocks are unaffected.
 
+#### Diagnostics
+
+What an error says, never what it is: the class, `data` and identity stay upstream's.
+
+##### D-17 — server fetch errors name the function they ran
+
+- **Kind** · a message prefix, in the form the browser client already writes
+- **Upstream** · `convex@1.49.0` `nextjs/index.ts` — `fetchQuery`, `fetchMutation`, `fetchAction` return
+  `ConvexHttpClient`'s promise as it is
+- **Port** · [`nuxt/function-name.ts`](./src/runtime/nuxt/function-name.ts) — `withFunctionName`, called by the three
+  helpers in [`nuxt/index.ts`](./src/runtime/nuxt/index.ts); `withoutFunctionName`, called by F-01's retry in
+  [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
+- **Pinned by** · `test/unit/nuxt-server.test.ts` — "fetchQuery names the function in the error it rethrows,
+  as the browser client does" (and its mutation and action rows), "leaves an error that already names
+  its function alone", "rewrites the stack's header, not the first match of the message", "rethrows an error whose
+  message cannot be written untouched", "rethrows a value
+  that is not an Error untouched"; `test/unit/auth/nuxt/server.test.ts` — "checks for an auth error on the
+  message without the function name"
+- **On sync** · keep; port changes to the calls, and drop the entry if `ConvexHttpClient` starts naming
+  the function itself
+- **Why** · the browser client prefixes every failure with `[CONVEX Q(module:fn)]`
+  (`browser/logging.ts` — `createHybridErrorStacktrace`), so a report says which call failed. The HTTP
+  client names nothing, and a failed server render or route read only `Server Error`. The prefix goes
+  on the error that was thrown, not a wrapper: a `ConvexError` keeps its class and `data`. F-01's
+  `jwtCache.isAuthError(error)` gets that same object, showing the message the server sent while it runs
+  (the prefix comes off and goes back on after), so the function's path never decides the retry: `/auth/i`
+  against `[CONVEX A(auth:sendWelcome)] …` would re-run any failed action under `auth/`. An error whose
+  message cannot be written (a `DOMException`, whose `message` is a getter) is rethrown as it was.
+
 ### 3.3 Port-only additions (`A-*`)
 
 #### Vue/Nuxt ergonomics
@@ -581,6 +612,11 @@ The Nuxt analogs of what a React app assembles by hand, plus the types that asse
   development the module reads `.env.local` beneath the environment (`deploymentEnv`): Vite and
   Next load that file themselves, Nuxt does not, and on the first `--start` run the CLI has
   written it but has not loaded it into the environment it hands Nuxt.
+- **Opt-out** · `convex.exclude` leaves out every registration whose name, as the app would see it,
+  a string or pattern names: app and Nitro auto-imports, components, the `convex-auth` middleware
+  (`registeredAs`, `isExcluded` in `src/registry.ts`). A module building on this one registers its
+  own names for the same things; without it, it had to filter this module's entries out of Nuxt's
+  hooks after the fact. Pinned by `test/module/registration.test.ts` — "with exclude"
 
 ##### A-10 — types upstream keeps private
 
@@ -704,6 +740,20 @@ so none can be "restored" by syncing.
 - **Why** · the one thing every app does with A-02's `useStorageUrl` — `<img v-if="url" :src="url">`
   with a placeholder while the URL resolves and another when the query returns `null`. Attributes
   fall through to the `<img>`; `getUrl` is read once, like `useStorageUrl`'s argument.
+
+##### A-18 — `nuxt-convex-module/testing`
+
+- **Port** · [`nuxt/testing.ts`](./src/runtime/nuxt/testing.ts) — `resetBetterAuthState`, defined in
+  [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts) beside the
+  state it resets
+- **Pinned by** · `test/unit/auth/vue/use-better-auth.test.ts` — "forgets the cached token and the
+  session subscription on resetBetterAuthState", "keeps the old reset name, which test helpers reach
+  by path, as the same function"; `test/nuxt/public-surface.test.ts`
+- **Why** · the browser's token cache and its session subscription live at module scope for the
+  app's lifetime (D-13), where upstream keeps them in a provider a test unmounts. An app's tests
+  need to forget them between cases, and used to reach `use-better-auth.js` by path for the
+  `@internal` `__resetUseBetterAuthForTests`. That name stays, deprecated, as the same function,
+  so a helper written against the path keeps working.
 
 ### 3.4 Upstream fixes the translation already rules out
 
