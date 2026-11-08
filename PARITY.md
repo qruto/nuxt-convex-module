@@ -444,7 +444,8 @@ for free — removing one would break the behaviour, not restore it.
   render Nitro's cached handler makes", "is taken back when the page sets a shared caching header as it renders", "stays off on a render whose %s lets a shared cache keep it", `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
   Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts` — "follows a statically imported
   client through a sign-in to a guarded page", "loads at startup on an swr page, whose render other visitors are served",
-  "asks nothing of the server when a link prefetches a page that imports the client"
+  "asks nothing of the server when a link prefetches a page that imports the client", "loads the client after its chunk
+  failed once, in the same document"
 - **On sync** · keep; port changes to how upstream reads the session or the token onto the loaded client
 - **Why** · a Nuxt plugin runs on every page, so a client the plugin imports is in the entry chunk of every
   page: 28 to 42 KB of the fixture's entry (`test/fixtures/lazy-auth`), more with an app's plugins. The runtime
