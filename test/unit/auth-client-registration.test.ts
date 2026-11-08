@@ -65,6 +65,13 @@ describe('the auth client registration', () => {
     expect(await transform('export const x = 1', '/app/app/auth.ts')).toBeUndefined()
   })
 
+  it('matches the file the alias resolved to, never a sibling of another extension', async () => {
+    resolved.set('/app/app/auth-client', '/app/app/auth-client.ts')
+    const transform = transformFor('/app/app/auth-client')
+    expect((await transform('export const authClient = {}', '/app/app/auth-client.ts'))?.code).toContain('__convexRegisterAuthClient')
+    expect(await transform('export const helper = 1', '/app/app/auth-client.js')).toBeUndefined()
+  })
+
   it('matches an alias that names a directory, by the index file it resolves to', async () => {
     resolved.set('/app/auth', '/app/auth/index.ts')
     const transform = transformFor('/app/auth')

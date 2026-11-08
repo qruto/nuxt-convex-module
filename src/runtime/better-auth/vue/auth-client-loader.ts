@@ -239,17 +239,23 @@ function pendingHook(path: readonly PropertyKey[], args: unknown[]): Ref<unknown
 
 // A method read off the loaded client through the forwarding one, called as
 // `client.signOut()`, would get the forwarding client as `this`. It is
-// handed out wrapped, so the call reaches it with the object it was read off.
-const withReceivers = new WeakMap<object, unknown>()
+// handed out wrapped, so the call reaches it with the object it was read off:
+// one wrapper per method and owner, since two atoms can share a method. A
+// wrapper is not `===` the method it wraps; `useBetterAuth().client` is the
+// client itself once it has loaded, so only a forwarding client kept from
+// before reads members this way.
+const withReceivers = new WeakMap<object, WeakMap<object, unknown>>()
 
 function withReceiver(member: unknown, owner: unknown): unknown {
-  if (typeof member !== 'function') return member
-  let wrapped = withReceivers.get(member)
+  if (typeof member !== 'function' || typeof owner !== 'object' || owner === null) return member
+  let byMethod = withReceivers.get(owner)
+  if (!byMethod) withReceivers.set(owner, byMethod = new WeakMap())
+  let wrapped = byMethod.get(member)
   if (!wrapped) {
     wrapped = new Proxy(member, {
       apply: (fn, _this, args: unknown[]) => Reflect.apply(fn, owner, args),
     })
-    withReceivers.set(member, wrapped)
+    byMethod.set(member, wrapped)
   }
   return wrapped
 }
@@ -285,7 +291,8 @@ function lazyPath(path: readonly PropertyKey[]): unknown {
  * A call through it (`client.signIn.email(...)`, `client.signOut()`) loads
  * the client and resolves with the call's result; a hook
  * (`client.useActiveOrganization()`) answers at once with a pending ref that
- * follows the real one. Once loaded, every member reads as the client's own.
+ * follows the real one. Once loaded, every member reads through to the
+ * client's own; a method comes wrapped, so it runs with the client as `this`.
  * @internal
  */
 export const lazyAuthClient = lazyPath([]) as AuthClient

@@ -108,8 +108,13 @@ export async function consumeCrossDomainOneTimeToken(
  * replace it.
  */
 async function exchangeKeptToken(authClient: AuthClient, token: string, url: URL, options: ConsumeCrossDomainOneTimeTokenOptions): Promise<void> {
-  const current = await Promise.resolve().then(() => authClient.getSession()).catch(() => null)
-  if ((current as { data?: { session?: unknown } } | null)?.data?.session) return
+  // Only a lookup that answered "signed out" lets the token through: one that
+  // threw or came back with an error says nothing about a newer session.
+  const current = await Promise.resolve().then(() => authClient.getSession()).catch(() => undefined) as { data?: { session?: unknown } | null, error?: unknown } | undefined
+  if (!current || current.error || current.data?.session) {
+    if (!current?.data?.session) console.warn('[nuxt-convex-module] Failed to consume cross-domain one-time token:', current?.error ?? 'the session lookup failed')
+    return
+  }
   await exchangeOneTimeToken(authClient, token, url, options)
 }
 

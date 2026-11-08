@@ -152,6 +152,7 @@ source.
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
 | `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/server-guard.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
 | `better-auth/nuxt/proxy.ts` | the `${betterAuth.authRoute}/**` server handler | A-14 |
+| `better-auth/nuxt/shared-render.ts`, `better-auth/nuxt/no-session-vary.ts` | whether a render may be served to other visitors, and the Nitro hook that has a no-session response made cacheable late vary on `Cookie` | D-18 |
 | `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
 
 ---
@@ -413,6 +414,8 @@ for free — removing one would break the behaviour, not restore it.
   [`better-auth/vue/plugin.client.ts`](./src/runtime/better-auth/vue/plugin.client.ts) and
   [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts) — the no-session flag, `isSharedRender`;
   [`better-auth/nuxt/middleware.ts`](./src/runtime/better-auth/nuxt/middleware.ts) — a guarded route loads the client;
+  [`better-auth/nuxt/shared-render.ts`](./src/runtime/better-auth/nuxt/shared-render.ts) — `isSharedRender`;
+  [`better-auth/nuxt/no-session-vary.ts`](./src/runtime/better-auth/nuxt/no-session-vary.ts) — `Vary: Cookie` on a late-cacheable no-session response;
   [`src/auth-client-registration.ts`](./src/auth-client-registration.ts) — `keepAuthClientOffPrefetch` and
   `registerAuthClientOnEvaluation`, called from [`src/module.ts`](./src/module.ts)
 - **Pinned by** · `test/unit/auth/vue/auth-client-loader.test.ts` (among them "keeps a client module that ran during the
@@ -422,19 +425,21 @@ for free — removing one would break the behaviour, not restore it.
   session settled while the client's store reads pending, then follows its answer", "settles the session signed out, with
   the error, after a second failure", "answers useSession(useFetch) with a promise, as Better Auth does, not a pending ref",
   "returns from a refetch whose hook never followed, instead of calling itself", "calls a method read off the loaded client
-  with the client as this", "keeps a store subscription made before the load through a failed load", "answers a hook with
+  with the client as this", "calls a method two owners share with the owner it was read off", "keeps a store subscription
+  made before the load through a failed load", "answers a hook with
   the error when its load fails twice, and stops waiting when its scope ends", "lets a guarded route wait out a failed first
   load that the retry recovers", "tries again on the next visit to the tab
   after a failed load", "answers a store subscription made before the load with an unsubscribe that works at once", "asks
   the client for a forced token request on a session settled without it", "waits for the client's own answer before a
-  guarded route decides"), `test/unit/auth-client-registration.test.ts` — "matches a posix manifest key against a Windows
+  guarded route decides"), `test/unit/auth/nuxt/no-session-vary.test.ts`, `test/unit/auth-client-registration.test.ts` — "matches the file the alias
+  resolved to, never a sibling of another extension", "matches a posix manifest key against a Windows
   target and root", "matches an alias that names a directory, by the index file it resolves to", "matches an alias
   under a symlinked root, by the real path Vite transforms", `test/unit/auth/nuxt/middleware.test.ts` — "decides
   on the client's answer, not on a session settled without it", "lets a visitor the server's token covers through when the
   client cannot load", `test/unit/auth/vue/plugin-client.test.ts` — "loads it at
   startup for a cross-domain session kept in sessionStorage", `test/nuxt/auth/vue/cross-domain.test.ts` — "scrubs the token
   from the address before the client loads", "keeps the token when the client cannot load, and exchanges it once the client
-  arrives", "does not let a kept token replace a session started since",
+  arrives", "does not let a kept token replace a session started since", "keeps a kept token unexchanged when the session lookup %s",
   `test/unit/auth/vue/plugin-server.test.ts` — "stays off on a render a %s route rule may serve to others", "stays off on the
   render Nitro's cached handler makes", "is taken back when the page sets a shared caching header as it renders", "stays off on a render whose %s lets a shared cache keep it", `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
   Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts` — "follows a statically imported
@@ -465,7 +470,9 @@ for free — removing one would break the behaviour, not restore it.
   webpack or rspack the client loads at startup as before. A flag set before a page sets a caching header is
   taken back on `app:rendered`, before the payload is written. A method read off the forwarding client is
   called with the real client as `this`; a subscription or hook made before the load waits through failed
-  loads, and a hook stops waiting when its scope ends. A session settled
+  loads, and a hook stops waiting when its scope ends. A response made cacheable after the payload was written (a
+  `render:response` hook) varies on `Cookie` instead, so a shared cache never hands it to a visitor whose request
+  carries a session cookie. A session settled
   without the client is the server's word, which a sign-in since then outdates: a guarded route and a forced
   token request wait for the client's own answer. A `?ott=` token leaves the address before the chunk is
   fetched, and waits in memory when the chunk cannot load.

@@ -8,8 +8,19 @@ import type { Nuxt } from '@nuxt/schema'
 // of the name: `auth.client` is `auth.client.ts`, not `auth.ts`.
 const SCRIPT_EXTENSION = /\.(?:[cm]?[jt]sx?|vue)$/
 
-/** A path with `/` separators and no script extension, as two spellings of one module compare. */
-const moduleKey = (file: string): string => file.replaceAll('\\', '/').replace(SCRIPT_EXTENSION, '')
+/** A path with `/` separators. */
+const posix = (file: string): string => file.replaceAll('\\', '/')
+
+/**
+ * Whether `file` is `target`. A target that names its extension (what
+ * `resolvePath` resolved) matches that file only, never a sibling of another
+ * extension (`auth-client.js` beside `auth-client.ts`); an extensionless one
+ * (the alias as configured, when nothing resolved) matches by name.
+ */
+function sameModule(file: string, target: string): boolean {
+  if (SCRIPT_EXTENSION.test(target)) return posix(file) === posix(target)
+  return posix(file).replace(SCRIPT_EXTENSION, '') === posix(target)
+}
 
 /**
  * Whether a client-manifest key (or its `src`) names `target`. Keys are
@@ -19,7 +30,7 @@ const moduleKey = (file: string): string => file.replaceAll('\\', '/').replace(S
  * platform's `node:path`; a test hands it `path.win32`. @internal
  */
 export function manifestKeyMatches(key: string, root: string, target: string, paths: Pick<typeof path, 'relative'> = path): boolean {
-  return moduleKey(key) === moduleKey(paths.relative(root, target))
+  return sameModule(key, paths.relative(root, target))
 }
 
 /** `path` with its symlinks followed, or `path` when it cannot be. */
@@ -45,7 +56,8 @@ function authClientFiles(nuxt: Nuxt): () => Promise<string[]> {
     const target = nuxt.options.alias['#convex/auth-client']
     if (!target) return []
     const resolved = await resolvePath(target, { fallbackToOriginal: true })
-    return [...new Set([target, resolved, real(resolved)])]
+    // The extensionless alias only when it resolved to nothing more exact.
+    return [...new Set(resolved === target ? [target, real(target)] : [resolved, real(resolved)])]
   })()
 }
 
@@ -83,7 +95,7 @@ export function registerAuthClientOnEvaluation(resolver: Resolver, nuxt: Nuxt): 
     async transform(code, id, transformOptions) {
       if (transformOptions?.ssr) return
       const file = id.split('?')[0]!
-      if (!(await files()).some(target => moduleKey(target) === moduleKey(file))) return
+      if (!(await files()).some(target => sameModule(file, target))) return
       return { code: code + authClientRegistration(file, loader), map: null }
     },
   }, { server: false })

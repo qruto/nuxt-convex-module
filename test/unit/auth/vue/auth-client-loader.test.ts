@@ -208,7 +208,35 @@ describe('lazyAuthClient', () => {
       const client = fresh.lazyAuthClient as unknown as typeof keyed
       await fresh.loadAuthClient()
       expect(client.action()).toBe('ok')
-      expect(receivers).toEqual([keyed])
+      expect(receivers).toHaveLength(1)
+      expect(receivers[0]).toBe(keyed)
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
+  it('calls a method two owners share with the owner it was read off', async () => {
+    const receivers: unknown[] = []
+    function listen(this: unknown) {
+      receivers.push(this)
+    }
+    const first = { listen }
+    const second = { listen }
+    vi.doMock('#convex/auth-client', () => ({ authClient: { $store: { atoms: { first, second } } } }))
+    try {
+      vi.resetModules()
+      const fresh = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      const client = fresh.lazyAuthClient as unknown as { $store: { atoms: { first: typeof first, second: typeof second } } }
+      // Kept from before the load: forwarding paths, read through afterwards.
+      const kept = { first: client.$store.atoms.first, second: client.$store.atoms.second }
+      await fresh.loadAuthClient()
+      kept.first.listen()
+      kept.second.listen()
+      // By identity: the two atoms are equal in shape.
+      expect(receivers).toHaveLength(2)
+      expect(receivers[0]).toBe(first)
+      expect(receivers[1]).toBe(second)
     }
     finally {
       vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))

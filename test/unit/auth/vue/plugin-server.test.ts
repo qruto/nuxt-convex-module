@@ -180,7 +180,7 @@ describe('the no-session flag the browser waits on', () => {
 
 describe('isSharedRender', () => {
   it('reads Nitro\'s rules and the shared caching headers, and nothing else', async () => {
-    const { isSharedRender } = await import('../../../../src/runtime/better-auth/vue/plugin.server')
+    const { isSharedRender } = await import('../../../../src/runtime/better-auth/nuxt/shared-render')
     expect(isSharedRender({})).toBe(false)
     expect(isSharedRender({ routeRules: { cache: false }, headers: { 'cache-control': 'private, no-store' } })).toBe(false)
     expect(isSharedRender({ routeRules: { ssr: true }, headers: { 'cache-control': 'private, max-age=60' } })).toBe(false)

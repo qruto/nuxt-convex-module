@@ -97,6 +97,33 @@ describe('auth/vue/cross-domain', () => {
     }
   })
 
+  it.each([
+    ['throws', () => Promise.reject(new Error('offline'))],
+    ['answers with an error', () => Promise.resolve({ data: null, error: { status: 500 } })],
+  ])('keeps a kept token unexchanged when the session lookup %s', async (_name, lookup) => {
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+      await consumeCrossDomainOneTimeToken()
+
+      mockGetSession.mockImplementationOnce(lookup)
+      registerAuthClient(mockAuthClient as never)
+      await vi.waitFor(() => expect(warn).toHaveBeenCalledWith('[nuxt-convex-module] Failed to consume cross-domain one-time token:', expect.anything()))
+      expect(mockVerify).not.toHaveBeenCalled()
+    }
+    finally {
+      warn.mockRestore()
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
   it('does not let a kept token replace a session started since', async () => {
     vi.resetModules()
     vi.doMock('#convex/auth-client', () => {
@@ -140,7 +167,9 @@ describe('auth/vue/cross-domain', () => {
       expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
       expect(mockVerify).not.toHaveBeenCalled()
 
-      // A later use brings the client: the token it kept is exchanged then.
+      // A later use brings the client, which finds no session: the token it
+      // kept is exchanged then.
+      mockGetSession.mockResolvedValueOnce({ data: null, error: null })
       registerAuthClient(mockAuthClient as never)
       await vi.waitFor(() => expect(mockUpdateSession).toHaveBeenCalledTimes(1))
       expect(mockVerify).toHaveBeenCalledWith({ token: 'one-time-token' })

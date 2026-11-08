@@ -639,6 +639,11 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
 function registerBetterAuth(resolver: Resolver, authRoute: string, policy: RegistrationPolicy): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
+  // PARITY: D-18
+  // A no-session payload that ends up cacheable after it rendered varies on
+  // `Cookie`. It imports nothing from Nitro, so one file serves both majors.
+  const noSessionVary = resolver.resolve('./runtime/better-auth/nuxt/no-session-vary')
+  addNitroPlugin({ nitro2: noSessionVary, nitro3: noSessionVary })
 
   registerIntegrationImports(resolver, 'betterAuth', policy)
   registerComponents(resolver, 'betterAuth', policy)

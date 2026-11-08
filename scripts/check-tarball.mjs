@@ -268,12 +268,14 @@ try {
   // 0.13.0 measured 575 KB. The upload queue's `prepare` / `after` / `retry`
   // (+4 KB, most of it the JSDoc mkdist keeps) and the `/testing` entry and
   // `function-name` (+6 KB, four files) took main to 584.7 KB in 110 files.
-  // The lazy Better Auth client adds its loader, the no-session flag and the
-  // registration transform (+16 KB, two files: `auth-client-loader.{js,d.ts}`),
-  // 600.9 KB in 112 files, so the ceiling moves to 605 KB / 112 files.
+  // The lazy Better Auth client adds its loader, the no-session flag, the
+  // registration transform and the Nitro hook that varies a late-cacheable
+  // no-session response on `Cookie` (+20 KB, six files: `auth-client-loader`,
+  // `shared-render`, `no-session-vary`, each `.js` and `.d.ts`): 604.4 KB in
+  // 116 files, so the ceiling moves to 615 KB / 116 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 605_000
-  const MAX_FILES = 112
+  const MAX_BYTES = 615_000
+  const MAX_FILES = 116
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {
