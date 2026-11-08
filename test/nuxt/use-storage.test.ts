@@ -303,8 +303,9 @@ describe('useUploadQueue hooks', () => {
     expect(refused).toMatchObject({ status: 'error', refused: true, stage: null })
     expect(failed).toMatchObject({ status: 'error', refused: false, stage: null })
     expect(onItemError).toHaveBeenCalledTimes(2)
-    // The refused file goes again on a retry; the failed one is still stored.
-    expect(refused!.storageId).toBeNull()
+    // Both files are still stored: the failed one for a retry of after, the
+    // refused one for the app to delete (a retry sends that one again).
+    expect(refused!.storageId).toBe('s0')
     expect(failed!.storageId).toBe('s1')
   })
 
@@ -360,6 +361,109 @@ describe('useUploadQueue hooks', () => {
     expect(item.storageId).toBe('s1')
     expect(prepare).toHaveBeenCalledTimes(1)
     expect(onComplete).toHaveBeenCalledTimes(3)
+  })
+
+  it('hands a storage id after refused to onItemError, and a retry forgets it', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const refusedIds: (string | null)[] = []
+    const after = vi.fn().mockRejectedValueOnce(new ConvexError('not a photo')).mockResolvedValue(undefined)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      after,
+      onItemError: (_error, item) => refusedIds.push(item.storageId),
+    }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.status === 'error')
+
+    // The app can delete the file it turned away: the queue never does.
+    expect(refusedIds).toEqual(['s0'])
+    expect(item).toMatchObject({ refused: true, storageId: 's0' })
+
+    result.retry(item.id)
+    expect(item).toMatchObject({ status: 'uploading', storageId: null, progress: 0 })
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => item.status === 'success')
+    expect(item.storageId).toBe('s1')
+  })
+
+  it('retry after onItemSuccess threw runs only onItemSuccess, never after twice', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const after = vi.fn()
+    const onItemSuccess = vi.fn().mockRejectedValueOnce(new Error('save failed')).mockResolvedValue(undefined)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { after, onItemSuccess }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.status === 'error')
+    expect(item).toMatchObject({ storageId: 's0', refused: false, stage: null })
+
+    result.retry(item.id)
+    await waitFor(() => item.status === 'success')
+    expect(after).toHaveBeenCalledTimes(1)
+    expect(onItemSuccess).toHaveBeenCalledTimes(2)
+    expect(onItemSuccess).toHaveBeenLastCalledWith('s0', item)
+    expect(FakeXhr.instances).toHaveLength(1)
+  })
+
+  it('settles an item as failed when isRefusal throws', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onComplete = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      concurrency: 1,
+      after: () => Promise.reject(new Error('attach failed')),
+      isRefusal: () => {
+        throw new TypeError('broken check')
+      },
+      onComplete,
+    }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    // The slot comes back: the second item starts.
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+
+    expect(result.items.value.map(item => [item.status, item.refused])).toEqual([['error', false], ['error', false]])
+    expect(result.items.value[0]!.error?.message).toBe('attach failed')
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps a retry started from onItemError abortable', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    let retried = false
+    let signal: AbortSignal | undefined
+    const after = vi.fn((_storageId: string, _item: unknown, seen: AbortSignal) => {
+      signal = seen
+      return retried ? new Promise<void>(() => {}) : Promise.reject(new Error('network down'))
+    })
+    let queue!: ReturnType<typeof useUploadQueue>
+
+    const { result } = await mountWithConvex(client, () => (queue = useUploadQueue(genUrlRef, {
+      after,
+      onItemError: (_error, item) => {
+        if (retried) return
+        retried = true
+        queue.retry(item.id)
+      },
+    })))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => after.mock.calls.length === 2)
+    expect(item.status).toBe('uploading')
+
+    // The first run has finished; the retry it started still answers to cancel.
+    result.cancel()
+    expect(signal?.aborted).toBe(true)
   })
 
   it('retry leaves items that did not fail alone', async () => {

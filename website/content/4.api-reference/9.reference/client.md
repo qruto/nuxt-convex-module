@@ -796,17 +796,17 @@ A single entry in the queue managed by [useUploadQueue](#useuploadqueue).
 | <a id="file"></a> `file` | `Blob` | The file or blob being uploaded. | [src/runtime/vue/composables/use-upload-queue.ts:30](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L30) |
 | <a id="status-1"></a> `status` | [`UploadItemStatus`](#uploaditemstatus) | Current upload status. | [src/runtime/vue/composables/use-upload-queue.ts:32](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L32) |
 | <a id="progress"></a> `progress` | `number` | Upload progress for this item, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:34](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L34) |
-| <a id="storageid"></a> `storageId` | [`StorageId`](#storageid-1) \| `null` | The storage id once the upload succeeds, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L36) |
-| <a id="error"></a> `error` | `Error` \| `null` | The error if this item failed, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L38) |
-| <a id="refused"></a> `refused` | `boolean` | Whether the error is a refusal rather than a failure: the app said no (`isRefusal`; by default a `ConvexError`), so the same file would be turned away again. `false` while the item has no error. | [src/runtime/vue/composables/use-upload-queue.ts:44](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L44) |
-| <a id="stage"></a> `stage` | [`UploadItemStage`](#uploaditemstage) \| `null` | The step an `uploading` item is on, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:46](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L46) |
-| <a id="prepared"></a> `prepared` | `Blob` \| `null` | What `prepare` returned, which is what gets sent; `null` until it runs, or without a `prepare` hook (the file itself is sent). Kept for a retry and for a preview. | [src/runtime/vue/composables/use-upload-queue.ts:52](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L52) |
+| <a id="storageid"></a> `storageId` | [`StorageId`](#storageid-1) \| `null` | The storage id once the file is stored, or `null`. An item that failed after that keeps it (see `after` and `onItemSuccess`). | [src/runtime/vue/composables/use-upload-queue.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L39) |
+| <a id="error"></a> `error` | `Error` \| `null` | The error if this item failed, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:41](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L41) |
+| <a id="refused"></a> `refused` | `boolean` | Whether the error is a refusal rather than a failure: the app said no (`isRefusal`; by default a `ConvexError`), so the same file would be turned away again. `false` while the item has no error. | [src/runtime/vue/composables/use-upload-queue.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L47) |
+| <a id="stage"></a> `stage` | [`UploadItemStage`](#uploaditemstage) \| `null` | The step an `uploading` item is on, or `null`. | [src/runtime/vue/composables/use-upload-queue.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L49) |
+| <a id="prepared"></a> `prepared` | `Blob` \| `null` | What `prepare` returned, which is what gets sent; `null` until it runs, or without a `prepare` hook (the file itself is sent). Kept for a retry and for a preview. | [src/runtime/vue/composables/use-upload-queue.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L55) |
 
 ***
 
 ### UseUploadQueueOptions
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:60](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L60)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L63)
 
 Options for [useUploadQueue](#useuploadqueue).
 
@@ -814,19 +814,19 @@ Options for [useUploadQueue](#useuploadqueue).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="concurrency"></a> `concurrency?` | `number` | Maximum number of uploads to run at once. Defaults to `3`. | [src/runtime/vue/composables/use-upload-queue.ts:62](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L62) |
-| <a id="prepare"></a> `prepare?` | (`file`, `item`, `signal`) => `Blob` \| `Promise`\<`Blob`\> | Turn a queued file into what is sent, before an upload URL is asked for: resize, re-encode, strip metadata. Throw to turn the file away; the item ends `error`, refused when `isRefusal` says so. Runs once per item: a retry reuses what it returned. | [src/runtime/vue/composables/use-upload-queue.ts:69](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L69) |
-| <a id="after"></a> `after?` | (`storageId`, `item`, `signal`) => `void` \| `Promise`\<`void`\> | Runs once the file is stored, before the item counts as a success: attach the storage id to a document, run a check on it. The item stays `uploading` (stage `'after'`) until it settles. A throw ends the item `error`; a retry then runs only this hook again, with the same storage id, unless the throw was a refusal, which sends the file again. | [src/runtime/vue/composables/use-upload-queue.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L77) |
-| <a id="isrefusal"></a> `isRefusal?` | (`error`, `item`) => `boolean` | Whether an error is a refusal (the app turned the file away) rather than a failure (the network, the deployment, an abort). Defaults to: the error is a `ConvexError`, which a Convex function throws on purpose. An aborted item is never refused. | [src/runtime/vue/composables/use-upload-queue.ts:84](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L84) |
-| <a id="onitemsuccess"></a> `onItemSuccess?` | (`storageId`, `item`) => `void` \| `Promise`\<`void`\> | Called when an individual item finishes uploading (after `after`). | [src/runtime/vue/composables/use-upload-queue.ts:86](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L86) |
-| <a id="onitemerror"></a> `onItemError?` | (`error`, `item`) => `void` | Called when an individual item fails or is refused (`item.refused` says which). | [src/runtime/vue/composables/use-upload-queue.ts:88](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L88) |
-| <a id="oncomplete"></a> `onComplete?` | (`items`) => `void` | Called once every queued item has settled (succeeded or failed). | [src/runtime/vue/composables/use-upload-queue.ts:90](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L90) |
+| <a id="concurrency"></a> `concurrency?` | `number` | Maximum number of uploads to run at once. Defaults to `3`. | [src/runtime/vue/composables/use-upload-queue.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L65) |
+| <a id="prepare"></a> `prepare?` | (`file`, `item`, `signal`) => `Blob` \| `Promise`\<`Blob`\> | Turn a queued file into what is sent, before an upload URL is asked for: resize, re-encode, strip metadata. Throw to turn the file away; the item ends `error`, refused when `isRefusal` says so. Runs once per item: a retry reuses what it returned. | [src/runtime/vue/composables/use-upload-queue.ts:72](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L72) |
+| <a id="after"></a> `after?` | (`storageId`, `item`, `signal`) => `void` \| `Promise`\<`void`\> | Runs once the file is stored, before the item counts as a success: attach the storage id to a document, run a check on it. The item stays `uploading` (stage `'after'`) until it settles. A throw ends the item `error`; a retry then runs only this hook again, with the same storage id, unless the throw was a refusal, which sends the file again. After a refusal `item.storageId` still holds the stored file while the item is in error, so `onItemError` can delete it; the queue never deletes files, and a retry forgets it before uploading again. | [src/runtime/vue/composables/use-upload-queue.ts:83](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L83) |
+| <a id="isrefusal"></a> `isRefusal?` | (`error`, `item`) => `boolean` | Whether an error is a refusal (the app turned the file away) rather than a failure (the network, the deployment, an abort). Defaults to: the error is a `ConvexError`, which a Convex function throws on purpose. An aborted item is never refused, and neither is an error this check throws on. | [src/runtime/vue/composables/use-upload-queue.ts:91](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L91) |
+| <a id="onitemsuccess"></a> `onItemSuccess?` | (`storageId`, `item`) => `void` \| `Promise`\<`void`\> | Called when an individual item finishes uploading (after `after`). A throw ends the item `error` with its storage id kept; a retry then runs only this callback again, never `after` a second time. | [src/runtime/vue/composables/use-upload-queue.ts:97](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L97) |
+| <a id="onitemerror"></a> `onItemError?` | (`error`, `item`) => `void` | Called when an individual item fails or is refused (`item.refused` says which). | [src/runtime/vue/composables/use-upload-queue.ts:99](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L99) |
+| <a id="oncomplete"></a> `onComplete?` | (`items`) => `void` | Called once every queued item has settled (succeeded or failed). | [src/runtime/vue/composables/use-upload-queue.ts:101](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L101) |
 
 ***
 
 ### VueUploadQueue
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:101](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L101)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:112](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L112)
 
 The reactive queue returned by [useUploadQueue](#useuploadqueue).
 
@@ -834,16 +834,16 @@ The reactive queue returned by [useUploadQueue](#useuploadqueue).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="items"></a> `items` | `Readonly`\<`Ref`\<[`UploadQueueItem`](#uploadqueueitem)[]\>\> | Reactive list of queued items, in insertion order. | [src/runtime/vue/composables/use-upload-queue.ts:103](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L103) |
-| <a id="enqueue"></a> `enqueue` | (`files`) => `void` | Add one or more files to the queue; uploading starts automatically. | [src/runtime/vue/composables/use-upload-queue.ts:105](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L105) |
-| <a id="isuploading"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while any item is pending or uploading. | [src/runtime/vue/composables/use-upload-queue.ts:107](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L107) |
-| <a id="progress-1"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Aggregate progress across all items, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:109](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L109) |
-| <a id="pendingcount"></a> `pendingCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items waiting to start. | [src/runtime/vue/composables/use-upload-queue.ts:111](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L111) |
-| <a id="activecount"></a> `activeCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items currently uploading. | [src/runtime/vue/composables/use-upload-queue.ts:113](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L113) |
-| <a id="cancel"></a> `cancel` | () => `void` | Abort all in-flight uploads (queued items stay `pending`). | [src/runtime/vue/composables/use-upload-queue.ts:115](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L115) |
-| <a id="remove"></a> `remove` | (`id`) => `void` | Remove an item by id, aborting it first if it is uploading. | [src/runtime/vue/composables/use-upload-queue.ts:117](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L117) |
-| <a id="clear"></a> `clear` | () => `void` | Abort everything and empty the queue. | [src/runtime/vue/composables/use-upload-queue.ts:119](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L119) |
-| <a id="retry"></a> `retry` | (`id?`) => `void` | Queue an errored item again, or every errored item without an id. It picks up where it stopped: `after` alone when the file is stored, the transfer when `prepare` already ran. Whether a refused item is worth retrying is the app's call; nothing here stops it. | [src/runtime/vue/composables/use-upload-queue.ts:126](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L126) |
+| <a id="items"></a> `items` | `Readonly`\<`Ref`\<[`UploadQueueItem`](#uploadqueueitem)[]\>\> | Reactive list of queued items, in insertion order. | [src/runtime/vue/composables/use-upload-queue.ts:114](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L114) |
+| <a id="enqueue"></a> `enqueue` | (`files`) => `void` | Add one or more files to the queue; uploading starts automatically. | [src/runtime/vue/composables/use-upload-queue.ts:116](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L116) |
+| <a id="isuploading"></a> `isUploading` | `Readonly`\<`Ref`\<`boolean`\>\> | `true` while any item is pending or uploading. | [src/runtime/vue/composables/use-upload-queue.ts:118](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L118) |
+| <a id="progress-1"></a> `progress` | `Readonly`\<`Ref`\<`number`\>\> | Aggregate progress across all items, from `0` to `1`. | [src/runtime/vue/composables/use-upload-queue.ts:120](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L120) |
+| <a id="pendingcount"></a> `pendingCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items waiting to start. | [src/runtime/vue/composables/use-upload-queue.ts:122](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L122) |
+| <a id="activecount"></a> `activeCount` | `Readonly`\<`Ref`\<`number`\>\> | Number of items currently uploading. | [src/runtime/vue/composables/use-upload-queue.ts:124](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L124) |
+| <a id="cancel"></a> `cancel` | () => `void` | Abort all in-flight uploads (queued items stay `pending`). | [src/runtime/vue/composables/use-upload-queue.ts:126](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L126) |
+| <a id="remove"></a> `remove` | (`id`) => `void` | Remove an item by id, aborting it first if it is uploading. | [src/runtime/vue/composables/use-upload-queue.ts:128](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L128) |
+| <a id="clear"></a> `clear` | () => `void` | Abort everything and empty the queue. | [src/runtime/vue/composables/use-upload-queue.ts:130](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L130) |
+| <a id="retry"></a> `retry` | (`id?`) => `void` | Queue an errored item again, or every errored item without an id. It picks up where it stopped: `onItemSuccess` alone when `after` already finished, `after` alone when the file is stored, the transfer when `prepare` already ran. Whether a refused item is worth retrying is the app's call; nothing here stops it. | [src/runtime/vue/composables/use-upload-queue.ts:138](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L138) |
 
 ***
 
@@ -1812,7 +1812,7 @@ its `after` hook. `null` outside `uploading`.
 type EnqueueInput = Blob | Blob[] | FileList | null | undefined;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:94](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L94)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:105](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L105)
 
 Accepted inputs to [VueUploadQueue.enqueue](#enqueue).
 
@@ -2467,7 +2467,7 @@ const url = useStorageUrl(api.images.getUrl, storageId)
 const useConvexUploadQueue: (generateUploadUrl, options) => VueUploadQueue = useUploadQueue;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:359](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L359)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:390](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L390)
 
 Upload many files to Convex file storage with bounded concurrency and
 per-item reactive progress.
@@ -3472,7 +3472,7 @@ const url = useStorageUrl(api.images.getUrl, storageId)
 function useUploadQueue(generateUploadUrl, options?): VueUploadQueue;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L190)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:202](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L202)
 
 Upload many files to Convex file storage with bounded concurrency and
 per-item reactive progress.
