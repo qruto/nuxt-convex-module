@@ -266,13 +266,14 @@ try {
   // coming back) and a declaration that spells out a dependency's types instead
   // of naming them. Raise the ceiling in the change that explains the growth.
   // 0.13.0 measured 575 KB. The upload queue's `prepare` / `after` / `retry`
-  // (+4 KB, most of it the JSDoc mkdist keeps) and the `/testing` entry (+3 KB,
-  // two files) moved the ceiling to 590 KB. The lazy Better Auth client adds its loader
-  // and the no-session flag (+7 KB, two files), about 589 KB with both, so the
-  // ceiling moves to 600 KB.
+  // (+4 KB, most of it the JSDoc mkdist keeps) and the `/testing` entry and
+  // `function-name` (+6 KB, four files) took main to 584.7 KB in 110 files.
+  // The lazy Better Auth client adds its loader, the no-session flag and the
+  // registration transform (+11 KB, two files: `auth-client-loader.{js,d.ts}`),
+  // 595.9 KB in 112 files, so the ceiling moves to 605 KB / 112 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 600_000
-  const MAX_FILES = 110
+  const MAX_BYTES = 605_000
+  const MAX_FILES = 112
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {
