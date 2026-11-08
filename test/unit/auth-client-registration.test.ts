@@ -1,5 +1,7 @@
 // PARITY: D-18
-import { win32 } from 'node:path'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, win32 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
 /** The part of a Vite plugin this test drives. */
@@ -11,7 +13,11 @@ interface Plugin { transform?: unknown }
 // the session follows a client nothing loaded through the loader.
 
 const plugins: Plugin[] = []
+// What @nuxt/kit's `resolvePath` answers for an alias target: by default the
+// target itself; a test sets the file it resolves to.
+const resolved = new Map<string, string>()
 vi.mock('@nuxt/kit', () => ({
+  resolvePath: async (target: string) => resolved.get(target) ?? target,
   addVitePlugin: (plugin: Plugin, options: unknown) => {
     expect(options).toEqual({ server: false })
     plugins.push(plugin)
@@ -26,30 +32,59 @@ function transformFor(target: string | undefined) {
   registerAuthClientOnEvaluation({ resolve: (path: string) => `/pkg/dist/${path.slice(2)}` } as never, nuxt as never)
   const { transform } = plugins[0]!
   return (code: string, id: string, ssr = false) =>
-    (transform as (code: string, id: string, options?: { ssr?: boolean }) => { code: string } | undefined)(code, id, { ssr })
+    (transform as (code: string, id: string, options?: { ssr?: boolean }) => Promise<{ code: string } | undefined>)(code, id, { ssr })
 }
 
 describe('the auth client registration', () => {
   it('appends a self import that hands the module\'s authClient to the loader', () => {
     const code = authClientRegistration('/app/app/convex-auth-client.ts', '/pkg/dist/runtime/better-auth/vue/auth-client-loader')
-    expect(code).toContain('import { registerAuthClient as __convexRegisterAuthClient } from "/pkg/dist/runtime/better-auth/vue/auth-client-loader"')
+    expect(code).toContain('import { registerEvaluatedAuthClient as __convexRegisterAuthClient } from "/pkg/dist/runtime/better-auth/vue/auth-client-loader"')
     // Relative, so a dev server serves it as the same module, not a second copy.
     expect(code).toContain('import * as __convexAuthClientModule from "./convex-auth-client.ts"')
     expect(code).toContain('__convexRegisterAuthClient(__convexAuthClientModule.authClient)')
   })
 
-  it('transforms the module behind the alias in the browser build, however its id is spelled', () => {
+  it('transforms the module behind the alias in the browser build, however its id is spelled', async () => {
     const transform = transformFor('/app/app/convex-auth-client')
-    const result = transform('export const authClient = {}', '/app/app/convex-auth-client.ts?v=123')
+    const result = await transform('export const authClient = {}', '/app/app/convex-auth-client.ts?v=123')
     expect(result?.code.startsWith('export const authClient = {}\n')).toBe(true)
     expect(result?.code).toContain('__convexRegisterAuthClient(__convexAuthClientModule.authClient)')
   })
 
-  it('leaves the server build, other modules and a missing alias alone', () => {
+  it('leaves the server build, other modules and a missing alias alone', async () => {
     const transform = transformFor('/app/app/convex-auth-client')
-    expect(transform('export const authClient = {}', '/app/app/convex-auth-client.ts', true)).toBeUndefined()
-    expect(transform('export const x = 1', '/app/app/other.ts')).toBeUndefined()
-    expect(transformFor(undefined)('export const authClient = {}', '/app/app/convex-auth-client.ts')).toBeUndefined()
+    expect(await transform('export const authClient = {}', '/app/app/convex-auth-client.ts', true)).toBeUndefined()
+    expect(await transform('export const x = 1', '/app/app/other.ts')).toBeUndefined()
+    expect(await transformFor(undefined)('export const authClient = {}', '/app/app/convex-auth-client.ts')).toBeUndefined()
+  })
+
+  it('keeps the dots in a client\'s name: auth.client is auth.client.ts, not auth.ts', async () => {
+    resolved.set('/app/app/auth.client', '/app/app/auth.client.ts')
+    const transform = transformFor('/app/app/auth.client')
+    expect((await transform('export const authClient = {}', '/app/app/auth.client.ts'))?.code).toContain('__convexRegisterAuthClient')
+    expect(await transform('export const x = 1', '/app/app/auth.ts')).toBeUndefined()
+  })
+
+  it('matches an alias that names a directory, by the index file it resolves to', async () => {
+    resolved.set('/app/auth', '/app/auth/index.ts')
+    const transform = transformFor('/app/auth')
+    expect((await transform('export const authClient = {}', '/app/auth/index.ts'))?.code).toContain('__convexRegisterAuthClient')
+  })
+
+  it('matches an alias under a symlinked root, by the real path Vite transforms', async () => {
+    const base = realpathSync(mkdtempSync(join(tmpdir(), 'ncm-auth-client-')))
+    try {
+      mkdirSync(join(base, 'real'))
+      writeFileSync(join(base, 'real', 'auth-client.ts'), 'export const authClient = {}\n')
+      // A junction on Windows, which needs no admin rights.
+      symlinkSync(join(base, 'real'), join(base, 'linked'), process.platform === 'win32' ? 'junction' : 'dir')
+      resolved.set(join(base, 'linked', 'auth-client'), join(base, 'linked', 'auth-client.ts'))
+      const transform = transformFor(join(base, 'linked', 'auth-client'))
+      expect((await transform('export const authClient = {}', join(base, 'real', 'auth-client.ts')))?.code).toContain('__convexRegisterAuthClient')
+    }
+    finally {
+      rmSync(base, { recursive: true, force: true })
+    }
   })
 })
 
@@ -58,7 +93,7 @@ describe('keeping the auth client off the prefetch list', () => {
 
   async function manifestAfterBuild(options: { srcDir: string, viteRoot?: string, target: string }, manifest: Record<string, Chunk>) {
     const { keepAuthClientOffPrefetch } = await import('../../src/auth-client-registration')
-    let hook: ((manifest: Record<string, Chunk>) => void) | undefined
+    let hook: ((manifest: Record<string, Chunk>) => Promise<void>) | undefined
     const nuxt = {
       options: { srcDir: options.srcDir, vite: options.viteRoot ? { root: options.viteRoot } : {}, alias: { '#convex/auth-client': options.target } },
       hook: (_name: string, fn: typeof hook) => {
@@ -66,7 +101,7 @@ describe('keeping the auth client off the prefetch list', () => {
       },
     }
     keepAuthClientOffPrefetch(nuxt as never)
-    hook!(manifest)
+    await hook!(manifest)
     return manifest
   }
 

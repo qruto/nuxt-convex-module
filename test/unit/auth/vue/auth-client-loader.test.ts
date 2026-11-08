@@ -195,6 +195,75 @@ describe('lazyAuthClient', () => {
     expect(unsubscribeAtom).toHaveBeenCalledTimes(1)
   })
 
+  it('calls a method read off the loaded client with the client as this', async () => {
+    const receivers: unknown[] = []
+    const keyed = { action(this: unknown) {
+      receivers.push(this)
+      return 'ok'
+    } }
+    vi.doMock('#convex/auth-client', () => ({ authClient: keyed }))
+    try {
+      vi.resetModules()
+      const fresh = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      const client = fresh.lazyAuthClient as unknown as typeof keyed
+      await fresh.loadAuthClient()
+      expect(client.action()).toBe('ok')
+      expect(receivers).toEqual([keyed])
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
+  it('keeps a store subscription made before the load through a failed load', async () => {
+    let failures = 1
+    vi.doMock('#convex/auth-client', () => {
+      if (failures-- > 0) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    try {
+      const { lazyAuthClient, loadAuthClient } = await loader()
+      const subscribe = fakeClient.$store.atoms.session.subscribe
+      subscribe.mockClear()
+      const client = lazyAuthClient as unknown as typeof fakeClient
+      client.$store.atoms.session.subscribe(() => {})
+      await vi.waitFor(() => expect(failures).toBe(0))
+      await Promise.resolve()
+      expect(subscribe).not.toHaveBeenCalled()
+
+      vi.resetModules()
+      await loadAuthClient()
+      expect(subscribe).toHaveBeenCalledTimes(1)
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
+  it('answers a hook with the error when its load fails twice, and stops waiting when its scope ends', async () => {
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    try {
+      const { lazyAuthClient, registerAuthClient } = await loader()
+      const client = lazyAuthClient as unknown as typeof fakeClient
+      fakeClient.useActiveOrganization.mockClear()
+      const scope = effectScope()
+      const organization = scope.run(() => client.useActiveOrganization()) as unknown as { value: { isPending: boolean, error: unknown } }
+
+      await vi.waitFor(() => expect(organization.value.isPending).toBe(false))
+      expect(organization.value.error).toBeInstanceOf(Error)
+
+      // Unmounted before the client came: nothing of it is left waiting.
+      scope.stop()
+      registerAuthClient(fakeClient as never)
+      expect(fakeClient.useActiveOrganization).not.toHaveBeenCalled()
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
   it('is not a thenable, so awaiting it loads nothing', async () => {
     const { lazyAuthClient, loadedAuthClient } = await loader()
     expect(await lazyAuthClient).toBe(lazyAuthClient)
@@ -262,6 +331,47 @@ describe('deferAuthClient', () => {
     finally {
       vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
     }
+  })
+
+  // A `<NuxtLink>` prefetching a page that imports `authClient` statically
+  // runs the client module. That must not opt the visitor in.
+  it('keeps a client module that ran during the deferral unused, until Better Auth signals a session change', async () => {
+    const { deferAuthClient, loadedAuthClient, onAuthClient, registerEvaluatedAuthClient } = await loader()
+    let signalled: (() => void) | undefined
+    const stop = vi.fn()
+    const ran = { $store: { atoms: { $sessionSignal: { listen: (listener: () => void) => {
+      signalled = listener
+      return stop
+    } } } } }
+    const listener = vi.fn()
+    onAuthClient(listener)
+    deferAuthClient()
+
+    registerEvaluatedAuthClient(ran as never)
+    expect(loadedAuthClient()).toBeUndefined()
+    expect(listener).not.toHaveBeenCalled()
+
+    // A sign-in through the static import.
+    signalled!()
+    expect(loadedAuthClient()).toBe(ran)
+    expect(listener).toHaveBeenCalledWith(ran)
+    expect(stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses a client module that ran during the deferral on the first loadAuthClient()', async () => {
+    const { deferAuthClient, loadAuthClient, loadedAuthClient, registerEvaluatedAuthClient } = await loader()
+    deferAuthClient()
+    const ran = { $store: { atoms: {} } }
+    registerEvaluatedAuthClient(ran as never)
+
+    await expect(loadAuthClient()).resolves.toBe(ran)
+    expect(loadedAuthClient()).toBe(ran)
+  })
+
+  it('counts a client module that ran with nothing deferred as loaded at once', async () => {
+    const { loadedAuthClient, registerEvaluatedAuthClient } = await loader()
+    registerEvaluatedAuthClient(fakeClient as never)
+    expect(loadedAuthClient()).toBe(fakeClient)
   })
 
   it('reads as not deferred once a first use loaded the client', async () => {
@@ -389,6 +499,27 @@ describe('a session that waits for the client', () => {
     expect(session.value).toBe(sessionRef.value)
   })
 
+  it('lets a guarded route wait out a failed first load that the retry recovers', async () => {
+    let failures = 1
+    vi.doMock('#convex/auth-client', () => {
+      if (failures-- > 0) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    try {
+      const { useBetterAuth, settleSessionWithoutClient, clientSessionSettled, loadedAuthClient } = await deferred()
+      const { session } = useBetterAuth()
+      settleSessionWithoutClient()
+      sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+
+      await clientSessionSettled()
+      expect(loadedAuthClient()).toBe(fakeClient)
+      expect(session.value).toBe(sessionRef.value)
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
   it('loads the client for a refetch asked of the waiting session', async () => {
     const { useBetterAuth, loadedAuthClient } = await deferred()
     const refetch = vi.fn(async () => {})
@@ -424,6 +555,33 @@ describe('a client chunk that fails to load at startup', () => {
 
     await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
     expect(session.value).toBe(sessionRef.value)
+  })
+
+  it('keeps the server\'s token after a second failure, and asks again when the browser is back online', async () => {
+    let failing = true
+    vi.doMock('#convex/auth-client', () => {
+      if (failing) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    const online: Array<() => void> = []
+    vi.stubGlobal('window', { addEventListener: (type: string, listener: () => void) => type === 'online' && online.push(listener), removeEventListener: () => {} })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { loadedAuthClient } = await loader()
+    const { useBetterAuth } = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+    const serverToken = `header.${Buffer.from(JSON.stringify({ sessionId: 'session-1' })).toString('base64url')}.signature`
+    const { session, isAuthenticated, fetchAccessToken } = useBetterAuth(serverToken)
+
+    await vi.waitFor(() => expect(online).toHaveLength(1))
+    // Signed in on the token: nothing settled it signed out, nothing dropped it.
+    expect(session.value.isPending).toBe(true)
+    expect(isAuthenticated.value).toBe(true)
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBe(serverToken)
+
+    failing = false
+    vi.resetModules()
+    online[0]!()
+    await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
+    warn.mockRestore()
   })
 
   it('settles the session signed out, with the error, after a second failure', async () => {

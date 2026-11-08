@@ -269,8 +269,8 @@ try {
   // (+4 KB, most of it the JSDoc mkdist keeps) and the `/testing` entry and
   // `function-name` (+6 KB, four files) took main to 584.7 KB in 110 files.
   // The lazy Better Auth client adds its loader, the no-session flag and the
-  // registration transform (+11 KB, two files: `auth-client-loader.{js,d.ts}`),
-  // 595.9 KB in 112 files, so the ceiling moves to 605 KB / 112 files.
+  // registration transform (+16 KB, two files: `auth-client-loader.{js,d.ts}`),
+  // 600.9 KB in 112 files, so the ceiling moves to 605 KB / 112 files.
   console.log('── Size ───────────────────────────────────────')
   const MAX_BYTES = 605_000
   const MAX_FILES = 112

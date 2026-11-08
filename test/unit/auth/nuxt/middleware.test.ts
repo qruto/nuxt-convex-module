@@ -11,6 +11,7 @@ const {
   mockUseAuth,
   mockLoadAuthClient,
   mockClientSessionSettled,
+  mockLoadedAuthClient,
 } = vi.hoisted(() => ({
   mockNavigateTo: vi.fn((to: unknown) => ({ redirectedTo: to })),
   mockUseRequestEvent: vi.fn(),
@@ -20,6 +21,7 @@ const {
   mockUseAuth: vi.fn(),
   mockLoadAuthClient: vi.fn(async () => ({})),
   mockClientSessionSettled: vi.fn(async () => {}),
+  mockLoadedAuthClient: vi.fn((): unknown => ({})),
 }))
 
 vi.mock('#app', () => ({
@@ -37,6 +39,7 @@ vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
 
 vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
   loadAuthClient: mockLoadAuthClient,
+  loadedAuthClient: mockLoadedAuthClient,
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({
@@ -169,6 +172,25 @@ describe('auth route middleware', () => {
     // PARITY: D-18 — a session settled signed out without the client (the
     // server saw no cookie) may be stale: a sign-in in another tab or through
     // a static import. The guard waits for the client's own answer.
+    it('lets a visitor the server\'s token covers through when the client cannot load', async () => {
+      mockLoadedAuthClient.mockReturnValueOnce(undefined)
+      mockUseAuth.mockReturnValue({ session: ref({ isPending: true, data: null }), isAuthenticated: ref(true) })
+      const { middleware } = await loadMiddleware()
+
+      await expect(middleware(route('/profile'))).resolves.toBeUndefined()
+      expect(mockNavigateTo).not.toHaveBeenCalled()
+    })
+
+    it('sends a visitor nothing covers to sign in when the client cannot load', async () => {
+      mockLoadedAuthClient.mockReturnValueOnce(undefined)
+      mockUseAuth.mockReturnValue({ session: ref({ isPending: false, data: null }), isAuthenticated: ref(false) })
+      const { middleware } = await loadMiddleware()
+
+      await expect(middleware(route('/profile'))).resolves.toEqual({
+        redirectedTo: { path: '/login', query: { redirect: '/profile' } },
+      })
+    })
+
     it('decides on the client\'s answer, not on a session settled without it', async () => {
       const session = ref<{ isPending: boolean, data: { user: string } | null }>({ isPending: false, data: null })
       mockUseAuth.mockReturnValue({ session })

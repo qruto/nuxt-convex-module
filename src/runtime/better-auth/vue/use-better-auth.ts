@@ -1,7 +1,7 @@
 import type { AuthTokenFetcher } from 'convex/browser'
 import { computed, effectScope, hasInjectionContext, inject, shallowRef, triggerRef, watch, type ComputedRef, type EffectScope, type ShallowRef } from 'vue'
 import type { AuthClient } from '#convex/auth-client'
-import { __resetAuthClientLoaderForTests, isAuthClientDeferred, lazyAuthClient, loadAuthClient, loadedAuthClient, onAuthClient } from './auth-client-loader'
+import { __resetAuthClientLoaderForTests, isAuthClientDeferred, lazyAuthClient, loadAuthClient, loadedAuthClient, onAuthClient, retryAuthClientLoad } from './auth-client-loader'
 import { BetterAuthTokenStoreKey, clearToken, createBetterAuthTokenStore, PENDING_AUTH_VERSION, readTokenClaims, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
 // The browser runs one app, so its store lives at module scope.
@@ -110,17 +110,26 @@ const useClientSession = (): BetterAuthSession => {
 
 // PARITY: D-18
 // A chunk that fails to load (a deploy that replaced it, a dropped request)
-// is asked for once more; a second failure settles the session signed out,
+// is asked for once more. A second failure settles the session signed out,
 // with the error, so a page that makes no further use of the client does not
-// read loading for good. The next use asks for the chunk again.
+// read loading for good, unless the server's token still covers the session:
+// settling would drop it, and the visitor is signed in on it. Either way the
+// chunk is asked for again when the browser is back online or the tab back in
+// view, and on the next use.
 async function loadAtStartup(): Promise<void> {
   try {
     await loadAuthClient().catch(() => loadAuthClient())
   }
   catch (error) {
     console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
-    settle(error)
+    if (!coveredByServerToken()) settle(error)
+    retryAuthClientLoad()
   }
+}
+
+/** Whether the token the server prefetched is still standing in for a session nothing has confirmed. */
+function coveredByServerToken(): boolean {
+  return Boolean(browserStore.cachedToken.value) && browserStore.cachedTokenVersion === PENDING_AUTH_VERSION
 }
 
 /**
@@ -133,10 +142,12 @@ async function loadAtStartup(): Promise<void> {
 export async function clientSessionSettled(): Promise<void> {
   useClientSession()
   try {
-    await loadAuthClient()
+    // Asked for once more, as at startup: a first failure may be the one the
+    // startup retry is already recovering from.
+    await loadAuthClient().catch(() => loadAuthClient())
   }
   catch {
-    settle()
+    if (!coveredByServerToken()) settle()
     return
   }
   if (clientAnswered.value) return

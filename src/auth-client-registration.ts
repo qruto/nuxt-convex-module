@@ -1,13 +1,15 @@
 // PARITY: D-18
+import { realpathSync } from 'node:fs'
 import path, { basename } from 'node:path'
-import { addVitePlugin, type Resolver } from '@nuxt/kit'
+import { addVitePlugin, resolvePath, type Resolver } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
 
-/** A path with `/` separators and no extension, as two spellings of one module compare. */
-const moduleKey = (file: string): string => {
-  const posixFile = file.replaceAll('\\', '/')
-  return posixFile.slice(0, posixFile.length - path.posix.extname(posixFile).length)
-}
+// The extensions a module's id may carry. Anything else after a dot is part
+// of the name: `auth.client` is `auth.client.ts`, not `auth.ts`.
+const SCRIPT_EXTENSION = /\.(?:[cm]?[jt]sx?|vue)$/
+
+/** A path with `/` separators and no script extension, as two spellings of one module compare. */
+const moduleKey = (file: string): string => file.replaceAll('\\', '/').replace(SCRIPT_EXTENSION, '')
 
 /**
  * Whether a client-manifest key (or its `src`) names `target`. Keys are
@@ -18,6 +20,33 @@ const moduleKey = (file: string): string => {
  */
 export function manifestKeyMatches(key: string, root: string, target: string, paths: Pick<typeof path, 'relative'> = path): boolean {
   return moduleKey(key) === moduleKey(paths.relative(root, target))
+}
+
+/** `path` with its symlinks followed, or `path` when it cannot be. */
+function real(file: string): string {
+  try {
+    return realpathSync(file)
+  }
+  catch {
+    return file
+  }
+}
+
+/**
+ * Every spelling of the module behind `#convex/auth-client`: the alias as
+ * configured (`join(rootDir, custom)`, often extensionless), the file it
+ * resolves to (an extension, a directory's `index`), and that file with its
+ * symlinks followed, as Vite names the modules it transforms. Resolved once
+ * per build.
+ */
+function authClientFiles(nuxt: Nuxt): () => Promise<string[]> {
+  let files: Promise<string[]> | undefined
+  return () => files ??= (async () => {
+    const target = nuxt.options.alias['#convex/auth-client']
+    if (!target) return []
+    const resolved = await resolvePath(target, { fallbackToOriginal: true })
+    return [...new Set([target, resolved, real(resolved)])]
+  })()
 }
 
 /**
@@ -33,7 +62,7 @@ export function authClientRegistration(file: string, loader: string): string {
   return [
     '',
     '// nuxt-convex-module (PARITY D-18): tell the loader this client has evaluated.',
-    `import { registerAuthClient as __convexRegisterAuthClient } from ${JSON.stringify(loader)}`,
+    `import { registerEvaluatedAuthClient as __convexRegisterAuthClient } from ${JSON.stringify(loader)}`,
     `import * as __convexAuthClientModule from ${JSON.stringify(`./${basename(file)}`)}`,
     '__convexRegisterAuthClient(__convexAuthClientModule.authClient)',
     '',
@@ -48,13 +77,13 @@ export function authClientRegistration(file: string, loader: string): string {
  */
 export function registerAuthClientOnEvaluation(resolver: Resolver, nuxt: Nuxt): void {
   const loader = resolver.resolve('./runtime/better-auth/vue/auth-client-loader')
+  const files = authClientFiles(nuxt)
   addVitePlugin({
     name: 'nuxt-convex-module:auth-client-registration',
-    transform(code, id, transformOptions) {
+    async transform(code, id, transformOptions) {
       if (transformOptions?.ssr) return
-      const target = nuxt.options.alias['#convex/auth-client']
       const file = id.split('?')[0]!
-      if (!target || moduleKey(file) !== moduleKey(target)) return
+      if (!(await files()).some(target => moduleKey(target) === moduleKey(file))) return
       return { code: code + authClientRegistration(file, loader), map: null }
     },
   }, { server: false })
@@ -67,13 +96,15 @@ export function registerAuthClientOnEvaluation(resolver: Resolver, nuxt: Nuxt): 
  * it never downloads it (PARITY D-18); a prefetch would fetch it anyway.
  */
 export function keepAuthClientOffPrefetch(nuxt: Nuxt): void {
-  nuxt.hook('build:manifest', (manifest) => {
-    const target = nuxt.options.alias['#convex/auth-client']
-    if (!target) return
+  const files = authClientFiles(nuxt)
+  nuxt.hook('build:manifest', async (manifest) => {
+    const targets = await files()
+    if (targets.length === 0) return
     // Manifest keys are relative to Vite's root, which Nuxt sets to `srcDir`
-    // unless the app sets `vite.root`.
+    // unless the app sets `vite.root`; a symlinked root is tried both ways.
     const root = nuxt.options.vite?.root ?? nuxt.options.srcDir
-    const isAuthClient = (key: string) => manifestKeyMatches(manifest[key]?.src ?? key, root, target)
+    const roots = [...new Set([root, real(root)])]
+    const isAuthClient = (key: string) => roots.some(base => targets.some(target => manifestKeyMatches(manifest[key]?.src ?? key, base, target)))
     const keys = new Set(Object.keys(manifest).filter(isAuthClient))
     if (keys.size === 0) return
     // As Nuxt keeps page chunks off it: a dynamic import listed here is prefetched.

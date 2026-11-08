@@ -32,7 +32,7 @@ function holdsCrossDomainSession(): boolean {
 export default defineNuxtPlugin({
   name: 'nuxt-convex-module:better-auth:client',
   async setup(nuxtApp) {
-    const { url, crossDomainCallbackRoute } = useRuntimeConfig().public.convex
+    const { url, crossDomainCallbackRoute, deferAuthClient: mayDefer } = useRuntimeConfig().public.convex
 
     if (!url) {
       console.warn('[nuxt-convex-module] No Convex deployment URL configured — client and auth not created. Set NUXT_PUBLIC_CONVEX_URL or `convex.url` in nuxt.config.')
@@ -48,7 +48,7 @@ export default defineNuxtPlugin({
     // signed out once the page has hydrated. Not for a cross-domain session,
     // which lives in this browser's storage where the server cannot see it,
     // nor for a one-time token, which needs the client now.
-    if (useState<boolean>(NO_SESSION_KEY, () => false).value && !new URL(window.location.href).searchParams.has('ott') && !holdsCrossDomainSession()) {
+    if (mayDefer !== false && useState<boolean>(NO_SESSION_KEY, () => false).value && !new URL(window.location.href).searchParams.has('ott') && !holdsCrossDomainSession()) {
       deferAuthClient()
       nuxtApp.hook('app:suspense:resolve', settleSessionWithoutClient)
     }

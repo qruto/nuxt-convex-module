@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 // the Convex client and the scoped auth state, consuming the cross-domain
 // one-time token first.
 
-const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud', crossDomainCallbackRoute: '' } } }
+const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud', crossDomainCallbackRoute: '', deferAuthClient: true } } }
 const initialTokenState = { value: null as string | null }
 const noSessionState = { value: false }
 
@@ -186,6 +186,20 @@ describe('better-auth client plugin, with no session on the request', () => {
     await runPlugin(app)
 
     expect(deferAuthClient).not.toHaveBeenCalled()
+  })
+
+  it('loads it at startup on a builder with no registration transform (webpack, rspack)', async () => {
+    noSessionState.value = true
+    runtimeConfig.public.convex.deferAuthClient = false
+    browser('https://app.example/')
+    const { app } = fakeNuxtApp()
+    try {
+      await runPlugin(app)
+      expect(deferAuthClient).not.toHaveBeenCalled()
+    }
+    finally {
+      runtimeConfig.public.convex.deferAuthClient = true
+    }
   })
 
   it('loads it at startup when the server could not tell', async () => {

@@ -5,13 +5,17 @@
 // page that never needs the client never downloads it. The module behind the
 // alias is still one module: whoever imports it, statically or through here,
 // gets the same instance.
-import { getCurrentScope, shallowRef, watch, type Ref } from 'vue'
+import { getCurrentScope, onScopeDispose, shallowRef, watch, type Ref } from 'vue'
 import type { AuthClient } from '#convex/auth-client'
 
 let loaded: AuthClient | undefined
 let loading: Promise<AuthClient> | undefined
 let deferred = false
 const waiting = new Set<(client: AuthClient) => void>()
+// A client whose module ran while the load was held back, not yet used: a
+// `<NuxtLink>` prefetching a page that imports it statically runs it.
+let evaluated: AuthClient | undefined
+let stopSignal: (() => void) | undefined
 
 /**
  * The app's Better Auth client (`#convex/auth-client`), loading it on the
@@ -29,6 +33,7 @@ const waiting = new Set<(client: AuthClient) => void>()
  * @public
  */
 export function loadAuthClient(): Promise<AuthClient> {
+  if (evaluated) registerAuthClient(evaluated)
   loading ??= import('#convex/auth-client').then(
     ({ authClient }) => {
       registerAuthClient(authClient)
@@ -44,14 +49,33 @@ export function loadAuthClient(): Promise<AuthClient> {
 }
 
 /**
- * Hand the loader a client module that has evaluated: through
- * {@link loadAuthClient}, or a static import of it, which the module's build
- * step makes call this (`registerAuthClientOnEvaluation` in `src/module.ts`).
- * Either way every listener hears of it once; one that throws is reported and
- * the rest still run. @internal
+ * The line the module's build step appends to the client module
+ * (`src/auth-client-registration.ts`) calls this as the module runs. While
+ * the load waits for a first use, a module that merely ran (a prefetch of a
+ * page that imports it statically) is kept, not used: nothing subscribes to
+ * it, so it asks the server nothing. It counts as loaded on a first use
+ * through {@link loadAuthClient}, or once Better Auth signals a session
+ * change on it (a sign-in through the static import). @internal
+ */
+export function registerEvaluatedAuthClient(client: AuthClient): void {
+  if (loaded || evaluated === client) return
+  if (!deferred) return registerAuthClient(client)
+  evaluated = client
+  const signal = (client as { $store?: { atoms?: { $sessionSignal?: { listen?: (listener: () => void) => () => void } } } }).$store?.atoms?.$sessionSignal
+  stopSignal = signal?.listen?.(() => registerAuthClient(client))
+}
+
+/**
+ * Hand the loader the client: what {@link loadAuthClient} imported, or what
+ * {@link registerEvaluatedAuthClient} kept, once it is used. Every listener
+ * hears of it once; one that throws is reported and the rest still run.
+ * @internal
  */
 export function registerAuthClient(client: AuthClient): void {
   if (loaded) return
+  stopSignal?.()
+  stopSignal = undefined
+  evaluated = undefined
   loaded = client
   loading ??= Promise.resolve(client)
   const listeners = [...waiting]
@@ -79,10 +103,18 @@ export function loadedAuthClient(): AuthClient | undefined {
   return loaded
 }
 
-/** Run `listener` with the client: now when it is loaded, else when it arrives. @internal */
-export function onAuthClient(listener: (client: AuthClient) => void): void {
-  if (loaded) listener(loaded)
-  else waiting.add(listener)
+/**
+ * Run `listener` with the client: now when it is loaded, else when it
+ * arrives, however many loads fail first. The function it returns stops a
+ * listener still waiting. @internal
+ */
+export function onAuthClient(listener: (client: AuthClient) => void): () => void {
+  if (loaded) {
+    listener(loaded)
+    return () => {}
+  }
+  waiting.add(listener)
+  return () => waiting.delete(listener)
 }
 
 /**
@@ -100,6 +132,24 @@ export function deferAuthClient(): void {
     void loadAuthClient().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
   }
   document.addEventListener('visibilitychange', onVisible)
+}
+
+/**
+ * Ask for the chunk again when the browser comes back online or the tab back
+ * into view: a startup load that failed twice (a deploy that replaced the
+ * chunk, a dropped connection) keeps a way back without a reload. @internal
+ */
+export function retryAuthClientLoad(): void {
+  if (loaded || typeof window === 'undefined') return
+  const retry = () => {
+    if (document.visibilityState !== 'visible') return
+    void loadAuthClient().then(() => {
+      window.removeEventListener('online', retry)
+      document.removeEventListener('visibilitychange', retry)
+    }, () => {})
+  }
+  window.addEventListener('online', retry)
+  document.addEventListener('visibilitychange', retry)
 }
 
 /** Whether the load waits for a first use (see {@link deferAuthClient}). @internal */
@@ -134,12 +184,13 @@ const HOOK = /^use[A-Z]/
  */
 function pendingSubscription(path: readonly PropertyKey[], args: unknown[]): () => void {
   let unsubscribe: (() => void) | undefined
-  let cancelled = false
-  void loadAuthClient().then((client) => {
-    if (!cancelled) unsubscribe = call(client, path, args) as () => void
-  }, () => {})
+  // Waits for the client through any failed loads, not for this one load.
+  const stopWaiting = onAuthClient((client) => {
+    unsubscribe = call(client, path, args) as () => void
+  })
+  void loadAuthClient().catch(() => {})
   return () => {
-    cancelled = true
+    stopWaiting()
     unsubscribe?.()
   }
 }
@@ -169,15 +220,38 @@ function pendingHook(path: readonly PropertyKey[], args: unknown[]): Ref<unknown
   // Better Auth's stores never fetch on the server, and a server render's
   // scope is never disposed: answer pending, and follow nothing.
   if (import.meta.server) return state
-  onAuthClient((client) => {
+  const stopWaiting = onAuthClient((client) => {
     const follow = () => watch(call(client, path, args) as Ref<Record<string, unknown>>, (value) => {
       state.value = value
     }, { immediate: true, flush: 'sync' })
     if (!scope) follow()
     else if (scope.active) scope.run(follow)
   })
-  void loadAuthClient().catch(() => {})
+  // A caller that unmounts before the client arrives leaves nothing waiting.
+  if (scope) onScopeDispose(stopWaiting)
+  // Asked for once more; when that fails too the hook answers with the
+  // error, and still follows the client should a later use bring it.
+  void loadAuthClient().catch(() => loadAuthClient()).catch((error: unknown) => {
+    if (!loaded) state.value = { ...state.value, isPending: false, error }
+  })
   return state
+}
+
+// A method read off the loaded client through the forwarding one, called as
+// `client.signOut()`, would get the forwarding client as `this`. It is
+// handed out wrapped, so the call reaches it with the object it was read off.
+const withReceivers = new WeakMap<object, unknown>()
+
+function withReceiver(member: unknown, owner: unknown): unknown {
+  if (typeof member !== 'function') return member
+  let wrapped = withReceivers.get(member)
+  if (!wrapped) {
+    wrapped = new Proxy(member, {
+      apply: (fn, _this, args: unknown[]) => Reflect.apply(fn, owner, args),
+    })
+    withReceivers.set(member, wrapped)
+  }
+  return wrapped
 }
 
 // A path through the client that resolves when it is used: read once the
@@ -186,7 +260,10 @@ function pendingHook(path: readonly PropertyKey[], args: unknown[]): Ref<unknown
 function lazyPath(path: readonly PropertyKey[]): unknown {
   return new Proxy(() => {}, {
     get(_target, key) {
-      if (loaded) return (reach(loaded, path).value as Record<PropertyKey, unknown>)[key]
+      if (loaded) {
+        const owner = reach(loaded, path).value as Record<PropertyKey, unknown>
+        return withReceiver(owner[key], owner)
+      }
       // Not a thenable: `await client` must not wait on a call to `then`.
       if (key === 'then') return undefined
       return lazyPath([...path, key])
@@ -216,5 +293,8 @@ export const lazyAuthClient = lazyPath([]) as AuthClient
 /** Forget the deferral between tests. The loaded client is the module's, and stays. @internal */
 export function __resetAuthClientLoaderForTests(): void {
   deferred = false
+  stopSignal?.()
+  stopSignal = undefined
+  evaluated = undefined
   waiting.clear()
 }

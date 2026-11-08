@@ -97,6 +97,33 @@ describe('auth/vue/cross-domain', () => {
     }
   })
 
+  it('does not let a kept token replace a session started since', async () => {
+    vi.resetModules()
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const { consumeCrossDomainOneTimeToken } = await loadModule()
+      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
+      await consumeCrossDomainOneTimeToken()
+
+      // Signed in some other way before the client arrived.
+      mockGetSession.mockResolvedValueOnce({ data: { session: { id: 'newer' } } })
+      registerAuthClient(mockAuthClient as never)
+      await vi.waitFor(() => expect(mockGetSession).toHaveBeenCalledTimes(1))
+      await Promise.resolve()
+      expect(mockVerify).not.toHaveBeenCalled()
+      expect(mockUpdateSession).not.toHaveBeenCalled()
+    }
+    finally {
+      warn.mockRestore()
+      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
+      vi.resetModules()
+    }
+  })
+
   it('keeps the token when the client cannot load, and exchanges it once the client arrives', async () => {
     vi.resetModules()
     vi.doMock('#convex/auth-client', () => {

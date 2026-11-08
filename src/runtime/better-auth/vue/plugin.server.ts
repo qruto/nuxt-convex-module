@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { defineNuxtPlugin, getRouteRules, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
+import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
@@ -39,21 +39,61 @@ export async function prefetchAuthToken(
 }
 
 // PARITY: D-18
+/** The parts of a request event `isSharedRender` reads. */
+export interface RenderContext {
+  /** Nitro's matched route rules (`event.context._nitro.routeRules`), `swr`/`isr` normalised into `cache`. */
+  routeRules?: Record<string, unknown>
+  /** Set by Nitro's cached handler on the render it caches (`event.context.cache`). */
+  cache?: unknown
+  /** The response's caching headers as the render sees them, by lower-case name. */
+  headers?: Record<string, unknown>
+}
+
+const CACHING_HEADERS = ['cache-control', 'cdn-cache-control', 'surrogate-control'] as const
+
+/** A header's value as one string; `''` when unset. */
+function headerText(value: unknown): string {
+  if (Array.isArray(value)) return value.join(',')
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : ''
+}
+
+/** Whether a caching header lets a cache other than this browser's keep the response. */
+function storesForOthers(name: (typeof CACHING_HEADERS)[number], value: string): boolean {
+  const directives = value.toLowerCase().split(',').map(directive => directive.trim().split('=')[0]!).filter(Boolean)
+  if (directives.length === 0 || directives.includes('private') || directives.includes('no-store')) return false
+  // CDN-Cache-Control and Surrogate-Control speak only to shared caches.
+  if (name !== 'cache-control') return true
+  return directives.includes('public') || directives.includes('s-maxage') || directives.includes('max-age')
+}
+
 /**
- * Whether this render may be served to other visitors: a route rule caches it
- * (`cache`, `swr`, `isr`, `prerender`), or its `Cache-Control` lets a shared
- * cache keep it. Nitro's cached handler renders with no cookie (only the
- * `varies` headers reach it), so a cached render always looks signed out:
- * its payload must not tell every browser that reads it there is no session.
+ * Whether this render may be served to other visitors: Nitro caches it (its
+ * cached handler marks the render, or a `cache`/`swr`/`isr`/`prerender`
+ * rule matches), or a caching header lets a shared cache keep it. Nitro's
+ * cached handler renders with no cookie (only the `varies` headers reach
+ * it), so a cached render always looks signed out: its payload must not tell
+ * every browser that reads it there is no session. Read off Nitro's own
+ * rules, not `getRouteRules()` from `#app`, which folds the caching rules
+ * into `payload`.
  *
  * Exported for unit tests.
  * @internal
  */
-export function isSharedRender(rules: Record<string, unknown>, cacheControl: unknown): boolean {
-  if (rules.cache || rules.swr || rules.isr || rules.prerender) return true
-  const header = Array.isArray(cacheControl) ? cacheControl.join(',') : typeof cacheControl === 'string' ? cacheControl : ''
-  const directives = header.toLowerCase().split(',').map(directive => directive.trim().split('=')[0])
-  return directives.includes('public') || directives.includes('s-maxage')
+export function isSharedRender({ routeRules = {}, cache, headers = {} }: RenderContext): boolean {
+  // `payload`: what Nuxt folds `cache`/`swr`/`isr` into, should a merged rule set carry it.
+  if (cache || routeRules.cache || routeRules.swr || routeRules.isr || routeRules.prerender || routeRules.payload) return true
+  const ruleHeaders = Object.fromEntries(Object.entries((routeRules.headers ?? {}) as Record<string, unknown>).map(([name, value]) => [name.toLowerCase(), value]))
+  return CACHING_HEADERS.some(name => storesForOthers(name, headerText(headers[name])) || storesForOthers(name, headerText(ruleHeaders[name])))
+}
+
+/** What `isSharedRender` reads off this request. */
+function renderContext(event: NonNullable<ReturnType<typeof useRequestEvent>>): RenderContext {
+  const context = event.context as { _nitro?: { routeRules?: Record<string, unknown> }, cache?: unknown }
+  return {
+    routeRules: context._nitro?.routeRules,
+    cache: context.cache,
+    headers: Object.fromEntries(CACHING_HEADERS.map(name => [name, event.node?.res?.getHeader?.(name)])),
+  }
 }
 
 /**
@@ -119,7 +159,12 @@ export default defineNuxtPlugin({
       // can wait for a first use before it downloads the Better Auth client.
       // Never on a render other visitors may be served.
       noSession.value = answered && !initialToken.value && !hasSessionCookie(cookie)
-        && !isSharedRender(getRouteRules({ path: event.path }) as Record<string, unknown>, cacheControl.value)
+        && !isSharedRender(renderContext(event))
+      // A page may set a caching header as it renders, after this plugin ran:
+      // check again once it has, before the payload is written.
+      nuxtApp.hooks.hook('app:rendered', () => {
+        if (noSession.value && isSharedRender(renderContext(event))) noSession.value = false
+      })
     }
   },
 })

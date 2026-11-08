@@ -96,9 +96,20 @@ export async function consumeCrossDomainOneTimeToken(
     console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
   })
   if (!authClient) {
-    onAuthClient(client => void exchangeOneTimeToken(client, token, url, options))
+    onAuthClient(client => void exchangeKeptToken(client, token, url, options))
     return
   }
+  await exchangeOneTimeToken(authClient, token, url, options)
+}
+
+/**
+ * The exchange of a token kept while the client could not load. A session the
+ * client finds by then (a sign-in since) wins: the older token must not
+ * replace it.
+ */
+async function exchangeKeptToken(authClient: AuthClient, token: string, url: URL, options: ConsumeCrossDomainOneTimeTokenOptions): Promise<void> {
+  const current = await Promise.resolve().then(() => authClient.getSession()).catch(() => null)
+  if ((current as { data?: { session?: unknown } } | null)?.data?.session) return
   await exchangeOneTimeToken(authClient, token, url, options)
 }
 

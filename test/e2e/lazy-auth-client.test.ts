@@ -24,8 +24,9 @@ await setup({
   },
 })
 
-// Better Auth's client: the session signal its store refetches on.
-const BETTER_AUTH = /\$sessionSignal/
+// Better Auth's client: the key its session store is kept under. (Not
+// `$sessionSignal`, which the loader names too.)
+const BETTER_AUTH = /better-auth:session:/
 
 /** A page that records which of the scripts it loaded carry Better Auth, and any page error. */
 async function open(options: { signedIn?: boolean } = {}) {
@@ -33,6 +34,10 @@ async function open(options: { signedIn?: boolean } = {}) {
   const reads: Promise<void>[] = []
   const betterAuthChunks: string[] = []
   const errors: string[] = []
+  const sessionRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.url().includes('/api/auth/get-session')) sessionRequests.push(request.url())
+  })
   page.on('response', (response) => {
     const address = response.url()
     if (!address.includes('/_nuxt/') || !address.endsWith('.js')) return
@@ -49,7 +54,7 @@ async function open(options: { signedIn?: boolean } = {}) {
     await page.waitForLoadState('networkidle')
     await Promise.all(reads)
   }
-  return { page, betterAuthChunks, errors, settled }
+  return { page, betterAuthChunks, errors, sessionRequests, settled }
 }
 
 describe('the Better Auth client, loaded on first use', () => {
@@ -92,6 +97,36 @@ describe('the Better Auth client, loaded on first use', () => {
     await page.getByRole('heading', { name: 'Dashboard' }).waitFor()
     expect(new URL(page.url()).pathname).toBe('/dashboard')
     expect(errors.filter(error => !error.includes('Invalid start version'))).toEqual([])
+  })
+
+  // Nuxt folds `swr`/`isr`/`cache` into `payload` in the rules `#app` sees;
+  // the server plugin reads Nitro's own, so a render served to everyone never
+  // tells a browser there is no session.
+  it('loads at startup on an swr page, whose render other visitors are served', async () => {
+    const { page, betterAuthChunks, errors, settled } = await open()
+
+    await page.goto(url('/cached'), { waitUntil: 'hydration' })
+    await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
+    await settled()
+
+    expect(betterAuthChunks).toHaveLength(1)
+    expect(errors).toEqual([])
+  })
+
+  // A visible `<NuxtLink>` to a page that imports `authClient` statically
+  // prefetches that page's chunk, which runs the client module. The client is
+  // kept, not used: no session request until something uses it.
+  it('asks nothing of the server when a link prefetches a page that imports the client', async () => {
+    const { page, betterAuthChunks, errors, sessionRequests, settled } = await open()
+
+    await page.goto(url('/links'), { waitUntil: 'hydration' })
+    await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
+    await settled()
+
+    // The prefetch fetched (and ran) the sign-in page, with Better Auth in it.
+    expect(betterAuthChunks).toHaveLength(1)
+    expect(sessionRequests).toEqual([])
+    expect(errors).toEqual([])
   })
 
   it('loads at startup for a signed-in visitor, off the entry chunk', async () => {

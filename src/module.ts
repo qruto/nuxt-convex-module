@@ -161,6 +161,8 @@ declare module '@nuxt/schema' {
       crossDomainCallbackRoute: string
       loginPath: string
       authRoute: string
+      /** Whether the browser may hold the Better Auth client back (PARITY D-18): only where the registration transform runs, on Vite. */
+      deferAuthClient: boolean
     }
   }
 }
@@ -229,6 +231,11 @@ export default defineNuxtModule<ModuleOptions>({
     // Read by `convexAuth` for the deployment's token endpoint, which sits
     // under the same route the proxy serves.
     nuxt.options.runtimeConfig.public.convex.authRoute = diagnostics.authRoute
+    // PARITY: D-18
+    // The client is held back only where a static import of it is seen
+    // (`registerAuthClientOnEvaluation`, a Vite transform). On webpack or
+    // rspack it loads at startup, as it did before.
+    nuxt.options.runtimeConfig.public.convex.deferAuthClient = nuxt.options.builder === '@nuxt/vite-builder'
 
     // Order matters: alias resolution is first-match-wins and `#convex` is a
     // prefix of `#convex/auth-client`, so the auth-client alias must be
