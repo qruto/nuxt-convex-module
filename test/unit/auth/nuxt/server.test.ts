@@ -158,6 +158,40 @@ describe('auth/nuxt/server', () => {
     expect(mockFetchQuery).toHaveBeenNthCalledWith(2, queryRef, {}, { token: 'fresh-token' })
   })
 
+  // PARITY: D-17 — the retry check reads the message the server sent: the
+  // `[CONVEX A(auth:sendWelcome)]` prefix must not make any failure of a
+  // function under `auth/` look like an auth error, and run it twice.
+  it('checks for an auth error on the message without the function name', async () => {
+    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { withFunctionName } = await import('../../../../src/runtime/nuxt/function-name')
+    const { makeFunctionReference } = await import('convex/server')
+    const actionRef = makeFunctionReference<'action'>('auth:sendWelcome')
+    const failure = await withFunctionName('action', actionRef, Promise.reject(new Error('Server Error: mailbox full'))).catch((error: Error) => error)
+    expect(failure.message).toBe('[CONVEX A(auth:sendWelcome)] Server Error: mailbox full')
+
+    mockGetToken.mockResolvedValue({ token: 'stale-token', isFresh: false })
+    mockFetchAction.mockRejectedValueOnce(failure)
+    const seen: string[] = []
+    const auth = convexAuth(event(), {
+      convexSiteUrl: 'https://example.convex.site',
+      jwtCache: {
+        enabled: true,
+        isAuthError: (error) => {
+          seen.push((error as Error).message)
+          return /auth/i.test((error as Error).message)
+        },
+      },
+    })
+
+    await expect(auth.fetchAuthAction(actionRef, {} as never)).rejects.toBe(failure)
+    expect(seen).toEqual(['Server Error: mailbox full'])
+    expect(mockFetchAction).toHaveBeenCalledTimes(1)
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
+    // What the caller catches still names the function.
+    expect(failure.message).toBe('[CONVEX A(auth:sendWelcome)] Server Error: mailbox full')
+    expect(failure.stack?.split('\n')[0]).toBe('Error: [CONVEX A(auth:sendWelcome)] Server Error: mailbox full')
+  })
+
   it('passes the auth token through preload, mutation, and action helpers', async () => {
     const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')

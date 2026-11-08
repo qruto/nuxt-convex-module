@@ -167,6 +167,17 @@ describe('Nuxt server utilities', () => {
       expect(thrown.message).toBe('[CONVEX Q(other:fn)] boom')
     })
 
+    it('rethrows an error whose message cannot be written untouched', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      // A DOMException's message is a getter: assigning it throws in a module.
+      const aborted = new DOMException('The operation was aborted.', 'AbortError')
+      mockQuery.mockRejectedValueOnce(aborted)
+
+      await expect(fetchQuery(mockFunctionReference<'query'>('tasks:list'), {})).rejects.toBe(aborted)
+      expect(aborted.message).toBe('The operation was aborted.')
+      expect(aborted.name).toBe('AbortError')
+    })
+
     it('rethrows a value that is not an Error untouched', async () => {
       const { fetchAction } = await import('../../src/runtime/nuxt/index')
       mockAction.mockRejectedValueOnce('offline')
