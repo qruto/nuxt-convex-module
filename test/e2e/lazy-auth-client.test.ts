@@ -9,7 +9,7 @@ import { startConvexStub } from './helpers/convex-stub'
 // server found no session for downloads it only once something calls it, and
 // a signed-in visitor gets it at startup, off the entry chunk.
 
-const stub = await startConvexStub()
+const stub = await startConvexStub({ sessions: true })
 afterAll(() => stub.close())
 
 await setup({
@@ -76,6 +76,22 @@ describe('the Better Auth client, loaded on first use', () => {
     await settled()
 
     expect(betterAuthChunks).toHaveLength(1)
+  })
+
+  // A sign-in page that imports `authClient` statically: no call goes
+  // through the loader, and the session must still follow the client.
+  it('follows a statically imported client through a sign-in to a guarded page', async () => {
+    const { page, errors } = await open()
+    await page.goto(url('/login'), { waitUntil: 'hydration' })
+    await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
+
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.locator('[data-test="auth"]', { hasText: 'signed-in' }).waitFor()
+    await page.getByRole('link', { name: 'Dashboard' }).click()
+
+    await page.getByRole('heading', { name: 'Dashboard' }).waitFor()
+    expect(new URL(page.url()).pathname).toBe('/dashboard')
+    expect(errors.filter(error => !error.includes('Invalid start version'))).toEqual([])
   })
 
   it('loads at startup for a signed-in visitor, off the entry chunk', async () => {

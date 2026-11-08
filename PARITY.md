@@ -409,10 +409,26 @@ for free — removing one would break the behaviour, not restore it.
   [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts) — the mirrored session,
   `settleSessionWithoutClient`, the token request; [`better-auth/vue/cross-domain.ts`](./src/runtime/better-auth/vue/cross-domain.ts);
   [`better-auth/vue/plugin.client.ts`](./src/runtime/better-auth/vue/plugin.client.ts) and
-  [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts) — the no-session flag;
-  `keepAuthClientOffPrefetch` in [`src/module.ts`](./src/module.ts)
-- **Pinned by** · `test/unit/auth/vue/auth-client-loader.test.ts`, `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
-  Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts`
+  [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts) — the no-session flag, `isSharedRender`;
+  [`better-auth/nuxt/middleware.ts`](./src/runtime/better-auth/nuxt/middleware.ts) — a guarded route loads the client;
+  [`src/auth-client-registration.ts`](./src/auth-client-registration.ts) — `keepAuthClientOffPrefetch` and
+  `registerAuthClientOnEvaluation`, called from [`src/module.ts`](./src/module.ts)
+- **Pinned by** · `test/unit/auth/vue/auth-client-loader.test.ts` (among them "tells every listener when one throws, and
+  stays loaded", "follows a client that a static import evaluated, with no call through the loader", "keeps a settled
+  session settled while the client's store reads pending, then follows its answer", "settles the session signed out, with
+  the error, after a second failure", "answers useSession(useFetch) with a promise, as Better Auth does, not a pending ref",
+  "returns from a refetch whose hook never followed, instead of calling itself", "tries again on the next visit to the tab
+  after a failed load", "answers a store subscription made before the load with an unsubscribe that works at once", "asks
+  the client for a forced token request on a session settled without it", "waits for the client's own answer before a
+  guarded route decides"), `test/unit/auth-client-registration.test.ts`, `test/unit/auth/nuxt/middleware.test.ts` — "decides
+  on the client's answer, not on a session settled without it", `test/unit/auth/vue/plugin-client.test.ts` — "loads it at
+  startup for a cross-domain session kept in sessionStorage", `test/nuxt/auth/vue/cross-domain.test.ts` — "scrubs the token
+  from the address before the client loads", "keeps the token when the client cannot load, and exchanges it once the client
+  arrives",
+  `test/unit/auth/vue/plugin-server.test.ts` — "stays off on a render a %s route rule may serve to others", "stays off on a
+  render whose Cache-Control lets a shared cache keep it", `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
+  Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts` — "follows a statically imported
+  client through a sign-in to a guarded page"
 - **On sync** · keep; port changes to how upstream reads the session or the token onto the loaded client
 - **Why** · a Nuxt plugin runs on every page, so a client the plugin imports is in the entry chunk of every
   page: 28 to 42 KB of the fixture's entry (`test/fixtures/lazy-auth`), more with an app's plugins. The runtime
@@ -424,7 +440,15 @@ for free — removing one would break the behaviour, not restore it.
   back into view) and settles the session signed out after hydration, so a page that never needs the
   client never downloads it. A `?ott=` token or a session the cross-domain plugin saved in storage loads it
   at startup, and the chunk is kept off Nuxt's prefetch list. An app that imports `authClient` statically
-  opts that page back in.
+  opts that page back in: the browser build appends a line to the client module that hands the client to the
+  loader as it evaluates, so the session follows it either way. The flag is never set on a render other
+  visitors may be served (a `cache`, `swr`, `isr` or `prerender` route rule, or a public `Cache-Control`):
+  Nitro's cached handler renders without the cookie, so a cached render always looks signed out. A settled
+  session stays settled while the client's store reads pending before its first answer, and a chunk that
+  fails to load is asked for once more, then the session settles signed out with the error. A session settled
+  without the client is the server's word, which a sign-in since then outdates: a guarded route and a forced
+  token request wait for the client's own answer. A `?ott=` token leaves the address before the chunk is
+  fetched, and waits in memory when the chunk cannot load.
 
 #### Consequences of an unimportable upstream internal
 

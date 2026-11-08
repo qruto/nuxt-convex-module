@@ -47,6 +47,15 @@ const serverSession = () => shallowRef({
 // navigation.
 let browserSession: BetterAuthSession | undefined
 let browserSessionScope: EffectScope | undefined
+// PARITY: D-18
+// Set once the session settled without the client (no session on the
+// request, or a client that could not load): Better Auth's store reads
+// pending before its first answer, and a settled session must not drop back
+// to loading while it waits.
+let settledWithoutClient = false
+// Whether the session holds an answer from the client's own store, rather
+// than one it settled on without the client.
+const clientAnswered = shallowRef(false)
 
 type SessionState = BetterAuthSession['value']
 
@@ -55,16 +64,16 @@ type SessionState = BetterAuthSession['value']
 // Until it arrives the session reads pending, as Better Auth's own store reads
 // before its first fetch, so the hydrating page matches the server render. Its
 // `refetch` loads the client first.
-const pendingSessionState = (): SessionState => ({
-  data: null,
-  error: null,
-  isPending: true,
-  isRefetching: false,
-  refetch: async (...args: unknown[]) => {
+const pendingSessionState = (): SessionState => {
+  const refetch = async (...args: unknown[]): Promise<void> => {
     await loadAuthClient()
-    return (browserSession!.value.refetch as (...args: unknown[]) => Promise<void>)(...args)
-  },
-}) as unknown as SessionState
+    const next = browserSession!.value.refetch as (...args: unknown[]) => Promise<void>
+    // Still this one: nothing mirrors the client's session.
+    if (next === refetch) return
+    return next(...args)
+  }
+  return { data: null, error: null, isPending: true, isRefetching: false, refetch } as unknown as SessionState
+}
 
 const useClientSession = (): BetterAuthSession => {
   if (import.meta.server) return serverSession()
@@ -77,10 +86,17 @@ const useClientSession = (): BetterAuthSession => {
     // found no session, in which case the first use asks.
     onAuthClient(client => scope.active && scope.run(() => {
       watch(client.useSession(), (state) => {
+        if (settledWithoutClient && state.isPending) {
+          // Keep what the session settled on; take the client's refetch.
+          if (session.value.refetch !== state.refetch) session.value = { ...session.value, refetch: state.refetch }
+          return
+        }
+        settledWithoutClient = false
         session.value = state
+        if (!state.isPending) clientAnswered.value = true
       }, { immediate: true, flush: 'sync' })
     }))
-    if (!isAuthClientDeferred()) void loadAuthClient().catch(warnLoadFailure)
+    if (!isAuthClientDeferred()) void loadAtStartup()
     // Maps upstream's `useEffect` that drops the SSR token once the session
     // loads. Better Auth reads pending again when a signed-out session
     // refetches, so a token left here would read as signed in. Only the
@@ -92,8 +108,53 @@ const useClientSession = (): BetterAuthSession => {
   })!
 }
 
-const warnLoadFailure = (error: unknown) => {
-  console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
+// PARITY: D-18
+// A chunk that fails to load (a deploy that replaced it, a dropped request)
+// is asked for once more; a second failure settles the session signed out,
+// with the error, so a page that makes no further use of the client does not
+// read loading for good. The next use asks for the chunk again.
+async function loadAtStartup(): Promise<void> {
+  try {
+    await loadAuthClient().catch(() => loadAuthClient())
+  }
+  catch (error) {
+    console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
+    settle(error)
+  }
+}
+
+/**
+ * Load the client and wait until its own store has answered for the session:
+ * what a guarded navigation or a forced token request decides on, where a
+ * session settled without the client (signed out on the server's word)
+ * could be stale, as after a sign-in in another tab. A client that fails to
+ * load settles the session signed out instead. @internal
+ */
+export async function clientSessionSettled(): Promise<void> {
+  useClientSession()
+  try {
+    await loadAuthClient()
+  }
+  catch {
+    settle()
+    return
+  }
+  if (clientAnswered.value) return
+  await new Promise<void>((resolve) => {
+    const stop = watch(clientAnswered, (answered) => {
+      if (!answered) return
+      stop()
+      resolve()
+    })
+  })
+}
+
+/** Settle a session the client has not answered for: signed out, with the load's error when it failed. */
+function settle(error: unknown = null): void {
+  const session = useClientSession() as unknown as ShallowRef<SessionState>
+  if (loadedAuthClient() || !session.value.isPending) return
+  settledWithoutClient = true
+  session.value = { ...session.value, isPending: false, error } as SessionState
 }
 
 /**
@@ -102,9 +163,7 @@ const warnLoadFailure = (error: unknown) => {
  * client already reports is left alone. @internal
  */
 export function settleSessionWithoutClient(): void {
-  const session = useClientSession() as unknown as ShallowRef<SessionState>
-  if (loadedAuthClient() || !session.value.isPending) return
-  session.value = { ...session.value, isPending: false }
+  settle()
 }
 
 // Read off `AuthClient`, so the published type follows the app's own client
@@ -194,6 +253,15 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   // `isSsrTokenActive`: a token fetched for a past session never counts.
   const isServerTokenActive = () => session.value.isPending && cachedToken.value !== null && store.cachedTokenVersion === PENDING_AUTH_VERSION
 
+  // PARITY: D-18
+  // Signed out on the server's word, without the client: a forced request
+  // asks the client, which may know of a session started since.
+  const signedInSince = async (forceRefreshToken: boolean): Promise<boolean> => {
+    if (!forceRefreshToken || import.meta.server || clientAnswered.value) return false
+    await clientSessionSettled()
+    return currentAuthVersion() !== null
+  }
+
   const fetchAccessToken: AuthTokenFetcher = async ({
     forceRefreshToken = false,
   }: { forceRefreshToken?: boolean } = {}) => {
@@ -202,6 +270,7 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // Maps upstream's cache-clearing `useEffect`: the session settled to
     // signed-out, so drop the cached token instead of fetching a new one.
     if (version === null) {
+      if (await signedInSince(forceRefreshToken)) return fetchAccessToken({ forceRefreshToken })
       clearToken(store)
       return null
     }
@@ -299,5 +368,7 @@ export function __resetUseBetterAuthForTests() {
   browserSessionScope?.stop()
   browserSessionScope = undefined
   browserSession = undefined
+  settledWithoutClient = false
+  clientAnswered.value = false
   __resetAuthClientLoaderForTests()
 }

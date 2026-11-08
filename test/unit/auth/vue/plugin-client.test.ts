@@ -125,17 +125,23 @@ describe('better-auth client plugin', () => {
 
 // PARITY: D-18
 describe('better-auth client plugin, with no session on the request', () => {
-  /** A browser at `href` whose storage holds `stored`. */
-  function browser(href: string, stored: Record<string, string> = {}) {
+  /** A storage holding `stored`. */
+  function storage(stored: Record<string, string>) {
     const keys = Object.keys(stored)
-    vi.stubGlobal('window', { location: { href } })
-    vi.stubGlobal('localStorage', {
+    return {
       get length() {
         return keys.length
       },
       key: (index: number) => keys[index] ?? null,
       getItem: (key: string) => stored[key] ?? null,
-    })
+    }
+  }
+
+  /** A browser at `href` whose local storage holds `stored` (and session storage `session`). */
+  function browser(href: string, stored: Record<string, string> = {}, session: Record<string, string> = {}) {
+    vi.stubGlobal('window', { location: { href } })
+    vi.stubGlobal('localStorage', storage(stored))
+    vi.stubGlobal('sessionStorage', storage(session))
   }
 
   it('holds the client back, and settles the session once the page has hydrated', async () => {
@@ -165,6 +171,16 @@ describe('better-auth client plugin, with no session on the request', () => {
   it('loads it at startup for a session the cross-domain plugin saved in storage', async () => {
     noSessionState.value = true
     browser('https://app.example/', { 'better-auth_cookie': '{"better-auth.session_token":{"value":"abc"}}' })
+    const { app } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(deferAuthClient).not.toHaveBeenCalled()
+  })
+
+  it('loads it at startup for a cross-domain session kept in sessionStorage', async () => {
+    noSessionState.value = true
+    browser('https://app.example/', {}, { 'my-app_cookie': '{"my-app.session_token":{"value":"abc"}}' })
     const { app } = fakeNuxtApp()
 
     await runPlugin(app)

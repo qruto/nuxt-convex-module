@@ -10,10 +10,12 @@ const signOut = vi.fn(async (options?: unknown) => ({ data: { success: true }, o
 const fakeClient = {
   signOut,
   signIn: { email: vi.fn(async (args: { email: string }) => ({ data: { user: { email: args.email } } })) },
-  $store: { name: 'store' },
-  useSession: () => sessionRef,
+  $store: { name: 'store', atoms: { session: { subscribe: vi.fn((_listener: unknown) => unsubscribeAtom) } } },
+  convex: { token: vi.fn(async () => ({ data: { token: 'jwt-after-sign-in' }, error: null })) },
+  useSession: (useFetch?: unknown) => typeof useFetch === 'function' ? Promise.resolve({ data: 'fetched' }) : sessionRef,
   useActiveOrganization: vi.fn((..._args: unknown[]) => organizationRef),
 }
+const unsubscribeAtom = vi.fn()
 const organizationRef = ref<{ data: unknown, isPending: boolean }>({ data: null, isPending: true })
 const sessionRef = ref<{ data: unknown, isPending: boolean }>({ data: null, isPending: true })
 vi.mock('#convex/auth-client', () => ({ authClient: fakeClient }))
@@ -72,6 +74,43 @@ describe('loadAuthClient', () => {
     expect(late).toHaveBeenCalledWith(fakeClient)
     expect(early).toHaveBeenCalledTimes(1)
   })
+
+  it('tells every listener when one throws, and stays loaded', async () => {
+    const { loadAuthClient, loadedAuthClient, onAuthClient } = await loader()
+    const reportError = vi.fn()
+    vi.stubGlobal('reportError', reportError)
+    try {
+      const broken = new Error('listener broke')
+      onAuthClient(() => {
+        throw broken
+      })
+      const after = vi.fn()
+      onAuthClient(after)
+
+      await expect(loadAuthClient()).resolves.toBe(fakeClient)
+      expect(after).toHaveBeenCalledWith(fakeClient)
+      expect(reportError).toHaveBeenCalledWith(broken)
+      expect(loadedAuthClient()).toBe(fakeClient)
+      await expect(loadAuthClient()).resolves.toBe(fakeClient)
+    }
+    finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('takes a client a static import evaluated, and tells the listeners', async () => {
+    const { loadAuthClient, loadedAuthClient, onAuthClient, registerAuthClient } = await loader()
+    const listener = vi.fn()
+    onAuthClient(listener)
+
+    registerAuthClient(fakeClient as never)
+    expect(loadedAuthClient()).toBe(fakeClient)
+    expect(listener).toHaveBeenCalledWith(fakeClient)
+    await expect(loadAuthClient()).resolves.toBe(fakeClient)
+    registerAuthClient({} as never)
+    expect(loadedAuthClient()).toBe(fakeClient)
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('lazyAuthClient', () => {
@@ -118,6 +157,44 @@ describe('lazyAuthClient', () => {
     expect(organization.value).toMatchObject({ data: { id: 'org-1' } })
   })
 
+  it('answers useSession(useFetch) with a promise, as Better Auth does, not a pending ref', async () => {
+    const { lazyAuthClient } = await loader()
+    const client = lazyAuthClient as unknown as { useSession: (useFetch: unknown) => Promise<unknown> }
+    await expect(client.useSession(() => {})).resolves.toEqual({ data: 'fetched' })
+  })
+
+  it('returns from a refetch whose hook never followed, instead of calling itself', async () => {
+    const { lazyAuthClient, loadAuthClient } = await loader()
+    const client = lazyAuthClient as unknown as typeof fakeClient
+    const scope = effectScope()
+    const organization = scope.run(() => client.useActiveOrganization()) as unknown as { value: { refetch: () => Promise<unknown> } }
+    // The caller's scope ended before the client arrived: nothing follows.
+    scope.stop()
+    await loadAuthClient()
+
+    await expect(organization.value.refetch()).resolves.toBeUndefined()
+  })
+
+  it('answers a store subscription made before the load with an unsubscribe that works at once', async () => {
+    const { lazyAuthClient, loadAuthClient } = await loader()
+    const client = lazyAuthClient as unknown as typeof fakeClient
+    const subscribe = fakeClient.$store.atoms.session.subscribe
+    subscribe.mockClear()
+    unsubscribeAtom.mockClear()
+
+    // Cancelled before the client arrived: it never subscribes.
+    const cancelled = client.$store.atoms.session.subscribe(() => {}) as unknown as () => void
+    expect(typeof cancelled).toBe('function')
+    cancelled()
+    // Kept: it subscribes once the client is here, and unsubscribes after.
+    const kept = client.$store.atoms.session.subscribe(() => {}) as unknown as () => void
+    await loadAuthClient()
+    await Promise.resolve()
+    expect(subscribe).toHaveBeenCalledTimes(1)
+    kept()
+    expect(unsubscribeAtom).toHaveBeenCalledTimes(1)
+  })
+
   it('is not a thenable, so awaiting it loads nothing', async () => {
     const { lazyAuthClient, loadedAuthClient } = await loader()
     expect(await lazyAuthClient).toBe(lazyAuthClient)
@@ -159,6 +236,32 @@ describe('deferAuthClient', () => {
     await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
     expect(isAuthClientDeferred()).toBe(false)
     expect(listeners).toEqual([])
+  })
+
+  it('tries again on the next visit to the tab after a failed load', async () => {
+    let failures = 1
+    vi.doMock('#convex/auth-client', () => {
+      if (failures-- > 0) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    try {
+      const { deferAuthClient, loadedAuthClient } = await loader()
+      deferAuthClient()
+      visibility = 'visible'
+      listeners.forEach(listener => listener())
+      await vi.waitFor(() => expect(failures).toBe(0))
+      await Promise.resolve()
+      expect(loadedAuthClient()).toBeUndefined()
+      expect(listeners).toHaveLength(1)
+
+      vi.resetModules()
+      listeners.forEach(listener => listener())
+      await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
+      await vi.waitFor(() => expect(listeners).toEqual([]))
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
   })
 
   it('reads as not deferred once a first use loaded the client', async () => {
@@ -215,6 +318,77 @@ describe('a session that waits for the client', () => {
     expect(session.value).toBe(sessionRef.value)
   })
 
+  it('keeps a settled session settled while the client\'s store reads pending, then follows its answer', async () => {
+    const { useBetterAuth, settleSessionWithoutClient, loadAuthClient } = await deferred()
+    const { session, isLoading } = useBetterAuth()
+    settleSessionWithoutClient()
+    expect(isLoading.value).toBe(false)
+
+    // Better Auth's store before its first fetch: pending.
+    const refetch = vi.fn(async () => {})
+    sessionRef.value = { data: null, isPending: true, refetch } as never
+    await loadAuthClient()
+    expect(session.value.isPending).toBe(false)
+    expect(isLoading.value).toBe(false)
+    expect(session.value.refetch).toBe(refetch)
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    expect(session.value).toBe(sessionRef.value)
+  })
+
+  it('follows a client that a static import evaluated, with no call through the loader', async () => {
+    const { useBetterAuth, settleSessionWithoutClient } = await deferred()
+    const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
+    const { session, isAuthenticated } = useBetterAuth()
+    settleSessionWithoutClient()
+
+    // What the module's build step appends to the client module (D-18).
+    registerAuthClient(fakeClient as never)
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+
+    expect(session.value).toBe(sessionRef.value)
+    expect(isAuthenticated.value).toBe(true)
+  })
+
+  it('asks the client for a forced token request on a session settled without it', async () => {
+    const { useBetterAuth, settleSessionWithoutClient, loadedAuthClient } = await deferred()
+    const { fetchAccessToken } = useBetterAuth()
+    settleSessionWithoutClient()
+
+    // Signed in elsewhere since the server rendered: the client's store knows.
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    await expect(fetchAccessToken({ forceRefreshToken: true })).resolves.toBe('jwt-after-sign-in')
+    expect(loadedAuthClient()).toBe(fakeClient)
+  })
+
+  it('answers an unforced token request on a settled session without loading the client', async () => {
+    const { useBetterAuth, settleSessionWithoutClient, loadedAuthClient } = await deferred()
+    const { fetchAccessToken } = useBetterAuth()
+    settleSessionWithoutClient()
+
+    await expect(fetchAccessToken({ forceRefreshToken: false })).resolves.toBeNull()
+    expect(loadedAuthClient()).toBeUndefined()
+  })
+
+  it('waits for the client\'s own answer before a guarded route decides', async () => {
+    const { useBetterAuth, settleSessionWithoutClient, clientSessionSettled } = await deferred()
+    const { session } = useBetterAuth()
+    settleSessionWithoutClient()
+    sessionRef.value = { data: null, isPending: true }
+
+    let settled = false
+    const waiting = clientSessionSettled().then(() => {
+      settled = true
+    })
+    await vi.waitFor(() => expect(session.value.isPending).toBe(false))
+    await Promise.resolve()
+    expect(settled).toBe(false)
+
+    sessionRef.value = { data: { session: { id: 'session-1' }, user: { id: 'user-1' } }, isPending: false }
+    await waiting
+    expect(session.value).toBe(sessionRef.value)
+  })
+
   it('loads the client for a refetch asked of the waiting session', async () => {
     const { useBetterAuth, loadedAuthClient } = await deferred()
     const refetch = vi.fn(async () => {})
@@ -224,5 +398,48 @@ describe('a session that waits for the client', () => {
     await session.value.refetch()
     expect(loadedAuthClient()).toBe(fakeClient)
     expect(refetch).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('a client chunk that fails to load at startup', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', { visibilityState: 'visible', addEventListener: () => {}, removeEventListener: () => {} })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+  })
+
+  it('is asked for once more before anything gives up', async () => {
+    let failures = 1
+    vi.doMock('#convex/auth-client', () => {
+      if (failures-- > 0) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    sessionRef.value = { data: null, isPending: false }
+    const { loadedAuthClient } = await loader()
+    const { useBetterAuth } = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+    const { session } = useBetterAuth()
+
+    await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
+    expect(session.value).toBe(sessionRef.value)
+  })
+
+  it('settles the session signed out, with the error, after a second failure', async () => {
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await loader()
+    const { useBetterAuth } = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
+    const { session, isLoading, user } = useBetterAuth()
+
+    await vi.waitFor(() => expect(session.value.isPending).toBe(false))
+    expect(session.value.error).toBeInstanceOf(Error)
+    expect(isLoading.value).toBe(false)
+    expect(user.value).toBeNull()
+    expect(warn).toHaveBeenCalledWith('[nuxt-convex-module] Failed to load the Better Auth client:', expect.any(Error))
+    warn.mockRestore()
   })
 })

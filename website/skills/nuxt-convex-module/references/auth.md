@@ -18,7 +18,7 @@ npm i @convex-dev/better-auth@~0.13.0 better-auth@~1.7.16
 **What the module adds on its own:**
 
 - a same-origin proxy at `/api/auth/**` to the Better Auth endpoints on the deployment's `.site` origin;
-- a Better Auth client with `convexClient()`, available through `useBetterAuth()` → `{ user, session, isLoading, isAuthenticated, client }`. Sign-in and sign-out live on `client`, for example `client.signIn.email({ email, password })`. The client loads on first use, off the entry chunk: call it through `client` or `await loadAuthClient()`, and don't import `authClient` statically in a layout, which puts Better Auth back on every page;
+- a Better Auth client with `convexClient()`, available through `useBetterAuth()` → `{ user, session, isLoading, isAuthenticated, client }`. Sign-in and sign-out live on `client`, for example `client.signIn.email({ email, password })`. The client loads on first use, off the entry chunk: call it through `client` or `await loadAuthClient()`, and don't import `authClient` statically in a layout, which puts Better Auth back on every page. Read `$store`, `$fetch` or a plugin atom only on `await loadAuthClient()`: before the load `client` forwards calls, not values;
 - the `convex-auth` route middleware: `definePageMeta({ middleware: 'convex-auth' })` sends signed-out visitors to `/login?redirect=…`;
 - `resolveAuthRedirect(route.query.redirect)`, which returns a safe same-origin destination for after sign-in;
 - `convexAuth(event)` in server routes, for authenticated `fetchAuthQuery` / `fetchAuthMutation` / `fetchAuthAction` calls.

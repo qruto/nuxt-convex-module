@@ -1,5 +1,5 @@
 import type { AuthClient } from '#convex/auth-client'
-import { loadAuthClient } from './auth-client-loader'
+import { loadAuthClient, onAuthClient } from './auth-client-loader'
 
 /**
  * An {@link AuthClient} that also includes the `crossDomainClient()` plugin.
@@ -82,68 +82,84 @@ export async function consumeCrossDomainOneTimeToken(
   }
   const url = new URL(window.location.href)
   const token = url.searchParams.get('ott')
-  if (token) {
-    // PARITY: D-18
-    // The one place startup waits for the client: the token is exchanged
-    // before the first `setAuth`. A client that fails to load leaves the
-    // token unexchanged, as a client without the plugin does below.
-    const authClient = await loadAuthClient().catch((error: unknown) => {
-      console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
-    })
-    const authClientWithCrossDomain = authClient as AuthClientWithCrossDomain | undefined
-    url.searchParams.delete('ott')
-    window.history.replaceState({}, '', url)
-    // PARITY: A-13
-    // Port-only guard: the aliased client may not install the cross-domain
-    // plugin (upstream requires it whenever an `ott` parameter appears).
-    if (!authClientWithCrossDomain?.crossDomain) {
-      return
-    }
-    // Port-only guard: with a dedicated callback route configured, a token
-    // landing anywhere else is scrubbed above but never exchanged, so
-    // sign-in can only complete where the app expects it.
-    if (
-      options.callbackRoute
-      && normalizePathname(url.pathname) !== normalizePathname(options.callbackRoute)
-    ) {
-      console.warn(
-        `[nuxt-convex-module] Ignoring cross-domain one-time token on "${url.pathname}" — consumption is restricted to "${options.callbackRoute}" (convex.betterAuth.crossDomainCallbackRoute).`,
-      )
-      return
-    }
-    // Port-only, dev only: with no callback route, this exchange completes
-    // sign-in on whatever page received the link. Say so once, where it
-    // happens, so the option is found before production.
-    if (import.meta.dev && !options.callbackRoute) {
-      console.warn(
-        `[nuxt-convex-module] Exchanged a cross-domain one-time token on "${url.pathname}" with no \`convex.betterAuth.crossDomainCallbackRoute\` set — any page can complete sign-in. Restrict it to your callback route.`,
-      )
-    }
-    // Port-only catch: this runs while the Nuxt app bootstraps (not in a
-    // fire-and-forget effect), so a failed exchange must not break startup.
-    try {
-      const result
-        = await authClientWithCrossDomain.crossDomain.oneTimeToken.verify({
-          token,
-        })
-      const session = result.data?.session
-      if (session) {
-        await authClientWithCrossDomain.getSession({
-          fetchOptions: {
-            headers: {
-              Authorization: `Bearer ${session.token}`,
-            },
+  if (!token) return
+  // Scrubbed before anything loads: a chunk request must not carry the live
+  // token in its `Referer`.
+  url.searchParams.delete('ott')
+  window.history.replaceState({}, '', url)
+  // PARITY: D-18
+  // The one place startup waits for the client: the token is exchanged
+  // before the first `setAuth`. A chunk that fails is asked for once more;
+  // when it fails again the token waits in memory, never in storage, and is
+  // exchanged once a later use brings the client.
+  const authClient = await loadAuthClient().catch(() => loadAuthClient()).catch((error: unknown) => {
+    console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
+  })
+  if (!authClient) {
+    onAuthClient(client => void exchangeOneTimeToken(client, token, url, options))
+    return
+  }
+  await exchangeOneTimeToken(authClient, token, url, options)
+}
+
+/** The exchange itself, on a client that has loaded. */
+async function exchangeOneTimeToken(
+  authClient: AuthClient,
+  token: string,
+  url: URL,
+  options: ConsumeCrossDomainOneTimeTokenOptions,
+): Promise<void> {
+  const authClientWithCrossDomain = authClient as AuthClientWithCrossDomain
+  // PARITY: A-13
+  // Port-only guard: the aliased client may not install the cross-domain
+  // plugin (upstream requires it whenever an `ott` parameter appears).
+  if (!authClientWithCrossDomain?.crossDomain) {
+    return
+  }
+  // Port-only guard: with a dedicated callback route configured, a token
+  // landing anywhere else is scrubbed above but never exchanged, so
+  // sign-in can only complete where the app expects it.
+  if (
+    options.callbackRoute
+    && normalizePathname(url.pathname) !== normalizePathname(options.callbackRoute)
+  ) {
+    console.warn(
+      `[nuxt-convex-module] Ignoring cross-domain one-time token on "${url.pathname}" — consumption is restricted to "${options.callbackRoute}" (convex.betterAuth.crossDomainCallbackRoute).`,
+    )
+    return
+  }
+  // Port-only, dev only: with no callback route, this exchange completes
+  // sign-in on whatever page received the link. Say so once, where it
+  // happens, so the option is found before production.
+  if (import.meta.dev && !options.callbackRoute) {
+    console.warn(
+      `[nuxt-convex-module] Exchanged a cross-domain one-time token on "${url.pathname}" with no \`convex.betterAuth.crossDomainCallbackRoute\` set — any page can complete sign-in. Restrict it to your callback route.`,
+    )
+  }
+  // Port-only catch: this runs while the Nuxt app bootstraps (not in a
+  // fire-and-forget effect), so a failed exchange must not break startup.
+  try {
+    const result
+      = await authClientWithCrossDomain.crossDomain.oneTimeToken.verify({
+        token,
+      })
+    const session = result.data?.session
+    if (session) {
+      await authClientWithCrossDomain.getSession({
+        fetchOptions: {
+          headers: {
+            Authorization: `Bearer ${session.token}`,
           },
-        })
-        // Awaited, where upstream fires and forgets. The whole exchange runs
-        // inside the `try` above so a failure cannot break app startup, and a
-        // promise nobody awaits escapes that `catch` — it turns up as an
-        // unhandled rejection instead.
-        await authClientWithCrossDomain.updateSession()
-      }
+        },
+      })
+      // Awaited, where upstream fires and forgets. The whole exchange runs
+      // inside the `try` above so a failure cannot break app startup, and a
+      // promise nobody awaits escapes that `catch` — it turns up as an
+      // unhandled rejection instead.
+      await authClientWithCrossDomain.updateSession()
     }
-    catch (error) {
-      console.warn('[nuxt-convex-module] Failed to consume cross-domain one-time token:', error)
-    }
+  }
+  catch (error) {
+    console.warn('[nuxt-convex-module] Failed to consume cross-domain one-time token:', error)
   }
 }

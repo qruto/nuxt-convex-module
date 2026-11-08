@@ -7,18 +7,26 @@ import { deferAuthClient } from './auth-client-loader'
 import { NO_SESSION_KEY } from './token-store'
 import { consumeCrossDomainOneTimeToken } from './cross-domain'
 
-/** Whether this browser's storage holds a session the cross-domain client plugin saved: `<prefix>_cookie`. */
+/**
+ * Whether this browser's storage holds a session the cross-domain client
+ * plugin saved: `<prefix>_cookie`, in `localStorage` (its default) or
+ * `sessionStorage`. Storage of the app's own making is invisible here; a
+ * guarded route still loads the client before it decides.
+ */
 function holdsCrossDomainSession(): boolean {
-  try {
-    for (let index = 0; index < localStorage.length; index++) {
-      const key = localStorage.key(index)
-      if (key?.endsWith('_cookie') && localStorage.getItem(key)?.includes('session_token')) return true
+  return [() => localStorage, () => sessionStorage].some((open) => {
+    try {
+      const storage = open()
+      for (let index = 0; index < storage.length; index++) {
+        const key = storage.key(index)
+        if (key?.endsWith('_cookie') && storage.getItem(key)?.includes('session_token')) return true
+      }
     }
-  }
-  catch {
-    // Storage the browser refuses to open holds nothing to read.
-  }
-  return false
+    catch {
+      // Storage the browser refuses to open holds nothing to read.
+    }
+    return false
+  })
 }
 
 export default defineNuxtPlugin({

@@ -31,9 +31,7 @@ const waiting = new Set<(client: AuthClient) => void>()
 export function loadAuthClient(): Promise<AuthClient> {
   loading ??= import('#convex/auth-client').then(
     ({ authClient }) => {
-      loaded = authClient
-      for (const listener of waiting) listener(authClient)
-      waiting.clear()
+      registerAuthClient(authClient)
       return authClient
     },
     (error: unknown) => {
@@ -43,6 +41,37 @@ export function loadAuthClient(): Promise<AuthClient> {
     },
   )
   return loading
+}
+
+/**
+ * Hand the loader a client module that has evaluated: through
+ * {@link loadAuthClient}, or a static import of it, which the module's build
+ * step makes call this (`registerAuthClientOnEvaluation` in `src/module.ts`).
+ * Either way every listener hears of it once; one that throws is reported and
+ * the rest still run. @internal
+ */
+export function registerAuthClient(client: AuthClient): void {
+  if (loaded) return
+  loaded = client
+  loading ??= Promise.resolve(client)
+  const listeners = [...waiting]
+  waiting.clear()
+  for (const listener of listeners) {
+    try {
+      listener(client)
+    }
+    catch (error) {
+      report(error)
+    }
+  }
+}
+
+/** An error a listener threw, surfaced without stopping the others. */
+function report(error: unknown): void {
+  if (typeof globalThis.reportError === 'function') globalThis.reportError(error)
+  else queueMicrotask(() => {
+    throw error
+  })
 }
 
 /** The client once {@link loadAuthClient} has it, else `undefined`. @internal */
@@ -67,8 +96,8 @@ export function deferAuthClient(): void {
   deferred = true
   const onVisible = () => {
     if (document.visibilityState !== 'visible') return
-    document.removeEventListener('visibilitychange', onVisible)
-    void loadAuthClient().catch(() => {})
+    // Kept until a load succeeds: a failed one is tried again next time.
+    void loadAuthClient().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
   }
   document.addEventListener('visibilitychange', onVisible)
 }
@@ -99,6 +128,23 @@ function call(client: AuthClient, path: readonly PropertyKey[], args: unknown[])
 const HOOK = /^use[A-Z]/
 
 /**
+ * A store subscription (`$store.atoms.session.subscribe(fn)`, nanostores'
+ * `listen`) made before the client is here: it starts once the client
+ * loads, and the unsubscribe it answers with at once cancels it either way.
+ */
+function pendingSubscription(path: readonly PropertyKey[], args: unknown[]): () => void {
+  let unsubscribe: (() => void) | undefined
+  let cancelled = false
+  void loadAuthClient().then((client) => {
+    if (!cancelled) unsubscribe = call(client, path, args) as () => void
+  }, () => {})
+  return () => {
+    cancelled = true
+    unsubscribe?.()
+  }
+}
+
+/**
  * A hook called before the client is here: a ref that reads pending, as
  * Better Auth's own store reads before its first fetch, and follows the real
  * hook once the client loads, subscribed in the caller's scope as the real
@@ -106,16 +152,23 @@ const HOOK = /^use[A-Z]/
  */
 function pendingHook(path: readonly PropertyKey[], args: unknown[]): Ref<unknown> {
   const scope = getCurrentScope()
+  const refetch = async (...refetchArgs: unknown[]): Promise<unknown> => {
+    await loadAuthClient()
+    const next = state.value.refetch as (...a: unknown[]) => unknown
+    // Still this one: the hook never followed (its scope had ended).
+    if (next === refetch) return
+    return next(...refetchArgs)
+  }
   const state: Ref<Record<string, unknown>> = shallowRef({
     data: null,
     error: null,
     isPending: true,
     isRefetching: false,
-    refetch: async (...refetchArgs: unknown[]) => {
-      await loadAuthClient()
-      return (state.value.refetch as (...a: unknown[]) => unknown)(...refetchArgs)
-    },
+    refetch,
   })
+  // Better Auth's stores never fetch on the server, and a server render's
+  // scope is never disposed: answer pending, and follow nothing.
+  if (import.meta.server) return state
   onAuthClient((client) => {
     const follow = () => watch(call(client, path, args) as Ref<Record<string, unknown>>, (value) => {
       state.value = value
@@ -141,7 +194,10 @@ function lazyPath(path: readonly PropertyKey[]): unknown {
     apply(_target, _this, args: unknown[]) {
       if (loaded) return call(loaded, path, args)
       const name = path.at(-1)
-      if (typeof name === 'string' && HOOK.test(name)) return pendingHook(path, args)
+      // `useSession(useFetch)`, Better Auth's Nuxt form, answers with a
+      // promise: a call, not a hook.
+      if (typeof name === 'string' && HOOK.test(name) && typeof args[0] !== 'function') return pendingHook(path, args)
+      if (name === 'subscribe' || name === 'listen') return pendingSubscription(path, args)
       return loadAuthClient().then(client => call(client, path, args))
     },
   })

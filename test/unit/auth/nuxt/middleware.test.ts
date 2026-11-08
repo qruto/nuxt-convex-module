@@ -10,6 +10,7 @@ const {
   mockIsAuthenticated,
   mockUseAuth,
   mockLoadAuthClient,
+  mockClientSessionSettled,
 } = vi.hoisted(() => ({
   mockNavigateTo: vi.fn((to: unknown) => ({ redirectedTo: to })),
   mockUseRequestEvent: vi.fn(),
@@ -18,6 +19,7 @@ const {
   mockIsAuthenticated: vi.fn(),
   mockUseAuth: vi.fn(),
   mockLoadAuthClient: vi.fn(async () => ({})),
+  mockClientSessionSettled: vi.fn(async () => {}),
 }))
 
 vi.mock('#app', () => ({
@@ -30,7 +32,7 @@ vi.mock('#app', () => ({
 
 vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
   useBetterAuth: mockUseAuth,
-  settleSessionWithoutClient: vi.fn(),
+  clientSessionSettled: mockClientSessionSettled,
 }))
 
 vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
@@ -161,6 +163,29 @@ describe('auth route middleware', () => {
       // Session resolves as signed-in — no redirect.
       session.value = { isPending: false, data: { user: 'u1' } }
       await expect(pending).resolves.toBeUndefined()
+      expect(mockNavigateTo).not.toHaveBeenCalled()
+    })
+
+    // PARITY: D-18 — a session settled signed out without the client (the
+    // server saw no cookie) may be stale: a sign-in in another tab or through
+    // a static import. The guard waits for the client's own answer.
+    it('decides on the client\'s answer, not on a session settled without it', async () => {
+      const session = ref<{ isPending: boolean, data: { user: string } | null }>({ isPending: false, data: null })
+      mockUseAuth.mockReturnValue({ session })
+      let answer!: () => void
+      mockClientSessionSettled.mockImplementationOnce(() => new Promise<void>((resolve) => {
+        answer = () => {
+          session.value = { isPending: false, data: { user: 'u1' } }
+          resolve()
+        }
+      }))
+      const { middleware } = await loadMiddleware()
+
+      const decided = middleware(route('/profile'))
+      await Promise.resolve()
+      expect(mockNavigateTo).not.toHaveBeenCalled()
+      answer()
+      await expect(decided).resolves.toBeUndefined()
       expect(mockNavigateTo).not.toHaveBeenCalled()
     })
   })

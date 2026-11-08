@@ -19,8 +19,9 @@ vi.mock('#convex/auth-client', () => {
 const state = { value: null as string | null }
 const noSession = { value: false }
 const requestHeaders: { cookie?: string } = {}
-const event = {}
+const event = { path: '/' }
 const cacheControl = { value: undefined as unknown }
+let routeRules: Record<string, unknown> = {}
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useRuntimeConfig: () => ({ public: { convex: { url: 'https://example.convex.cloud' } } }),
@@ -28,6 +29,7 @@ vi.mock('#app', () => ({
   useRequestEvent: () => event,
   useRequestHeaders: () => requestHeaders,
   useResponseHeader: () => cacheControl,
+  getRouteRules: () => routeRules,
 }))
 
 const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.server')).default as unknown as
@@ -67,6 +69,8 @@ describe('the no-session flag the browser waits on', () => {
     state.value = null
     noSession.value = false
     delete requestHeaders.cookie
+    routeRules = {}
+    cacheControl.value = undefined
   })
 
   const run = () => setup({ vueApp: { provide: vi.fn() }, hook: vi.fn() })
@@ -90,11 +94,44 @@ describe('the no-session flag the browser waits on', () => {
     expect(noSession.value).toBe(false)
   })
 
+  // PARITY: D-18 — Nitro's cached handler renders with no cookie, so every
+  // cached render looks signed out; its payload is served to everyone.
+  it.each([
+    ['swr', { swr: true }],
+    ['isr', { isr: 60 }],
+    ['cache', { cache: { maxAge: 60 } }],
+    ['prerender', { prerender: true }],
+  ])('stays off on a render a %s route rule may serve to others', async (_name, rules) => {
+    getToken.mockResolvedValueOnce(null)
+    routeRules = rules
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off on a render whose Cache-Control lets a shared cache keep it', async () => {
+    getToken.mockResolvedValueOnce(null)
+    cacheControl.value = 'public, s-maxage=600'
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
   it('stays off when the prefetch failed: the server could not tell', async () => {
     getToken.mockRejectedValueOnce(new Error('deployment down'))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     await run()
     expect(noSession.value).toBe(false)
     warn.mockRestore()
+  })
+})
+
+describe('isSharedRender', () => {
+  it('reads route rules and the shared-cache directives, and nothing else', async () => {
+    const { isSharedRender } = await import('../../../../src/runtime/better-auth/vue/plugin.server')
+    expect(isSharedRender({}, undefined)).toBe(false)
+    expect(isSharedRender({ cache: false }, 'private, no-store')).toBe(false)
+    expect(isSharedRender({ ssr: true }, 'max-age=60')).toBe(false)
+    expect(isSharedRender({ swr: 60 }, undefined)).toBe(true)
+    expect(isSharedRender({}, 'S-MAXAGE=60')).toBe(true)
+    expect(isSharedRender({}, ['public', 'max-age=60'])).toBe(true)
   })
 })

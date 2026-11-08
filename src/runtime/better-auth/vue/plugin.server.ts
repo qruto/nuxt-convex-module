@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
+import { defineNuxtPlugin, getRouteRules, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
@@ -36,6 +36,24 @@ export async function prefetchAuthToken(
     console.warn('[nuxt-convex-module] Failed to prefetch auth token for SSR:', error)
     return false
   }
+}
+
+// PARITY: D-18
+/**
+ * Whether this render may be served to other visitors: a route rule caches it
+ * (`cache`, `swr`, `isr`, `prerender`), or its `Cache-Control` lets a shared
+ * cache keep it. Nitro's cached handler renders with no cookie (only the
+ * `varies` headers reach it), so a cached render always looks signed out:
+ * its payload must not tell every browser that reads it there is no session.
+ *
+ * Exported for unit tests.
+ * @internal
+ */
+export function isSharedRender(rules: Record<string, unknown>, cacheControl: unknown): boolean {
+  if (rules.cache || rules.swr || rules.isr || rules.prerender) return true
+  const header = Array.isArray(cacheControl) ? cacheControl.join(',') : typeof cacheControl === 'string' ? cacheControl : ''
+  const directives = header.toLowerCase().split(',').map(directive => directive.trim().split('=')[0])
+  return directives.includes('public') || directives.includes('s-maxage')
 }
 
 /**
@@ -99,7 +117,9 @@ export default defineNuxtPlugin({
       // PARITY: D-18
       // No session cookie, and the deployment confirmed no token: the browser
       // can wait for a first use before it downloads the Better Auth client.
+      // Never on a render other visitors may be served.
       noSession.value = answered && !initialToken.value && !hasSessionCookie(cookie)
+        && !isSharedRender(getRouteRules({ path: event.path }) as Record<string, unknown>, cacheControl.value)
     }
   },
 })
