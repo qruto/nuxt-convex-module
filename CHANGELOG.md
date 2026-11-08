@@ -22,6 +22,12 @@
 
 - **Better Auth:** ⚠️  Load the Better Auth client on first use ([#149](https://github.com/qruto/nuxt-convex-module/pull/149))
 
+### ⬆️ Upgrading from 0.13
+
+- **The Better Auth client loads on first use.** It is no longer in the entry chunk. Code that needs the client itself awaits `loadAuthClient()`. Until it loads, calls through `useBetterAuth().client` return promises and its `use*` hooks return a pending ref. Your own `authClient` module needs no change.
+- **Tests.** A test that signs in and reads the session right away should `await loadAuthClient()` first.
+- **Server fetch errors name the function.** Errors from `fetchQuery`, `fetchMutation` and `fetchAction` now start with `[CONVEX Q(module:fn)]` (`M` for mutations, `A` for actions), as the browser client's do. A check anchored to the start of the message, like `/^Unauthenticated/`, needs updating. A `ConvexError` keeps its class and `data`.
+
 ### ❤️ Contributors
 
 - Slava Razum ([@slavarazum](https://github.com/slavarazum))
