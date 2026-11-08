@@ -1,4 +1,5 @@
 // PARITY: D-18
+import { win32 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
 /** The part of a Vite plugin this test drives. */
@@ -17,7 +18,7 @@ vi.mock('@nuxt/kit', () => ({
   },
 }))
 
-const { authClientRegistration, registerAuthClientOnEvaluation } = await import('../../src/auth-client-registration')
+const { authClientRegistration, manifestKeyMatches, registerAuthClientOnEvaluation } = await import('../../src/auth-client-registration')
 
 function transformFor(target: string | undefined) {
   plugins.length = 0
@@ -77,5 +78,12 @@ describe('keeping the auth client off the prefetch list', () => {
 
     expect(manifest['node_modules/nuxt/dist/app/entry.js']!.dynamicImports).toEqual(['pages/index.vue'])
     expect(manifest['lib/auth-client.ts']!.prefetch).toBe(false)
+  })
+
+  it('matches a posix manifest key against a Windows target and root', () => {
+    expect(manifestKeyMatches('lib/auth-client.ts', 'C:\\app', 'C:\\app\\lib\\auth-client', win32)).toBe(true)
+    expect(manifestKeyMatches('lib/auth-client.ts', 'C:/app', 'C:/app/lib/auth-client.ts', win32)).toBe(true)
+    expect(manifestKeyMatches('../node_modules/pkg/dist/client.js', 'C:\\app\\app', 'C:\\app\\node_modules\\pkg\\dist\\client', win32)).toBe(true)
+    expect(manifestKeyMatches('pages/index.vue', 'C:\\app', 'C:\\app\\lib\\auth-client', win32)).toBe(false)
   })
 })

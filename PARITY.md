@@ -420,7 +420,8 @@ for free — removing one would break the behaviour, not restore it.
   "returns from a refetch whose hook never followed, instead of calling itself", "tries again on the next visit to the tab
   after a failed load", "answers a store subscription made before the load with an unsubscribe that works at once", "asks
   the client for a forced token request on a session settled without it", "waits for the client's own answer before a
-  guarded route decides"), `test/unit/auth-client-registration.test.ts`, `test/unit/auth/nuxt/middleware.test.ts` — "decides
+  guarded route decides"), `test/unit/auth-client-registration.test.ts` — "matches a posix manifest key against a Windows
+  target and root", `test/unit/auth/nuxt/middleware.test.ts` — "decides
   on the client's answer, not on a session settled without it", `test/unit/auth/vue/plugin-client.test.ts` — "loads it at
   startup for a cross-domain session kept in sessionStorage", `test/nuxt/auth/vue/cross-domain.test.ts` — "scrubs the token
   from the address before the client loads", "keeps the token when the client cannot load, and exchanges it once the client
