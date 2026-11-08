@@ -1,7 +1,8 @@
 // PARITY: A-02
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { nextTick, toRaw } from 'vue'
 import { makeFunctionReference } from 'convex/server'
+import { ConvexError } from 'convex/values'
 import { ConvexVueClient } from '../../src/runtime/vue/client'
 import { mountWithConvex } from '../helpers/vue_test_utils'
 import { silentConnectLogger } from '../helpers/silent-logger'
@@ -217,6 +218,189 @@ describe('useUploadQueue', () => {
     result.clear()
     expect(result.items.value.length).toBe(0)
     expect(result.isUploading.value).toBe(false)
+  })
+})
+
+describe('useUploadQueue hooks', () => {
+  /** A promise and its settle functions, for a hook the test finishes by hand. */
+  function deferred<T = void>() {
+    let resolve!: (value: T) => void
+    let reject!: (error: unknown) => void
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+    return { promise, resolve, reject }
+  }
+
+  it('sends what prepare returns, and keeps it on the item', async () => {
+    const mutation = vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const shrunk = new Blob(['small'])
+    const preparing = deferred<Blob>()
+    const prepare = vi.fn((_file: Blob) => preparing.promise)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { prepare }))
+    const original = new Blob(['large original'])
+    result.enqueue(original)
+    const item = result.items.value[0]!
+
+    expect(item.stage).toBe('prepare')
+    expect(toRaw(prepare.mock.calls[0]![0])).toBe(original)
+    // No upload URL is asked for until the file is ready.
+    expect(mutation).not.toHaveBeenCalled()
+
+    preparing.resolve(shrunk)
+    await waitFor(() => FakeXhr.instances.length === 1)
+    expect(item.stage).toBe('upload')
+    expect(FakeXhr.instances[0]!.sentBody).toBe(shrunk)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.status === 'success')
+
+    expect(toRaw(item.prepared)).toBe(shrunk)
+    expect(item.stage).toBeNull()
+  })
+
+  it('keeps an item uploading until after settles, then calls onItemSuccess', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const finishing = deferred()
+    const after = vi.fn(() => finishing.promise)
+    const onItemSuccess = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { after, onItemSuccess }))
+    result.enqueue(new Blob(['a']))
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    const item = result.items.value[0]!
+    await waitFor(() => item.stage === 'after')
+
+    expect(after).toHaveBeenCalledWith('s0', item, expect.any(AbortSignal))
+    expect(item.status).toBe('uploading')
+    expect(item.progress).toBe(1)
+    expect(result.isUploading.value).toBe(true)
+    expect(onItemSuccess).not.toHaveBeenCalled()
+
+    finishing.resolve()
+    await waitFor(() => item.status === 'success')
+    expect(onItemSuccess).toHaveBeenCalledWith('s0', item)
+    expect(result.isUploading.value).toBe(false)
+  })
+
+  it('tells a refusal from a failure: a ConvexError is refused, anything else failed', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onItemError = vi.fn()
+    const after = vi.fn()
+      .mockRejectedValueOnce(new ConvexError({ code: 'too_many_photos' }))
+      .mockRejectedValueOnce(new Error('network down'))
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { after, onItemError }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+
+    const [refused, failed] = result.items.value
+    expect(refused).toMatchObject({ status: 'error', refused: true, stage: null })
+    expect(failed).toMatchObject({ status: 'error', refused: false, stage: null })
+    expect(onItemError).toHaveBeenCalledTimes(2)
+    // The refused file goes again on a retry; the failed one is still stored.
+    expect(refused!.storageId).toBeNull()
+    expect(failed!.storageId).toBe('s1')
+  })
+
+  it('lets isRefusal decide, prepare\'s throw included', async () => {
+    class NotAPhoto extends Error {}
+    const isRefusal = vi.fn((error: Error) => error instanceof NotAPhoto)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      prepare: (file) => {
+        if (file.size === 0) throw new NotAPhoto('That file is not a photo.')
+        throw new Error('decoder crashed')
+      },
+      isRefusal,
+    }))
+    result.enqueue([new Blob([]), new Blob(['x'])])
+    await waitFor(() => !result.isUploading.value)
+
+    expect(result.items.value.map(item => [item.status, item.refused])).toEqual([['error', true], ['error', false]])
+    expect(isRefusal).toHaveBeenCalledWith(expect.any(NotAPhoto), result.items.value[0])
+    expect(FakeXhr.instances).toHaveLength(0)
+  })
+
+  it('retry runs only after again when the file is stored, and sends it again after a refusal', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const prepare = vi.fn((file: Blob) => file)
+    const after = vi.fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockRejectedValueOnce(new ConvexError('refused'))
+      .mockResolvedValue(undefined)
+    const onComplete = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { prepare, after, onComplete }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.status === 'error')
+    expect(item.refused).toBe(false)
+
+    // A failure in after: no second transfer, the same storage id.
+    result.retry(item.id)
+    await waitFor(() => item.status === 'error' && item.refused)
+    expect(after).toHaveBeenNthCalledWith(2, 's0', item, expect.any(AbortSignal))
+    expect(FakeXhr.instances).toHaveLength(1)
+
+    // A refusal in after: the file goes again; prepare does not run again.
+    result.retry()
+    await waitFor(() => FakeXhr.instances.length === 2)
+    expect(item).toMatchObject({ status: 'uploading', error: null, refused: false, stage: 'upload' })
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => item.status === 'success')
+
+    expect(item.storageId).toBe('s1')
+    expect(prepare).toHaveBeenCalledTimes(1)
+    expect(onComplete).toHaveBeenCalledTimes(3)
+  })
+
+  it('retry leaves items that did not fail alone', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef))
+    result.enqueue(new Blob(['a']))
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => !result.isUploading.value)
+
+    result.retry()
+    result.retry(result.items.value[0]!.id)
+    await nextTick()
+    expect(result.items.value[0]!.status).toBe('success')
+    expect(FakeXhr.instances).toHaveLength(1)
+  })
+
+  it('aborts prepare on remove, never refused, and never uploads', async () => {
+    const mutation = vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const preparing = deferred<Blob>()
+    let seen: AbortSignal | undefined
+    const onItemError = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      prepare: (_file, _item, signal) => {
+        seen = signal
+        return preparing.promise
+      },
+      isRefusal: () => true,
+      onItemError,
+    }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    result.remove(item.id)
+    expect(seen?.aborted).toBe(true)
+
+    preparing.resolve(new Blob(['ready']))
+    await waitFor(() => onItemError.mock.calls.length === 1)
+    expect(item.refused).toBe(false)
+    expect(mutation).not.toHaveBeenCalled()
   })
 })
 
