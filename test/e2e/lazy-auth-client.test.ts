@@ -1,7 +1,7 @@
 // PARITY: D-18
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { createPage, setup, url, useTestContext } from '@nuxt/test-utils/e2e'
 import { startConvexStub } from './helpers/convex-stub'
 
 // Upstream's provider takes a client the app built at import, so every page
@@ -28,6 +28,9 @@ await setup({
 // `$sessionSignal`, which the loader names too.)
 const BETTER_AUTH = /better-auth:session:/
 
+/** Where the build serves its chunks: `app.buildAssetsDir`, `/_nuxt/` unless the fixture moves it. */
+const assetsDir = () => useTestContext().nuxt!.options.app.buildAssetsDir
+
 /** A page that records which of the scripts it loaded carry Better Auth, and any page error. */
 async function open(options: { signedIn?: boolean } = {}) {
   const page = await createPage()
@@ -40,7 +43,7 @@ async function open(options: { signedIn?: boolean } = {}) {
   })
   page.on('response', (response) => {
     const address = response.url()
-    if (!address.includes('/_nuxt/') || !address.endsWith('.js')) return
+    if (!new URL(address).pathname.startsWith(assetsDir()) || !address.endsWith('.js')) return
     reads.push(response.text().then((body) => {
       if (BETTER_AUTH.test(body)) betterAuthChunks.push(address)
     }, () => {}))
@@ -67,6 +70,43 @@ describe('the Better Auth client, loaded on first use', () => {
 
     expect(betterAuthChunks).toEqual([])
     expect(errors).toEqual([])
+
+    // The same detector, in the same run, sees the chunk once something
+    // loads it: the empty list above is an absence, not a blind spot.
+    await page.goto(url('/account'), { waitUntil: 'hydration' })
+    const signOut = page.waitForRequest(request => request.url().endsWith('/api/auth/sign-out'))
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await signOut
+    await settled()
+    expect(betterAuthChunks).toHaveLength(1)
+  })
+
+  // A failed chunk request is asked for again in the same document, with no
+  // reload: the browser must not keep the failure for the module.
+  it('loads the client after its chunk failed once, in the same document', async () => {
+    const { page, betterAuthChunks, settled } = await open()
+    let failed = ''
+    await page.route(`**${assetsDir()}**/*.js`, async (route) => {
+      const response = await route.fetch()
+      const body = await response.text()
+      if (!failed && BETTER_AUTH.test(body)) {
+        failed = route.request().url()
+        return route.abort('failed')
+      }
+      return route.fulfill({ response, body })
+    })
+    await page.goto(url('/account'), { waitUntil: 'hydration' })
+    await settled()
+
+    // The first use fails: the chunk request is cut.
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await expect.poll(() => failed).not.toBe('')
+    // The next use, same page, loads it and makes the call.
+    const signOut = page.waitForRequest(request => request.url().endsWith('/api/auth/sign-out'))
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await signOut
+    await settled()
+    expect(betterAuthChunks).toEqual([failed])
   })
 
   it('loads on the first call through useBetterAuth().client', async () => {
@@ -137,7 +177,7 @@ describe('the Better Auth client, loaded on first use', () => {
 
     expect(await page.locator('[data-test="auth"]').textContent()).toContain('signed-in')
     expect(betterAuthChunks).toHaveLength(1)
-    const entry = await page.locator('script[type="module"][src*="/_nuxt/"]').first().getAttribute('src')
+    const entry = await page.locator(`script[type="module"][src*="${assetsDir()}"]`).first().getAttribute('src')
     expect(betterAuthChunks[0]).not.toContain(entry)
     // The stub answers every transition at identity version 0; a client that
     // authenticated expects 1. That mismatch is the stub's, not the page's.
