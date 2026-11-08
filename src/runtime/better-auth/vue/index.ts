@@ -10,6 +10,9 @@ export { useBetterAuth, type UseBetterAuthReturn, type BetterAuthSession, type B
 // default — see `#convex/auth-client` in the module. Routing the public export
 // through the same alias keeps a single client instance across the app.
 export { authClient, type AuthClient } from '#convex/auth-client'
+// The same client, loaded on first use: what the runtime itself reaches it by,
+// so a page that never calls it never downloads Better Auth.
+export { loadAuthClient } from './auth-client-loader'
 export { usePreloadedAuthQuery } from './hydration'
 export { consumeCrossDomainOneTimeToken, type AuthClientWithCrossDomain, type ConsumeCrossDomainOneTimeTokenOptions } from './cross-domain'
 export { resolveAuthRedirect } from './redirect'

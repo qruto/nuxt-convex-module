@@ -150,6 +150,7 @@ source.
 | `runtime/devtools/**`, `devtools/**`, `devtools-client-app/` | DevTools panel (dev-only) | A-15 |
 | `better-auth/nuxt/middleware.ts`, `better-auth/nuxt/server-guard.ts`, `better-auth/vue/redirect.ts` | `convex-auth` route middleware + its redirect guard | A-12 |
 | `better-auth/nuxt/proxy.ts` | the `${betterAuth.authRoute}/**` server handler | A-14 |
+| `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
 
 ---
 
@@ -397,6 +398,33 @@ for free — removing one would break the behaviour, not restore it.
   waits behind the clear, in upstream's order. Don't skip the clear to save the wait: `setAuth`
   pauses the socket, and if the new token never comes, a clear sent while paused is dropped and
   the server keeps the old identity.
+
+##### D-18 — the Better Auth client loads on first use
+
+- **Kind** · a client upstream's app builds at import, here behind a dynamic import
+- **Upstream** · `@convex-dev/better-auth@0.13.0` `react/index.tsx` — `ConvexBetterAuthProvider` takes the `authClient` the
+  app created at module scope, and `useUseAuthFromBetterAuth` calls `authClient.useSession()` and `authClient.convex.token()`
+- **Port** · [`better-auth/vue/auth-client-loader.ts`](./src/runtime/better-auth/vue/auth-client-loader.ts) —
+  `loadAuthClient`, `lazyAuthClient`, `deferAuthClient`;
+  [`better-auth/vue/use-better-auth.ts`](./src/runtime/better-auth/vue/use-better-auth.ts) — the mirrored session,
+  `settleSessionWithoutClient`, the token request; [`better-auth/vue/cross-domain.ts`](./src/runtime/better-auth/vue/cross-domain.ts);
+  [`better-auth/vue/plugin.client.ts`](./src/runtime/better-auth/vue/plugin.client.ts) and
+  [`better-auth/vue/plugin.server.ts`](./src/runtime/better-auth/vue/plugin.server.ts) — the no-session flag;
+  `keepAuthClientOffPrefetch` in [`src/module.ts`](./src/module.ts)
+- **Pinned by** · `test/unit/auth/vue/auth-client-loader.test.ts`, `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
+  Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts`
+- **On sync** · keep; port changes to how upstream reads the session or the token onto the loaded client
+- **Why** · a Nuxt plugin runs on every page, so a client the plugin imports is in the entry chunk of every
+  page: 28 to 42 KB of the fixture's entry (`test/fixtures/lazy-auth`), more with an app's plugins. The runtime
+  reaches `#convex/auth-client` only through `import()`, so the module behind the alias, and with it the
+  one instance, is unchanged. Until it loads, the session reads pending, as Better Auth's store reads before
+  its first fetch, so hydration matches the server render; `useBetterAuth().client` is a forwarding client
+  whose calls wait for the load and whose `use*` hooks answer with a pending ref that follows the real one. The server plugin flags a request that carried no session cookie and got no
+  token; there the browser waits for a first use (a call, a token request, a guarded route, the tab coming
+  back into view) and settles the session signed out after hydration, so a page that never needs the
+  client never downloads it. A `?ott=` token or a session the cross-domain plugin saved in storage loads it
+  at startup, and the chunk is kept off Nuxt's prefetch list. An app that imports `authClient` statically
+  opts that page back in.
 
 #### Consequences of an unimportable upstream internal
 

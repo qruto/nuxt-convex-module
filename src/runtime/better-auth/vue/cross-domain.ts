@@ -1,4 +1,5 @@
-import { authClient } from '#convex/auth-client'
+import type { AuthClient } from '#convex/auth-client'
+import { loadAuthClient } from './auth-client-loader'
 
 /**
  * An {@link AuthClient} that also includes the `crossDomainClient()` plugin.
@@ -9,7 +10,7 @@ import { authClient } from '#convex/auth-client'
  *
  * @public
  */
-export type AuthClientWithCrossDomain = typeof authClient & {
+export type AuthClientWithCrossDomain = AuthClient & {
   // `updateSession` is a top-level action contributed by the cross-domain
   // client plugin's `getActions` (not namespaced under `crossDomain`), matching
   // `convex/react`'s `authClientWithCrossDomain.updateSession()`.
@@ -82,13 +83,20 @@ export async function consumeCrossDomainOneTimeToken(
   const url = new URL(window.location.href)
   const token = url.searchParams.get('ott')
   if (token) {
-    const authClientWithCrossDomain = authClient as AuthClientWithCrossDomain
+    // PARITY: D-18
+    // The one place startup waits for the client: the token is exchanged
+    // before the first `setAuth`. A client that fails to load leaves the
+    // token unexchanged, as a client without the plugin does below.
+    const authClient = await loadAuthClient().catch((error: unknown) => {
+      console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
+    })
+    const authClientWithCrossDomain = authClient as AuthClientWithCrossDomain | undefined
     url.searchParams.delete('ott')
     window.history.replaceState({}, '', url)
     // PARITY: A-13
     // Port-only guard: the aliased client may not install the cross-domain
     // plugin (upstream requires it whenever an `ott` parameter appears).
-    if (!authClientWithCrossDomain.crossDomain) {
+    if (!authClientWithCrossDomain?.crossDomain) {
       return
     }
     // Port-only guard: with a dedicated callback route configured, a token
@@ -120,7 +128,7 @@ export async function consumeCrossDomainOneTimeToken(
         })
       const session = result.data?.session
       if (session) {
-        await authClient.getSession({
+        await authClientWithCrossDomain.getSession({
           fetchOptions: {
             headers: {
               Authorization: `Bearer ${session.token}`,

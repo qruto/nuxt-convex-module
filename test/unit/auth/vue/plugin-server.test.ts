@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // test/unit-server/prerender-auth-prefetch.test.ts — `import.meta.prerender`
 // is compile-time, and only that project compiles it truthy.
 
-const getToken = vi.fn(async () => 'jwt')
+const getToken = vi.fn(async (): Promise<string | null> => 'jwt')
 const convexAuth = vi.fn(() => ({ getToken }))
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
 
@@ -17,13 +17,16 @@ vi.mock('#convex/auth-client', () => {
 })
 
 const state = { value: null as string | null }
+const noSession = { value: false }
+const requestHeaders: { cookie?: string } = {}
 const event = {}
 const cacheControl = { value: undefined as unknown }
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useRuntimeConfig: () => ({ public: { convex: { url: 'https://example.convex.cloud' } } }),
-  useState: () => state,
+  useState: (key: string) => key === 'convex:betterAuth:noSession' ? noSession : state,
   useRequestEvent: () => event,
+  useRequestHeaders: () => requestHeaders,
   useResponseHeader: () => cacheControl,
 }))
 
@@ -33,6 +36,8 @@ const setup = (await import('../../../../src/runtime/better-auth/vue/plugin.serv
 describe('better-auth server plugin on an ordinary SSR request', () => {
   beforeEach(() => {
     state.value = null
+    noSession.value = false
+    delete requestHeaders.cookie
     vi.clearAllMocks()
   })
 
@@ -53,5 +58,43 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
     const store = provide.mock.calls.find(([key]) => key === BetterAuthTokenStoreKey)?.[1]
     expect(store.cachedToken.value).toBe('jwt')
     expect(store.initialTokenUsed).toBe(true)
+  })
+})
+
+// PARITY: D-18
+describe('the no-session flag the browser waits on', () => {
+  beforeEach(() => {
+    state.value = null
+    noSession.value = false
+    delete requestHeaders.cookie
+  })
+
+  const run = () => setup({ vueApp: { provide: vi.fn() }, hook: vi.fn() })
+
+  it('is set for a request with no session cookie that got no token', async () => {
+    getToken.mockResolvedValueOnce(null)
+    requestHeaders.cookie = 'theme=dark'
+    await run()
+    expect(noSession.value).toBe(true)
+  })
+
+  it('stays off for a request that carries a session cookie, under any prefix', async () => {
+    getToken.mockResolvedValueOnce(null)
+    requestHeaders.cookie = 'theme=dark; __Secure-my-app.session_token=abc'
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off for a signed-in request', async () => {
+    await run()
+    expect(noSession.value).toBe(false)
+  })
+
+  it('stays off when the prefetch failed: the server could not tell', async () => {
+    getToken.mockRejectedValueOnce(new Error('deployment down'))
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await run()
+    expect(noSession.value).toBe(false)
+    warn.mockRestore()
   })
 })

@@ -1,13 +1,14 @@
 import { computed } from 'vue'
-import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useResponseHeader } from '#app'
+import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexAuth } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
-import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, seedInitialToken } from './token-store'
+import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, hasSessionCookie, NO_SESSION_KEY, seedInitialToken } from './token-store'
 
 /**
- * Prefetch the Convex JWT for SSR and stash it in `initialToken`.
+ * Prefetch the Convex JWT for SSR and stash it in `initialToken`. Resolves
+ * `true` once the deployment answered, `false` when the prefetch failed.
  *
  * Exported for unit tests.
  * @internal
@@ -16,7 +17,7 @@ export async function prefetchAuthToken(
   event: ReturnType<typeof useRequestEvent>,
   initialToken: ReturnType<typeof useState<string | null>>,
   cacheControl: { value: unknown },
-) {
+): Promise<boolean> {
   try {
     const token = await convexAuth(event!).getToken()
     initialToken.value = token ?? null
@@ -29,9 +30,11 @@ export async function prefetchAuthToken(
       // that a route with stricter needs can still override it.
       cacheControl.value = 'private, no-store'
     }
+    return true
   }
   catch (error) {
     console.warn('[nuxt-convex-module] Failed to prefetch auth token for SSR:', error)
+    return false
   }
 }
 
@@ -88,8 +91,15 @@ export default defineNuxtPlugin({
     const event = useRequestEvent()
     if (event && !import.meta.prerender) {
       // Taken before the await: the Nuxt context it needs is gone after it.
-      await prefetchAuthToken(event, initialToken, useResponseHeader('Cache-Control'))
+      const cacheControl = useResponseHeader('Cache-Control')
+      const noSession = useState<boolean>(NO_SESSION_KEY, () => false)
+      const { cookie } = useRequestHeaders(['cookie'])
+      const answered = await prefetchAuthToken(event, initialToken, cacheControl)
       seedInitialToken(tokenStore, initialToken.value)
+      // PARITY: D-18
+      // No session cookie, and the deployment confirmed no token: the browser
+      // can wait for a first use before it downloads the Better Auth client.
+      noSession.value = answered && !initialToken.value && !hasSessionCookie(cookie)
     }
   },
 })

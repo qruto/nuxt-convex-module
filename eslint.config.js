@@ -35,6 +35,11 @@ export default createConfigForNuxt({
       // this workspace.
       ignores: ['.agents/**', '.claude/**', '.deepsec/**', 'examples/**', 'templates/**'],
     },
+    // A Nuxt page is named by its route: a fixture's `pages/index.vue` is `/`.
+    {
+      files: ['test/fixtures/**/pages/**/*.vue'],
+      rules: { 'vue/multi-word-component-names': 'off' },
+    },
     // Playground demo components and DevTools panel pages use short,
     // single-word names by design.
     {

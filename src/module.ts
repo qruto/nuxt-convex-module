@@ -1,5 +1,5 @@
 import { defineNuxtModule, addPlugin, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
-import { isAbsolute, join } from 'node:path'
+import { extname, isAbsolute, join, resolve } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
@@ -220,6 +220,7 @@ export default defineNuxtModule<ModuleOptions>({
     // registered BEFORE the functions-dir catch-all or it resolves to
     // `<functionsDir>/auth-client` (which doesn't exist).
     registerAuthClientAlias(resolver, nuxt, options)
+    keepAuthClientOffPrefetch(nuxt)
     registerConvexAliases(nuxt)
 
     registerConvexTypeFallback(nuxt)
@@ -489,6 +490,30 @@ function registerConvexAliases(nuxt: Nuxt): void {
  * library's own type-check always resolves the alias, and on both Vite
  * (`options.alias`) and Nitro (`nitro.alias`).
  */
+/** A path with `/` separators and no extension, as two spellings of one module compare. */
+const moduleKey = (path: string): string => path.slice(0, path.length - extname(path).length).replaceAll('\\', '/')
+
+/**
+ * Keep the auth client's chunk out of the `<link rel="prefetch">` tags Nuxt
+ * writes for every dynamic import of the entry. The runtime
+ * imports `#convex/auth-client` only dynamically, so a page that never needs
+ * it never downloads it (PARITY D-18); a prefetch would fetch it anyway.
+ */
+function keepAuthClientOffPrefetch(nuxt: Nuxt): void {
+  nuxt.hook('build:manifest', (manifest) => {
+    const target = nuxt.options.alias['#convex/auth-client']
+    if (!target) return
+    const isAuthClient = (key: string) => moduleKey(resolve(nuxt.options.srcDir, manifest[key]?.src ?? key)) === moduleKey(target)
+    const keys = new Set(Object.keys(manifest).filter(isAuthClient))
+    if (keys.size === 0) return
+    // As Nuxt keeps page chunks off it: a dynamic import listed here is prefetched.
+    for (const chunk of Object.values(manifest)) {
+      chunk.dynamicImports &&= chunk.dynamicImports.filter(key => !keys.has(key))
+    }
+    for (const key of keys) manifest[key]!.prefetch = false
+  })
+}
+
 function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): void {
   const custom = typeof options.betterAuth === 'object' ? options.betterAuth.authClient : undefined
   const target = custom

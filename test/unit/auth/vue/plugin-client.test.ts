@@ -10,12 +10,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const runtimeConfig = { public: { convex: { url: 'https://example.convex.cloud', crossDomainCallbackRoute: '' } } }
 const initialTokenState = { value: null as string | null }
+const noSessionState = { value: false }
 
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: unknown) =>
     typeof plugin === 'function' ? plugin : (plugin as { setup: unknown }).setup,
   useRuntimeConfig: () => runtimeConfig,
-  useState: (_key: string, init?: () => unknown) => {
+  useState: (key: string, init?: () => unknown) => {
+    if (key === 'convex:betterAuth:noSession') return noSessionState
     if (initialTokenState.value === null && init) {
       initialTokenState.value = init() as string | null
     }
@@ -29,8 +31,15 @@ vi.mock('../../../../src/runtime/better-auth/vue/cross-domain', () => ({
 }))
 
 const useBetterAuth = vi.fn()
+const settleSessionWithoutClient = vi.fn()
 vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
   useBetterAuth: (...args: unknown[]) => useBetterAuth(...args),
+  settleSessionWithoutClient: () => settleSessionWithoutClient(),
+}))
+
+const deferAuthClient = vi.fn()
+vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
+  deferAuthClient: () => deferAuthClient(),
 }))
 
 const createScopedConvexAuthState = vi.fn(() => ({
@@ -50,18 +59,26 @@ const { ConvexAuthStateKey } = await import('../../../../src/runtime/vue/auth/in
 const pluginMod = await import('../../../../src/runtime/better-auth/vue/plugin.client')
 const runPlugin = pluginMod.default as unknown as (app: {
   vueApp: { provide: (key: unknown, value: unknown) => void }
+  hook?: (name: string, fn: () => void) => void
 }) => Promise<void>
 
 function fakeNuxtApp() {
   const provided = new Map<unknown, unknown>()
+  const hooks = new Map<string, () => void>()
   return {
     provided,
-    app: { vueApp: { provide: (k: unknown, v: unknown) => provided.set(k, v) } },
+    hooks,
+    app: {
+      vueApp: { provide: (k: unknown, v: unknown) => provided.set(k, v) },
+      hook: (name: string, fn: () => void) => hooks.set(name, fn),
+    },
   }
 }
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
+  noSessionState.value = false
   runtimeConfig.public.convex.url = 'https://example.convex.cloud'
   runtimeConfig.public.convex.crossDomainCallbackRoute = ''
 })
@@ -103,5 +120,64 @@ describe('better-auth client plugin', () => {
     expect(provided.size).toBe(0)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('NUXT_PUBLIC_CONVEX_URL'))
     warn.mockRestore()
+  })
+})
+
+// PARITY: D-18
+describe('better-auth client plugin, with no session on the request', () => {
+  /** A browser at `href` whose storage holds `stored`. */
+  function browser(href: string, stored: Record<string, string> = {}) {
+    const keys = Object.keys(stored)
+    vi.stubGlobal('window', { location: { href } })
+    vi.stubGlobal('localStorage', {
+      get length() {
+        return keys.length
+      },
+      key: (index: number) => keys[index] ?? null,
+      getItem: (key: string) => stored[key] ?? null,
+    })
+  }
+
+  it('holds the client back, and settles the session once the page has hydrated', async () => {
+    noSessionState.value = true
+    browser('https://app.example/')
+    const { app, hooks } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(deferAuthClient).toHaveBeenCalledTimes(1)
+    expect(settleSessionWithoutClient).not.toHaveBeenCalled()
+    hooks.get('app:suspense:resolve')?.()
+    expect(settleSessionWithoutClient).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads it at startup for a one-time token, which needs it now', async () => {
+    noSessionState.value = true
+    browser('https://app.example/auth/callback?ott=token')
+    const { app, hooks } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(deferAuthClient).not.toHaveBeenCalled()
+    expect(hooks.has('app:suspense:resolve')).toBe(false)
+  })
+
+  it('loads it at startup for a session the cross-domain plugin saved in storage', async () => {
+    noSessionState.value = true
+    browser('https://app.example/', { 'better-auth_cookie': '{"better-auth.session_token":{"value":"abc"}}' })
+    const { app } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(deferAuthClient).not.toHaveBeenCalled()
+  })
+
+  it('loads it at startup when the server could not tell', async () => {
+    browser('https://app.example/')
+    const { app } = fakeNuxtApp()
+
+    await runPlugin(app)
+
+    expect(deferAuthClient).not.toHaveBeenCalled()
   })
 })

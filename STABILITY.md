@@ -45,7 +45,7 @@ The port cannot promise more than the code it mirrors.
 
 **Internal** — no promise at all: anything tagged `@internal` (stripped from the published
 types, present at runtime for parity), the DevTools panel and its RPC, `__resetUseBetterAuthForTests`,
-and how `#convex/auth-client` is resolved.
+and how and when `#convex/auth-client` is resolved and loaded.
 
 ## Upstream versions and this module's
 

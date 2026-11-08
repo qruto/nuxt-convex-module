@@ -27,6 +27,9 @@ vi.mock('#convex/auth-client', () => ({
 async function loadUseAuth() {
   const mod = await import('../../../../src/runtime/better-auth/vue/use-better-auth')
   mod.__resetUseBetterAuthForTests()
+  // The client loads on first use (D-18); load it here, so each case starts
+  // with the session mirrored from the mock's store.
+  await (await import('../../../../src/runtime/better-auth/vue/auth-client-loader')).loadAuthClient()
   return mod
 }
 
@@ -56,7 +59,10 @@ describe('useBetterAuth (Better Auth + Convex)', () => {
     const auth = useBetterAuth()
 
     expect(auth.client).toBe(mockAuthClient)
-    expect(auth.session).toBe(sessionRef)
+    // The session mirrors the client's store (D-18): the same state, kept in step.
+    expect(auth.session.value).toBe(sessionRef.value)
+    sessionRef.value = { data: { session: { id: 'session-2' } }, isPending: false }
+    expect(auth.session.value).toBe(sessionRef.value)
   })
 
   it('caches tokens across calls and dedups concurrent fetches', async () => {

@@ -9,6 +9,7 @@ const {
   mockUseRuntimeConfig,
   mockIsAuthenticated,
   mockUseAuth,
+  mockLoadAuthClient,
 } = vi.hoisted(() => ({
   mockNavigateTo: vi.fn((to: unknown) => ({ redirectedTo: to })),
   mockUseRequestEvent: vi.fn(),
@@ -16,6 +17,7 @@ const {
   mockUseRuntimeConfig: vi.fn(() => ({ public: { convex: { loginPath: '/login' } } })),
   mockIsAuthenticated: vi.fn(),
   mockUseAuth: vi.fn(),
+  mockLoadAuthClient: vi.fn(async () => ({})),
 }))
 
 vi.mock('#app', () => ({
@@ -28,6 +30,11 @@ vi.mock('#app', () => ({
 
 vi.mock('../../../../src/runtime/better-auth/vue/use-better-auth', () => ({
   useBetterAuth: mockUseAuth,
+  settleSessionWithoutClient: vi.fn(),
+}))
+
+vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
+  loadAuthClient: mockLoadAuthClient,
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({

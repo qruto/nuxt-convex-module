@@ -63,7 +63,8 @@ describe('auth/vue/plugin.server prefetchAuthToken', () => {
     const { event, cacheControl } = fakeEvent()
     const initialToken = { value: null as string | null } as never
 
-    await expect(prefetchAuthToken(event, initialToken, cacheControl)).resolves.toBeUndefined()
+    // `false`: no answer, so the browser loads the client at startup.
+    await expect(prefetchAuthToken(event, initialToken, cacheControl)).resolves.toBe(false)
 
     expect((initialToken as { value: string | null }).value).toBeNull()
     expect(cacheControl.value).toBeUndefined()

@@ -1,6 +1,7 @@
 import type { AuthTokenFetcher } from 'convex/browser'
-import { computed, effectScope, hasInjectionContext, inject, shallowRef, triggerRef, watch, type ComputedRef, type EffectScope } from 'vue'
-import { authClient, type AuthClient } from '#convex/auth-client'
+import { computed, effectScope, hasInjectionContext, inject, shallowRef, triggerRef, watch, type ComputedRef, type EffectScope, type ShallowRef } from 'vue'
+import type { AuthClient } from '#convex/auth-client'
+import { __resetAuthClientLoaderForTests, isAuthClientDeferred, lazyAuthClient, loadAuthClient, loadedAuthClient, onAuthClient } from './auth-client-loader'
 import { BetterAuthTokenStoreKey, clearToken, createBetterAuthTokenStore, PENDING_AUTH_VERSION, readTokenClaims, seedInitialToken, type BetterAuthTokenStore } from './token-store'
 
 // The browser runs one app, so its store lives at module scope.
@@ -47,11 +48,39 @@ const serverSession = () => shallowRef({
 let browserSession: BetterAuthSession | undefined
 let browserSessionScope: EffectScope | undefined
 
+type SessionState = BetterAuthSession['value']
+
+// PARITY: D-18
+// Better Auth's session store lives on the client, which loads on first use.
+// Until it arrives the session reads pending, as Better Auth's own store reads
+// before its first fetch, so the hydrating page matches the server render. Its
+// `refetch` loads the client first.
+const pendingSessionState = (): SessionState => ({
+  data: null,
+  error: null,
+  isPending: true,
+  isRefetching: false,
+  refetch: async (...args: unknown[]) => {
+    await loadAuthClient()
+    return (browserSession!.value.refetch as (...args: unknown[]) => Promise<void>)(...args)
+  },
+}) as unknown as SessionState
+
 const useClientSession = (): BetterAuthSession => {
   if (import.meta.server) return serverSession()
   browserSessionScope ??= effectScope(true)
-  return browserSession ??= browserSessionScope.run(() => {
-    const session = authClient.useSession()
+  const scope = browserSessionScope
+  return browserSession ??= scope.run(() => {
+    const session = shallowRef(pendingSessionState()) as ShallowRef<SessionState>
+    // PARITY: D-18
+    // Mirror the store once the client is here; ask for it unless the server
+    // found no session, in which case the first use asks.
+    onAuthClient(client => scope.active && scope.run(() => {
+      watch(client.useSession(), (state) => {
+        session.value = state
+      }, { immediate: true, flush: 'sync' })
+    }))
+    if (!isAuthClientDeferred()) void loadAuthClient().catch(warnLoadFailure)
     // Maps upstream's `useEffect` that drops the SSR token once the session
     // loads. Better Auth reads pending again when a signed-out session
     // refetches, so a token left here would read as signed in. Only the
@@ -59,8 +88,23 @@ const useClientSession = (): BetterAuthSession => {
     watch(session, ({ data, isPending }) => {
       if (!data && !isPending) clearToken(browserStore)
     }, { flush: 'sync' })
-    return session
+    return session as unknown as BetterAuthSession
   })!
+}
+
+const warnLoadFailure = (error: unknown) => {
+  console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
+}
+
+/**
+ * Settle a deferred session as signed out, without the client: the server
+ * found no session on this request, and the page has hydrated. A session the
+ * client already reports is left alone. @internal
+ */
+export function settleSessionWithoutClient(): void {
+  const session = useClientSession() as unknown as ShallowRef<SessionState>
+  if (loadedAuthClient() || !session.value.isPending) return
+  session.value = { ...session.value, isPending: false }
 }
 
 // Read off `AuthClient`, so the published type follows the app's own client
@@ -120,7 +164,9 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
   const { cachedToken } = store
 
   const session = useClientSession()
-  const client = authClient
+  // PARITY: D-18
+  // The loaded client, or one that loads on its first call until it is.
+  const client = loadedAuthClient() ?? lazyAuthClient
 
   // `undefined` while the session is pending: nothing is known yet, and the
   // session that settles is the one a seeded token was minted for.
@@ -198,8 +244,10 @@ export function useBetterAuth(initialToken?: string | null): UseBetterAuthReturn
     // Only the latest request writes the cache: a newer one replaced this one,
     // or the session ended while it was in flight.
     const isLatest = () => store.pendingToken === pending
-    const pending: Promise<string | null> = store.pendingToken = client.convex
-      .token({ fetchOptions: { throw: false } })
+    // PARITY: D-18
+    // Upstream's client is already here; this one may load first.
+    const pending: Promise<string | null> = store.pendingToken = loadAuthClient()
+      .then(client => client.convex.token({ fetchOptions: { throw: false } }))
       .then(({ data, error }) => {
         if (error && error.status !== 401) {
           return afterFailure()
@@ -251,4 +299,5 @@ export function __resetUseBetterAuthForTests() {
   browserSessionScope?.stop()
   browserSessionScope = undefined
   browserSession = undefined
+  __resetAuthClientLoaderForTests()
 }

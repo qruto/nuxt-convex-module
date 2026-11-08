@@ -263,8 +263,12 @@ try {
   // grows quietly here is the DevTools panel (a router or duplicate HTML pages
   // coming back) and a declaration that spells out a dependency's types instead
   // of naming them. Raise the ceiling in the change that explains the growth.
+  // 0.13.0 measured 575 KB. The lazy Better Auth client adds its loader and
+  // the no-session flag (+7 KB, two files, most of it the JSDoc mkdist keeps);
+  // the upload queue's hooks and `/testing` land in the same release (+7 KB),
+  // about 589 KB together, so the ceiling moves to 600 KB.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 580_000
+  const MAX_BYTES = 600_000
   const MAX_FILES = 110
   let bytes = 0
   let count = 0

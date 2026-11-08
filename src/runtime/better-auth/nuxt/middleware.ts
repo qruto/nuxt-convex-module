@@ -1,7 +1,8 @@
 // PARITY: A-12
 import { defineNuxtRouteMiddleware, navigateTo, useRuntimeConfig } from '#app'
 import { watch } from 'vue'
-import { useBetterAuth } from '../vue/use-better-auth'
+import { settleSessionWithoutClient, useBetterAuth } from '../vue/use-better-auth'
+import { loadAuthClient } from '../vue/auth-client-loader'
 import { loginTarget, serverGuard } from './server-guard'
 
 // The Better Auth client only resolves a session in the browser (it relies
@@ -45,6 +46,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const { session } = useBetterAuth()
   if (session.value.isPending) {
+    // A guarded route needs the session, so it needs the client (D-18). One
+    // that fails to load settles the session signed out rather than hang.
+    void loadAuthClient().catch(settleSessionWithoutClient)
     await waitForSession(() => session.value.isPending)
   }
 
