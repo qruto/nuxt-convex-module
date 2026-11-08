@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.14.0
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.13.0...v0.14.0)
+
+### 🚀 Enhancements
+
+- Add a testing export, name the function on server fetch errors, and an exclude option ([#147](https://github.com/qruto/nuxt-convex-module/pull/147))
+
+#### Storage
+
+- Give useUploadQueue prepare and after hooks, refusals, and retry ([#148](https://github.com/qruto/nuxt-convex-module/pull/148))
+
+### 🔥 Performance
+
+#### Better Auth
+
+- ⚠️  Load the Better Auth client on first use ([#149](https://github.com/qruto/nuxt-convex-module/pull/149))
+
+#### ⚠️ Breaking Changes
+
+- **Better Auth:** ⚠️  Load the Better Auth client on first use ([#149](https://github.com/qruto/nuxt-convex-module/pull/149))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.13.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.12.3...v0.13.0)
