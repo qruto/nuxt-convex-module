@@ -470,9 +470,21 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Port** · [`vue/composables/use-upload.ts`](./src/runtime/vue/composables/use-upload.ts),
   `use-upload-queue.ts`, `use-storage-url.ts` — `useUpload`, `uploadFile`, `useUploadQueue`,
   `useStorageUrl` (+ `useConvex*` aliases)
-- **Pinned by** · `test/unit/use-upload.test.ts`, `test/nuxt/use-storage.test.ts`
+- **Pinned by** · `test/unit/use-upload.test.ts`, `test/nuxt/use-storage.test.ts` — the `useUploadQueue hooks` cases
+  pin `prepare`, `after`, refused against failed, and `retry`; "hands a storage id after refused to
+  onItemError, and a retry forgets it", "retry after onItemSuccess threw runs only onItemSuccess, never
+  after twice", "settles an item as failed when isRefusal throws" and "keeps a retry started from
+  onItemError abortable" pin the edges
 - **Why** · Convex file storage has a documented three-step flow but no client helpers in
   `convex/react`. These wrap it with progress, cancellation and queueing.
+  `useUploadQueue`'s `prepare` and `after` hooks put an app's own steps on either side of the
+  transfer (shrink a photo before it leaves; attach and check it once stored), and the item stays
+  `uploading` until both settle. A failed item says whether it was `refused`, the app turning the
+  file away (`isRefusal`, by default a `ConvexError`), or failed, so a UI can show the reason for
+  one and offer a retry for the other. `retry` resumes from the step that stopped and never
+  runs a finished `after` twice; a file `after` refused stays on `item.storageId` for the app to
+  delete (the queue never deletes files) until a retry sends the file again. An app
+  otherwise hand-rolls the whole queue to get any of this.
 
 ##### A-04 — `useAsyncQuery`
 

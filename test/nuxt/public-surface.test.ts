@@ -78,7 +78,7 @@ const ENTRY: Record<string, Entry> = {
       'FunctionReference_future', 'FunctionReturnType', 'GenerateUploadUrl', 'GetStorageUrl', 'IConvexVueClient', 'MutationOptions',
       'OptimisticUpdate', 'OptionalRestArgs', 'OptionalRestArgsOrSkip', 'PaginatedQueryArgs', 'PaginatedQueryItem',
       'PaginatedQueryReference', 'PaginatedWatch', 'PaginationStatus', 'Preloaded', 'QueryJournal', 'QueryOptions',
-      'RequestForQueries', 'StorageId', 'UploadFileOptions', 'UploadItemStatus', 'UploadQueueItem',
+      'RequestForQueries', 'StorageId', 'UploadFileOptions', 'UploadItemStage', 'UploadItemStatus', 'UploadQueueItem',
       'UsePaginatedQueryObjectReturnType', 'UsePaginatedQueryOptions', 'UsePaginatedQueryResult',
       'UsePaginatedQueryReturnType', 'UseQueryResult', 'UseUploadOptions', 'UseUploadQueueOptions', 'Value',
       'VueAction', 'VueMutation', 'VueMutationOptions', 'VueUpload', 'VueUploadQueue', 'Watch', 'WatchQueryOptions',
