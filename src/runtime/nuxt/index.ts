@@ -52,6 +52,7 @@ import { getFunctionName } from 'convex/server'
 import { convexToJson, jsonToConvex } from 'convex/values'
 import type { Preloaded } from '../vue/index'
 import { getConvexRuntimeConfig } from './config'
+import { withFunctionName } from './function-name'
 
 /**
  * Options to {@link preloadQuery}, {@link fetchQuery}, {@link fetchMutation} and {@link fetchAction}.
@@ -147,7 +148,8 @@ export async function fetchQuery<Query extends FunctionReference<'query'> | Func
 ): Promise<FunctionReturnType<Query>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.query(query, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('query', query, client.query(query, fnArgs || {}))
 }
 
 /**
@@ -170,7 +172,8 @@ export async function fetchMutation<
 ): Promise<FunctionReturnType<Mutation>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.mutation(mutation, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('mutation', mutation, client.mutation(mutation, fnArgs || {}))
 }
 
 /**
@@ -191,7 +194,8 @@ export async function fetchAction<Action extends FunctionReference<'action'> | F
 ): Promise<FunctionReturnType<Action>> {
   const [fnArgs, options] = args
   const client = setupClient(options ?? {})
-  return client.action(action, fnArgs || {})
+  // PARITY: D-17
+  return withFunctionName('action', action, client.action(action, fnArgs || {}))
 }
 
 // The published `convex` types omit the internal `setFetchOptions` /

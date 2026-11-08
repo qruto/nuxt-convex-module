@@ -44,7 +44,7 @@ The rule behind the list: a symbol upstream marks experimental or unstable is ex
 The port cannot promise more than the code it mirrors.
 
 **Internal** — no promise at all: anything tagged `@internal` (stripped from the published
-types, present at runtime for parity), the DevTools panel and its RPC, `__resetUseBetterAuthForTests`,
+types, present at runtime for parity), the DevTools panel and its RPC, `__resetUseBetterAuthForTests` (now `resetBetterAuthState` from `nuxt-convex-module/testing`, which is stable),
 and how and when `#convex/auth-client` is resolved and loaded.
 
 ## Upstream versions and this module's

@@ -30,6 +30,7 @@ Ask the user, and wait for a yes, before any command that logs in to Convex or c
 - Import function references from `#convex/api`: `import { api } from '#convex/api'`. `#convex/dataModel` and `#convex/server` alias the other generated files.
 - `convex dev` generates `convex/_generated/`. Until it exists, `#convex/*` imports are typed `any`. Run `npx convex dev --once` before type-checking.
 - Composables, components and server helpers are auto-imported. Don't import from `convex/react`; that is React.
+- `convex.exclude` (names or patterns) leaves named auto-imports, components or the `convex-auth` middleware unregistered; they stay importable from the subpath exports.
 - In development the module reads the deployment URL from the `.env.local` that `convex dev` writes. A production build reads `NUXT_PUBLIC_CONVEX_URL` (and `NUXT_PUBLIC_CONVEX_SITE_URL`). Never hardcode a deployment URL.
 - The `dev` script is `convex dev --start "nuxt dev"`: one long-running command for Convex and Nuxt. When you start it to check something, run it in the background and stop it afterwards.
 
@@ -79,6 +80,7 @@ The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and
 
 - Provider-agnostic state: `useConvexAuth()` → `isLoading`, `isAuthenticated`; components `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>`, `<AuthRefreshing>`.
 - Better Auth, Clerk and Auth0 switch on when their package is installed. Setup on both sides: [references/auth.md](references/auth.md).
+- In the app's own tests, call `resetBetterAuthState()` from `nuxt-convex-module/testing` between cases that sign in; never import the module's files by path.
 - During SSR the auth state reads as loading. Server-render signed-in data through the request instead: `convexAuth(event)` on the server (Better Auth).
 
 ## Billing

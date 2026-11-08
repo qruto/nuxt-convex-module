@@ -19,6 +19,7 @@ import type {
 import type { Preloaded } from '../../vue/hydration'
 import { getConvexRuntimeConfig } from '../../nuxt/config'
 import { fetchAction, fetchMutation, fetchQuery, preloadQuery } from '../../nuxt/index'
+import { withoutFunctionName } from '../../nuxt/function-name'
 
 const parseConvexSiteUrl = (url: string | undefined) => {
   // Texts mirror upstream verbatim, modulo the sanctioned env-var/framework
@@ -331,10 +332,13 @@ export function convexAuth(event: ConvexAuthEvent, opts?: ConvexAuthOptions): Co
       // It rethrows auth errors and retries every other error. Here a cached
       // token rejected with an auth error is refreshed once and the call
       // retried. Do not sync upstream's condition back.
+      // PARITY: D-17 — the check reads the message the server sent, without
+      // the `[CONVEX A(module:fn)]` prefix, which a function path containing
+      // "auth" would otherwise satisfy.
       if (
         !opts?.jwtCache?.enabled
         || token.isFresh
-        || !opts.jwtCache.isAuthError(error)
+        || !withoutFunctionName(error, opts.jwtCache.isAuthError.bind(opts.jwtCache))
       ) {
         throw error
       }

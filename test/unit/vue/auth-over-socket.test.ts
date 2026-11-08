@@ -52,11 +52,12 @@ const renderer = createRenderer<object, object>({
 
 /** A page hydrated with a server token and a pending session: three components' worth of gated queries. */
 async function hydrate(address: string, options: { lifetime?: number, leeway?: number } = {}) {
-  const { useBetterAuth, __resetUseBetterAuthForTests } = await import('../../../src/runtime/better-auth/vue/use-better-auth')
+  const { useBetterAuth } = await import('../../../src/runtime/better-auth/vue/use-better-auth')
+  const { resetBetterAuthState } = await import('../../../src/runtime/nuxt/testing')
   const { ConvexClientKey, ConvexVueClient } = await import('../../../src/runtime/vue/client')
   const { ConvexAuthStateKey, createScopedConvexAuthState } = await import('../../../src/runtime/vue/auth')
   const { useQuery_experimental } = await import('../../../src/runtime/vue/composables/use-query')
-  __resetUseBetterAuthForTests()
+  resetBetterAuthState()
 
   const client = new ConvexVueClient(address, {
     webSocketConstructor: nodeWebSocket,

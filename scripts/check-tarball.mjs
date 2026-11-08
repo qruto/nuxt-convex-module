@@ -117,6 +117,8 @@ const allowed = {
   './vue': [],
   './server': [],
   './app': [],
+  // Resets the Better Auth integration's state, so it may reach what that entry reaches.
+  './testing': ['better-auth', '@convex-dev/better-auth'],
   './better-auth/client': ['better-auth', '@convex-dev/better-auth'],
   './better-auth/vue': ['better-auth', '@convex-dev/better-auth'],
   './better-auth/server': ['better-auth', '@convex-dev/better-auth'],
