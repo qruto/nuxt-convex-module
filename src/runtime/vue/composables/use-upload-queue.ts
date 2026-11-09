@@ -220,6 +220,10 @@ export function useUploadQueue(
   // Runs not yet finished. An item reads `success` while its `onItemSuccess`
   // still runs, so the item counts alone can't say the queue has settled.
   let running = 0
+  // `clear()` starts a new generation; runs it cut off count apart, so one
+  // that never settles can't hold back `onComplete` for the files after it.
+  let generation = 0
+  let cutOff = 0
 
   const activeCount = computed(
     () => items.value.filter(item => item.status === 'uploading').length,
@@ -294,6 +298,7 @@ export function useUploadQueue(
   }
 
   async function run(item: UploadQueueItem): Promise<void> {
+    const own = generation
     running++
     item.status = 'uploading'
     const controller = new AbortController()
@@ -317,15 +322,21 @@ export function useUploadQueue(
       fail(item, caught, signal)
     }
     finally {
-      running--
-      // A retry started from `onItemError` holds a controller of its own by now.
-      if (controllers.get(item.id) === controller) controllers.delete(item.id)
-      if (pendingCount.value === 0 && running === 0) {
-        options.onComplete?.(items.value)
+      if (own !== generation) {
+        // Cut off by `clear()`: that queue ended empty, said once its last run is done.
+        if (--cutOff === 0) options.onComplete?.([])
       }
-      // A cancelled run starts nothing: the queued items wait for `enqueue` or `retry`.
-      else if (!signal.aborted) {
-        pump()
+      else {
+        running--
+        // A retry started from `onItemError` holds a controller of its own by now.
+        if (controllers.get(item.id) === controller) controllers.delete(item.id)
+        if (pendingCount.value === 0 && running === 0) {
+          options.onComplete?.(items.value)
+        }
+        // A cancelled run starts nothing: the queued items wait for `enqueue` or `retry`.
+        else if (!signal.aborted) {
+          pump()
+        }
       }
     }
   }
@@ -379,6 +390,9 @@ export function useUploadQueue(
 
   function clear(): void {
     cancel()
+    generation++
+    cutOff += running
+    running = 0
     controllers.clear()
     afterDone.clear()
     resend.clear()

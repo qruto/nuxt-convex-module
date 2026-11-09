@@ -585,7 +585,8 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   after twice", "settles an item as failed when isRefusal throws", "keeps a retry started from
   onItemError abortable", "never runs an after that finished during a cancel again on retry", "calls
   onComplete once, after every onItemSuccess has returned", "cancel holds the queued items until a retry
-  starts them" and "remove hands an in-flight item's slot to the next queued item" pin the edges
+  starts them" "remove hands an in-flight item's slot to the next queued item" and "completes a queue reused after
+  clear, while a run clear cut off never settles" pin the edges
 - **Why** · Convex file storage has a documented three-step flow but no client helpers in
   `convex/react`. These wrap it with progress, cancellation and queueing.
   `useUploadQueue`'s `prepare` and `after` hooks put an app's own steps on either side of the

@@ -553,6 +553,34 @@ describe('useUploadQueue hooks', () => {
     expect(settled).toEqual([['error', 'success']])
   })
 
+  it('completes a queue reused after clear, while a run clear cut off never settles', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const hanging = deferred()
+    const after = vi.fn((storageId: string) => storageId === 's0' ? hanging.promise : undefined)
+    const completed: string[][] = []
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      after,
+      onComplete: items => completed.push(items.map(item => item.status)),
+    }))
+    result.enqueue(new Blob(['a']))
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => after.mock.calls.length === 1)
+
+    result.clear()
+    result.enqueue(new Blob(['b']))
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => completed.length === 1)
+    expect(completed).toEqual([['success']])
+
+    // The cleared queue says it ended empty once its last run is done.
+    hanging.resolve()
+    await waitFor(() => completed.length === 2)
+    expect(completed[1]).toEqual([])
+  })
+
   it('retry leaves items that did not fail alone', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 

@@ -2467,7 +2467,7 @@ const url = useStorageUrl(api.images.getUrl, storageId)
 const useConvexUploadQueue: (generateUploadUrl, options) => VueUploadQueue = useUploadQueue;
 ```
 
-Defined in: [src/runtime/vue/composables/use-upload-queue.ts:405](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L405)
+Defined in: [src/runtime/vue/composables/use-upload-queue.ts:419](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/composables/use-upload-queue.ts#L419)
 
 Upload many files to Convex file storage with bounded concurrency and
 per-item reactive progress.
