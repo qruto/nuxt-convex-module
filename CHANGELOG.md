@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.14.1
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.0...v0.14.1)
+
+### 🩹 Fixes
+
+#### Better Auth
+
+- Drop a one-time token the client could not load for, and keep a read-only stack ([#152](https://github.com/qruto/nuxt-convex-module/pull/152))
+
+#### Storage
+
+- Keep a finished after done, hold the queue on cancel, and call onComplete once ([#154](https://github.com/qruto/nuxt-convex-module/pull/154))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Update node-forge to 1.4.3, and accept three build-only OSV findings ([#153](https://github.com/qruto/nuxt-convex-module/pull/153))
+
+### ✅ Tests
+
+#### Better Auth
+
+- Retry a failed client chunk in the browser, and check the e2e detector ([#151](https://github.com/qruto/nuxt-convex-module/pull/151))
+- Wait for the prefetched client chunk, not for the first quiet network ([#155](https://github.com/qruto/nuxt-convex-module/pull/155))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.14.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.13.0...v0.14.0)
