@@ -161,10 +161,14 @@ describe('the Better Auth client, loaded on first use', () => {
 
     await page.goto(url('/links'), { waitUntil: 'hydration' })
     await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
-    await settled()
+    // Nuxt prefetches a visible link once the browser is idle, which can come
+    // after the network first goes quiet: wait for the chunk itself.
+    await expect.poll(async () => {
+      await settled()
+      return betterAuthChunks.length
+    }, { timeout: 15_000 }).toBe(1)
 
     // The prefetch fetched (and ran) the sign-in page, with Better Auth in it.
-    expect(betterAuthChunks).toHaveLength(1)
     expect(sessionRequests).toEqual([])
     expect(errors).toEqual([])
   })
