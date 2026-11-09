@@ -132,7 +132,10 @@ export interface VueUploadQueue {
   cancel: () => void
   /** Remove an item by id, aborting it first if it is uploading. */
   remove: (id: string) => void
-  /** Abort everything and empty the queue. */
+  /**
+   * Abort everything and empty the queue. Once the aborted uploads end,
+   * `onComplete` gets `[]`, unless files were queued since.
+   */
   clear: () => void
   /**
    * Queue an errored item again, or every errored item without an id. It
@@ -242,12 +245,11 @@ export function useUploadQueue(
 
   function pump(): void {
     if (typeof XMLHttpRequest === 'undefined') return
-    let slots = concurrency - activeCount.value
     for (const item of items.value) {
-      // Checked on every item: a run starts in step with this loop, and its `onItemSuccess` may cancel.
-      if (slots <= 0 || held) break
+      // Read on every item: a run starts in step with this loop, and its
+      // `onItemSuccess` may cancel or queue more files.
+      if (held || activeCount.value >= concurrency) break
       if (item.status !== 'pending') continue
-      slots--
       void run(item)
     }
   }
@@ -326,8 +328,9 @@ export function useUploadQueue(
     }
     finally {
       if (own !== generation) {
-        // Cut off by `clear()`: that queue ended empty, said once its last run is done.
-        if (--cutOff === 0) options.onComplete?.([])
+        // Cut off by `clear()`: once its last run is done, a queue still empty
+        // hears it ended. Files queued since report for themselves.
+        if (--cutOff === 0 && items.value.length === 0) options.onComplete?.([])
       }
       else {
         running--
