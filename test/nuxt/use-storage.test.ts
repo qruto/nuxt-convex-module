@@ -581,6 +581,30 @@ describe('useUploadQueue hooks', () => {
     expect(completed[1]).toEqual([])
   })
 
+  it('starts nothing more once onItemSuccess cancels during a retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    let queue!: ReturnType<typeof useUploadQueue>
+    const onItemSuccess = vi.fn()
+      .mockImplementationOnce(() => {
+        throw new Error('save failed')
+      })
+      .mockImplementation(() => queue.cancel())
+
+    const { result } = await mountWithConvex(client, () => (queue = useUploadQueue(genUrlRef, { concurrency: 2, onItemSuccess })))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    FakeXhr.instances[1]!.failWith(500, 'down')
+    await waitFor(() => !result.isUploading.value)
+
+    // The first item runs only onItemSuccess again, which cancels: the
+    // second must stay queued.
+    result.retry()
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(2)
+    expect(result.items.value.map(item => item.status)).toEqual(['success', 'pending'])
+  })
+
   it('retry leaves items that did not fail alone', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 
