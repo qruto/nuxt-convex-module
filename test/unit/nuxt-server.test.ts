@@ -187,6 +187,19 @@ describe('Nuxt server utilities', () => {
       expect(aborted.name).toBe('AbortError')
     })
 
+    it('names the function on an error whose stack cannot be written, and rethrows that error', async () => {
+      const { fetchQuery } = await import('../../src/runtime/nuxt/index')
+      const { withoutFunctionName } = await import('../../src/runtime/nuxt/function-name')
+      const thrown = Object.defineProperty(new Error('boom'), 'stack', { value: 'Error: boom\n    at x', writable: false })
+      mockQuery.mockRejectedValueOnce(thrown)
+
+      await expect(fetchQuery(mockFunctionReference<'query'>('tasks:list'), {})).rejects.toBe(thrown)
+      expect(thrown.message).toBe('[CONVEX Q(tasks:list)] boom')
+      expect(thrown.stack).toBe('Error: boom\n    at x')
+      expect(withoutFunctionName(thrown, error => (error as Error).message)).toBe('boom')
+      expect(thrown.message).toBe('[CONVEX Q(tasks:list)] boom')
+    })
+
     it('rethrows a value that is not an Error untouched', async () => {
       const { fetchAction } = await import('../../src/runtime/nuxt/index')
       mockAction.mockRejectedValueOnce('offline')

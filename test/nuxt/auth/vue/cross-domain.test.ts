@@ -97,10 +97,7 @@ describe('auth/vue/cross-domain', () => {
     }
   })
 
-  it.each([
-    ['throws', () => Promise.reject(new Error('offline'))],
-    ['answers with an error', () => Promise.resolve({ data: null, error: { status: 500 } })],
-  ])('keeps a kept token unexchanged when the session lookup %s', async (_name, lookup) => {
+  it('drops the token when the client cannot load, and leaves the client that loads later alone', async () => {
     vi.resetModules()
     vi.doMock('#convex/auth-client', () => {
       throw new Error('chunk failed')
@@ -109,70 +106,18 @@ describe('auth/vue/cross-domain', () => {
     try {
       const { consumeCrossDomainOneTimeToken } = await loadModule()
       const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
-      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
-      await consumeCrossDomainOneTimeToken()
-
-      mockGetSession.mockImplementationOnce(lookup)
-      registerAuthClient(mockAuthClient as never)
-      await vi.waitFor(() => expect(warn).toHaveBeenCalledWith('[nuxt-convex-module] Failed to consume cross-domain one-time token:', expect.anything()))
-      expect(mockVerify).not.toHaveBeenCalled()
-    }
-    finally {
-      warn.mockRestore()
-      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
-      vi.resetModules()
-    }
-  })
-
-  it('does not let a kept token replace a session started since', async () => {
-    vi.resetModules()
-    vi.doMock('#convex/auth-client', () => {
-      throw new Error('chunk failed')
-    })
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const { consumeCrossDomainOneTimeToken } = await loadModule()
-      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
-      window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
-      await consumeCrossDomainOneTimeToken()
-
-      // Signed in some other way before the client arrived.
-      mockGetSession.mockResolvedValueOnce({ data: { session: { id: 'newer' } } })
-      registerAuthClient(mockAuthClient as never)
-      await vi.waitFor(() => expect(mockGetSession).toHaveBeenCalledTimes(1))
-      await Promise.resolve()
-      expect(mockVerify).not.toHaveBeenCalled()
-      expect(mockUpdateSession).not.toHaveBeenCalled()
-    }
-    finally {
-      warn.mockRestore()
-      vi.doMock('#convex/auth-client', () => ({ authClient: mockAuthClient }))
-      vi.resetModules()
-    }
-  })
-
-  it('keeps the token when the client cannot load, and exchanges it once the client arrives', async () => {
-    vi.resetModules()
-    vi.doMock('#convex/auth-client', () => {
-      throw new Error('chunk failed')
-    })
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const { consumeCrossDomainOneTimeToken } = await loadModule()
-      const { registerAuthClient } = await import('../../../../src/runtime/better-auth/vue/auth-client-loader')
-      mockVerify.mockResolvedValue({ data: { session: { token: 'session-token' } } })
       window.history.replaceState({}, '', 'https://nuxt-convex-module.localhost/profile?ott=one-time-token')
 
       await consumeCrossDomainOneTimeToken()
       expect(new URL(window.location.href).searchParams.get('ott')).toBeNull()
-      expect(mockVerify).not.toHaveBeenCalled()
+      expect(warn).toHaveBeenCalledWith('[nuxt-convex-module] Failed to load the Better Auth client:', expect.anything())
 
-      // A later use brings the client, which finds no session: the token it
-      // kept is exchanged then.
-      mockGetSession.mockResolvedValueOnce({ data: null, error: null })
+      // A later use brings the client, perhaps for a sign-in: no old token
+      // may race it.
       registerAuthClient(mockAuthClient as never)
-      await vi.waitFor(() => expect(mockUpdateSession).toHaveBeenCalledTimes(1))
-      expect(mockVerify).toHaveBeenCalledWith({ token: 'one-time-token' })
+      await new Promise(resolve => setTimeout(resolve))
+      expect(mockGetSession).not.toHaveBeenCalled()
+      expect(mockVerify).not.toHaveBeenCalled()
     }
     finally {
       warn.mockRestore()

@@ -438,8 +438,8 @@ for free — removing one would break the behaviour, not restore it.
   on the client's answer, not on a session settled without it", "lets a visitor the server's token covers through when the
   client cannot load", `test/unit/auth/vue/plugin-client.test.ts` — "loads it at
   startup for a cross-domain session kept in sessionStorage", `test/nuxt/auth/vue/cross-domain.test.ts` — "scrubs the token
-  from the address before the client loads", "keeps the token when the client cannot load, and exchanges it once the client
-  arrives", "does not let a kept token replace a session started since", "keeps a kept token unexchanged when the session lookup %s",
+  from the address before the client loads", "drops the token when the client cannot load, and leaves the client that loads
+  later alone",
   `test/unit/auth/vue/plugin-server.test.ts` — "stays off on a render a %s route rule may serve to others", "stays off on the
   render Nitro's cached handler makes", "is taken back when the page sets a shared caching header as it renders", "stays off on a render whose %s lets a shared cache keep it", `test/unit/auth/vue/use-better-auth.test.ts` — "exposes the
   Better Auth client and session from one service", `test/e2e/lazy-auth-client.test.ts` — "follows a statically imported
@@ -476,7 +476,7 @@ for free — removing one would break the behaviour, not restore it.
   carries a session cookie. A session settled
   without the client is the server's word, which a sign-in since then outdates: a guarded route and a forced
   token request wait for the client's own answer. A `?ott=` token leaves the address before the chunk is
-  fetched, and waits in memory when the chunk cannot load.
+  fetched, and is dropped when the chunk cannot load: exchanged later, it could replace a sign-in made since.
 
 #### Consequences of an unimportable upstream internal
 
@@ -545,7 +545,8 @@ What an error says, never what it is: the class, `data` and identity stay upstre
 - **Pinned by** · `test/unit/nuxt-server.test.ts` — "fetchQuery names the function in the error it rethrows,
   as the browser client does" (and its mutation and action rows), "leaves an error that already names
   its function alone", "rewrites the stack's header, not the first match of the message", "rethrows an error whose
-  message cannot be written untouched", "rethrows a value
+  message cannot be written untouched", "names the function on an error whose stack cannot be written, and
+  rethrows that error", "rethrows a value
   that is not an Error untouched"; `test/unit/auth/nuxt/server.test.ts` — "checks for an auth error on the
   message without the function name"
 - **On sync** · keep; port changes to the calls, and drop the entry if `ConvexHttpClient` starts naming
