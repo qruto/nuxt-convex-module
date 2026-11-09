@@ -244,6 +244,21 @@ describe('useUploadQueue', () => {
     expect(result.items.value[0]!.status).toBe('uploading')
   })
 
+  it('keeps the queue held after cancel when an item is removed', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { concurrency: 1 }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+
+    result.cancel()
+    await waitFor(() => result.items.value[0]!.status === 'error')
+    result.remove(result.items.value[0]!.id)
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(1)
+    expect(result.items.value[0]!.status).toBe('pending')
+  })
+
   it('clear empties the queue', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 

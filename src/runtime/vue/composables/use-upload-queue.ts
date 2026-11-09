@@ -224,8 +224,8 @@ export function useUploadQueue(
   // that never settles can't hold back `onComplete` for the files after it.
   let generation = 0
   let cutOff = 0
-  // Counts `cancel()` calls, so a `pump()` loop under way stops at one.
-  let cancels = 0
+  // Set by `cancel()`: queued items wait until `enqueue` or `retry` starts the queue again.
+  let held = false
 
   const activeCount = computed(
     () => items.value.filter(item => item.status === 'uploading').length,
@@ -242,11 +242,10 @@ export function useUploadQueue(
 
   function pump(): void {
     if (typeof XMLHttpRequest === 'undefined') return
-    // A run starts in step with this loop, and its `onItemSuccess` may cancel.
-    const at = cancels
     let slots = concurrency - activeCount.value
     for (const item of items.value) {
-      if (slots <= 0 || cancels !== at) break
+      // Checked on every item: a run starts in step with this loop, and its `onItemSuccess` may cancel.
+      if (slots <= 0 || held) break
       if (item.status !== 'pending') continue
       slots--
       void run(item)
@@ -361,11 +360,12 @@ export function useUploadQueue(
         prepared: null,
       })),
     )
+    held = false
     pump()
   }
 
   function cancel(): void {
-    cancels++
+    held = true
     for (const controller of controllers.values()) {
       controller.abort()
     }
@@ -390,6 +390,7 @@ export function useUploadQueue(
       if (resend.delete(item.id)) item.storageId = null
       if (item.storageId === null) item.progress = 0
     }
+    held = false
     pump()
   }
 
