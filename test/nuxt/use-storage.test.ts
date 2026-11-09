@@ -685,6 +685,79 @@ describe('useUploadQueue hooks', () => {
   })
 })
 
+describe('useUploadQueue item data', () => {
+  interface Photo { kind: 'cover' | 'page', position: number }
+
+  it('hands the data enqueue gave each item to prepare, after and onItemSuccess', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const seen: Array<[hook: string, data: Photo]> = []
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue<Photo>(genUrlRef, {
+      concurrency: 1,
+      prepare: (file, item) => {
+        seen.push(['prepare', toRaw(item.data)])
+        return file
+      },
+      after: (_storageId, item) => {
+        seen.push(['after', toRaw(item.data)])
+      },
+      onItemSuccess: (_storageId, item) => {
+        seen.push(['onItemSuccess', toRaw(item.data)])
+      },
+    }))
+    const cover: Photo = { kind: 'cover', position: 0 }
+    const page: Photo = { kind: 'page', position: 1 }
+    result.enqueue(new Blob(['a']), cover)
+    result.enqueue(new Blob(['b']), page)
+
+    expect(result.items.value.map(item => toRaw(item.data))).toEqual([cover, page])
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+
+    // The object the app gave, not a copy.
+    expect(toRaw(result.items.value[0]!.data)).toBe(cover)
+    expect(seen).toEqual([
+      ['prepare', cover], ['after', cover], ['onItemSuccess', cover],
+      ['prepare', page], ['after', page], ['onItemSuccess', page],
+    ])
+  })
+
+  it('gives one call\'s data to every file it queues, and keeps it through a retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const after = vi.fn().mockRejectedValueOnce(new Error('network down'))
+    const onItemError = vi.fn()
+
+    const { result } = await mountWithConvex(client, () =>
+      useUploadQueue<{ albumId: string }>(genUrlRef, { after, onItemError }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])], { albumId: 'album-1' })
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+
+    const [failed] = result.items.value
+    expect(result.items.value.map(item => item.data.albumId)).toEqual(['album-1', 'album-1'])
+    expect(onItemError.mock.calls[0]![1].data).toEqual({ albumId: 'album-1' })
+
+    result.retry(failed!.id)
+    await waitFor(() => failed!.status === 'success')
+    expect(after).toHaveBeenLastCalledWith('s0', failed, expect.any(AbortSignal))
+    expect(failed!.data).toEqual({ albumId: 'album-1' })
+  })
+
+  it('leaves data undefined when enqueue is given none', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef))
+    result.enqueue(new Blob(['a']))
+
+    expect(result.items.value[0]).toHaveProperty('data', undefined)
+  })
+})
+
 describe('useStorageUrl', () => {
   const getUrlRef = makeFunctionReference<'query'>('files:getUrl')
   const seedRef = makeFunctionReference<'mutation'>('seed:storageUrl')

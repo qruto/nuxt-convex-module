@@ -589,7 +589,10 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   starts them", "keeps the queue held after cancel when an item is removed", "completes a queue reused
   after clear, while a run clear cut off never settles", "calls onComplete([]) once when clear leaves the
   queue empty", "starts nothing more once onItemSuccess cancels during a retry" and "starts no more than
-  concurrency allows when onItemSuccess queues files during a retry" pin the edges
+  concurrency allows when onItemSuccess queues files during a retry" pin the edges; the
+  `useUploadQueue item data` cases ("hands the data enqueue gave each item to prepare, after and
+  onItemSuccess", "gives one call's data to every file it queues, and keeps it through a retry", "leaves
+  data undefined when enqueue is given none") and `test/types/use-upload-queue.test-d.ts` pin `item.data`
 - **Why** · Convex file storage has a documented three-step flow but no client helpers in
   `convex/react`. These wrap it with progress, cancellation and queueing.
   `useUploadQueue`'s `prepare` and `after` hooks put an app's own steps on either side of the
@@ -598,7 +601,10 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
   file away (`isRefusal`, by default a `ConvexError`), or failed, so a UI can show the reason for
   one and offer a retry for the other. `retry` resumes from the step that stopped and never
   runs a finished `after` twice; a file `after` refused stays on `item.storageId` for the app to
-  delete (the queue never deletes files) until a retry sends the file again. An app
+  delete (the queue never deletes files) until a retry sends the file again.
+  `enqueue(files, data)` puts the app's own data on each item it queues (`item.data`, typed by the
+  queue's `TData`), so the hooks know what a file is for (a document, a kind, a position) without
+  a map kept beside the queue; `data` is required once `TData` excludes `undefined`. An app
   otherwise hand-rolls the whole queue to get any of this.
 
 ##### A-04 — `useAsyncQuery`
