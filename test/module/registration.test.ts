@@ -1,4 +1,4 @@
-// PARITY: A-01, A-09, A-11
+// PARITY: A-01, A-09, A-11, D-19
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { sep } from 'node:path'
@@ -53,8 +53,8 @@ function nitroConfigStub(): Record<string, unknown> {
   return config
 }
 
-async function load(overrides: Record<string, unknown> = {}): Promise<{ nuxt: Nuxt, registered: Registered }> {
-  const nuxt = await loadNuxt({ cwd: fixture, dev: false, ready: true, overrides: { convex: overrides } as never })
+async function load(overrides: Record<string, unknown> = {}, nuxtOverrides: Record<string, unknown> = {}): Promise<{ nuxt: Nuxt, registered: Registered }> {
+  const nuxt = await loadNuxt({ cwd: fixture, dev: false, ready: true, overrides: { ...nuxtOverrides, convex: overrides } as never })
   // Nuxt and nuxt-security register through the same hooks; keep this module's.
   const ours = <T extends { from?: string, filePath?: string, path?: string }>(entries: T[]) =>
     entries.filter(e => (e.from ?? e.filePath ?? e.path ?? '').startsWith(moduleDir))
@@ -165,6 +165,15 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(plugins.some(p => /runtime\/vue\/plugin(?:\.[cm]?[jt]s)?$/.test(p))).toBe(false)
   })
 
+  // Nuxt's default `emitRouteChunkError: 'automatic'`, with the app manifest on.
+  it('reloads on a removed client chunk, from a plugin that runs before the client plugin', () => {
+    const plugins = r.options.plugins.map(p => (typeof p === 'string' ? p : p.src))
+    const reload = plugins.findIndex(p => /runtime\/better-auth\/nuxt\/chunk-reload\.client(?:\.[cm]?[jt]s)?$/.test(p))
+    const client = plugins.findIndex(p => /runtime\/better-auth\/vue\/plugin\.client(?:\.[cm]?[jt]s)?$/.test(p))
+    expect(reload).toBeGreaterThanOrEqual(0)
+    expect(reload).toBeLessThan(client)
+  })
+
   it('registers the nuxt-security CSP plugin', () => {
     // (The codegen watch registers only in dev — see codegen-watch.test.ts.)
     expect(r.options.nitro.plugins?.some(p => /runtime\/nuxt\/security(?:\.[cm]?[jt]s)?$/.test(p ?? ''))).toBe(true)
@@ -182,6 +191,25 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     for (const path of referenced) {
       expect(['', '.ts', '.js', '.vue'].some(ext => existsSync(path + ext)), `${path} does not exist`).toBe(true)
     }
+  })
+})
+
+// PARITY: D-19 — Nuxt's other chunk-error modes reload already or leave it to
+// the app, and without the app manifest there is no build id to compare.
+describe.each([
+  ['emitRouteChunkError: \'automatic-immediate\'', { emitRouteChunkError: 'automatic-immediate' }],
+  ['emitRouteChunkError: \'manual\'', { emitRouteChunkError: 'manual' }],
+  ['appManifest: false', { appManifest: false }],
+])('with experimental %s', (_name, experimental) => {
+  let nuxt: Nuxt
+  let r: Registered
+  beforeAll(async () => ({ nuxt, registered: r } = await load({}, { experimental })), 60_000)
+  afterAll(() => nuxt.close())
+
+  it('leaves the chunk-reload plugin out', () => {
+    const plugins = r.options.plugins.map(p => (typeof p === 'string' ? p : p.src))
+    expect(plugins.some(p => p.includes('chunk-reload.client'))).toBe(false)
+    expect(plugins.some(p => /runtime\/better-auth\/vue\/plugin\.client(?:\.[cm]?[jt]s)?$/.test(p))).toBe(true)
   })
 })
 

@@ -109,6 +109,36 @@ describe('the Better Auth client, loaded on first use', () => {
     expect(betterAuthChunks).toEqual([failed])
   })
 
+  // PARITY: D-19 — a deploy replaced the chunks under the open page: the
+  // client's chunk is a 404 for good, and the server serves another build.
+  it('reloads the page once when a deploy removed the client chunk, and not again', async () => {
+    const { page } = await open()
+    await page.route(`**${assetsDir()}**/*.js`, async (route) => {
+      const response = await route.fetch()
+      const body = await response.text()
+      if (BETTER_AUTH.test(body)) return route.fulfill({ status: 404, body: 'Not Found' })
+      return route.fulfill({ response, body })
+    })
+    await page.route(`**${assetsDir()}builds/latest.json*`, route =>
+      route.fulfill({ json: { id: 'the-next-build', timestamp: Date.now() } }))
+    await page.goto(url('/account'), { waitUntil: 'hydration' })
+    const loads: string[] = []
+    page.on('load', () => loads.push(page.url()))
+
+    // The first use fails, and the server names another build: the page reloads.
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await expect.poll(() => loads.length).toBe(1)
+    await page.waitForFunction(() => (window as { useNuxtApp?: () => { isHydrating?: boolean } }).useNuxtApp?.().isHydrating === false)
+    expect(await page.evaluate(() => sessionStorage.getItem('nuxt:reload'))).toContain('/account')
+
+    // Still a 404 after the reload: Nuxt's `nuxt:reload` guard holds it at one.
+    const latest = page.waitForRequest(request => request.url().includes('/builds/latest.json'))
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await latest
+    await page.waitForTimeout(500)
+    expect(loads).toHaveLength(1)
+  })
+
   it('loads on the first call through useBetterAuth().client', async () => {
     const { page, betterAuthChunks, settled } = await open()
     await page.goto(url('/account'), { waitUntil: 'hydration' })

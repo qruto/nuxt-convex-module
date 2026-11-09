@@ -327,7 +327,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   if (betterAuth) {
     // Better Auth's client/SSR plugins create *and* provide the Convex client
     // (alongside session hydration), so it owns client provisioning here.
-    registerBetterAuth(resolver, authRoute, policy)
+    registerBetterAuth(resolver, authRoute, policy, nuxt.options.experimental)
   }
   else {
     // No auth integration manages the client — provide a base one so the data
@@ -636,9 +636,24 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
  * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
  * server helper.
  */
-function registerBetterAuth(resolver: Resolver, authRoute: string, policy: RegistrationPolicy): void {
+function registerBetterAuth(
+  resolver: Resolver,
+  authRoute: string,
+  policy: RegistrationPolicy,
+  experimental: Pick<Nuxt['options']['experimental'], 'appManifest' | 'emitRouteChunkError'>,
+): void {
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.client'))
   addPlugin(resolver.resolve('./runtime/better-auth/vue/plugin.server'))
+  // PARITY: D-19
+  // A client chunk a deploy removed reloads the page, as Nuxt's `automatic`
+  // chunk-error mode does for a route's chunk. `automatic-immediate` reloads
+  // on any chunk error already; `manual` and `false` leave it to the app; and
+  // without the app manifest there is no build id to tell a deploy by.
+  // Added last, so it runs first: `addPlugin` prepends, and the client plugin
+  // above may load the client at startup (a `?ott=` token).
+  if (experimental.emitRouteChunkError === 'automatic' && experimental.appManifest) {
+    addPlugin(resolver.resolve('./runtime/better-auth/nuxt/chunk-reload.client'))
+  }
   // PARITY: D-18
   // A no-session payload that ends up cacheable after it rendered varies on
   // `Cookie`. It imports nothing from Nitro, so one file serves both majors.

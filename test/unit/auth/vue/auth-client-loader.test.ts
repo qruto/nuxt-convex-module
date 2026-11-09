@@ -60,6 +60,60 @@ describe('loadAuthClient', () => {
     }
   })
 
+  // PARITY: D-19 — what the chunk-reload plugin listens to.
+  it('tells a failure listener of every failed load, with its error, until one succeeds', async () => {
+    let failures = 2
+    vi.doMock('#convex/auth-client', () => {
+      if (failures-- > 0) throw new Error('chunk failed')
+      return { authClient: fakeClient }
+    })
+    const reportError = vi.fn()
+    vi.stubGlobal('reportError', reportError)
+    try {
+      const { loadAuthClient, onAuthClientLoadFailure } = await loader()
+      const heard: unknown[] = []
+      onAuthClientLoadFailure(() => {
+        throw new Error('listener broke')
+      })
+      onAuthClientLoadFailure(error => heard.push(error))
+
+      const first = await loadAuthClient().catch((error: unknown) => error)
+      vi.resetModules()
+      const second = await loadAuthClient().catch((error: unknown) => error)
+      // The listener gets the error the caller gets, and a throwing one stops nothing.
+      expect(heard).toEqual([first, second])
+      expect(reportError).toHaveBeenCalledTimes(2)
+
+      vi.resetModules()
+      expect(await loadAuthClient()).toBe(fakeClient)
+      const late = vi.fn()
+      onAuthClientLoadFailure(late)
+      expect(heard).toHaveLength(2)
+      expect(late).not.toHaveBeenCalled()
+    }
+    finally {
+      vi.unstubAllGlobals()
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
+  it('stops telling a failure listener once its stop function runs', async () => {
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    try {
+      const { loadAuthClient, onAuthClientLoadFailure } = await loader()
+      const listener = vi.fn()
+      const stop = onAuthClientLoadFailure(listener)
+      stop()
+      await expect(loadAuthClient()).rejects.toThrow()
+      expect(listener).not.toHaveBeenCalled()
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
+  })
+
   it('tells every waiting listener once the client arrives, and a later one at once', async () => {
     const { loadAuthClient, onAuthClient } = await loader()
     const early = vi.fn()

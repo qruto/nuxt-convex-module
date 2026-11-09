@@ -12,6 +12,7 @@ let loaded: AuthClient | undefined
 let loading: Promise<AuthClient> | undefined
 let deferred = false
 const waiting = new Set<(client: AuthClient) => void>()
+const failing = new Set<(error: unknown) => void>()
 // A client whose module ran while the load was held back, not yet used: a
 // `<NuxtLink>` prefetching a page that imports it statically runs it.
 let evaluated: AuthClient | undefined
@@ -42,6 +43,7 @@ export function loadAuthClient(): Promise<AuthClient> {
     (error: unknown) => {
       // A chunk that failed to load is asked for again on the next call.
       loading = undefined
+      notify(failing, error)
       throw error
     },
   )
@@ -78,11 +80,17 @@ export function registerAuthClient(client: AuthClient): void {
   evaluated = undefined
   loaded = client
   loading ??= Promise.resolve(client)
+  failing.clear()
   const listeners = [...waiting]
   waiting.clear()
-  for (const listener of listeners) {
+  notify(listeners, client)
+}
+
+/** Run every listener with `value`; one that throws is reported and the rest still run. */
+function notify<T>(listeners: Iterable<(value: T) => void>, value: T): void {
+  for (const listener of [...listeners]) {
     try {
-      listener(client)
+      listener(value)
     }
     catch (error) {
       report(error)
@@ -118,6 +126,17 @@ export function onAuthClient(listener: (client: AuthClient) => void): () => void
 }
 
 /**
+ * Run `listener` with the error of every load that fails, until one
+ * succeeds. The function it returns stops it. PARITY: D-19, which reloads
+ * the page when a deploy removed the chunk. @internal
+ */
+export function onAuthClientLoadFailure(listener: (error: unknown) => void): () => void {
+  if (loaded) return () => {}
+  failing.add(listener)
+  return () => failing.delete(listener)
+}
+
+/**
  * Hold the load back until something needs the client: the server found no
  * session on this request. A tab that comes back into view loads it, as
  * Better Auth refetches the session then; so does every
@@ -136,8 +155,9 @@ export function deferAuthClient(): void {
 
 /**
  * Ask for the chunk again when the browser comes back online or the tab back
- * into view: a startup load that failed twice (a deploy that replaced the
- * chunk, a dropped connection) keeps a way back without a reload. @internal
+ * into view: a startup load that failed twice (a dropped connection) keeps a
+ * way back without a reload. A deploy that replaced the chunk reloads the
+ * page instead (D-19, `better-auth/nuxt/chunk-reload.client.ts`). @internal
  */
 export function retryAuthClientLoad(): void {
   if (loaded || typeof window === 'undefined') return
@@ -304,4 +324,5 @@ export function __resetAuthClientLoaderForTests(): void {
   stopSignal = undefined
   evaluated = undefined
   waiting.clear()
+  failing.clear()
 }
