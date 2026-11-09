@@ -5,7 +5,8 @@
 // which function it ran. Prefix the message in the browser's form, on the
 // error that was thrown: a `ConvexError` keeps its class and `data`. An error
 // that already carries a prefix, or whose message cannot be written (a
-// `DOMException`'s is a getter), is rethrown untouched.
+// `DOMException`'s is a getter), is rethrown untouched; one whose stack cannot
+// be written keeps it.
 import { getFunctionName } from 'convex/server'
 
 const SOURCE_PREFIX = { query: 'Q', mutation: 'M', action: 'A' } as const
@@ -44,7 +45,17 @@ function name(error: Error, prefix: string): void {
   // Only the header V8 writes, `<name>: <message>`: a message such as
   // `Error` also matches the name, and other engines' stacks carry no header.
   const header = `${error.name}: ${original}`
-  if (original && stack?.startsWith(header)) error.stack = `${error.name}: ${error.message}${stack.slice(header.length)}`
+  if (original && stack?.startsWith(header)) setStack(error, `${error.name}: ${error.message}${stack.slice(header.length)}`)
+}
+
+/** A stack that cannot be written (read-only, or a setter that throws) keeps what it has. */
+function setStack(error: Error, stack: string | undefined): void {
+  try {
+    error.stack = stack
+  }
+  catch {
+    // The message still carries the function's name.
+  }
 }
 
 /**
@@ -60,12 +71,12 @@ export function withoutFunctionName<T>(error: unknown, read: (error: unknown) =>
   const named = error as Error
   const { message, stack } = named
   named.message = before.message
-  named.stack = before.stack
+  setStack(named, before.stack)
   try {
     return read(error)
   }
   finally {
     named.message = message
-    named.stack = stack
+    setStack(named, stack)
   }
 }
