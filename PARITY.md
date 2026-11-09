@@ -546,7 +546,7 @@ What an error says, never what it is: the class, `data` and identity stay upstre
   as the browser client does" (and its mutation and action rows), "leaves an error that already names
   its function alone", "rewrites the stack's header, not the first match of the message", "rethrows an error whose
   message cannot be written untouched", "names the function on an error whose stack cannot be written, and
-  rethrows that error", "rethrows a value
+  rethrows that error", "reads the unnamed message for the auth check when the stack setter throws", "rethrows a value
   that is not an Error untouched"; `test/unit/auth/nuxt/server.test.ts` — "checks for an auth error on the
   message without the function name"
 - **On sync** · keep; port changes to the calls, and drop the entry if `ConvexHttpClient` starts naming

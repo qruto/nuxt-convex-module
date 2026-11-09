@@ -45,12 +45,16 @@ function name(error: Error, prefix: string): void {
   // Only the header V8 writes, `<name>: <message>`: a message such as
   // `Error` also matches the name, and other engines' stacks carry no header.
   const header = `${error.name}: ${original}`
-  if (!original || !stack?.startsWith(header)) return
+  if (original && stack?.startsWith(header)) setStack(error, `${error.name}: ${error.message}${stack.slice(header.length)}`)
+}
+
+/** A stack that cannot be written (read-only, or a setter that throws) keeps what it has. */
+function setStack(error: Error, stack: string | undefined): void {
   try {
-    error.stack = `${error.name}: ${error.message}${stack.slice(header.length)}`
+    error.stack = stack
   }
   catch {
-    // A read-only stack keeps its header; the message still names the function.
+    // The message still carries the function's name.
   }
 }
 
@@ -66,15 +70,13 @@ export function withoutFunctionName<T>(error: unknown, read: (error: unknown) =>
   if (!before) return read(error)
   const named = error as Error
   const { message, stack } = named
-  // A stack that could not be written was never rewritten: nothing to swap.
-  const swapStack = stack !== before.stack
   named.message = before.message
-  if (swapStack) named.stack = before.stack
+  setStack(named, before.stack)
   try {
     return read(error)
   }
   finally {
     named.message = message
-    if (swapStack) named.stack = stack
+    setStack(named, stack)
   }
 }
