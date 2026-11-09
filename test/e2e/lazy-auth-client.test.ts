@@ -153,16 +153,17 @@ describe('the Better Auth client, loaded on first use', () => {
     expect(errors).toEqual([])
   })
 
-  // A visible `<NuxtLink>` to a page that imports `authClient` statically
-  // prefetches that page's chunk, which runs the client module. The client is
+  // A `<NuxtLink>` to a page that imports `authClient` statically prefetches
+  // that page's chunk on focus, which runs the client module. The client is
   // kept, not used: no session request until something uses it.
   it('asks nothing of the server when a link prefetches a page that imports the client', async () => {
     const { page, betterAuthChunks, errors, sessionRequests, settled } = await open()
 
     await page.goto(url('/links'), { waitUntil: 'hydration' })
     await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
-    // Nuxt prefetches a visible link once the browser is idle, which can come
-    // after the network first goes quiet: wait for the chunk itself.
+    // Focus, not hover: hover waits for the link to hold still across
+    // animation frames, and focus needs no frame.
+    await page.getByRole('link', { name: 'Sign in' }).focus()
     await expect.poll(async () => {
       await settled()
       return betterAuthChunks.length

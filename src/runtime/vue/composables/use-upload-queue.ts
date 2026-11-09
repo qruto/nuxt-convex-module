@@ -97,7 +97,10 @@ export interface UseUploadQueueOptions {
   onItemSuccess?: (storageId: StorageId, item: UploadQueueItem) => void | Promise<void>
   /** Called when an individual item fails or is refused (`item.refused` says which). */
   onItemError?: (error: Error, item: UploadQueueItem) => void
-  /** Called once every queued item has settled (succeeded or failed). */
+  /**
+   * Called once every queued item has settled (succeeded or failed), after
+   * every `onItemSuccess` has returned.
+   */
   onComplete?: (items: UploadQueueItem[]) => void
 }
 
@@ -122,11 +125,17 @@ export interface VueUploadQueue {
   pendingCount: Readonly<Ref<number>>
   /** Number of items currently uploading. */
   activeCount: Readonly<Ref<number>>
-  /** Abort all in-flight uploads (queued items stay `pending`). */
+  /**
+   * Abort all in-flight uploads. Queued items stay `pending` until the next
+   * `enqueue` or `retry()`, which start them again.
+   */
   cancel: () => void
   /** Remove an item by id, aborting it first if it is uploading. */
   remove: (id: string) => void
-  /** Abort everything and empty the queue. */
+  /**
+   * Abort everything and empty the queue. Once the aborted uploads end,
+   * `onComplete` gets `[]`, unless files were queued since.
+   */
   clear: () => void
   /**
    * Queue an errored item again, or every errored item without an id. It
@@ -211,6 +220,15 @@ export function useUploadQueue(
   const afterDone = new Set<string>()
   // Items whose stored file `after` refused: a retry uploads again.
   const resend = new Set<string>()
+  // Runs not yet finished. An item reads `success` while its `onItemSuccess`
+  // still runs, so the item counts alone can't say the queue has settled.
+  let running = 0
+  // `clear()` starts a new generation; runs it cut off count apart, so one
+  // that never settles can't hold back `onComplete` for the files after it.
+  let generation = 0
+  let cutOff = 0
+  // Set by `cancel()`: queued items wait until `enqueue` or `retry` starts the queue again.
+  let held = false
 
   const activeCount = computed(
     () => items.value.filter(item => item.status === 'uploading').length,
@@ -227,11 +245,11 @@ export function useUploadQueue(
 
   function pump(): void {
     if (typeof XMLHttpRequest === 'undefined') return
-    let slots = concurrency - activeCount.value
     for (const item of items.value) {
-      if (slots <= 0) break
+      // Read on every item: a run starts in step with this loop, and its
+      // `onItemSuccess` may cancel or queue more files.
+      if (held || activeCount.value >= concurrency) break
       if (item.status !== 'pending') continue
-      slots--
       void run(item)
     }
   }
@@ -285,6 +303,8 @@ export function useUploadQueue(
   }
 
   async function run(item: UploadQueueItem): Promise<void> {
+    const own = generation
+    running++
     item.status = 'uploading'
     const controller = new AbortController()
     controllers.set(item.id, controller)
@@ -295,8 +315,9 @@ export function useUploadQueue(
       if (options.after && !afterDone.has(item.id)) {
         item.stage = 'after'
         await options.after(storageId, item, signal)
-        signal.throwIfAborted()
+        // Finished, even when a cancel came in meanwhile: a retry must not run it again.
         afterDone.add(item.id)
+        signal.throwIfAborted()
       }
       item.stage = null
       item.status = 'success'
@@ -306,13 +327,22 @@ export function useUploadQueue(
       fail(item, caught, signal)
     }
     finally {
-      // A retry started from `onItemError` holds a controller of its own by now.
-      if (controllers.get(item.id) === controller) controllers.delete(item.id)
-      if (pendingCount.value === 0 && activeCount.value === 0) {
-        options.onComplete?.(items.value)
+      if (own !== generation) {
+        // Cut off by `clear()`: once its last run is done, a queue still empty
+        // hears it ended. Files queued since report for themselves.
+        if (--cutOff === 0 && items.value.length === 0) options.onComplete?.([])
       }
       else {
-        pump()
+        running--
+        // A retry started from `onItemError` holds a controller of its own by now.
+        if (controllers.get(item.id) === controller) controllers.delete(item.id)
+        if (pendingCount.value === 0 && running === 0) {
+          options.onComplete?.(items.value)
+        }
+        // A cancelled run starts nothing: the queued items wait for `enqueue` or `retry`.
+        else if (!signal.aborted) {
+          pump()
+        }
       }
     }
   }
@@ -333,10 +363,12 @@ export function useUploadQueue(
         prepared: null,
       })),
     )
+    held = false
     pump()
   }
 
   function cancel(): void {
+    held = true
     for (const controller of controllers.values()) {
       controller.abort()
     }
@@ -348,6 +380,8 @@ export function useUploadQueue(
     afterDone.delete(id)
     resend.delete(id)
     items.value = items.value.filter(item => item.id !== id)
+    // The removed run, aborted, starts nothing: its slot goes to the next item here.
+    pump()
   }
 
   function retry(id?: string): void {
@@ -359,11 +393,15 @@ export function useUploadQueue(
       if (resend.delete(item.id)) item.storageId = null
       if (item.storageId === null) item.progress = 0
     }
+    held = false
     pump()
   }
 
   function clear(): void {
     cancel()
+    generation++
+    cutOff += running
+    running = 0
     controllers.clear()
     afterDone.clear()
     resend.clear()

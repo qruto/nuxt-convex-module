@@ -207,6 +207,46 @@ describe('useUploadQueue', () => {
     expect(result.isUploading.value).toBe(false)
   })
 
+  it('cancel holds the queued items until a retry starts them', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onComplete = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { concurrency: 1, onComplete }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+
+    result.cancel()
+    await waitFor(() => result.items.value[0]!.status === 'error')
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(1)
+    expect(result.items.value[1]!.status).toBe('pending')
+    expect(onComplete).not.toHaveBeenCalled()
+
+    result.retry()
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s0')
+    await waitFor(() => FakeXhr.instances.length === 3)
+    FakeXhr.instances[2]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+    expect(result.items.value.map(item => item.storageId)).toEqual(['s0', 's1'])
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the queue held after cancel when an item is removed', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { concurrency: 1 }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+
+    result.cancel()
+    await waitFor(() => result.items.value[0]!.status === 'error')
+    result.remove(result.items.value[0]!.id)
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(1)
+    expect(result.items.value[0]!.status).toBe('pending')
+  })
+
   it('clear empties the queue', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 
@@ -464,6 +504,143 @@ describe('useUploadQueue hooks', () => {
     // The first run has finished; the retry it started still answers to cancel.
     result.cancel()
     expect(signal?.aborted).toBe(true)
+  })
+
+  it('never runs an after that finished during a cancel again on retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const finishing = deferred()
+    const after = vi.fn(() => finishing.promise)
+    const onItemSuccess = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { after, onItemSuccess }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.stage === 'after')
+
+    // The hook ignores the signal and finishes its work anyway.
+    result.cancel()
+    finishing.resolve()
+    await waitFor(() => item.status === 'error')
+    expect(item).toMatchObject({ refused: false, storageId: 's0' })
+
+    result.retry(item.id)
+    await waitFor(() => item.status === 'success')
+    expect(after).toHaveBeenCalledTimes(1)
+    expect(onItemSuccess).toHaveBeenCalledWith('s0', item)
+  })
+
+  it('calls onComplete once, after every onItemSuccess has returned', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const saving = deferred()
+    const onItemSuccess = vi.fn((storageId: string) => storageId === 's0' ? saving.promise : undefined)
+    const settled: string[][] = []
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      onItemSuccess,
+      onComplete: items => settled.push(items.map(item => item.status)),
+    }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => onItemSuccess.mock.calls.length === 1)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => result.items.value[1]!.status === 'success')
+    for (let i = 0; i < 5; i++) await nextTick()
+    // The first item reads `success`, but its callback is still saving.
+    expect(settled).toEqual([])
+
+    saving.reject(new Error('save failed'))
+    await waitFor(() => settled.length === 1)
+    expect(settled).toEqual([['error', 'success']])
+  })
+
+  it('completes a queue reused after clear, while a run clear cut off never settles', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const hanging = deferred()
+    const after = vi.fn((storageId: string) => storageId === 's0' ? hanging.promise : undefined)
+    const completed: string[][] = []
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      after,
+      onComplete: items => completed.push(items.map(item => item.status)),
+    }))
+    result.enqueue(new Blob(['a']))
+    const cut = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => after.mock.calls.length === 1)
+
+    result.clear()
+    result.enqueue(new Blob(['b']))
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => completed.length === 1)
+    expect(completed).toEqual([['success']])
+
+    // The run clear cut off ends with files queued since: they speak for the queue.
+    hanging.resolve()
+    await waitFor(() => cut.status === 'error')
+    expect(completed).toEqual([['success']])
+  })
+
+  it('calls onComplete([]) once when clear leaves the queue empty', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onComplete = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { onComplete }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    const [first, second] = result.items.value
+
+    result.clear()
+    await waitFor(() => first!.status === 'error' && second!.status === 'error')
+    expect(onComplete.mock.calls).toEqual([[[]]])
+  })
+
+  it('starts nothing more once onItemSuccess cancels during a retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    let queue!: ReturnType<typeof useUploadQueue>
+    const onItemSuccess = vi.fn()
+      .mockImplementationOnce(() => {
+        throw new Error('save failed')
+      })
+      .mockImplementation(() => queue.cancel())
+
+    const { result } = await mountWithConvex(client, () => (queue = useUploadQueue(genUrlRef, { concurrency: 2, onItemSuccess })))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    FakeXhr.instances[1]!.failWith(500, 'down')
+    await waitFor(() => !result.isUploading.value)
+
+    // The first item runs only onItemSuccess again, which cancels: the
+    // second must stay queued.
+    result.retry()
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(2)
+    expect(result.items.value.map(item => item.status)).toEqual(['success', 'pending'])
+  })
+
+  it('starts no more than concurrency allows when onItemSuccess queues files during a retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    let queue!: ReturnType<typeof useUploadQueue>
+    const onItemSuccess = vi.fn()
+      .mockImplementationOnce(() => {
+        throw new Error('save failed')
+      })
+      .mockImplementationOnce(() => queue.enqueue([new Blob(['b']), new Blob(['c']), new Blob(['d'])]))
+
+    const { result } = await mountWithConvex(client, () => (queue = useUploadQueue(genUrlRef, { concurrency: 2, onItemSuccess })))
+    result.enqueue(new Blob(['a']))
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => !result.isUploading.value)
+
+    // The retry runs only onItemSuccess, which queues three files at once.
+    result.retry()
+    expect(result.activeCount.value).toBe(2)
   })
 
   it('retry leaves items that did not fail alone', async () => {
