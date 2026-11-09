@@ -582,8 +582,10 @@ Surface a Vue app expects and `convex/react` has no reason to ship.
 - **Pinned by** · `test/unit/use-upload.test.ts`, `test/nuxt/use-storage.test.ts` — the `useUploadQueue hooks` cases
   pin `prepare`, `after`, refused against failed, and `retry`; "hands a storage id after refused to
   onItemError, and a retry forgets it", "retry after onItemSuccess threw runs only onItemSuccess, never
-  after twice", "settles an item as failed when isRefusal throws" and "keeps a retry started from
-  onItemError abortable" pin the edges
+  after twice", "settles an item as failed when isRefusal throws", "keeps a retry started from
+  onItemError abortable", "never runs an after that finished during a cancel again on retry", "calls
+  onComplete once, after every onItemSuccess has returned", "cancel holds the queued items until a retry
+  starts them" and "remove hands an in-flight item's slot to the next queued item" pin the edges
 - **Why** · Convex file storage has a documented three-step flow but no client helpers in
   `convex/react`. These wrap it with progress, cancellation and queueing.
   `useUploadQueue`'s `prepare` and `after` hooks put an app's own steps on either side of the

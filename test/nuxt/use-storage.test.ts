@@ -207,6 +207,43 @@ describe('useUploadQueue', () => {
     expect(result.isUploading.value).toBe(false)
   })
 
+  it('cancel holds the queued items until a retry starts them', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const onComplete = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { concurrency: 1, onComplete }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+
+    result.cancel()
+    await waitFor(() => result.items.value[0]!.status === 'error')
+    for (let i = 0; i < 5; i++) await nextTick()
+    expect(FakeXhr.instances).toHaveLength(1)
+    expect(result.items.value[1]!.status).toBe('pending')
+    expect(onComplete).not.toHaveBeenCalled()
+
+    result.retry()
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[1]!.resolveWith('s0')
+    await waitFor(() => FakeXhr.instances.length === 3)
+    FakeXhr.instances[2]!.resolveWith('s1')
+    await waitFor(() => !result.isUploading.value)
+    expect(result.items.value.map(item => item.storageId)).toEqual(['s0', 's1'])
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('remove hands an in-flight item\'s slot to the next queued item', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { concurrency: 1 }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 1)
+
+    result.remove(result.items.value[0]!.id)
+    await waitFor(() => FakeXhr.instances.length === 2)
+    expect(result.items.value[0]!.status).toBe('uploading')
+  })
+
   it('clear empties the queue', async () => {
     vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
 
@@ -464,6 +501,56 @@ describe('useUploadQueue hooks', () => {
     // The first run has finished; the retry it started still answers to cancel.
     result.cancel()
     expect(signal?.aborted).toBe(true)
+  })
+
+  it('never runs an after that finished during a cancel again on retry', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const finishing = deferred()
+    const after = vi.fn(() => finishing.promise)
+    const onItemSuccess = vi.fn()
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, { after, onItemSuccess }))
+    result.enqueue(new Blob(['a']))
+    const item = result.items.value[0]!
+    await waitFor(() => FakeXhr.instances.length === 1)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => item.stage === 'after')
+
+    // The hook ignores the signal and finishes its work anyway.
+    result.cancel()
+    finishing.resolve()
+    await waitFor(() => item.status === 'error')
+    expect(item).toMatchObject({ refused: false, storageId: 's0' })
+
+    result.retry(item.id)
+    await waitFor(() => item.status === 'success')
+    expect(after).toHaveBeenCalledTimes(1)
+    expect(onItemSuccess).toHaveBeenCalledWith('s0', item)
+  })
+
+  it('calls onComplete once, after every onItemSuccess has returned', async () => {
+    vi.spyOn(client, 'mutation').mockResolvedValue(uploadUrl as never)
+    const saving = deferred()
+    const onItemSuccess = vi.fn((storageId: string) => storageId === 's0' ? saving.promise : undefined)
+    const settled: string[][] = []
+
+    const { result } = await mountWithConvex(client, () => useUploadQueue(genUrlRef, {
+      onItemSuccess,
+      onComplete: items => settled.push(items.map(item => item.status)),
+    }))
+    result.enqueue([new Blob(['a']), new Blob(['b'])])
+    await waitFor(() => FakeXhr.instances.length === 2)
+    FakeXhr.instances[0]!.resolveWith('s0')
+    await waitFor(() => onItemSuccess.mock.calls.length === 1)
+    FakeXhr.instances[1]!.resolveWith('s1')
+    await waitFor(() => result.items.value[1]!.status === 'success')
+    for (let i = 0; i < 5; i++) await nextTick()
+    // The first item reads `success`, but its callback is still saving.
+    expect(settled).toEqual([])
+
+    saving.reject(new Error('save failed'))
+    await waitFor(() => settled.length === 1)
+    expect(settled).toEqual([['error', 'success']])
   })
 
   it('retry leaves items that did not fail alone', async () => {
