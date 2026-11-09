@@ -1,5 +1,5 @@
 import type { AuthClient } from '#convex/auth-client'
-import { loadAuthClient, onAuthClient } from './auth-client-loader'
+import { loadAuthClient } from './auth-client-loader'
 
 /**
  * An {@link AuthClient} that also includes the `crossDomainClient()` plugin.
@@ -90,31 +90,13 @@ export async function consumeCrossDomainOneTimeToken(
   // PARITY: D-18
   // The one place startup waits for the client: the token is exchanged
   // before the first `setAuth`. A chunk that fails is asked for once more;
-  // when it fails again the token waits in memory, never in storage, and is
-  // exchanged once a later use brings the client.
+  // when it fails again the token is dropped, as upstream's would be on a
+  // page whose client never loaded. Kept for later, its exchange could land
+  // after a sign-in that the same load let through, and replace that session.
   const authClient = await loadAuthClient().catch(() => loadAuthClient()).catch((error: unknown) => {
     console.warn('[nuxt-convex-module] Failed to load the Better Auth client:', error)
   })
-  if (!authClient) {
-    onAuthClient(client => void exchangeKeptToken(client, token, url, options))
-    return
-  }
-  await exchangeOneTimeToken(authClient, token, url, options)
-}
-
-/**
- * The exchange of a token kept while the client could not load. A session the
- * client finds by then (a sign-in since) wins: the older token must not
- * replace it.
- */
-async function exchangeKeptToken(authClient: AuthClient, token: string, url: URL, options: ConsumeCrossDomainOneTimeTokenOptions): Promise<void> {
-  // Only a lookup that answered "signed out" lets the token through: one that
-  // threw or came back with an error says nothing about a newer session.
-  const current = await Promise.resolve().then(() => authClient.getSession()).catch(() => undefined) as { data?: { session?: unknown } | null, error?: unknown } | undefined
-  if (!current || current.error || current.data?.session) {
-    if (!current?.data?.session) console.warn('[nuxt-convex-module] Failed to consume cross-domain one-time token:', current?.error ?? 'the session lookup failed')
-    return
-  }
+  if (!authClient) return
   await exchangeOneTimeToken(authClient, token, url, options)
 }
 
