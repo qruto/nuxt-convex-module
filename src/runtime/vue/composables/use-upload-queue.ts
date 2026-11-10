@@ -62,8 +62,9 @@ export interface UploadQueueItem<TData = undefined> {
    * item. Deeply reactive like the rest of the item: an object reads as
    * Vue's proxy of the one given, not a copy, so a change through it
    * reaches that object and every item the same call queued (`toRaw`
-   * returns the object itself), and a ref inside it reads unwrapped.
-   * `undefined` when `enqueue` was given none.
+   * returns the object itself). A ref held as one of its properties reads
+   * unwrapped; one inside an array or a `Map` stays a ref. `undefined`
+   * when `enqueue` was given none.
    */
   data: TData
 }
