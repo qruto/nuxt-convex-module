@@ -21,9 +21,12 @@ export type UploadItemStage = 'prepare' | 'upload' | 'after'
 /**
  * A single entry in the queue managed by {@link useUploadQueue}.
  *
+ * @typeParam TData - The app's own data for the item, given to
+ *   {@link VueUploadQueue.enqueue}. `undefined` when the queue takes none.
+ *
  * @public
  */
-export interface UploadQueueItem {
+export interface UploadQueueItem<TData = undefined> {
   /** Stable id for this queue entry (not the storage id). */
   id: string
   /** The file or blob being uploaded. */
@@ -53,14 +56,27 @@ export interface UploadQueueItem {
    * and for a preview.
    */
   prepared: Blob | null
+  /**
+   * The app's data for this item, as given to `enqueue`: what the file is
+   * for (a document id, a kind, a position). Every hook reads it off the
+   * item. Deeply reactive like the rest of the item: an object reads as
+   * Vue's proxy of the one given, not a copy, so a change through it
+   * reaches that object and every item the same call queued (`toRaw`
+   * returns the object itself). A ref held as one of its properties reads
+   * unwrapped; one inside an array or a `Map` stays a ref. `undefined`
+   * when `enqueue` was given none.
+   */
+  data: TData
 }
 
 /**
  * Options for {@link useUploadQueue}.
  *
+ * @typeParam TData - The data each item carries; see {@link UploadQueueItem}.
+ *
  * @public
  */
-export interface UseUploadQueueOptions {
+export interface UseUploadQueueOptions<TData = undefined> {
   /** Maximum number of uploads to run at once. Defaults to `3`. */
   concurrency?: number
   /**
@@ -69,7 +85,7 @@ export interface UseUploadQueueOptions {
    * item ends `error`, refused when `isRefusal` says so. Runs once per
    * item: a retry reuses what it returned.
    */
-  prepare?: (file: Blob, item: UploadQueueItem, signal: AbortSignal) => Blob | Promise<Blob>
+  prepare?: (file: Blob, item: UploadQueueItem<TData>, signal: AbortSignal) => Blob | Promise<Blob>
   /**
    * Runs once the file is stored, before the item counts as a success:
    * attach the storage id to a document, run a check on it. The item stays
@@ -80,7 +96,7 @@ export interface UseUploadQueueOptions {
    * in error, so `onItemError` can delete it; the queue never deletes files,
    * and a retry forgets it before uploading again.
    */
-  after?: (storageId: StorageId, item: UploadQueueItem, signal: AbortSignal) => void | Promise<void>
+  after?: (storageId: StorageId, item: UploadQueueItem<TData>, signal: AbortSignal) => void | Promise<void>
   /**
    * Whether an error is a refusal (the app turned the file away) rather than
    * a failure (the network, the deployment, an abort). Defaults to: the
@@ -88,35 +104,49 @@ export interface UseUploadQueueOptions {
    * An aborted item is never refused, and neither is an error this check
    * throws on.
    */
-  isRefusal?: (error: Error, item: UploadQueueItem) => boolean
+  isRefusal?: (error: Error, item: UploadQueueItem<TData>) => boolean
   /**
    * Called when an individual item finishes uploading (after `after`). A
    * throw ends the item `error` with its storage id kept; a retry then runs
    * only this callback again, never `after` a second time.
    */
-  onItemSuccess?: (storageId: StorageId, item: UploadQueueItem) => void | Promise<void>
+  onItemSuccess?: (storageId: StorageId, item: UploadQueueItem<TData>) => void | Promise<void>
   /** Called when an individual item fails or is refused (`item.refused` says which). */
-  onItemError?: (error: Error, item: UploadQueueItem) => void
+  onItemError?: (error: Error, item: UploadQueueItem<TData>) => void
   /**
    * Called once every queued item has settled (succeeded or failed), after
    * every `onItemSuccess` has returned.
    */
-  onComplete?: (items: UploadQueueItem[]) => void
+  onComplete?: (items: UploadQueueItem<TData>[]) => void
 }
 
 /** Accepted inputs to {@link VueUploadQueue.enqueue}. @public */
 export type EnqueueInput = Blob | Blob[] | FileList | null | undefined
 
 /**
- * The reactive queue returned by {@link useUploadQueue}.
+ * The `data` argument of {@link VueUploadQueue.enqueue}: optional when the
+ * item data may be `undefined`, required otherwise.
  *
  * @public
  */
-export interface VueUploadQueue {
+export type EnqueueData<TData> = undefined extends TData ? [data?: TData] : [data: TData]
+
+/**
+ * The reactive queue returned by {@link useUploadQueue}.
+ *
+ * @typeParam TData - The data each item carries; see {@link UploadQueueItem}.
+ *
+ * @public
+ */
+export interface VueUploadQueue<TData = undefined> {
   /** Reactive list of queued items, in insertion order. */
-  items: Readonly<Ref<UploadQueueItem[]>>
-  /** Add one or more files to the queue; uploading starts automatically. */
-  enqueue: (files: EnqueueInput) => void
+  items: Readonly<Ref<UploadQueueItem<TData>[]>>
+  /**
+   * Add one or more files to the queue; uploading starts automatically.
+   * `data` goes on every item this call queues, as `item.data`: queue files
+   * one call at a time to give each its own.
+   */
+  enqueue: (files: EnqueueInput, ...data: EnqueueData<TData>) => void
   /** `true` while any item is pending or uploading. */
   isUploading: Readonly<Ref<boolean>>
   /** Aggregate progress across all items, from `0` to `1`. */
@@ -173,6 +203,11 @@ function nextQueueItemId(): string {
  * item says whether the app `refused` it or it failed, so the UI can show a
  * reason for one and {@link VueUploadQueue.retry} the other.
  *
+ * `enqueue(files, data)` attaches the app's own data to the items it
+ * queues, as `item.data`, so a hook knows what a file is for without a
+ * side map: type it with the `TData` parameter,
+ * `useUploadQueue<{ albumId: Id<'albums'> }>(…)`.
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
@@ -201,6 +236,8 @@ function nextQueueItemId(): string {
  * </template>
  * ```
  *
+ * @typeParam TData - The data each item carries, given to `enqueue`;
+ *   `undefined` (no data) by default.
  * @param generateUploadUrl - A `FunctionReference` for the public
  *   `generateUploadUrl` mutation.
  * @param options - Optional {@link UseUploadQueueOptions}.
@@ -208,13 +245,15 @@ function nextQueueItemId(): string {
  *
  * @public
  */
-export function useUploadQueue(
+export function useUploadQueue<TData = undefined>(
   generateUploadUrl: GenerateUploadUrl,
-  options: UseUploadQueueOptions = {},
-): VueUploadQueue {
+  options: UseUploadQueueOptions<TData> = {},
+): VueUploadQueue<TData> {
+  type Item = UploadQueueItem<TData>
   const convex = useConvexOrThrow('useUploadQueue')
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? 3))
-  const items = ref<UploadQueueItem[]>([])
+  // `ref` would type the items as `UnwrapRef<TData>`, which an open `TData` is not assignable to.
+  const items = ref([]) as Ref<Item[]>
   const controllers = new Map<string, AbortController>()
   // Items whose `after` finished: a retry must not run it twice.
   const afterDone = new Set<string>()
@@ -257,7 +296,7 @@ export function useUploadQueue(
   const isRefusal = options.isRefusal ?? ((error: Error) => error instanceof ConvexError)
 
   /** `prepare` (once per item), then the transfer: the storage id. */
-  async function transfer(item: UploadQueueItem, signal: AbortSignal): Promise<StorageId> {
+  async function transfer(item: Item, signal: AbortSignal): Promise<StorageId> {
     if (options.prepare && item.prepared === null) {
       item.stage = 'prepare'
       const prepared = await options.prepare(toRaw(item.file), item, signal)
@@ -280,7 +319,7 @@ export function useUploadQueue(
   }
 
   /** `isRefusal`, with a throw read as "not a refusal": the item must still settle. */
-  function refusal(failure: Error, item: UploadQueueItem): boolean {
+  function refusal(failure: Error, item: Item): boolean {
     try {
       return isRefusal(failure, item)
     }
@@ -290,7 +329,7 @@ export function useUploadQueue(
   }
 
   /** Record a failure on the item, refused or not. */
-  function fail(item: UploadQueueItem, caught: unknown, signal: AbortSignal): void {
+  function fail(item: Item, caught: unknown, signal: AbortSignal): void {
     const failure = caught instanceof Error ? caught : new Error(String(caught))
     item.refused = !signal.aborted && refusal(failure, item)
     // `after` turned the stored file away: a retry sends it again. Until then
@@ -302,7 +341,7 @@ export function useUploadQueue(
     options.onItemError?.(failure, item)
   }
 
-  async function run(item: UploadQueueItem): Promise<void> {
+  async function run(item: Item): Promise<void> {
     const own = generation
     running++
     item.status = 'uploading'
@@ -347,11 +386,11 @@ export function useUploadQueue(
     }
   }
 
-  function enqueue(files: EnqueueInput): void {
+  function enqueue(files: EnqueueInput, ...[data]: EnqueueData<TData>): void {
     const incoming = normalizeFiles(files)
     if (incoming.length === 0) return
     items.value.push(
-      ...incoming.map((file): UploadQueueItem => ({
+      ...incoming.map((file): Item => ({
         id: nextQueueItemId(),
         file,
         status: 'pending',
@@ -361,6 +400,8 @@ export function useUploadQueue(
         refused: false,
         stage: null,
         prepared: null,
+        // `undefined` only when `TData` allows it: `EnqueueData` requires it otherwise.
+        data: data as TData,
       })),
     )
     held = false
