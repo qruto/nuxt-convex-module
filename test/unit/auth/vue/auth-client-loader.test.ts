@@ -75,13 +75,13 @@ describe('loadAuthClient', () => {
       onAuthClientLoadFailure(() => {
         throw new Error('listener broke')
       })
-      onAuthClientLoadFailure(error => heard.push(error))
+      onAuthClientLoadFailure(failure => heard.push(failure))
 
       const first = await loadAuthClient().catch((error: unknown) => error)
       vi.resetModules()
       const second = await loadAuthClient().catch((error: unknown) => error)
       // The listener gets the error the caller gets, and a throwing one stops nothing.
-      expect(heard).toEqual([first, second])
+      expect(heard).toEqual([{ error: first, used: true }, { error: second, used: true }])
       expect(reportError).toHaveBeenCalledTimes(2)
 
       vi.resetModules()
@@ -387,6 +387,30 @@ describe('deferAuthClient', () => {
     await vi.waitFor(() => expect(loadedAuthClient()).toBe(fakeClient))
     expect(isAuthClientDeferred()).toBe(false)
     expect(listeners).toEqual([])
+  })
+
+  // PARITY: D-19 — reloads at once only for a use.
+  it('tells a failure listener whether a use asked for the load, not only the tab coming back', async () => {
+    vi.doMock('#convex/auth-client', () => {
+      throw new Error('chunk failed')
+    })
+    try {
+      const { deferAuthClient, loadAuthClient, onAuthClientLoadFailure } = await loader()
+      const used: boolean[] = []
+      onAuthClientLoadFailure(failure => used.push(failure.used))
+      deferAuthClient()
+      visibility = 'visible'
+
+      listeners.forEach(listener => listener())
+      await vi.waitFor(() => expect(used).toEqual([false]))
+      // A use that joins a load the tab started counts as a use.
+      listeners.forEach(listener => listener())
+      await loadAuthClient().catch(() => {})
+      expect(used).toEqual([false, true])
+    }
+    finally {
+      vi.doMock('#convex/auth-client', () => ({ authClient: fakeClient }))
+    }
   })
 
   it('tries again on the next visit to the tab after a failed load', async () => {

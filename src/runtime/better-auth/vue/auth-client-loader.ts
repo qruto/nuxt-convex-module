@@ -12,7 +12,10 @@ let loaded: AuthClient | undefined
 let loading: Promise<AuthClient> | undefined
 let deferred = false
 const waiting = new Set<(client: AuthClient) => void>()
-const failing = new Set<(error: unknown) => void>()
+const failing = new Set<(failure: AuthClientLoadFailure) => void>()
+// Whether a use asked for the load under way, not only the tab coming back
+// into view or the browser back online: D-19 reloads at once for a use.
+let used = false
 // A client whose module ran while the load was held back, not yet used: a
 // `<NuxtLink>` prefetching a page that imports it statically runs it.
 let evaluated: AuthClient | undefined
@@ -34,6 +37,15 @@ let stopSignal: (() => void) | undefined
  * @public
  */
 export function loadAuthClient(): Promise<AuthClient> {
+  used = true
+  return load()
+}
+
+/**
+ * The load itself. A use comes in through {@link loadAuthClient}; the tab
+ * back into view and the browser back online call this directly.
+ */
+function load(): Promise<AuthClient> {
   if (evaluated) registerAuthClient(evaluated)
   loading ??= import('#convex/auth-client').then(
     ({ authClient }) => {
@@ -43,7 +55,9 @@ export function loadAuthClient(): Promise<AuthClient> {
     (error: unknown) => {
       // A chunk that failed to load is asked for again on the next call.
       loading = undefined
-      notify(failing, error)
+      const failure = { error, used }
+      used = false
+      notify(failing, failure)
       throw error
     },
   )
@@ -125,12 +139,19 @@ export function onAuthClient(listener: (client: AuthClient) => void): () => void
   return () => waiting.delete(listener)
 }
 
+/** A load that failed: its error, and whether a use asked for it (see {@link onAuthClientLoadFailure}). @internal */
+export interface AuthClientLoadFailure {
+  error: unknown
+  /** `false` when only the tab coming back into view or the browser back online asked for it. */
+  used: boolean
+}
+
 /**
- * Run `listener` with the error of every load that fails, until one
- * succeeds. The function it returns stops it. PARITY: D-19, which reloads
- * the page when a deploy removed the chunk. @internal
+ * Run `listener` with every load that fails, until one succeeds. The
+ * function it returns stops it. PARITY: D-19, which reloads the page when a
+ * deploy removed the chunk. @internal
  */
-export function onAuthClientLoadFailure(listener: (error: unknown) => void): () => void {
+export function onAuthClientLoadFailure(listener: (failure: AuthClientLoadFailure) => void): () => void {
   if (loaded) return () => {}
   failing.add(listener)
   return () => failing.delete(listener)
@@ -148,7 +169,7 @@ export function deferAuthClient(): void {
   const onVisible = () => {
     if (document.visibilityState !== 'visible') return
     // Kept until a load succeeds: a failed one is tried again next time.
-    void loadAuthClient().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
+    void load().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
   }
   document.addEventListener('visibilitychange', onVisible)
 }
@@ -157,13 +178,14 @@ export function deferAuthClient(): void {
  * Ask for the chunk again when the browser comes back online or the tab back
  * into view: a startup load that failed twice (a dropped connection) keeps a
  * way back without a reload. A deploy that replaced the chunk reloads the
- * page instead (D-19, `better-auth/nuxt/chunk-reload.client.ts`). @internal
+ * page on the next navigation instead (D-19,
+ * `better-auth/nuxt/chunk-reload.client.ts`). @internal
  */
 export function retryAuthClientLoad(): void {
   if (loaded || typeof window === 'undefined') return
   const retry = () => {
     if (document.visibilityState !== 'visible') return
-    void loadAuthClient().then(() => {
+    void load().then(() => {
       window.removeEventListener('online', retry)
       document.removeEventListener('visibilitychange', retry)
     }, () => {})
@@ -325,4 +347,5 @@ export function __resetAuthClientLoaderForTests(): void {
   evaluated = undefined
   waiting.clear()
   failing.clear()
+  used = false
 }

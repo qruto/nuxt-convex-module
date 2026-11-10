@@ -111,8 +111,7 @@ describe('the Better Auth client, loaded on first use', () => {
 
   // PARITY: D-19 — a deploy replaced the chunks under the open page: the
   // client's chunk is a 404 for good, and the server serves another build.
-  it('reloads the page once when a deploy removed the client chunk, and not again', async () => {
-    const { page } = await open()
+  async function afterDeploy(page: Awaited<ReturnType<typeof open>>['page']) {
     await page.route(`**${assetsDir()}**/*.js`, async (route) => {
       const response = await route.fetch()
       const body = await response.text()
@@ -121,6 +120,11 @@ describe('the Better Auth client, loaded on first use', () => {
     })
     await page.route(`**${assetsDir()}builds/latest.json*`, route =>
       route.fulfill({ json: { id: 'the-next-build', timestamp: Date.now() } }))
+  }
+
+  it('reloads the page once when a deploy removed the client chunk, and not again', async () => {
+    const { page } = await open()
+    await afterDeploy(page)
     await page.goto(url('/account'), { waitUntil: 'hydration' })
     const loads: string[] = []
     page.on('load', () => loads.push(page.url()))
@@ -137,6 +141,27 @@ describe('the Better Auth client, loaded on first use', () => {
     await latest
     await page.waitForTimeout(500)
     expect(loads).toHaveLength(1)
+  })
+
+  it('waits for the next navigation to reload when only the tab coming back asked for the client', async () => {
+    const { page } = await open()
+    await afterDeploy(page)
+    // Signed out: the load waits until the tab comes back into view.
+    await page.goto(url('/'), { waitUntil: 'hydration' })
+    await page.locator('[data-test="auth"]', { hasText: 'signed-out' }).waitFor()
+    const loads: string[] = []
+    page.on('load', () => loads.push(page.url()))
+
+    // The load fails on a newer build, and the visitor keeps the page.
+    const latest = page.waitForRequest(request => request.url().includes('/builds/latest.json'))
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+    await latest
+    await page.waitForTimeout(500)
+    expect(loads).toEqual([])
+
+    // Nuxt reloads on the next navigation, onto the page asked for.
+    await page.evaluate(() => (window as { useNuxtApp?: () => { $router: { push: (to: string) => unknown } } }).useNuxtApp!().$router.push('/account'))
+    await expect.poll(() => loads).toEqual([url('/account')])
   })
 
   it('loads on the first call through useBetterAuth().client', async () => {

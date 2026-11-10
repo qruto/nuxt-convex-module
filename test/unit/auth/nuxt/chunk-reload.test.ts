@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // replaced the app's chunks under an open page. The plugin reloads the page
 // for a load Nuxt reported as a chunk error, once the server says it serves
 // another build; a dropped request on the same build is left to the loader's
-// next try. Driven with a stubbed `#app` and loader.
+// next try, and a load no use asked for reloads on the next navigation.
+// Driven with a stubbed `#app` and loader.
 
 const runtimeConfig = { app: { baseURL: '/', buildAssetsDir: '/_nuxt/', cdnURL: '', buildId: 'build-a' } }
 const reloadNuxtApp = vi.fn()
@@ -15,24 +16,33 @@ vi.mock('#app', () => ({
   useRuntimeConfig: () => runtimeConfig,
 }))
 
-let failureListener: ((error: unknown) => void) | undefined
+type Failure = { error: unknown, used: boolean }
+let failureListener: ((failure: Failure) => void) | undefined
 vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
-  onAuthClientLoadFailure: (listener: (error: unknown) => void) => {
+  onAuthClientLoadFailure: (listener: (failure: Failure) => void) => {
     failureListener = listener
     return () => {}
   },
 }))
 
 const plugin = (await import('../../../../src/runtime/better-auth/nuxt/chunk-reload.client')).default as unknown as
-  (nuxtApp: { hook: (name: string, fn: (payload: { error: unknown }) => void) => void }) => void
+  (nuxtApp: {
+    hook: (name: string, fn: (payload: { error: unknown }) => void) => void
+    callHook: (name: string, ...args: unknown[]) => Promise<void>
+  }) => void
 
-/** Run the plugin; `chunkError` stands in for Nuxt calling `app:chunkError`. */
+/**
+ * Run the plugin; `chunkError` stands in for Nuxt calling `app:chunkError`,
+ * `fail` for a load that failed, by default one a use asked for.
+ */
 function setup() {
   const hooks: Array<(payload: { error: unknown }) => void> = []
-  plugin({ hook: (name, fn) => name === 'app:chunkError' && hooks.push(fn) })
+  const callHook = vi.fn(async (_name: string, ..._args: unknown[]) => {})
+  plugin({ hook: (name, fn) => name === 'app:chunkError' && hooks.push(fn), callHook })
   return {
     chunkError: (error: unknown) => hooks.forEach(hook => hook({ error })),
-    fail: (error: unknown) => failureListener!(error),
+    fail: (error: unknown, used = true) => failureListener!({ error, used }),
+    callHook,
   }
 }
 
@@ -85,6 +95,27 @@ describe('chunk-reload plugin', () => {
     chunkError(error)
     await settle()
 
+    expect(reloadNuxtApp).toHaveBeenCalledOnce()
+  })
+
+  it('leaves a load no use asked for to reload on the next navigation, as Nuxt does for a newer build', async () => {
+    serveLatest({ id: 'build-b', timestamp: 1 })
+    const { chunkError, fail, callHook } = setup()
+    const error = new TypeError('Failed to fetch dynamically imported module')
+    chunkError(error)
+
+    // The tab came back into view: the visitor keeps what they left on the page.
+    fail(error, false)
+    await settle()
+    fail(error, false)
+    await settle()
+    expect(reloadNuxtApp).not.toHaveBeenCalled()
+    expect(callHook).toHaveBeenCalledOnce()
+    expect(callHook).toHaveBeenCalledWith('app:manifest:update', { id: 'build-b', timestamp: 1 })
+
+    // A use that fails the same way reloads at once.
+    fail(error)
+    await settle()
     expect(reloadNuxtApp).toHaveBeenCalledOnce()
   })
 

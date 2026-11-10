@@ -530,7 +530,7 @@ function loadAuthClient(): Promise<VueAuthClient<{
 }>>;
 ```
 
-Defined in: [src/runtime/better-auth/vue/auth-client-loader.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-client-loader.ts#L36)
+Defined in: [src/runtime/better-auth/vue/auth-client-loader.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/auth-client-loader.ts#L39)
 
 The app's Better Auth client (`#convex/auth-client`), loading it on the
 first call. Every call resolves to the same instance, the one a static
