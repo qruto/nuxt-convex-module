@@ -12,6 +12,10 @@ let loaded: AuthClient | undefined
 let loading: Promise<AuthClient> | undefined
 let deferred = false
 const waiting = new Set<(client: AuthClient) => void>()
+const failing = new Set<(failure: AuthClientLoadFailure) => void>()
+// Whether a use asked for the load under way, not only the tab coming back
+// into view or the browser back online: D-19 reloads at once for a use.
+let used = false
 // A client whose module ran while the load was held back, not yet used: a
 // `<NuxtLink>` prefetching a page that imports it statically runs it.
 let evaluated: AuthClient | undefined
@@ -33,6 +37,15 @@ let stopSignal: (() => void) | undefined
  * @public
  */
 export function loadAuthClient(): Promise<AuthClient> {
+  used = true
+  return load()
+}
+
+/**
+ * The load itself. A use comes in through {@link loadAuthClient}; the tab
+ * back into view and the browser back online call this directly.
+ */
+function load(): Promise<AuthClient> {
   if (evaluated) registerAuthClient(evaluated)
   loading ??= import('#convex/auth-client').then(
     ({ authClient }) => {
@@ -42,6 +55,9 @@ export function loadAuthClient(): Promise<AuthClient> {
     (error: unknown) => {
       // A chunk that failed to load is asked for again on the next call.
       loading = undefined
+      const failure = { error, used }
+      used = false
+      notify(failing, failure)
       throw error
     },
   )
@@ -78,11 +94,17 @@ export function registerAuthClient(client: AuthClient): void {
   evaluated = undefined
   loaded = client
   loading ??= Promise.resolve(client)
+  failing.clear()
   const listeners = [...waiting]
   waiting.clear()
-  for (const listener of listeners) {
+  notify(listeners, client)
+}
+
+/** Run every listener with `value`; one that throws is reported and the rest still run. */
+function notify<T>(listeners: Iterable<(value: T) => void>, value: T): void {
+  for (const listener of [...listeners]) {
     try {
-      listener(client)
+      listener(value)
     }
     catch (error) {
       report(error)
@@ -117,6 +139,24 @@ export function onAuthClient(listener: (client: AuthClient) => void): () => void
   return () => waiting.delete(listener)
 }
 
+/** A load that failed: its error, and whether a use asked for it (see {@link onAuthClientLoadFailure}). @internal */
+export interface AuthClientLoadFailure {
+  error: unknown
+  /** `false` when only the tab coming back into view or the browser back online asked for it. */
+  used: boolean
+}
+
+/**
+ * Run `listener` with every load that fails, until one succeeds. The
+ * function it returns stops it. PARITY: D-19, which reloads the page when a
+ * deploy removed the chunk. @internal
+ */
+export function onAuthClientLoadFailure(listener: (failure: AuthClientLoadFailure) => void): () => void {
+  if (loaded) return () => {}
+  failing.add(listener)
+  return () => failing.delete(listener)
+}
+
 /**
  * Hold the load back until something needs the client: the server found no
  * session on this request. A tab that comes back into view loads it, as
@@ -129,21 +169,23 @@ export function deferAuthClient(): void {
   const onVisible = () => {
     if (document.visibilityState !== 'visible') return
     // Kept until a load succeeds: a failed one is tried again next time.
-    void loadAuthClient().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
+    void load().then(() => document.removeEventListener('visibilitychange', onVisible), () => {})
   }
   document.addEventListener('visibilitychange', onVisible)
 }
 
 /**
  * Ask for the chunk again when the browser comes back online or the tab back
- * into view: a startup load that failed twice (a deploy that replaced the
- * chunk, a dropped connection) keeps a way back without a reload. @internal
+ * into view: a startup load that failed twice (a dropped connection) keeps a
+ * way back without a reload. A deploy that replaced the chunk reloads the
+ * page on the next navigation instead (D-19,
+ * `better-auth/nuxt/chunk-reload.client.ts`). @internal
  */
 export function retryAuthClientLoad(): void {
   if (loaded || typeof window === 'undefined') return
   const retry = () => {
     if (document.visibilityState !== 'visible') return
-    void loadAuthClient().then(() => {
+    void load().then(() => {
       window.removeEventListener('online', retry)
       document.removeEventListener('visibilitychange', retry)
     }, () => {})
@@ -304,4 +346,6 @@ export function __resetAuthClientLoaderForTests(): void {
   stopSignal = undefined
   evaluated = undefined
   waiting.clear()
+  failing.clear()
+  used = false
 }

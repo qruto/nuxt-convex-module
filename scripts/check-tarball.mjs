@@ -272,10 +272,12 @@ try {
   // registration transform and the Nitro hook that varies a late-cacheable
   // no-session response on `Cookie` (+20 KB, six files: `auth-client-loader`,
   // `shared-render`, `no-session-vary`, each `.js` and `.d.ts`): 604.4 KB in
-  // 116 files, so the ceiling moves to 615 KB / 116 files.
+  // 116 files, so the ceiling moves to 615 KB / 116 files. Reloading the page
+  // when a deploy removed the client's chunk adds its client plugin (+2 KB,
+  // two files): 606.7 KB in 118 files, so the ceiling moves to 118 files.
   console.log('── Size ───────────────────────────────────────')
   const MAX_BYTES = 615_000
-  const MAX_FILES = 116
+  const MAX_FILES = 118
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

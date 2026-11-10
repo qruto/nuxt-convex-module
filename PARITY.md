@@ -154,6 +154,7 @@ source.
 | `better-auth/nuxt/proxy.ts` | the `${betterAuth.authRoute}/**` server handler | A-14 |
 | `better-auth/nuxt/shared-render.ts`, `better-auth/nuxt/no-session-vary.ts` | whether a render may be served to other visitors, and the Nitro hook that has a no-session response made cacheable late vary on `Cookie` | D-18 |
 | `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
+| `better-auth/nuxt/chunk-reload.client.ts` | reloads the page once a deploy removed the client's chunk | D-19 |
 
 ---
 
@@ -477,6 +478,48 @@ for free — removing one would break the behaviour, not restore it.
   without the client is the server's word, which a sign-in since then outdates: a guarded route and a forced
   token request wait for the client's own answer. A `?ott=` token leaves the address before the chunk is
   fetched, and is dropped when the chunk cannot load: exchanged later, it could replace a sign-in made since.
+  A chunk a deploy removed is not asked for until the page is reloaded: [D-19](#d-19--a-client-chunk-a-deploy-removed-reloads-the-page).
+
+##### D-19 — a client chunk a deploy removed reloads the page
+
+- **Kind** · a reload where upstream has nothing to load, following Nuxt's own route-chunk reload
+- **Upstream** · `@convex-dev/better-auth@0.13.0` `react/index.tsx` — the client is in the app's bundle, so a deploy
+  never leaves a page without it
+- **Port** · [`better-auth/nuxt/chunk-reload.client.ts`](./src/runtime/better-auth/nuxt/chunk-reload.client.ts) —
+  `newerBuild`, `latestBuildURL`, registered from [`src/module.ts`](./src/module.ts) `registerBetterAuth`;
+  [`better-auth/vue/auth-client-loader.ts`](./src/runtime/better-auth/vue/auth-client-loader.ts) —
+  `onAuthClientLoadFailure`, `AuthClientLoadFailure`, and `load`, which the tab and network triggers call without
+  counting as a use
+- **Pinned by** · `test/unit/auth/nuxt/chunk-reload.test.ts` — "reloads once a chunk error meets a build the server
+  replaced", "reloads when Nuxt reports the chunk error after the loader heard of it", "leaves a load no use asked for
+  to reload on the next navigation, as Nuxt does for a newer build", "stays on a page whose build the server still
+  serves: a dropped request the next load recovers", "leaves a failed load Nuxt did not report as a chunk error alone",
+  "asks the server once while a check is under way";
+  `test/unit/auth/vue/auth-client-loader.test.ts` — "tells a failure listener of every failed load, with its error, until
+  one succeeds", "tells a failure listener whether a use asked for the load, not only the tab coming back";
+  `test/module/registration.test.ts` — "reloads on a removed client chunk, from a plugin that runs before the client
+  plugin", "leaves the chunk-reload plugin out"; `test/e2e/lazy-auth-client.test.ts` — "reloads the page once when a
+  deploy removed the client chunk, and not again", "waits for the next navigation to reload when only the tab coming
+  back asked for the client"
+- **On sync** · keep while D-18 loads the client on first use; drop it with D-18
+- **Why** · D-18 puts the client in a chunk of its own, loaded after the page. A deploy that replaced the app's
+  chunks under an open page leaves that chunk a 404, and every retry asks for the same URL. Nuxt reloads the page
+  when a route's chunk fails on a navigation (`emitRouteChunkError: 'automatic'`, its default); the client's load
+  is no navigation, so nothing reloaded. The plugin keeps the errors Nuxt reports through `app:chunkError` (a failed
+  import as the build's preload helper saw it, not a module that threw as it ran) and, when a load fails with one,
+  fetches the app manifest's `builds/latest.json`: only a build id other than `app.buildId` reloads, so a dropped
+  request on the same build, or a manifest that cannot be read, is left to the loader's next try instead of reloading
+  into a network error. The reload goes through `reloadNuxtApp`, whose `nuxt:reload` guard in `sessionStorage`
+  holds it at one per path for ten seconds, without `persistState`: the reloaded page takes its session from the
+  server, not from the stale page. That reload is for a load a use asked for, which waits on the client. A load
+  only the tab coming back into view or the browser back online asked for (D-18's deferred load and its retries)
+  does not reload the page under the visitor, who may have left a half-filled form on it: the plugin calls Nuxt's
+  `app:manifest:update` hook once, as Nuxt's own check does when it finds a newer build, and Nuxt's route-chunk
+  plugin reloads on the next navigation (its `persistState` is restored only with `experimental.restoreState`).
+  Until then, a use reloads at once. The plugin is added for `'automatic'` with `experimental.appManifest` on, and
+  ahead of the client plugin, whose `?ott=` load runs during startup: `'automatic-immediate'` reloads on any chunk
+  error already, `'manual'` and `false` leave chunk errors to the app, and without the manifest there is no build
+  id to tell a deploy by.
 
 #### Consequences of an unimportable upstream internal
 
