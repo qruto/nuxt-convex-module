@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.14.2
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.1...v0.14.2)
+
+### 🚀 Enhancements
+
+#### Storage
+
+- Let useUploadQueue().enqueue attach data to each item ([#159](https://github.com/qruto/nuxt-convex-module/pull/159))
+
+### 🩹 Fixes
+
+#### Better Auth
+
+- Reload the page once a deploy removed the client chunk ([#160](https://github.com/qruto/nuxt-convex-module/pull/160))
+
+### 🏡 Chore
+
+#### Dev dependencies
+
+- Bump the all-non-major group with 4 updates ([#158](https://github.com/qruto/nuxt-convex-module/pull/158))
+
+### 🤖 CI
+
+#### Dependencies
+
+- Bump step-security/harden-runner ([#157](https://github.com/qruto/nuxt-convex-module/pull/157))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.14.1
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.0...v0.14.1)
