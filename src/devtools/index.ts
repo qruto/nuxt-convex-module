@@ -51,6 +51,7 @@ export async function servePanel(request: Request, root: string): Promise<Respon
   // A `..` segment or an absolute path never reaches past the panel's folder.
   const stats = file.startsWith(root + sep) ? await stat(file).catch(() => undefined) : undefined
   if (!stats?.isFile()) return new Response(null, { status: 404 })
+  // fallow-ignore-next-line security-sink -- `file` stays inside the panel's folder, checked above; verified 2026-11-10
   return new Response(request.method === 'HEAD' ? null : await readFile(file), {
     headers: {
       'content-type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream',
