@@ -255,7 +255,7 @@
     "@vue/test-utils": "^2.5.1",
     "better-auth": "~1.7.18",
     "changelogen": "^0.6.2",
-    "convex": "^1.49.0",
+    "convex": "^1.50.0",
     "eslint": "^10.13.0",
     "fallow": "3.41.0",
     "happy-dom": "^21.0.4",
