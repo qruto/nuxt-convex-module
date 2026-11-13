@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
-import { clientDependencies, deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
+import { clientDependencies, createDependencyLocator, deploymentEnv, deploymentWarnings, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveDeploymentUrls, resolveIntegrationState, validateModuleOptions, type IntegrationFlags } from './options'
 import { getConvexAliases } from './aliases'
 import { keepAuthClientOffPrefetch, registerAuthClientOnEvaluation } from './auth-client-registration'
 import { watchConvexCodegen } from './codegen-watch'
@@ -356,12 +356,15 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   }
 
   const flags = { betterAuth, clerk, auth0, polar, security }
+  // The runtime's own imports resolve from this module's folder, so the
+  // warnings ask whether a package is there or at the root. Vite resolves the
+  // include list from the root alone, so that list asks how to reach it.
   for (const message of integrationWarnings(flags, pkg => isPackageInstalled(pkg, rootDir))) logger.warn(message)
   if (nuxt.options.dev) {
     nuxt.options.vite.optimizeDeps ??= {}
     nuxt.options.vite.optimizeDeps.include = [
       ...(nuxt.options.vite.optimizeDeps.include ?? []),
-      ...clientDependencies(flags, pkg => isPackageInstalled(pkg, rootDir)),
+      ...clientDependencies(flags, createDependencyLocator(rootDir)),
     ]
   }
   return flags

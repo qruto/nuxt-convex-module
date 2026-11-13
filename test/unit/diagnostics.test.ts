@@ -1,9 +1,9 @@
 // PARITY: A-09
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { clientDependencies, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveIntegrationState } from '../../src/options'
+import { clientDependencies, createDependencyLocator, formatStartupSummary, integrationWarnings, isDeclaredDependency, isPackageInstalled, resolveIntegrationState } from '../../src/options'
 import { hasGeneratedApi } from '../../src/functions-dir'
 
 describe('resolveIntegrationState', () => {
@@ -150,7 +150,7 @@ describe('integrationWarnings', () => {
 describe('clientDependencies', () => {
   const flags = (on: Partial<Record<'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
     ({ betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
-  const everything = () => true
+  const everything = () => ''
 
   it('lists only Convex when no integration is on', () => {
     expect(clientDependencies(flags({}), everything)).toEqual(['convex/browser', 'convex/server', 'convex/values'])
@@ -171,8 +171,114 @@ describe('clientDependencies', () => {
 
   it('leaves out an entry whose package is not installed', () => {
     const checked: string[] = []
-    const missing = (pkg: string) => checked.push(pkg) > 0 && pkg !== '@polar-sh/checkout'
+    const missing = (pkg: string) => (checked.push(pkg), pkg === '@polar-sh/checkout' ? undefined : '')
     expect(clientDependencies(flags({ polar: true }), missing)).not.toContain('@polar-sh/checkout/embed')
     expect(checked).toEqual(['convex', 'convex', 'convex', '@polar-sh/checkout'])
+  })
+
+  it('names an entry by the walk Vite takes to it', () => {
+    const nested = (pkg: string) => pkg === 'better-auth' ? 'nuxt-backend > nuxt-convex-module > ' : ''
+    expect(clientDependencies(flags({ betterAuth: true }), nested)).toEqual([
+      'convex/browser',
+      'convex/server',
+      'convex/values',
+      '@convex-dev/better-auth/client/plugins',
+      'nuxt-backend > nuxt-convex-module > better-auth/vue',
+    ])
+  })
+})
+
+// Each layout is built the way its package manager lays it out on disk, down
+// to pnpm's symlinks into `.pnpm`, because those links are what Vite follows.
+describe('createDependencyLocator', () => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'convex-locate-')))
+  afterAll(() => rmSync(root, { recursive: true, force: true }))
+
+  let count = 0
+  function app(dependencies: Record<string, string>): string {
+    const dir = join(root, `app-${++count}`)
+    write(dir, { name: 'app', dependencies })
+    return dir
+  }
+  function write(dir: string, manifest: Record<string, unknown> = {}) {
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), JSON.stringify(manifest))
+  }
+  function link(target: string, path: string) {
+    mkdirSync(dirname(path), { recursive: true })
+    symlinkSync(target, path, process.platform === 'win32' ? 'junction' : 'dir')
+  }
+  /** This module in pnpm's virtual store with its peers beside it; returns the folder it runs from. */
+  function storeModule(dir: string, peers: string[]): string {
+    const store = join(dir, 'node_modules', '.pnpm', 'nuxt-convex-module@1.0.0', 'node_modules')
+    write(join(store, 'nuxt-convex-module'), { name: 'nuxt-convex-module' })
+    mkdirSync(join(store, 'nuxt-convex-module', 'dist'), { recursive: true })
+    for (const peer of peers) {
+      const real = join(dir, 'node_modules', '.pnpm', `${peer.replace('/', '+')}@1.0.0`, 'node_modules', peer)
+      write(real, { name: peer })
+      link(real, join(store, peer))
+    }
+    return join(store, 'nuxt-convex-module', 'dist')
+  }
+
+  it('leaves a package at the app\'s root bare: npm, yarn and hoisted pnpm', () => {
+    const dir = app({ 'nuxt-convex-module': '1.0.0' })
+    write(join(dir, 'node_modules', 'nuxt-convex-module'), { name: 'nuxt-convex-module' })
+    write(join(dir, 'node_modules', 'better-auth'), { name: 'better-auth' })
+    write(join(dir, 'node_modules', '@polar-sh', 'checkout'), { name: '@polar-sh/checkout' })
+    mkdirSync(join(dir, 'node_modules', 'nuxt-convex-module', 'dist'))
+    const locate = createDependencyLocator(dir, join(dir, 'node_modules', 'nuxt-convex-module', 'dist'))
+    expect(locate('better-auth')).toBe('')
+    expect(locate('@polar-sh/checkout')).toBe('')
+    expect(locate('@clerk/vue')).toBeUndefined()
+  })
+
+  it('walks through this module to a peer only its own folder has: isolated pnpm', () => {
+    const dir = app({ 'nuxt-convex-module': '1.0.0' })
+    const moduleDir = storeModule(dir, ['better-auth', '@polar-sh/checkout'])
+    link(dirname(moduleDir), join(dir, 'node_modules', 'nuxt-convex-module'))
+    const locate = createDependencyLocator(dir, moduleDir)
+    expect(locate('better-auth')).toBe('nuxt-convex-module > ')
+    expect(locate('@polar-sh/checkout')).toBe('nuxt-convex-module > ')
+    expect(locate('@clerk/vue')).toBeUndefined()
+  })
+
+  /** A package in pnpm's virtual store, linked to `at`; returns its real folder. */
+  function storePackage(dir: string, name: string, dependencies: Record<string, string>, at: string): string {
+    const real = join(dir, 'node_modules', '.pnpm', `${name.replace('/', '+')}@1.0.0`, 'node_modules', name)
+    write(real, { name, dependencies })
+    link(real, at)
+    return real
+  }
+
+  it('starts the walk at the app\'s dependency that brings this module in, as nuxt-backend does', () => {
+    const dir = app({ 'nuxt': '4.0.0', '@acme/wrapper': '1.0.0' })
+    const moduleDir = storeModule(dir, ['better-auth'])
+    // pnpm's hidden hoist: every store package reaches this module by walking
+    // up, `nuxt` included. Only the wrapper names it, so only it is the parent.
+    link(dirname(moduleDir), join(dir, 'node_modules', '.pnpm', 'node_modules', 'nuxt-convex-module'))
+    storePackage(dir, 'nuxt', {}, join(dir, 'node_modules', 'nuxt'))
+    const wrapper = storePackage(dir, '@acme/wrapper', { 'nuxt-convex-module': '1.0.0' }, join(dir, 'node_modules', '@acme', 'wrapper'))
+    link(dirname(moduleDir), join(wrapper, '..', '..', 'nuxt-convex-module'))
+    expect(createDependencyLocator(dir, moduleDir)('better-auth')).toBe('@acme/wrapper > nuxt-convex-module > ')
+  })
+
+  it('walks to the copy of this module that is running, not another one at the root', () => {
+    const dir = app({ 'nuxt-convex-module': '0.9.0', 'wrapper': '1.0.0' })
+    write(join(dir, 'node_modules', 'nuxt-convex-module'), { name: 'nuxt-convex-module' })
+    const moduleDir = storeModule(dir, ['better-auth'])
+    const wrapper = storePackage(dir, 'wrapper', { 'nuxt-convex-module': '1.0.0' }, join(dir, 'node_modules', 'wrapper'))
+    link(dirname(moduleDir), join(wrapper, '..', 'nuxt-convex-module'))
+    expect(createDependencyLocator(dir, moduleDir)('better-auth')).toBe('wrapper > nuxt-convex-module > ')
+  })
+
+  it('leaves a package out when this module is more than one dependency deep', () => {
+    const dir = app({ outer: '1.0.0' })
+    const moduleDir = storeModule(dir, ['better-auth'])
+    const inner = storePackage(dir, 'inner', { 'nuxt-convex-module': '1.0.0' }, join(dir, 'node_modules', '.pnpm', 'outer@1.0.0', 'node_modules', 'inner'))
+    link(dirname(moduleDir), join(inner, '..', 'nuxt-convex-module'))
+    write(join(dir, 'node_modules', '.pnpm', 'outer@1.0.0', 'node_modules', 'outer'), { name: 'outer', dependencies: { inner: '1.0.0' } })
+    link(join(dir, 'node_modules', '.pnpm', 'outer@1.0.0', 'node_modules', 'outer'), join(dir, 'node_modules', 'outer'))
+    expect(createDependencyLocator(dir, moduleDir)('better-auth')).toBeUndefined()
   })
 })

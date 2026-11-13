@@ -2,8 +2,8 @@
 // state, the dev startup summary. Kept out of `module.ts` so they stay off the
 // package's `.` entry — nuxt-module-build re-exports everything that file
 // exports, and none of this is API. Tests import this file directly.
-import { basename, dirname, isAbsolute, join } from 'node:path'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { basename, dirname, isAbsolute, join, sep } from 'node:path'
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { parseEnv } from 'node:util'
 
@@ -52,13 +52,20 @@ export function resolveIntegrationState(
  * needs and resolution cannot give.
  */
 export function isDeclaredDependency(id: string, rootDir: string): boolean {
+  return declaredDependencies(rootDir).includes(id)
+}
+
+/** Every package the app's own `package.json` names, across its dependency fields. */
+function declaredDependencies(rootDir: string): string[] {
   try {
     const manifest = JSON.parse(readFileSync(join(rootDir, 'package.json'), 'utf8')) as Record<string, unknown>
-    return ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
-      .some(field => typeof manifest[field] === 'object' && manifest[field] !== null && id in (manifest[field] as object))
+    return ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'].flatMap((field) => {
+      const names = manifest[field]
+      return typeof names === 'object' && names !== null ? Object.keys(names) : []
+    })
   }
   catch {
-    return false
+    return []
   }
 }
 
@@ -222,14 +229,14 @@ export function integrationWarnings(
  * The packages the client runtime imports, for Vite to pre-bundle in dev.
  * Vite does not crawl the runtime, so it finds these on the first page load
  * and reloads the page once. Only the enabled integrations' entries are
- * listed, and only those whose package is installed: an optional peer such
- * as `@polar-sh/checkout` may be missing, and an entry Vite cannot resolve
- * makes Nuxt print a warning. Every one is a peer, so it resolves from the
- * app's root and needs no `nuxt-convex-module > ` prefix.
+ * listed, each under the name `locate` gives it (see
+ * {@link createDependencyLocator}). An entry `locate` cannot place is left
+ * out: an optional peer such as `@polar-sh/checkout` may be missing, and an
+ * entry Vite cannot resolve makes Nuxt print NUXT_B7002.
  */
 export function clientDependencies(
   flags: IntegrationFlags,
-  isInstalled: (pkg: string) => boolean,
+  locate: (pkg: string) => string | undefined,
 ): string[] {
   const entries = [
     'convex/browser',
@@ -240,7 +247,77 @@ export function clientDependencies(
     ...(flags.auth0 ? ['@auth0/auth0-vue'] : []),
     ...(flags.polar ? ['@polar-sh/checkout/embed'] : []),
   ]
-  return entries.filter(entry => isInstalled(entry.split('/').slice(0, entry.startsWith('@') ? 2 : 1).join('/')))
+  return entries.flatMap((entry) => {
+    const prefix = locate(entry.split('/').slice(0, entry.startsWith('@') ? 2 : 1).join('/'))
+    return prefix === undefined ? [] : [`${prefix}${entry}`]
+  })
+}
+
+/**
+ * How Vite reaches a package from the app's root, as the prefix its
+ * `optimizeDeps.include` entry needs: `''` when the package is in a
+ * `node_modules` folder above the root, `'nuxt-convex-module > '` (or
+ * `'<dependency> > nuxt-convex-module > '`) when only this module's own folder
+ * has it, and `undefined` when neither does.
+ *
+ * Vite resolves an include entry from the root, not from the file that
+ * imports it. npm, yarn and a hoisted pnpm put every peer this module imports
+ * up there. pnpm's default isolated layout does not: a peer the app never
+ * listed itself (better-auth under a wrapper module such as nuxt-backend, or
+ * one pnpm installed for the peer range alone) lands only beside this module
+ * in the virtual store. Vite's nested form walks there one package name at a
+ * time, `nuxt-convex-module > better-auth/vue`, pre-bundles the copy this
+ * module's runtime imports, and matches that import to it by its folder.
+ *
+ * The walk is looked for among the app's own dependencies, one deep: this
+ * module, or a package that depends on it. A longer chain leaves the entry
+ * out, and Vite finds the import on the first page load, as it would with no
+ * list at all.
+ */
+export function createDependencyLocator(
+  rootDir: string,
+  moduleDir = dirname(fileURLToPath(import.meta.url)),
+): (pkg: string) => string | undefined {
+  let walk: ModuleWalk | false | undefined
+  return (pkg) => {
+    if (findPackageDir(pkg, rootDir) !== undefined) return ''
+    walk ??= walkToModule(rootDir, moduleDir) ?? false
+    return walk && findPackageDir(pkg, walk.dir) !== undefined ? `${walk.names.join(' > ')} > ` : undefined
+  }
+}
+
+/** The package names Vite walks from the app's root to this module, and the folder they lead to. */
+interface ModuleWalk {
+  names: string[]
+  dir: string
+}
+
+const MODULE_NAME = 'nuxt-convex-module'
+
+/**
+ * Find the walk {@link createDependencyLocator} names: this module as one of
+ * the app's dependencies, or one of those dependencies first. Each step is
+ * checked against the folder this module really runs from, so a second copy
+ * of it elsewhere in the tree is not mistaken for this one.
+ *
+ * A dependency counts as the first step only when its own `package.json`
+ * names this module. pnpm also links every package into
+ * `node_modules/.pnpm/node_modules`, which any package in the store reaches
+ * by walking up, so `nuxt > nuxt-convex-module` would resolve too: it would
+ * just name the wrong parent and lean on that hoisting.
+ */
+function walkToModule(rootDir: string, moduleDir: string): ModuleWalk | undefined {
+  const own = realpathSync(moduleDir)
+  const isOwn = (dir: string | undefined): dir is string => dir !== undefined && (own === dir || own.startsWith(dir + sep))
+  const direct = findPackageDir(MODULE_NAME, rootDir)
+  if (isOwn(direct)) return { names: [MODULE_NAME], dir: direct }
+  for (const dependency of declaredDependencies(rootDir)) {
+    const parent = findPackageDir(dependency, rootDir)
+    if (parent === undefined || !isDeclaredDependency(MODULE_NAME, parent)) continue
+    const nested = findPackageDir(MODULE_NAME, parent)
+    if (isOwn(nested)) return { names: [dependency, MODULE_NAME], dir: nested }
+  }
+  return undefined
 }
 
 /**
@@ -273,9 +350,21 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
  * report as missing even though it is right there.
  */
 export function isPackageInstalled(id: string, rootDir: string): boolean {
-  return [rootDir, dirname(fileURLToPath(import.meta.url))].some(base =>
-    nodeModulesPaths(base).some(dir => existsSync(join(dir, id, 'package.json'))),
-  )
+  return [rootDir, dirname(fileURLToPath(import.meta.url))].some(base => findPackageDir(id, base) !== undefined)
+}
+
+/**
+ * The folder a bare import of `id` from `dir` finds the package in, probed
+ * the way {@link isPackageInstalled} explains, or `undefined`. The real path:
+ * Vite follows the symlinks pnpm installs through before it resolves the next
+ * step of a nested entry, so the walk has to as well.
+ */
+function findPackageDir(id: string, dir: string): string | undefined {
+  for (const folder of nodeModulesPaths(dir)) {
+    const candidate = join(folder, id)
+    if (existsSync(join(candidate, 'package.json'))) return realpathSync(candidate)
+  }
+  return undefined
 }
 
 /**
