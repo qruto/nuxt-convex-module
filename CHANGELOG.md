@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.14.3
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.2...v0.14.3)
+
+### 🩹 Fixes
+
+#### Module
+
+- Pre-bundle peers that only the module's folder has ([#163](https://github.com/qruto/nuxt-convex-module/pull/163))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump fast-xml-parser ([#162](https://github.com/qruto/nuxt-convex-module/pull/162))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.14.2
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.1...v0.14.2)
