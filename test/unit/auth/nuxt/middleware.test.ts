@@ -43,7 +43,7 @@ vi.mock('../../../../src/runtime/better-auth/vue/auth-client-loader', () => ({
 }))
 
 vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({
-  convexAuth: vi.fn(() => ({ isAuthenticated: mockIsAuthenticated })),
+  convexBetterAuthNuxt: vi.fn(() => ({ isAuthenticated: mockIsAuthenticated })),
 }))
 
 type RouteMiddleware = (to: { path: string, fullPath: string }) => Promise<unknown>

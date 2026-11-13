@@ -199,7 +199,7 @@ function authClientModuleExists(authClient: string, rootDir: string): boolean {
  * need. Pure: the caller logs each line.
  *
  * - Better Auth's plugins own the Convex client's auth. With Clerk or Auth0 on
- *   as well, `provideConvexAuthFromClerk()` / `...FromAuth0()` would call
+ *   as well, `provideConvexWithClerk()` / `...FromAuth0()` would call
  *   `setAuth` on the same client and the two fight over it.
  * - `<CheckoutLink>` imports `@polar-sh/checkout`, a peer of `@convex-dev/polar`
  *   that yarn and `--legacy-peer-deps` installs skip. Vite fails the client

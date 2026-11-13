@@ -60,7 +60,7 @@ export function useConvexAuth(): {
   if (authContext === undefined) {
     throw new Error(
       'Could not find Convex auth context. '
-      + 'Ensure `provideConvexAuth` has been called in an ancestor component '
+      + 'Ensure `provideConvexWithAuth` has been called in an ancestor component '
       + 'or that the Convex auth plugin is installed, or you might have two '
       + 'instances of the `nuxt-convex-module` runtime loaded in your project.',
     )
@@ -69,10 +69,10 @@ export function useConvexAuth(): {
 }
 
 /**
- * Options for {@link provideConvexAuth} — the Vue translation of the props of
+ * Options for {@link provideConvexWithAuth} — the Vue translation of the props of
  * upstream's `ConvexProviderWithAuth` component.
  */
-export interface ConvexAuthProviderOptions {
+export interface ConvexProviderWithAuthOptions {
   client: IConvexVueClient
   useAuth: () => {
     isLoading: MaybeRefOrGetter<boolean>
@@ -155,7 +155,7 @@ function clearAuthLast(client: IConvexVueClient, ended: () => void): void {
  * import { useAuth } from '~/composables/useMyAuthProvider'  // your auth provider
  *
  * const client = useConvex()
- * const authState = provideConvexAuth({ client, useAuth })
+ * const authState = provideConvexWithAuth({ client, useAuth })
  * </script>
  * ```
  *
@@ -165,11 +165,27 @@ function clearAuthLast(client: IConvexVueClient, ended: () => void): void {
  *
  * @public
  */
-export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAuthState {
+export function provideConvexWithAuth(options: ConvexProviderWithAuthOptions): ConvexAuthState {
   const authState = createConvexAuthState(options)
   provide(ConvexAuthStateKey, authState)
   return authState
 }
+
+/**
+ * The old name of {@link provideConvexWithAuth}.
+ *
+ * @deprecated Use `provideConvexWithAuth`, the port of `ConvexProviderWithAuth`.
+ * The next minor release gives this name to Convex Auth's `ConvexAuthProvider`.
+ * @public
+ */
+export const provideConvexAuth = provideConvexWithAuth
+
+/**
+ * The old name of {@link ConvexProviderWithAuthOptions}.
+ *
+ * @deprecated Use `ConvexProviderWithAuthOptions`. Removed in the next minor release.
+ */
+export type ConvexAuthProviderOptions = ConvexProviderWithAuthOptions
 
 /**
  * Build reactive {@link ConvexAuthState} and wire watchers between the
@@ -183,7 +199,7 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
  * `EffectScope` so callers can dispose them later.
  */
 export function createConvexAuthState(
-  options: ConvexAuthProviderOptions,
+  options: ConvexProviderWithAuthOptions,
   scope?: EffectScope,
 ): ConvexAuthState {
   const { client, useAuth } = options
@@ -364,7 +380,7 @@ export function createConvexAuthState(
  */
 // PARITY: A-08
 export function createScopedConvexAuthState(
-  options: ConvexAuthProviderOptions,
+  options: ConvexProviderWithAuthOptions,
 ): { state: ConvexAuthState, scope: EffectScope } {
   const scope = effectScope(true)
   const state = createConvexAuthState(options, scope)

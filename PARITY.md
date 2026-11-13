@@ -130,7 +130,7 @@ source.
 | better-auth `react/index.tsx` — export surface | `better-auth/vue/index.ts` |
 | better-auth `react/index.tsx` — `AuthBoundary`, provider's `useUseAuthFromBetterAuth` | `better-auth/vue/{auth-boundary,plugin.client,plugin.server,token-store,use-better-auth}.ts` |
 | better-auth `react/index.tsx` — provider's `?ott=` `useEffect` | `better-auth/vue/cross-domain.ts` |
-| better-auth `nextjs/index.ts` — `convexBetterAuthNextJs` | `better-auth/nuxt/server.ts` — `convexAuth` |
+| better-auth `nextjs/index.ts` — `convexBetterAuthNextJs` | `better-auth/nuxt/server.ts` — `convexBetterAuthNuxt` |
 | better-auth `nextjs/client.tsx` — `usePreloadedAuthQuery` | `better-auth/vue/hydration.ts` |
 | better-auth — the user-authored `createAuthClient({ plugins: [convexClient(), …] })` passed to `ConvexBetterAuthProvider` | `better-auth/vue/client.ts` — bundled default, overridden by pointing `convex.betterAuth.authClient` at your own module (resolved through the `#convex/auth-client` alias) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
@@ -186,8 +186,9 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | `ConvexReactClient` | `ConvexVueClient` |
 | `ReactMutation` / `ReactAction` | `VueMutation` / `VueAction` |
 | `<ConvexProvider client>` component | Plugin provides the client via `ConvexClientKey`; read with `useConvex()` |
-| `<ConvexProviderWithAuth useAuth>` | `provideConvexAuth({ client, useAuth })` composable |
-| `<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>` | `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0` composables (+ thin component wrappers) |
+| Any other provider component `<XProvider>` / `<XProviderWithY>` | `provideX` / `provideXWithY`: the same words in the same order, minus `Provider`. A component wrapper keeps upstream's name |
+| `<ConvexProviderWithAuth useAuth>` | `provideConvexWithAuth({ client, useAuth })` composable |
+| `<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>` | `provideConvexWithClerk` / `provideConvexWithAuth0` composables (+ thin component wrappers) |
 | `useState` / `useEffect` reconciliation | `ref` + `watch` / `watchEffect` (see `vue/auth/index.ts` for the auth-state port and the comments explaining the live-sign-out edge case) |
 | `useEffect` (never runs during SSR) | `if (!import.meta.server) watch(…)` — the **negative** guard. In a plain Vue app neither `import.meta.client` nor `import.meta.server` is defined, so `import.meta.client && …` fails closed and the effect never runs; `!import.meta.server` fails open. Pinned by the `plain-vue` vitest project |
 | `setState(updater)` functional update | `state.value = updater(state.value)` — keep upstream's module-level curried updaters as-is (see `splitQuery` / `completeSplitQuery`) |
@@ -199,13 +200,13 @@ it is recorded as an `N-*` row in [§3.1](#31-naming-and-shape-n-), never as a `
 | Next.js server helpers (`preloadQuery`, `fetchQuery`, …) | Nitro server utils in `nuxt/index.ts` (auto-imported on the server); helper names stay verbatim |
 | Framework-qualified names (`NextjsOptions`, `convexBetterAuthNextJs`) | Substitute the framework part only: `NuxtOptions`, `convexBetterAuthNuxt` |
 | Ambient per-request context (`next/headers` + `React.cache`) | Explicit `event` parameter, the `nuxt/server` event or the h3 one (Nitro has no ambient request context) |
-| `React.cache` per-request memoization | Memoize on `event.context` (see `convexAuth`'s token cache) |
+| `React.cache` per-request memoization | Memoize on `event.context` (see `convexBetterAuthNuxt`'s token cache) |
 | `fetchAccessToken` identity change between renders (re-auth trigger) | Pass the fetcher as a `Ref`/`ComputedRef` whose identity changes (or bump the port-only `authVersion` key) |
 
 Reuse the generic primitives instead of writing new auth cores: the Clerk and Auth0 adapters
-are thin shims over `provideConvexAuth` / `createConvexAuthState` (`vue/auth/index.ts`). When
+are thin shims over `provideConvexWithAuth` / `createConvexAuthState` (`vue/auth/index.ts`). When
 an upstream "provider" component takes a `useAuth` prop, port it as a `useAuthFromX` shim
-feeding `provideConvexAuth`.
+feeding `provideConvexWithAuth`.
 
 ### 2.3 Enforcement
 
@@ -255,7 +256,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-01"></a>**N-01** | `ConvexReactClient` | `ConvexVueClient` | *Framework-qualified names* |
 | <a id="n-02"></a>**N-02** | `ReactMutation` / `ReactAction` | `VueMutation` / `VueAction` | *`ReactMutation` / `ReactAction`*. `MutationOptions` keeps its upstream name; `VueMutationOptions` is an additive alias in the same family |
 | <a id="n-03"></a>**N-03** | `<ConvexProvider client>` component | Nuxt plugin + `ConvexClientKey` + `useConvex()` | *`<ConvexProvider client>` component* |
-| <a id="n-04"></a>**N-04** | `<ConvexProviderWithAuth>` / `WithClerk` / `WithAuth0` | `provideConvexAuth` / `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0` | *`<ConvexProviderWithAuth useAuth>`*, *`<ConvexProviderWithClerk>` / `<ConvexProviderWithAuth0>`*. Thin component wrappers are kept for drop-in parity |
+| <a id="n-04"></a>**N-04** | `<ConvexProviderWithAuth>` / `WithClerk` / `WithAuth0` | `provideConvexWithAuth` / `provideConvexWithClerk` / `provideConvexWithAuth0` | *Any other provider component*. Thin component wrappers are kept for drop-in parity. Until 0.15 these were `provideConvexAuth` / `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0`, which stay as deprecated aliases for one minor release |
 | <a id="n-05"></a>**N-05** | Static hook arguments | `MaybeRefOrGetter`, read via `toValue` | *Static hook arguments* |
 | <a id="n-06"></a>**N-06** | Returns a plain value | Returns `ComputedRef` / `ShallowRef` | *Returns a plain value*. Applies to `ConvexAuthState` and to `UsePaginatedQueryReturnType`, redefined as `{ results, status, isLoading: ComputedRef, loadMore }` with a stable `loadMore`; upstream's plain union stays exported as `UsePaginatedQueryResult` |
 | <a id="n-07"></a>**N-07** | `NextjsOptions`, `convexBetterAuthNextJs` | `NuxtOptions`, `convexBetterAuthNuxt` | *Framework-qualified names* + *Ambient per-request context*. `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }` pair |
@@ -823,7 +824,7 @@ so none can be "restored" by syncing.
   in [`better-auth/nuxt/server.ts`](./src/runtime/better-auth/nuxt/server.ts)
 - **Pinned by** · `test/e2e/better-auth-proxy.test.ts`, `test/unit/auth/nuxt/proxy.test.ts`
 - **On sync** · `xssValidator: false` is **load-bearing** — do not "tidy" it away
-- **Why** · the proxy delegates to `convexAuth(event).handler()`, which strips hop-by-hop
+- **Why** · the proxy delegates to `convexBetterAuthNuxt(event).handler()`, which strips hop-by-hop
   headers and rewrites forwarded-host headers exactly as `convexBetterAuthNextJs` does; only
   the Nitro route registration is port-only. The route rules are what need justifying:
   `xssValidator: false` is a **correctness** fix, not hardening — `nuxt-security`'s validator
@@ -832,7 +833,7 @@ so none can be "restored" by syncing.
   GET/HEAD/POST/OPTIONS, and the handler asserts the same list itself, so the route stays
   closed without nuxt-security. Both rules apply regardless of `convex.security`, since they
   concern the module's own route rather than the app's CSP. The handler resolves the site URL
-  through `convexAuth` (private runtime key, then public, then env) rather than reading one
+  through `convexBetterAuthNuxt` (private runtime key, then public, then env) rather than reading one
   key — a build without the URL, configured at start-up through
   `NUXT_PUBLIC_CONVEX_SITE_URL`, reaches only the public key. It also refuses a request whose
   URL-normalised path differs from the routed one: Nitro routes the raw path, so

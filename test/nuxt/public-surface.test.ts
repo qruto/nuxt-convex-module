@@ -60,7 +60,9 @@ const ENTRY: Record<string, Entry> = {
     values: [
       'AuthLoading', 'AuthRefreshing', 'Authenticated', 'Unauthenticated', 'ConvexImage',
       'ConvexAuthStateKey', 'ConvexClientKey', 'ConvexVueClient',
-      'createConvexAuthState', 'createScopedConvexAuthState', 'provideConvexAuth', 'useConvexAuth',
+      'createConvexAuthState', 'createScopedConvexAuthState', 'provideConvexWithAuth', 'useConvexAuth',
+      // Deprecated names, kept for one minor release.
+      'provideConvexAuth',
       'insertAtBottomIfLoaded', 'insertAtPosition', 'insertAtTop', 'optimisticallyUpdateValueInPaginatedQuery',
       'resetPaginationId',
       'useConvex', 'useConvexConnectionState', 'usePreloadedQuery', 'useSubscription',
@@ -73,7 +75,7 @@ const ENTRY: Record<string, Entry> = {
       'useConvexStorageUrl', 'useConvexUpload', 'useConvexUploadQueue',
     ],
     types: [
-      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexAuthProviderOptions',
+      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexAuthProviderOptions', 'ConvexProviderWithAuthOptions',
       'ConvexAuthState', 'ConvexLogger', 'ConvexVueClientOptions', 'EnqueueData', 'EnqueueInput', 'FunctionArgs', 'FunctionReference',
       'FunctionReference_future', 'FunctionReturnType', 'GenerateUploadUrl', 'GetStorageUrl', 'IConvexVueClient', 'MutationOptions',
       'OptimisticUpdate', 'OptionalRestArgs', 'OptionalRestArgsOrSkip', 'PaginatedQueryArgs', 'PaginatedQueryItem',
@@ -117,7 +119,10 @@ const ENTRY: Record<string, Entry> = {
   './better-auth/server': {
     source: 'src/runtime/better-auth/nuxt/server.ts',
     values: ['convexAuth', 'convexBetterAuthNuxt'],
-    types: ['ConvexAuthEvent', 'ConvexAuthOptions', 'ConvexAuthService'],
+    types: [
+      'ConvexAuthEvent', 'ConvexAuthOptions', 'ConvexAuthService',
+      'ConvexBetterAuthEvent', 'ConvexBetterAuthOptions', 'ConvexBetterAuthService',
+    ],
   },
   './polar/client': {
     source: 'src/runtime/polar/vue/components.ts',
@@ -127,13 +132,13 @@ const ENTRY: Record<string, Entry> = {
   './polar/vue': { source: 'src/runtime/polar/vue/components.ts', aliasOf: './polar/client', values: [], types: [] },
   './clerk/client': {
     source: 'src/runtime/clerk/vue/index.ts',
-    values: ['ConvexProviderWithClerk', 'provideConvexAuthFromClerk'],
+    values: ['ConvexProviderWithClerk', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],
     types: ['ConvexProviderWithClerkOptions', 'UseAuth'],
   },
   './clerk/vue': { source: 'src/runtime/clerk/vue/index.ts', aliasOf: './clerk/client', values: [], types: [] },
   './auth0/client': {
     source: 'src/runtime/auth0/vue/index.ts',
-    values: ['ConvexProviderWithAuth0', 'provideConvexAuthFromAuth0'],
+    values: ['ConvexProviderWithAuth0', 'provideConvexAuthFromAuth0', 'provideConvexWithAuth0'],
     types: ['ConvexProviderWithAuth0Options'],
   },
   './auth0/vue': { source: 'src/runtime/auth0/vue/index.ts', aliasOf: './auth0/client', values: [], types: [] },
@@ -184,6 +189,18 @@ describe('runtime surface', () => {
     const [, entry] = canonical(subpath)
     const mod = await import(/* @vite-ignore */ at(entry.source)) as Record<string, unknown>
     expect(sorted(Object.keys(mod))).toEqual(sorted(entry.values))
+  })
+
+  // A deprecated name is the new one under its old name, so code on it keeps
+  // working unchanged until the minor release that removes it.
+  it.each([
+    ['./client', 'provideConvexAuth', 'provideConvexWithAuth'],
+    ['./clerk/client', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],
+    ['./auth0/client', 'provideConvexAuthFromAuth0', 'provideConvexWithAuth0'],
+    ['./better-auth/server', 'convexAuth', 'convexBetterAuthNuxt'],
+  ])('%s keeps %s as %s', async (subpath, old, current) => {
+    const mod = await import(/* @vite-ignore */ at(ENTRY[subpath]!.source)) as Record<string, unknown>
+    expect(mod[old]).toBe(mod[current])
   })
 })
 

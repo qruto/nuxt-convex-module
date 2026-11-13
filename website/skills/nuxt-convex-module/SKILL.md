@@ -81,7 +81,7 @@ The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and
 - Provider-agnostic state: `useConvexAuth()` → `isLoading`, `isAuthenticated`; components `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>`, `<AuthRefreshing>`.
 - Better Auth, Clerk and Auth0 switch on when their package is installed. Setup on both sides: [references/auth.md](references/auth.md).
 - In the app's own tests, call `resetBetterAuthState()` from `nuxt-convex-module/testing` between cases that sign in; never import the module's files by path.
-- During SSR the auth state reads as loading. Server-render signed-in data through the request instead: `convexAuth(event)` on the server (Better Auth).
+- During SSR the auth state reads as loading. Server-render signed-in data through the request instead: `convexBetterAuthNuxt(event)` on the server (Better Auth).
 
 ## Billing
 

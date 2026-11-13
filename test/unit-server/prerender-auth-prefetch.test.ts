@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from 'vitest'
 // round-trip per page — and one "Failed to prefetch" warning per page when the
 // site URL is unset. Under `import.meta.prerender` the plugin must not call it.
 
-const convexAuth = vi.fn()
-vi.mock('../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
+const convexBetterAuthNuxt = vi.fn()
+vi.mock('../../src/runtime/better-auth/nuxt/server', () => ({ convexBetterAuthNuxt }))
 
 const state = { value: null as string | null }
 vi.mock('#app', () => ({
@@ -25,7 +25,7 @@ describe('better-auth server plugin while prerendering', () => {
     const provide = vi.fn()
     await setup({ vueApp: { provide }, hook: vi.fn() })
     expect(provide).toHaveBeenCalledTimes(3)
-    expect(convexAuth).not.toHaveBeenCalled()
+    expect(convexBetterAuthNuxt).not.toHaveBeenCalled()
     expect(state.value).toBeNull()
   })
 })

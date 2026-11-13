@@ -415,11 +415,11 @@ A `Promise` fulfilled when the connection has been completely closed.
 
 ## Interfaces
 
-### ConvexAuthProviderOptions
+### ConvexProviderWithAuthOptions
 
 Defined in: [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L75)
 
-Options for [provideConvexAuth](#provideconvexauth) — the Vue translation of the props of
+Options for [provideConvexWithAuth](#provideconvexwithauth) — the Vue translation of the props of
 upstream's `ConvexProviderWithAuth` component.
 
 #### Properties
@@ -1676,6 +1676,22 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 
 ***
 
+### ~~ConvexAuthProviderOptions~~
+
+```ts
+type ConvexAuthProviderOptions = ConvexProviderWithAuthOptions;
+```
+
+Defined in: [src/runtime/vue/auth/index.ts:188](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L188)
+
+The old name of [ConvexProviderWithAuthOptions](#convexproviderwithauthoptions).
+
+#### Deprecated
+
+Use `ConvexProviderWithAuthOptions`. Removed in the next minor release.
+
+***
+
 ### VueMutationOptions
 
 ```ts
@@ -1908,7 +1924,7 @@ and passed to [usePreloadedQuery](#usepreloadedquery).
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="__type-10"></a> `__type` | `Query` | [src/runtime/vue/hydration.ts:15](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L15) |
+| <a id="__type-11"></a> `__type` | `Query` | [src/runtime/vue/hydration.ts:15](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L15) |
 | <a id="_name"></a> `_name` | `string` | [src/runtime/vue/hydration.ts:16](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L16) |
 | <a id="_argsjson"></a> `_argsJSON` | `string` | [src/runtime/vue/hydration.ts:17](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L17) |
 | <a id="_valuejson"></a> `_valueJSON` | `string` | [src/runtime/vue/hydration.ts:18](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/hydration.ts#L18) |
@@ -2077,6 +2093,60 @@ const ConvexAuthStateKey: InjectionKey<ConvexAuthState>;
 ```
 
 Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L42)
+
+***
+
+### ~~provideConvexAuth~~
+
+```ts
+const provideConvexAuth: (options) => ConvexAuthState = provideConvexWithAuth;
+```
+
+Defined in: [src/runtime/vue/auth/index.ts:181](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L181)
+
+The old name of [provideConvexWithAuth](#provideconvexwithauth).
+
+A replacement for the plain Convex client provide (upstream's
+`ConvexProvider`) which additionally provides [ConvexAuthState](#convexauthstate) to
+descendants of the calling component.
+
+Use this to integrate any auth provider with Convex. The `useAuth` option
+should be a Vue composable that returns the provider's authentication state
+and a function to fetch a JWT access token.
+
+If the returned `fetchAccessToken` ref identity (or the optional
+`authVersion` value) updates then auth state
+will transition to loading and the `fetchAccessToken()` function called again.
+
+See [Custom Auth Integration](https://docs.convex.dev/auth/advanced/custom-auth) for more information.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options` | [`ConvexProviderWithAuthOptions`](#convexproviderwithauthoptions) | Auth integration options including the Convex client and an `useAuth` factory that returns loading state and a token fetcher. |
+
+#### Returns
+
+[`ConvexAuthState`](#convexauthstate)
+
+The reactive auth state.
+
+#### Example
+
+```vue
+<script setup lang="ts">
+import { useAuth } from '~/composables/useMyAuthProvider'  // your auth provider
+
+const client = useConvex()
+const authState = provideConvexWithAuth({ client, useAuth })
+</script>
+```
+
+#### Deprecated
+
+Use `provideConvexWithAuth`, the port of `ConvexProviderWithAuth`.
+The next minor release gives this name to Convex Auth's `ConvexAuthProvider`.
 
 ***
 
@@ -2672,10 +2742,10 @@ The current [ConvexAuthState](#convexauthstate).
 
 ***
 
-### provideConvexAuth()
+### provideConvexWithAuth()
 
 ```ts
-function provideConvexAuth(options): ConvexAuthState;
+function provideConvexWithAuth(options): ConvexAuthState;
 ```
 
 Defined in: [src/runtime/vue/auth/index.ts:168](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L168)
@@ -2698,7 +2768,7 @@ See [Custom Auth Integration](https://docs.convex.dev/auth/advanced/custom-auth)
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`ConvexAuthProviderOptions`](#convexauthprovideroptions) | Auth integration options including the Convex client and an `useAuth` factory that returns loading state and a token fetcher. |
+| `options` | [`ConvexProviderWithAuthOptions`](#convexproviderwithauthoptions) | Auth integration options including the Convex client and an `useAuth` factory that returns loading state and a token fetcher. |
 
 #### Returns
 
@@ -2713,7 +2783,7 @@ The reactive auth state.
 import { useAuth } from '~/composables/useMyAuthProvider'  // your auth provider
 
 const client = useConvex()
-const authState = provideConvexAuth({ client, useAuth })
+const authState = provideConvexWithAuth({ client, useAuth })
 </script>
 ```
 
@@ -2725,7 +2795,7 @@ const authState = provideConvexAuth({ client, useAuth })
 function createConvexAuthState(options, scope?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:185](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L185)
+Defined in: [src/runtime/vue/auth/index.ts:201](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L201)
 
 Build reactive [ConvexAuthState](#convexauthstate) and wire watchers between the
 external auth provider and the Convex client, without calling `provide()` —
@@ -2741,7 +2811,7 @@ When `scope` is provided, all watchers are created inside that
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | [`ConvexAuthProviderOptions`](#convexauthprovideroptions) |
+| `options` | [`ConvexProviderWithAuthOptions`](#convexproviderwithauthoptions) |
 | `scope?` | `EffectScope` |
 
 #### Returns
@@ -2759,7 +2829,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:366](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L366)
+Defined in: [src/runtime/vue/auth/index.ts:382](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L382)
 
 Create a fresh `EffectScope` and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2768,7 +2838,7 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options` | [`ConvexAuthProviderOptions`](#convexauthprovideroptions) |
+| `options` | [`ConvexProviderWithAuthOptions`](#convexproviderwithauthoptions) |
 
 #### Returns
 
@@ -2781,8 +2851,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:368](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L368) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:368](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L368) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:384](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L384) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:384](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L384) |
 
 ***
 

@@ -32,7 +32,7 @@ function mockFunctionReference<Type extends 'query' | 'mutation' | 'action'>(
   return { _name: name } as unknown as NamedFunctionReference<Type>
 }
 
-// The two events convexAuth reads: `nuxt/server`'s, whose `req` is a web
+// The two events convexBetterAuthNuxt reads: `nuxt/server`'s, whose `req` is a web
 // Request, and the h3 one Nuxt 4 routes and `useRequestEvent()` pass, which
 // carries `headers`. A test that sets `mockRequest` gets the first.
 function event() {
@@ -66,12 +66,12 @@ describe('auth/nuxt/server', () => {
   })
 
   it('caches the token per request and forwards it to Convex query helpers', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
     mockFetchQuery.mockResolvedValue([{ text: 'Buy milk' }])
 
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     })
 
@@ -90,48 +90,48 @@ describe('auth/nuxt/server', () => {
     expect(forwardedHeaders.has('transfer-encoding')).toBe(false)
   })
 
-  it('shares the token across convexAuth instances for the same request', async () => {
+  it('shares the token across convexBetterAuthNuxt instances for the same request', async () => {
     // The cache lives on event.context (the Nitro analog of upstream wrapping
     // getToken in React.cache): the server plugin, the auth middleware, and a
-    // user route each call convexAuth(event) but must share one fetch.
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    // user route each call convexBetterAuthNuxt(event) but must share one fetch.
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     mockGetToken.mockResolvedValue({ token: 'jwt-shared', isFresh: false })
 
     const shared = event()
     const opts = { convexSiteUrl: 'https://example.convex.site' }
 
-    await expect(convexAuth(shared, opts).getToken()).resolves.toBe('jwt-shared')
-    await expect(convexAuth(shared, opts).isAuthenticated()).resolves.toBe(true)
+    await expect(convexBetterAuthNuxt(shared, opts).getToken()).resolves.toBe('jwt-shared')
+    await expect(convexBetterAuthNuxt(shared, opts).isAuthenticated()).resolves.toBe(true)
 
     expect(mockGetToken).toHaveBeenCalledTimes(1)
 
     // A different request (fresh event.context) fetches its own token.
-    await expect(convexAuth(event(), opts).getToken()).resolves.toBe('jwt-shared')
+    await expect(convexBetterAuthNuxt(event(), opts).getToken()).resolves.toBe('jwt-shared')
     expect(mockGetToken).toHaveBeenCalledTimes(2)
   })
 
   it('reads the cookies from either kind of event', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
     const opts = { convexSiteUrl: 'https://example.convex.site' }
 
-    await convexAuth(event(), opts).getToken()
+    await convexBetterAuthNuxt(event(), opts).getToken()
     mockRequest.mockReturnValue(new Request('https://app.example.com/', { headers: { cookie: 'session=web' } }))
-    await convexAuth(event(), opts).getToken()
+    await convexBetterAuthNuxt(event(), opts).getToken()
 
     const cookies = mockGetToken.mock.calls.map(([, headers]) => (headers as Headers).get('cookie'))
     expect(cookies).toEqual(['session=abc', 'session=web'])
   })
 
   it('needs the nuxt/server event to proxy a request', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
-    expect(() => convexAuth(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()).toThrow(/nuxt\/server/)
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    expect(() => convexBetterAuthNuxt(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()).toThrow(/nuxt\/server/)
   })
 
   // PARITY: F-01 — upstream's `callWithToken` rethrows auth errors and retries
   // every other error. A future upstream sync must not bring that back.
   it('refreshes the token once when jwt cache marks the first error as auth-related', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
     const authError = new Error('expired')
 
@@ -142,7 +142,7 @@ describe('auth/nuxt/server', () => {
       .mockRejectedValueOnce(authError)
       .mockResolvedValueOnce([{ text: 'Fresh result' }])
 
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
       jwtCache: {
         enabled: true,
@@ -162,7 +162,7 @@ describe('auth/nuxt/server', () => {
   // `[CONVEX A(auth:sendWelcome)]` prefix must not make any failure of a
   // function under `auth/` look like an auth error, and run it twice.
   it('checks for an auth error on the message without the function name', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const { withFunctionName } = await import('../../../../src/runtime/nuxt/function-name')
     const { makeFunctionReference } = await import('convex/server')
     const actionRef = makeFunctionReference<'action'>('auth:sendWelcome')
@@ -172,7 +172,7 @@ describe('auth/nuxt/server', () => {
     mockGetToken.mockResolvedValue({ token: 'stale-token', isFresh: false })
     mockFetchAction.mockRejectedValueOnce(failure)
     const seen: string[] = []
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
       jwtCache: {
         enabled: true,
@@ -193,7 +193,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('passes the auth token through preload, mutation, and action helpers', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
     const mutationRef = mockFunctionReference<'mutation'>('api.tasks.create')
     const actionRef = mockFunctionReference<'action'>('api.tasks.process')
@@ -202,7 +202,7 @@ describe('auth/nuxt/server', () => {
     mockFetchMutation.mockResolvedValue({ _id: 'task-1' })
     mockFetchAction.mockResolvedValue({ ok: true })
 
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     })
 
@@ -216,7 +216,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('provides a Nuxt auth route handler adapted from the Next.js helper shape', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/session?foo=bar', {
       method: 'POST',
@@ -226,7 +226,7 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    const response = await convexAuth(event(), {
+    const response = await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -245,14 +245,14 @@ describe('auth/nuxt/server', () => {
   })
 
   it('drops x-forwarded-* headers the request arrived with', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/session', {
       headers: { 'x-forwarded-host': 'evil.example', 'x-forwarded-proto': 'http' },
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    await convexAuth(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()
+    await convexBetterAuthNuxt(event(), { convexSiteUrl: 'https://example.convex.site' }).handler()
 
     const [, proxiedInit] = mockFetch.mock.calls[0] as [string, RequestInit]
     const proxiedHeaders = proxiedInit.headers as Headers
@@ -262,7 +262,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('strips hop-by-hop headers from the forwarded request', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     const inboundHeaders = new Headers({ 'cookie': 'session=abc', 'content-type': 'application/json' })
     inboundHeaders.set('transfer-encoding', 'chunked')
@@ -275,7 +275,7 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    await convexAuth(event(), {
+    await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -291,7 +291,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('buffers the POST body and forwards it to the proxied request', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     const body = JSON.stringify({ email: 'test@example.com' })
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/sign-in/email', {
@@ -301,7 +301,7 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    await convexAuth(event(), {
+    await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -311,7 +311,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('does not forward a body for GET requests', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/get-session', {
       method: 'GET',
@@ -319,7 +319,7 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    await convexAuth(event(), {
+    await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -328,7 +328,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('does not forward a body for an empty POST', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     // An empty string still produces a body stream — it buffers to zero bytes.
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/sign-out', {
@@ -338,7 +338,7 @@ describe('auth/nuxt/server', () => {
     }))
     mockFetch.mockResolvedValue(new Response('ok'))
 
-    await convexAuth(event(), {
+    await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -349,7 +349,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('strips stale content-encoding/length from the proxied response', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/get-session', {
       headers: { cookie: 'session=abc' },
@@ -364,7 +364,7 @@ describe('auth/nuxt/server', () => {
       },
     }))
 
-    const response = await convexAuth(event(), {
+    const response = await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -375,7 +375,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('drops the upstream connection\'s hop-by-hop headers from the proxied response, and keeps the rest', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     mockRequest.mockReturnValue(new Request('https://app.example.com/api/auth/convex/token', {
       headers: { cookie: 'session=abc' },
@@ -398,7 +398,7 @@ describe('auth/nuxt/server', () => {
     upstream.append('set-cookie', 'b=2; Path=/')
     mockFetch.mockResolvedValue(new Response('{"token":null}', { status: 401, headers: upstream }))
 
-    const response = await convexAuth(event(), {
+    const response = await convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     }).handler()
 
@@ -411,10 +411,10 @@ describe('auth/nuxt/server', () => {
   })
 
   it('throws when the Convex site URL is not set anywhere', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
     // beforeEach cleared the option, runtime config, and env sources.
-    expect(() => convexAuth(event())).toThrow(
+    expect(() => convexBetterAuthNuxt(event())).toThrow(
       'NUXT_PUBLIC_CONVEX_SITE_URL is not set.\n'
       + 'This is automatically set in the Convex deployment, but must be set in the Nuxt environment.\n'
       + 'For local development, this can be set in the .env file, '
@@ -423,9 +423,9 @@ describe('auth/nuxt/server', () => {
   })
 
   it('rejects a .convex.cloud deployment URL where the .convex.site URL is expected', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
 
-    expect(() => convexAuth(event(), {
+    expect(() => convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://x.convex.cloud',
     })).toThrow(
       'NUXT_PUBLIC_CONVEX_SITE_URL should be set to your Convex Site URL, which ends in .convex.site.\n'
@@ -434,14 +434,14 @@ describe('auth/nuxt/server', () => {
   })
 
   it('rethrows fetch errors as-is when the jwt cache is disabled', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
     const failure = new Error('boom')
 
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
     mockFetchQuery.mockRejectedValue(failure)
 
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
     })
 
@@ -456,14 +456,14 @@ describe('auth/nuxt/server', () => {
   // retries genuine auth errors (see the intentional-divergence comment in
   // server.ts) — everything else is rethrown without a token refresh.
   it('rethrows non-auth errors without refreshing even when the jwt cache is enabled', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     const queryRef = mockFunctionReference<'query'>('api.tasks.list')
     const failure = new Error('validation failed')
 
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: false })
     mockFetchQuery.mockRejectedValue(failure)
 
-    const auth = convexAuth(event(), {
+    const auth = convexBetterAuthNuxt(event(), {
       convexSiteUrl: 'https://example.convex.site',
       jwtCache: {
         enabled: true,
@@ -478,7 +478,7 @@ describe('auth/nuxt/server', () => {
   })
 
   it('uses Nuxt runtime config for the Convex site URL when no override or env is set', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     setNuxtRuntimeConfigForTests({
       public: {
         convex: {
@@ -488,42 +488,42 @@ describe('auth/nuxt/server', () => {
     })
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
 
-    await convexAuth(event()).getToken()
+    await convexBetterAuthNuxt(event()).getToken()
 
     expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://public-runtime.convex.site')
   })
 
   it('reads the site URL from the request\'s own config', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: 'https://public-runtime.convex.site' } } })
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
     const request = event()
 
-    await convexAuth(request).getToken()
+    await convexBetterAuthNuxt(request).getToken()
 
     expect(runtimeConfigEvents).toContain(request)
   })
 
   it('falls back to NUXT_PUBLIC_CONVEX_SITE_URL when the runtime config holds an empty site URL', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     // A value never set reaches the runtime config as ''.
     setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: '' } } })
     process.env.NUXT_PUBLIC_CONVEX_SITE_URL = 'https://from-env.convex.site'
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
 
-    await convexAuth(event()).getToken()
+    await convexBetterAuthNuxt(event()).getToken()
 
     expect(mockGetToken.mock.calls[0]?.[0]).toBe('https://from-env.convex.site')
   })
 
   it('fetches the token under the app\'s auth route', async () => {
-    const { convexAuth } = await import('../../../../src/runtime/better-auth/nuxt/server')
+    const { convexBetterAuthNuxt } = await import('../../../../src/runtime/better-auth/nuxt/server')
     setNuxtRuntimeConfigForTests({ public: { convex: { siteUrl: 'https://public-runtime.convex.site', authRoute: '/auth' } } })
     mockGetToken.mockResolvedValue({ token: 'jwt-1', isFresh: true })
 
-    await convexAuth(event()).getToken()
+    await convexBetterAuthNuxt(event()).getToken()
     // An explicit `basePath` still wins.
-    await convexAuth(event(), { basePath: '/custom' }).getToken()
+    await convexBetterAuthNuxt(event(), { basePath: '/custom' }).getToken()
 
     expect(mockGetToken.mock.calls[0]?.[2]).toMatchObject({ basePath: '/auth' })
     expect(mockGetToken.mock.calls[1]?.[2]).toMatchObject({ basePath: '/custom' })
