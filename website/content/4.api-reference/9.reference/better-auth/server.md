@@ -9,17 +9,17 @@ seo:
 
 Server-side Better Auth + Convex integration for Nuxt.
 
-Provides [convexAuth](#convexauth) for Nuxt server handlers: it takes the event
+Provides [convexBetterAuthNuxt](#convexbetterauthnuxt) for Nuxt server handlers: it takes the event
 every Nuxt server route, API handler and server middleware receives, and
 returns a request-scoped, authenticated Convex client.
 
 ## Interfaces
 
-### ConvexAuthService
+### ConvexBetterAuthService
 
 Defined in: [src/runtime/better-auth/nuxt/server.ts:212](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L212)
 
-Per-request Better Auth + Convex helper returned by [convexAuth](#convexauth).
+Per-request Better Auth + Convex helper returned by [convexBetterAuthNuxt](#convexbetterauthnuxt).
 
 #### Properties
 
@@ -35,10 +35,10 @@ Per-request Better Auth + Convex helper returned by [convexAuth](#convexauth).
 
 ## Type Aliases
 
-### ConvexAuthEvent
+### ConvexBetterAuthEvent
 
 ```ts
-type ConvexAuthEvent = 
+type ConvexBetterAuthEvent = 
   | Pick<RequestEvent, "req" | "context">
   | {
   headers: Headers;
@@ -48,17 +48,17 @@ type ConvexAuthEvent =
 
 Defined in: [src/runtime/better-auth/nuxt/server.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L148)
 
-The server event [convexAuth](#convexauth) reads: the one `defineEventHandler` from
+The server event [convexBetterAuthNuxt](#convexbetterauthnuxt) reads: the one `defineEventHandler` from
 `nuxt/server` passes, whose `req` is a web `Request`, or the h3 event a
 Nuxt 4 route defined with the auto-imported `defineEventHandler`, and
 `useRequestEvent()` during SSR, still pass, which carries `headers`.
 
 ***
 
-### ConvexAuthOptions
+### ConvexBetterAuthOptions
 
 ```ts
-type ConvexAuthOptions = GetTokenOptions & {
+type ConvexBetterAuthOptions = GetTokenOptions & {
   convexUrl?: string;
   convexSiteUrl?: string;
 };
@@ -66,7 +66,7 @@ type ConvexAuthOptions = GetTokenOptions & {
 
 Defined in: [src/runtime/better-auth/nuxt/server.ts:192](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L192)
 
-Options for [convexAuth](#convexauth).
+Options for [convexBetterAuthNuxt](#convexbetterauthnuxt).
 
 Extends GetTokenOptions from `@convex-dev/better-auth/utils` with
 an optional override for the Convex site URL.
@@ -78,29 +78,70 @@ an optional override for the Convex site URL.
 | `convexUrl?` | `string` | Accepted for drop-in compatibility with upstream `convexBetterAuthNextJs` option objects and ignored — upstream requires but never reads it either; the deployment URL comes from runtime config. | [src/runtime/better-auth/nuxt/server.ts:198](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L198) |
 | `convexSiteUrl?` | `string` | Override the Convex site URL. Defaults to `runtimeConfig.public.convex.siteUrl`, then the `NUXT_PUBLIC_CONVEX_SITE_URL` process variable. | [src/runtime/better-auth/nuxt/server.ts:204](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L204) |
 
-## Variables
+***
 
-### convexBetterAuthNuxt
+### ~~ConvexAuthEvent~~
 
 ```ts
-const convexBetterAuthNuxt: (event, opts?) => ConvexAuthService = convexAuth;
+type ConvexAuthEvent = ConvexBetterAuthEvent;
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:408](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L408)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:413](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L413)
 
-Upstream-named alias of [convexAuth](#convexauth) — the mechanical rename target
-for `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs` (framework
-suffix `NextJs` → `Nuxt`). Unlike upstream's module-level factory (which
-reads request state ambiently via `next/headers`), Nitro has no ambient
-per-request context, so the `event` is passed explicitly.
+#### Deprecated
+
+Use [ConvexBetterAuthEvent](#convexbetterauthevent). Removed in the next minor release.
+
+***
+
+### ~~ConvexAuthOptions~~
+
+```ts
+type ConvexAuthOptions = ConvexBetterAuthOptions;
+```
+
+Defined in: [src/runtime/better-auth/nuxt/server.ts:415](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L415)
+
+#### Deprecated
+
+Use [ConvexBetterAuthOptions](#convexbetterauthoptions). Removed in the next minor release.
+
+***
+
+### ~~ConvexAuthService~~
+
+```ts
+type ConvexAuthService = ConvexBetterAuthService;
+```
+
+Defined in: [src/runtime/better-auth/nuxt/server.ts:417](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L417)
+
+#### Deprecated
+
+Use [ConvexBetterAuthService](#convexbetterauthservice). Removed in the next minor release.
+
+## Variables
+
+### ~~convexAuth~~
+
+```ts
+const convexAuth: (event, opts?) => ConvexBetterAuthService = convexBetterAuthNuxt;
+```
+
+Defined in: [src/runtime/better-auth/nuxt/server.ts:410](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L410)
+
+The old name of [convexBetterAuthNuxt](#convexbetterauthnuxt).
 
 Create a per-request Better Auth + Convex helper for Nuxt server code.
 
-Adapts the Better Auth + Convex server helper pattern to Nuxt server events.
+The port of `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs`, with
+the framework suffix `NextJs` swapped for `Nuxt`. Upstream reads the request
+from `next/headers`; Nitro has no ambient per-request context, so the
+`event` is passed explicitly.
 
 Call once at the top of a server route / event handler and destructure the
 helpers you need. The auth token is fetched at most once per request — the
-cache lives on `event.context`, so every `convexAuth(event)` instance for
+cache lives on `event.context`, so every `convexBetterAuthNuxt(event)` instance for
 the same request (server plugin, middleware, your route) shares one Better
 Auth round-trip. Mirrors upstream's `React.cache`-wrapped `getToken`.
 
@@ -108,19 +149,19 @@ Auth round-trip. Mirrors upstream's `React.cache`-wrapped `getToken`.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `event` | [`ConvexAuthEvent`](#convexauthevent) | The event from a Nuxt server route or middleware, or `useRequestEvent()` during SSR. See [ConvexAuthEvent](#convexauthevent). |
-| `opts?` | [`ConvexAuthOptions`](#convexauthoptions) | Optional [ConvexAuthOptions](#convexauthoptions). |
+| `event` | [`ConvexBetterAuthEvent`](#convexbetterauthevent) | The event from a Nuxt server route or middleware, or `useRequestEvent()` during SSR. See [ConvexBetterAuthEvent](#convexbetterauthevent). |
+| `opts?` | [`ConvexBetterAuthOptions`](#convexbetterauthoptions) | Optional [ConvexBetterAuthOptions](#convexbetterauthoptions). |
 
 #### Returns
 
-[`ConvexAuthService`](#convexauthservice)
+[`ConvexBetterAuthService`](#convexbetterauthservice)
 
 #### Examples
 
 ```ts
 // server/api/profile.get.ts
 export default defineEventHandler(async (event) => {
-  const { fetchAuthQuery, isAuthenticated } = convexAuth(event)
+  const { fetchAuthQuery, isAuthenticated } = convexBetterAuthNuxt(event)
   if (!await isAuthenticated()) {
     throw createError({ statusCode: 401 })
   }
@@ -132,27 +173,36 @@ export default defineEventHandler(async (event) => {
 // pages/profile.vue — preloading data for SSR
 const { data } = await useAsyncData(async () => {
   const event = useRequestEvent()!
-  return convexAuth(event).preloadAuthQuery(api.users.current)
+  return convexBetterAuthNuxt(event).preloadAuthQuery(api.users.current)
 })
 ```
+
+#### Deprecated
+
+Use `convexBetterAuthNuxt`. Names with `ConvexAuth` and no
+`Better` now belong to Convex Auth (`@convex-dev/auth`). Removed in the
+next minor release.
 
 ## Functions
 
-### convexAuth()
+### convexBetterAuthNuxt()
 
 ```ts
-function convexAuth(event, opts?): ConvexAuthService;
+function convexBetterAuthNuxt(event, opts?): ConvexBetterAuthService;
 ```
 
-Defined in: [src/runtime/better-auth/nuxt/server.ts:278](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L278)
+Defined in: [src/runtime/better-auth/nuxt/server.ts:281](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/nuxt/server.ts#L281)
 
 Create a per-request Better Auth + Convex helper for Nuxt server code.
 
-Adapts the Better Auth + Convex server helper pattern to Nuxt server events.
+The port of `@convex-dev/better-auth/nextjs`'s `convexBetterAuthNextJs`, with
+the framework suffix `NextJs` swapped for `Nuxt`. Upstream reads the request
+from `next/headers`; Nitro has no ambient per-request context, so the
+`event` is passed explicitly.
 
 Call once at the top of a server route / event handler and destructure the
 helpers you need. The auth token is fetched at most once per request — the
-cache lives on `event.context`, so every `convexAuth(event)` instance for
+cache lives on `event.context`, so every `convexBetterAuthNuxt(event)` instance for
 the same request (server plugin, middleware, your route) shares one Better
 Auth round-trip. Mirrors upstream's `React.cache`-wrapped `getToken`.
 
@@ -160,19 +210,19 @@ Auth round-trip. Mirrors upstream's `React.cache`-wrapped `getToken`.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `event` | [`ConvexAuthEvent`](#convexauthevent) | The event from a Nuxt server route or middleware, or `useRequestEvent()` during SSR. See [ConvexAuthEvent](#convexauthevent). |
-| `opts?` | [`ConvexAuthOptions`](#convexauthoptions) | Optional [ConvexAuthOptions](#convexauthoptions). |
+| `event` | [`ConvexBetterAuthEvent`](#convexbetterauthevent) | The event from a Nuxt server route or middleware, or `useRequestEvent()` during SSR. See [ConvexBetterAuthEvent](#convexbetterauthevent). |
+| `opts?` | [`ConvexBetterAuthOptions`](#convexbetterauthoptions) | Optional [ConvexBetterAuthOptions](#convexbetterauthoptions). |
 
 #### Returns
 
-[`ConvexAuthService`](#convexauthservice)
+[`ConvexBetterAuthService`](#convexbetterauthservice)
 
 #### Examples
 
 ```ts
 // server/api/profile.get.ts
 export default defineEventHandler(async (event) => {
-  const { fetchAuthQuery, isAuthenticated } = convexAuth(event)
+  const { fetchAuthQuery, isAuthenticated } = convexBetterAuthNuxt(event)
   if (!await isAuthenticated()) {
     throw createError({ statusCode: 401 })
   }
@@ -184,6 +234,6 @@ export default defineEventHandler(async (event) => {
 // pages/profile.vue — preloading data for SSR
 const { data } = await useAsyncData(async () => {
   const event = useRequestEvent()!
-  return convexAuth(event).preloadAuthQuery(api.users.current)
+  return convexBetterAuthNuxt(event).preloadAuthQuery(api.users.current)
 })
 ```

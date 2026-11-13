@@ -247,7 +247,7 @@ describe('with autoImports: \'prefixed\'', () => {
     expect(r.components.map(c => c.pascalName)).toEqual(expect.arrayContaining(['ConvexAuthenticated', 'ConvexAuthBoundary', 'ConvexImage']))
     expect(r.components.map(c => c.pascalName).sort()).toEqual(prefixed(names(APP_COMPONENTS, ['core', 'betterAuth'])))
     expect([...r.serverImports].sort()).toEqual(prefixed(names(SERVER_IMPORTS, ['core', 'betterAuth'])))
-    expect(r.serverImports).toEqual(expect.arrayContaining(['fetchConvexQuery', 'preloadedConvexQueryResult', 'convexAuth']))
+    expect(r.serverImports).toEqual(expect.arrayContaining(['fetchConvexQuery', 'preloadedConvexQueryResult', 'convexBetterAuthNuxt']))
   })
 
   it('leaves plugins, the proxy and the middleware in place', () => {

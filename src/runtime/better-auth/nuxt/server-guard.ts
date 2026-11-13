@@ -6,7 +6,7 @@
 // and its `./server` import (jose, ConvexHttpClient) leave the client
 // bundle once `import.meta.server` folds the only call site away.
 import { navigateTo, useNuxtApp, useRequestEvent } from '#app'
-import { convexAuth } from './server'
+import { convexBetterAuthNuxt } from './server'
 
 interface GuardedRoute {
   path: string
@@ -28,7 +28,7 @@ export async function serverGuard(to: GuardedRoute, loginPath: string) {
   // No request event means no session to check, so the answer is "not signed
   // in" — never "let it through". A server render always has one; this is
   // the guard failing closed, not a path a page takes.
-  const authed = event ? await convexAuth(event).isAuthenticated() : false
+  const authed = event ? await convexBetterAuthNuxt(event).isAuthenticated() : false
   if (!authed && to.path !== loginPath) {
     return nuxtApp.runWithContext(() => navigateTo(loginTarget(to, loginPath)))
   }

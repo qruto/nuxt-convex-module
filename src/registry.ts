@@ -98,6 +98,8 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'useStorageUrl', from: composable('use-storage-url') },
     { name: 'useConvexStorageUrl', from: composable('use-storage-url') },
     { name: 'useConvexAuth', from: vue('auth/index') },
+    { name: 'provideConvexWithAuth', from: vue('auth/index') },
+    // Deprecated name of `provideConvexWithAuth`; Convex Auth takes it over.
     { name: 'provideConvexAuth', from: vue('auth/index') },
     { name: 'usePreloadedQuery', from: vue('hydration') },
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
@@ -124,8 +126,15 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'usePreloadedAuthQuery', from: 'runtime/better-auth/vue/hydration' },
     { name: 'resolveAuthRedirect', from: 'runtime/better-auth/vue/redirect' },
   ],
-  clerk: [{ name: 'provideConvexAuthFromClerk', from: 'runtime/clerk/vue/index' }],
-  auth0: [{ name: 'provideConvexAuthFromAuth0', from: 'runtime/auth0/vue/index' }],
+  // The `provideConvexAuthFrom*` names are deprecated, kept for one minor release.
+  clerk: [
+    { name: 'provideConvexWithClerk', from: 'runtime/clerk/vue/index' },
+    { name: 'provideConvexAuthFromClerk', from: 'runtime/clerk/vue/index' },
+  ],
+  auth0: [
+    { name: 'provideConvexWithAuth0', from: 'runtime/auth0/vue/index' },
+    { name: 'provideConvexAuthFromAuth0', from: 'runtime/auth0/vue/index' },
+  ],
   polar: [],
 }
 
@@ -147,7 +156,8 @@ export const APP_COMPONENTS: Record<Integration, Registration[]> = {
 export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   core: ['fetchQuery', 'fetchMutation', 'fetchAction', 'preloadQuery', 'preloadedQueryResult']
     .map(name => ({ name, from: 'runtime/nuxt/index' })),
-  betterAuth: ['convexAuth', 'convexBetterAuthNuxt']
+  // `convexAuth` is the deprecated name, kept for one minor release.
+  betterAuth: ['convexBetterAuthNuxt', 'convexAuth']
     .map(name => ({ name, from: 'runtime/better-auth/nuxt/server' })),
   clerk: [],
   auth0: [],
