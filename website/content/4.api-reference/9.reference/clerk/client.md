@@ -10,10 +10,10 @@ seo:
 Vue login component for use with Clerk.
 
 A Vue/Nuxt port of `convex/react-clerk`. The provider is exposed both as the
-[provideConvexAuthFromClerk](#provideconvexauthfromclerk) composable and the thin
+[provideConvexWithClerk](#provideconvexwithclerk) composable and the thin
 [ConvexProviderWithClerk](#convexproviderwithclerk) component wrapper; both adapt `@clerk/vue`'s
 `useAuth()` into the generic Convex auth provider
-([provideConvexAuth](/api-reference/reference/client#provideconvexauth)) — no new auth core, just the SDK shim.
+([provideConvexWithAuth](/api-reference/reference/client#provideconvexwithauth)) — no new auth core, just the SDK shim.
 
 ## Interfaces
 
@@ -21,7 +21,7 @@ A Vue/Nuxt port of `convex/react-clerk`. The provider is exposed both as the
 
 Defined in: [src/runtime/clerk/vue/index.ts:45](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L45)
 
-Options for [provideConvexAuthFromClerk](#provideconvexauthfromclerk) / `<ConvexProviderWithClerk>`.
+Options for [provideConvexWithClerk](#provideconvexwithclerk) / `<ConvexProviderWithClerk>`.
 
 #### Properties
 
@@ -74,6 +74,54 @@ Defined in: [src/runtime/clerk/vue/index.ts:25](https://github.com/qruto/nuxt-co
 
 ## Variables
 
+### ~~provideConvexAuthFromClerk~~
+
+```ts
+const provideConvexAuthFromClerk: (options) => ConvexAuthState = provideConvexWithClerk;
+```
+
+Defined in: [src/runtime/clerk/vue/index.ts:92](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L92)
+
+The old name of [provideConvexWithClerk](#provideconvexwithclerk).
+
+A composable which provides a [ConvexVueClient](/api-reference/reference/client#convexvueclient)
+authenticated with Clerk, exposing the reactive auth state to descendants
+via [useConvexAuth](/api-reference/reference/client#useconvexauth) — the Vue translation of wrapping the app in
+`convex/react-clerk`'s `<ConvexProviderWithClerk>`.
+
+Call it in a top-level component's `setup`. The app must be wrapped by a
+configured `clerkPlugin`, from `@clerk/vue`, `@clerk/nuxt` or
+another Vue-based Clerk client library and have the corresponding
+`useAuth` composable passed in (it defaults to `useAuth` from `@clerk/vue`).
+
+See [Convex Clerk](https://docs.convex.dev/auth/clerk) on how to set up
+Convex with Clerk.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`ConvexProviderWithClerkOptions`](#convexproviderwithclerkoptions) |
+
+#### Returns
+
+[`ConvexAuthState`](/api-reference/reference/client#convexauthstate)
+
+#### Example
+
+```vue
+<script setup lang="ts">
+import { provideConvexWithClerk } from 'nuxt-convex-module/clerk/client'
+provideConvexWithClerk()
+</script>
+```
+
+#### Deprecated
+
+Use `provideConvexWithClerk`. Removed in the next minor release.
+
+***
+
 ### ConvexProviderWithClerk
 
 ```ts
@@ -114,20 +162,20 @@ const ConvexProviderWithClerk: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/clerk/vue/index.ts:95](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L95)
+Defined in: [src/runtime/clerk/vue/index.ts:103](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L103)
 
 A wrapper Vue component which provides a [ConvexVueClient](/api-reference/reference/client#convexvueclient)
 authenticated with Clerk — the component form of
-[provideConvexAuthFromClerk](#provideconvexauthfromclerk), kept as a drop-in parity port of
+[provideConvexWithClerk](#provideconvexwithclerk), kept as a drop-in parity port of
 `convex/react-clerk`'s `<ConvexProviderWithClerk>`. Renders its default
 slot once Convex auth is wired.
 
 ## Functions
 
-### provideConvexAuthFromClerk()
+### provideConvexWithClerk()
 
 ```ts
-function provideConvexAuthFromClerk(options?): ConvexAuthState;
+function provideConvexWithClerk(options?): ConvexAuthState;
 ```
 
 Defined in: [src/runtime/clerk/vue/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/clerk/vue/index.ts#L76)
@@ -159,7 +207,7 @@ Convex with Clerk.
 
 ```vue
 <script setup lang="ts">
-import { provideConvexAuthFromClerk } from 'nuxt-convex-module/clerk/client'
-provideConvexAuthFromClerk()
+import { provideConvexWithClerk } from 'nuxt-convex-module/clerk/client'
+provideConvexWithClerk()
 </script>
 ```

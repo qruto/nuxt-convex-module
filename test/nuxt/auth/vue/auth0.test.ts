@@ -29,7 +29,7 @@ vi.mock('@auth0/auth0-vue', async () => {
   }
 })
 
-const { provideConvexAuthFromAuth0, ConvexProviderWithAuth0 } = await import('../../../../src/runtime/auth0/vue/index')
+const { provideConvexWithAuth0, ConvexProviderWithAuth0 } = await import('../../../../src/runtime/auth0/vue/index')
 const { useConvexAuth } = await import('../../../../src/runtime/vue/auth/index')
 
 function makeClient() {
@@ -45,7 +45,7 @@ function makeClient() {
   return { client, confirmAuth: () => onAuthChange?.(true), fetchToken: () => fetchToken! }
 }
 
-describe('ConvexProviderWithAuth0 (provideConvexAuthFromAuth0)', () => {
+describe('ConvexProviderWithAuth0 (provideConvexWithAuth0)', () => {
   it('maps Auth0 state into Convex auth and fetches the id_token', async () => {
     const { client, confirmAuth, fetchToken } = makeClient()
 
@@ -57,7 +57,7 @@ describe('ConvexProviderWithAuth0 (provideConvexAuthFromAuth0)', () => {
     })
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromAuth0({ client })
+        provideConvexWithAuth0({ client })
         return () => h(App)
       },
     })
@@ -131,7 +131,7 @@ describe('ConvexProviderWithAuth0 (provideConvexAuthFromAuth0)', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromAuth0({ client })
+        provideConvexWithAuth0({ client })
         return () => h('div')
       },
     })

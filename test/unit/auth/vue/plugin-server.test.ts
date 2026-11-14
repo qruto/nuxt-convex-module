@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // is compile-time, and only that project compiles it truthy.
 
 const getToken = vi.fn(async (): Promise<string | null> => 'jwt')
-const convexAuth = vi.fn(() => ({ getToken }))
-vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexAuth }))
+const convexBetterAuthNuxt = vi.fn(() => ({ getToken }))
+vi.mock('../../../../src/runtime/better-auth/nuxt/server', () => ({ convexBetterAuthNuxt }))
 
 // The plugin runs on every server render, so it must not load the app's auth
 // client: one with browser-only top-level code would fail every page.
@@ -56,7 +56,7 @@ describe('better-auth server plugin on an ordinary SSR request', () => {
     const provide = vi.fn()
     await setup({ vueApp: { provide }, hook: vi.fn(), hooks })
     expect(provide).toHaveBeenCalledTimes(3)
-    expect(convexAuth).toHaveBeenCalledWith(event)
+    expect(convexBetterAuthNuxt).toHaveBeenCalledWith(event)
     expect(state.value).toBe('jwt')
     expect(cacheControl.value).toBe('private, no-store')
   })

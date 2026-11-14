@@ -9,11 +9,11 @@ import type { ConvexVueClient } from '../../../../src/runtime/vue/client'
 // real SDK isn't initialized. Each test passes its own `useAuth` override.
 vi.mock('@clerk/vue', () => ({ useAuth: vi.fn() }))
 
-const { provideConvexAuthFromClerk, ConvexProviderWithClerk } = await import('../../../../src/runtime/clerk/vue/index')
+const { provideConvexWithClerk, ConvexProviderWithClerk } = await import('../../../../src/runtime/clerk/vue/index')
 const { useConvexAuth } = await import('../../../../src/runtime/vue/auth/index')
 
 type ClerkUseAuthOverride = NonNullable<
-  Parameters<typeof provideConvexAuthFromClerk>[0]
+  Parameters<typeof provideConvexWithClerk>[0]
 >['useAuth']
 
 function makeClient() {
@@ -33,7 +33,7 @@ function makeClient() {
   }
 }
 
-describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
+describe('ConvexProviderWithClerk (provideConvexWithClerk)', () => {
   it('maps Clerk loading/signed-in state into Convex auth', async () => {
     const isLoaded = ref(false)
     const isSignedIn = ref<boolean | undefined>(false)
@@ -57,7 +57,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     })
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        provideConvexWithClerk({ client, useAuth: useClerk })
         return () => h(App)
       },
     })
@@ -94,7 +94,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const { client, fetchToken } = makeClient()
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        provideConvexWithClerk({ client, useAuth: useClerk })
         return () => h('div')
       },
     })
@@ -125,7 +125,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const { client, fetchToken } = makeClient()
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        provideConvexWithClerk({ client, useAuth: useClerk })
         return () => h('div')
       },
     })
@@ -150,7 +150,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const { client } = makeClient()
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        provideConvexWithClerk({ client, useAuth: useClerk })
         return () => h('div')
       },
     })
@@ -185,7 +185,7 @@ describe('ConvexProviderWithClerk (provideConvexAuthFromClerk)', () => {
     const { client } = makeClient()
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuthFromClerk({ client, useAuth: useClerk })
+        provideConvexWithClerk({ client, useAuth: useClerk })
         return () => h('div')
       },
     })

@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h, nextTick, ref, watch } from 'vue'
 import type { AuthTokenFetcher } from 'convex/browser'
-import { provideConvexAuth, useConvexAuth, type IConvexVueClient } from '../../../src/runtime/vue/auth'
+import { provideConvexWithAuth, useConvexAuth, type IConvexVueClient } from '../../../src/runtime/vue/auth'
 import type { ConvexVueClient } from '../../../src/runtime/vue/client'
 
 describe('ConvexAuthState', () => {
-  it('provideConvexAuth works', async () => {
+  it('provideConvexWithAuth works', async () => {
     const isLoading = ref(true)
     const isAuthenticated = ref(false)
     const fetchAccessToken: AuthTokenFetcher = vi.fn(async () => 'token')
@@ -28,7 +28,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,
@@ -86,7 +86,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,
@@ -136,7 +136,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,
@@ -190,7 +190,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,
@@ -246,7 +246,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({ isLoading, isAuthenticated, fetchAccessToken }),
         })
@@ -291,7 +291,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken }),
         })
@@ -320,7 +320,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({ isLoading: ref(false), isAuthenticated: ref(true), fetchAccessToken, authVersion }),
         })
@@ -371,7 +371,7 @@ describe('ConvexAuthState', () => {
     })
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({ isLoading: ref(false), isAuthenticated, fetchAccessToken }),
         })
@@ -405,7 +405,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,
@@ -449,7 +449,7 @@ describe('ConvexAuthState', () => {
 
     const Wrapper = defineComponent({
       setup() {
-        provideConvexAuth({
+        provideConvexWithAuth({
           client,
           useAuth: () => ({
             isLoading,

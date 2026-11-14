@@ -90,12 +90,12 @@ export interface ModuleOptions {
    */
   polar?: boolean
   /**
-   * Clerk auth adapter (`provideConvexAuthFromClerk` / `<ConvexProviderWithClerk>`).
+   * Clerk auth adapter (`provideConvexWithClerk` / `<ConvexProviderWithClerk>`).
    * Auto-enabled when `@clerk/vue` is a dependency of your app; set `false` to force it off.
    */
   clerk?: boolean
   /**
-   * Auth0 auth adapter (`provideConvexAuthFromAuth0` / `<ConvexProviderWithAuth0>`).
+   * Auth0 auth adapter (`provideConvexWithAuth0` / `<ConvexProviderWithAuth0>`).
    * Auto-enabled when `@auth0/auth0-vue` is a dependency of your app; set `false` to force it off.
    */
   auth0?: boolean
@@ -228,7 +228,7 @@ export default defineNuxtModule<ModuleOptions>({
     for (const message of diagnostics.errors) logger.error(message)
     for (const message of diagnostics.warnings) logger.warn(message)
     nuxt.options.runtimeConfig.public.convex.loginPath = diagnostics.loginPath
-    // Read by `convexAuth` for the deployment's token endpoint, which sits
+    // Read by `convexBetterAuthNuxt` for the deployment's token endpoint, which sits
     // under the same route the proxy serves.
     nuxt.options.runtimeConfig.public.convex.authRoute = diagnostics.authRoute
     // PARITY: D-18
@@ -636,7 +636,7 @@ const AUTH_PROXY_SECURITY_RULES: SecurityRouteRules = {
  * Wire the Better Auth integration (a Vue/Nuxt port of `@convex-dev/better-auth`'s
  * `react` + `nextjs` integration): the client/SSR auth plugins, the
  * `${authRoute}/**` same-origin proxy, the opt-in `convex-auth` route middleware, the
- * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexAuth(event)`
+ * `useBetterAuth` / `usePreloadedAuthQuery` composables, and the `convexBetterAuthNuxt(event)`
  * server helper.
  */
 function registerBetterAuth(
@@ -698,8 +698,8 @@ function registerBaseConvexClient(resolver: Resolver): void {
 
 /**
  * Wire the Clerk auth adapter (a Vue/Nuxt port of `convex/react-clerk`): the
- * `provideConvexAuthFromClerk` composable and the `<ConvexProviderWithClerk>`
- * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
+ * `provideConvexWithClerk` composable and the `<ConvexProviderWithClerk>`
+ * drop-in component. Both reuse the generic `provideConvexWithAuth` primitive.
  */
 function registerClerk(resolver: Resolver, policy: RegistrationPolicy): void {
   registerIntegrationImports(resolver, 'clerk', policy)
@@ -708,8 +708,8 @@ function registerClerk(resolver: Resolver, policy: RegistrationPolicy): void {
 
 /**
  * Wire the Auth0 auth adapter (a Vue/Nuxt port of `convex/react-auth0`): the
- * `provideConvexAuthFromAuth0` composable and the `<ConvexProviderWithAuth0>`
- * drop-in component. Both reuse the generic `provideConvexAuth` primitive.
+ * `provideConvexWithAuth0` composable and the `<ConvexProviderWithAuth0>`
+ * drop-in component. Both reuse the generic `provideConvexWithAuth` primitive.
  */
 function registerAuth0(resolver: Resolver, policy: RegistrationPolicy): void {
   registerIntegrationImports(resolver, 'auth0', policy)

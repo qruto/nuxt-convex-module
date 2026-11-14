@@ -31,7 +31,7 @@ npx nuxi@latest module add nuxt-convex-module
 - ⚡ **Live data** — [`useQuery`, `useQueries`](https://nuxt-convex-module.dev/guide/queries), [`useMutation`, `useAction`](https://nuxt-convex-module.dev/guide/mutations-and-actions) and cursor [`usePaginatedQuery`](https://nuxt-convex-module.dev/guide/pagination), over one `ConvexVueClient`.
 - 🖥️ **SSR and preloading** — [`useAsyncQuery`, `useAsyncPaginatedQuery`, `fetchQuery`, `preloadQuery`](https://nuxt-convex-module.dev/guide/server-and-ssr) for hydration-safe server rendering; `fetchMutation` / `fetchAction` on the Nitro side.
 - 📁 **File storage** — [`useUpload`, `useUploadQueue`, `useStorageUrl`](https://nuxt-convex-module.dev/guide/file-storage) and `<ConvexImage>`.
-- 🔐 **Auth state** — provider-agnostic [`useConvexAuth` / `provideConvexAuth`](https://nuxt-convex-module.dev/guide/auth-state) and the `<Authenticated>` / `<Unauthenticated>` / `<AuthLoading>` / `<AuthRefreshing>` components.
+- 🔐 **Auth state** — provider-agnostic [`useConvexAuth` / `provideConvexWithAuth`](https://nuxt-convex-module.dev/guide/auth-state) and the `<Authenticated>` / `<Unauthenticated>` / `<AuthLoading>` / `<AuthRefreshing>` components.
 - 🧩 **Opt-in integrations** — install [Better Auth, Clerk, Auth0 or Polar](https://nuxt-convex-module.dev/components) and they wire themselves up.
 - 🛡️ **Security** — install [`nuxt-security`](https://nuxt-convex-module.dev/getting-started/security) and the CSP learns your deployment's origins.
 - 🧰 **DevTools** — a Convex tab in [Nuxt DevTools](https://nuxt-convex-module.dev/guide/devtools): connection, live subscriptions, server logs, auth state.
@@ -45,7 +45,7 @@ All of it is auto-imported — composables and components in the app, `fetch*` h
 
 A Nuxt/Vue **port of Convex's own React/Next client**, hook for composable, not a reimagining: the public API keeps the names, arguments and return shapes Convex documents, so its docs and examples translate line for line. The port is kept diffable against upstream so new Convex releases can be tracked file-for-file — see [Relationship to upstream](#relationship-to-upstream) and [`PARITY.md`](./PARITY.md).
 
-Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns). Authentication is **provider-agnostic**: the core ships the generic `provideConvexAuth` plumbing plus Vue adapters for [Clerk](https://clerk.com) and [Auth0](https://auth0.com), while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
+Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` inputs, `ComputedRef`/`ShallowRef` returns). Authentication is **provider-agnostic**: the core ships the generic `provideConvexWithAuth` plumbing plus Vue adapters for [Clerk](https://clerk.com) and [Auth0](https://auth0.com), while [Better Auth](https://www.better-auth.com) and [Polar](https://polar.sh) are **opt-in** sub-modules — mirroring how `@convex-dev/better-auth` and `@convex-dev/polar` are separate packages upstream.
 
 ## Documentation
 

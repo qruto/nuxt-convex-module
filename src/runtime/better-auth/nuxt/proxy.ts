@@ -1,6 +1,6 @@
 // PARITY: A-14
 import { createError, defineEventHandler, getRouterParam } from 'nuxt/server'
-import { convexAuth } from './server'
+import { convexBetterAuthNuxt } from './server'
 
 const METHODS = ['GET', 'HEAD', 'POST', 'OPTIONS']
 
@@ -8,7 +8,7 @@ const METHODS = ['GET', 'HEAD', 'POST', 'OPTIONS']
  * Proxy all `${convex.betterAuth.authRoute}/**` requests (default `/api/auth/**`) to the
  * Convex site URL. This keeps auth cookies on the same origin (no CORS issues).
  *
- * The site URL is `convexAuth`'s to resolve: `runtimeConfig.public.convex.siteUrl`,
+ * The site URL is `convexBetterAuthNuxt`'s to resolve: `runtimeConfig.public.convex.siteUrl`,
  * then the environment — so a container built without it and started with
  * `NUXT_PUBLIC_CONVEX_SITE_URL` works.
  *
@@ -32,5 +32,5 @@ export default defineEventHandler(async (event) => {
   if (matched.split(/[/\\]/).some(segment => segment === '.' || segment === '..')) {
     throw createError({ status: 400, statusText: 'Bad Request' })
   }
-  return convexAuth(event).handler()
+  return convexBetterAuthNuxt(event).handler()
 })

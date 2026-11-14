@@ -21,7 +21,7 @@ npm i @convex-dev/better-auth@~0.13.0 better-auth@~1.7.16
 - a Better Auth client with `convexClient()`, available through `useBetterAuth()` → `{ user, session, isLoading, isAuthenticated, client }`. Sign-in and sign-out live on `client`, for example `client.signIn.email({ email, password })`. The client loads on first use, off the entry chunk: call it through `client` or `await loadAuthClient()`, and don't import `authClient` statically in a layout, which puts Better Auth back on every page. Read `$store`, `$fetch` or a plugin atom only on `await loadAuthClient()`: before the load `client` forwards calls, not values;
 - the `convex-auth` route middleware: `definePageMeta({ middleware: 'convex-auth' })` sends signed-out visitors to `/login?redirect=…`;
 - `resolveAuthRedirect(route.query.redirect)`, which returns a safe same-origin destination for after sign-in;
-- `convexAuth(event)` in server routes, for authenticated `fetchAuthQuery` / `fetchAuthMutation` / `fetchAuthAction` calls.
+- `convexBetterAuthNuxt(event)` in server routes, for authenticated `fetchAuthQuery` / `fetchAuthMutation` / `fetchAuthAction` calls.
 
 **Nuxt config.** Nothing is required. `NUXT_PUBLIC_CONVEX_SITE_URL` must reach a production build; in development the `CONVEX_SITE_URL` in `.env.local` is enough. Options live under `convex.betterAuth` (`authClient`, `loginPath`, `crossDomainCallbackRoute`).
 
@@ -77,7 +77,7 @@ npm i @clerk/vue
 ```
 
 1. Register Clerk's Vue plugin as Clerk documents. With `@clerk/nuxt` instead, auto-detection stays off: set `convex: { clerk: true }` in `nuxt.config.ts`.
-2. Call `provideConvexAuthFromClerk()` in `app.vue`, above anything that reads Convex data. The component form is `<ConvexProviderWithClerk>`.
+2. Call `provideConvexWithClerk()` in `app.vue`, above anything that reads Convex data. The component form is `<ConvexProviderWithClerk>`.
 3. Convex side: the Clerk JWT template and the Clerk entry in `convex/auth.config.ts`, as in https://docs.convex.dev/auth/clerk.
 4. Under `nuxt-security`, add Clerk's origins to `connect-src`.
 
@@ -90,7 +90,7 @@ npm i @auth0/auth0-vue
 ```
 
 1. Register Auth0's Vue plugin as Auth0 documents.
-2. Call `provideConvexAuthFromAuth0()` in `app.vue`. The component form is `<ConvexProviderWithAuth0>`.
+2. Call `provideConvexWithAuth0()` in `app.vue`. The component form is `<ConvexProviderWithAuth0>`.
 3. Convex side: the Auth0 entry in `convex/auth.config.ts`, as in https://docs.convex.dev/auth/auth0.
 4. Under `nuxt-security`, add the Auth0 tenant to `connect-src`.
 

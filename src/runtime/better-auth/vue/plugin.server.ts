@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
 import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
-import { convexAuth } from '../nuxt/server'
+import { convexBetterAuthNuxt } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
 import { CACHING_HEADERS, isSharedRender, NO_SESSION_CONTEXT_KEY, type RenderContext } from '../nuxt/shared-render'
 import { BetterAuthTokenStoreKey, createBetterAuthTokenStore, hasSessionCookie, NO_SESSION_KEY, seedInitialToken } from './token-store'
@@ -20,7 +20,7 @@ export async function prefetchAuthToken(
   cacheControl: { value: unknown },
 ): Promise<boolean> {
   try {
-    const token = await convexAuth(event!).getToken()
+    const token = await convexBetterAuthNuxt(event!).getToken()
     initialToken.value = token ?? null
     if (token && event) {
       // The token is serialized into the client-readable SSR payload

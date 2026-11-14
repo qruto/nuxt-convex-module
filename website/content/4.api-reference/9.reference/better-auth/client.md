@@ -730,7 +730,7 @@ function usePreloadedAuthQuery<Query>(preloadedQuery): ComputedRef<Query["_retur
 Defined in: [src/runtime/better-auth/vue/hydration.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/better-auth/vue/hydration.ts#L65)
 
 Auth-aware version of [usePreloadedQuery](/api-reference/reference/client#usepreloadedquery) for payloads returned by
-`convexAuth(event).preloadAuthQuery(...)`.
+`convexBetterAuthNuxt(event).preloadAuthQuery(...)`.
 
 A Vue/Nuxt port of `@convex-dev/better-auth`'s `usePreloadedAuthQuery`
 (`src/nextjs/client.tsx`): show the preloaded server result until the preload

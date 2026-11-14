@@ -2,10 +2,10 @@
  * Vue login component for use with Auth0.
  *
  * A Vue/Nuxt port of `convex/react-auth0`. The provider is exposed both as the
- * {@link provideConvexAuthFromAuth0} composable and the thin
+ * {@link provideConvexWithAuth0} composable and the thin
  * {@link ConvexProviderWithAuth0} component wrapper; both adapt
  * `@auth0/auth0-vue`'s `useAuth0()` into the generic Convex auth provider
- * ({@link provideConvexAuth}) — no new auth core, just the SDK shim.
+ * ({@link provideConvexWithAuth}) — no new auth core, just the SDK shim.
  *
  * @module auth0/client
  */
@@ -14,11 +14,11 @@ import { defineComponent, type PropType } from 'vue'
 
 // Upstream re-describes its client interface locally (`IConvexReactClient`);
 // the port's mirror is exported from the auth core, so import it instead.
-import { provideConvexAuth, type ConvexAuthState, type IConvexVueClient } from '../../vue/auth/index'
+import { provideConvexWithAuth, type ConvexAuthState, type IConvexVueClient } from '../../vue/auth/index'
 import { useConvexOrThrow } from '../../vue/client'
 
 /**
- * Options for {@link provideConvexAuthFromAuth0} / `<ConvexProviderWithAuth0>`.
+ * Options for {@link provideConvexWithAuth0} / `<ConvexProviderWithAuth0>`.
  */
 export interface ConvexProviderWithAuth0Options {
   /** Convex client to authenticate. Defaults to the client `useConvex()` returns. */
@@ -38,24 +38,32 @@ export interface ConvexProviderWithAuth0Options {
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { provideConvexAuthFromAuth0 } from 'nuxt-convex-module/auth0/client'
- * provideConvexAuthFromAuth0()
+ * import { provideConvexWithAuth0 } from 'nuxt-convex-module/auth0/client'
+ * provideConvexWithAuth0()
  * </script>
  * ```
  *
  * @public
  */
-export function provideConvexAuthFromAuth0(
+export function provideConvexWithAuth0(
   options: ConvexProviderWithAuth0Options = {},
 ): ConvexAuthState {
-  const client = options.client ?? useConvexOrThrow('provideConvexAuthFromAuth0')
-  return provideConvexAuth({ client, useAuth: useAuthFromAuth0 })
+  const client = options.client ?? useConvexOrThrow('provideConvexWithAuth0')
+  return provideConvexWithAuth({ client, useAuth: useAuthFromAuth0 })
 }
+
+/**
+ * The old name of {@link provideConvexWithAuth0}.
+ *
+ * @deprecated Use `provideConvexWithAuth0`. Removed in the next minor release.
+ * @public
+ */
+export const provideConvexAuthFromAuth0 = provideConvexWithAuth0
 
 /**
  * A wrapper Vue component which provides a {@link client!ConvexVueClient | ConvexVueClient}
  * authenticated with Auth0 — the component form of
- * {@link provideConvexAuthFromAuth0}. Renders its default slot once Convex
+ * {@link provideConvexWithAuth0}. Renders its default slot once Convex
  * auth is wired.
  *
  * It must be wrapped by a configured Auth0 plugin from `@auth0/auth0-vue`.
@@ -71,7 +79,7 @@ export const ConvexProviderWithAuth0 = /* @__PURE__ */ defineComponent({
     client: { type: Object as PropType<IConvexVueClient>, default: undefined },
   },
   setup(props, { slots }) {
-    provideConvexAuthFromAuth0({ client: props.client })
+    provideConvexWithAuth0({ client: props.client })
     return () => slots.default?.()
   },
 })
