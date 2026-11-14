@@ -208,7 +208,7 @@
     "docs:api": "typedoc && node scripts/typedoc-postprocess.mjs",
     "docs:api:check": "pnpm run docs:api && git diff --exit-code -- website/content/4.api-reference",
     "bump": "pnpm exec taze major -w",
-    "check:manifest": "installed-check -d --no-workspaces",
+    "check:manifest": "installed-check -d --no-workspaces -i @convex-dev/auth",
     "check:tarball": "node scripts/check-tarball.mjs",
     "check:rulesets": "node scripts/check-rulesets.mjs",
     "parity:diff": "node scripts/parity-diff.mjs",

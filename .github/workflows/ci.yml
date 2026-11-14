@@ -165,7 +165,9 @@ jobs:
       #
       # `--no-workspaces` skips the website and DevTools apps, which are private
       # and promise nobody anything. `-d` skips devDependencies, which are ours
-      # alone.
+      # alone. `-i @convex-dev/auth` skips that optional peer: it needs `convex`
+      # 1.48, and the check would raise the floor for every app, with or without
+      # it. An app that installs it is told by its own package manager.
       - name: Manifest ranges (installed-check)
         if: ${{ !cancelled() }}
         run: pnpm run check:manifest

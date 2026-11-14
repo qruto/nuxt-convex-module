@@ -372,6 +372,7 @@ export function oauth(): AmbientSignInClient {
         // none, so it gets the url back, opens it in an in-app browser, and
         // finishes with `signIn(refs, { code })`.
         if (href !== null && navigator.product !== "ReactNative") {
+          // fallow-ignore-next-line security-sink -- the URL comes from the app's own `startSignIn` mutation; verified 2026-11-14
           window.location.href = url.toString();
         }
         return { status: "redirect", redirect: url };

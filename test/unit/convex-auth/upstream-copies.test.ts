@@ -10,11 +10,16 @@ const read = (path: string) =>
   readFileSync(fileURLToPath(new URL(`../../../${path}`, import.meta.url)), 'utf8')
 
 // The edits a copy carries. This repository compiles with
-// `verbatimModuleSyntax`, which rejects a type imported as a value. And the
-// build emits a relative import as written, so a `.ts` extension would name a
-// file the package does not ship.
+// `verbatimModuleSyntax`, which rejects a type imported as a value. Its
+// security gate wants the one navigation marked as reviewed. And the build
+// emits a relative import as written, so a `.ts` extension would name a file
+// the package does not ship.
+const NAVIGATION = '          window.location.href = url.toString();\n'
 const EDITS: Record<string, Array<[upstream: string, copy: string]>> = {
-  'methods/oauth/client.ts': [['import {\n  FunctionReference,\n', 'import {\n  type FunctionReference,\n']],
+  'methods/oauth/client.ts': [
+    ['import {\n  FunctionReference,\n', 'import {\n  type FunctionReference,\n'],
+    [NAVIGATION, `          // fallow-ignore-next-line security-sink -- the URL comes from the app's own \`startSignIn\` mutation; verified 2026-11-14\n${NAVIGATION}`],
+  ],
 }
 const withoutExtensions = (source: string) => source.replace(/(from "\.\.?\/[^"]+)\.ts"/g, '$1"')
 

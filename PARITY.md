@@ -580,10 +580,11 @@ upstream routes through that client has to land somewhere else here.
 - **On sync** · copy the changed files again. When upstream exports the client, delete the folder
   and import it
 - **Why** · the three files are free of React, but the package's `exports` map offers them only
-  through entries that import `react`. Each copy is the package's own source with two edits:
+  through entries that import `react`. Each copy is the package's own source with three edits:
   `FunctionReference` is imported as a type, because `verbatimModuleSyntax` rejects a type
-  imported as a value, and relative imports lose their `.ts` extension, because the build emits
-  them as written. The four files beside them are not copies. They hold the types the copies
+  imported as a value; relative imports lose their `.ts` extension, because the build emits
+  them as written; and the navigation to the identity provider carries a `fallow-ignore` comment,
+  because its target comes from the app's own `startSignIn` mutation. The four files beside them are not copies. They hold the types the copies
   import from unexported files, read off the public `AuthClientConfig`, `TokenBundle`,
   `SignInComplete` and `SignInError`.
 
