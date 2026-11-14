@@ -78,6 +78,12 @@ export interface ModuleOptions {
    */
   siteUrl?: string
   /**
+   * Convex Auth client (`provideConvexAuth`, `useAuthActions`, the sign-in
+   * composables). Auto-enabled when `@convex-dev/auth` is a dependency of your
+   * app; set `false` to force it off (or `true` to require it).
+   */
+  convexAuth?: boolean
+  /**
    * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is a
    * dependency of your app; set `false` to force it off, `true` to require it
    * (a package a layer or workspace root provides counts then), or a
@@ -335,6 +341,11 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerBaseConvexClient(resolver)
   }
 
+  const convexAuth = resolve('convexAuth', '@convex-dev/auth')
+  if (convexAuth) {
+    registerConvexAuth(resolver, policy)
+  }
+
   const clerk = resolve('clerk', '@clerk/vue')
   if (clerk) {
     registerClerk(resolver, policy)
@@ -355,7 +366,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerSecurity(resolver)
   }
 
-  const flags = { betterAuth, clerk, auth0, polar, security }
+  const flags = { convexAuth, betterAuth, clerk, auth0, polar, security }
   // The runtime's own imports resolve from this module's folder, so the
   // warnings ask whether a package is there or at the root. Vite resolves the
   // include list from the root alone, so that list asks how to reach it.
@@ -694,6 +705,16 @@ function registerBetterAuth(
  */
 function registerBaseConvexClient(resolver: Resolver): void {
   addPlugin(resolver.resolve('./runtime/vue/plugin'))
+}
+
+/**
+ * Wire the Convex Auth client (a Vue/Nuxt port of `@convex-dev/auth/react`):
+ * `provideConvexAuth`, the `<ConvexAuthProvider>` drop-in component and the
+ * sign-in composables. The provider feeds the generic `provideConvexWithAuth`.
+ */
+function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy): void {
+  registerIntegrationImports(resolver, 'convexAuth', policy)
+  registerComponents(resolver, 'convexAuth', policy)
 }
 
 /**

@@ -124,6 +124,9 @@ const allowed = {
   './better-auth/server': ['better-auth', '@convex-dev/better-auth'],
   './polar/client': ['@convex-dev/polar', '@polar-sh/checkout'],
   './polar/vue': ['@convex-dev/polar', '@polar-sh/checkout'],
+  './convex-auth/client': ['@convex-dev/auth'],
+  './convex-auth/vue': ['@convex-dev/auth'],
+  './convex-auth/methods/username-password': ['@convex-dev/auth'],
   './clerk/client': ['@clerk/vue'],
   './clerk/vue': ['@clerk/vue'],
   './auth0/client': ['@auth0/auth0-vue'],
@@ -275,9 +278,14 @@ try {
   // 116 files, so the ceiling moves to 615 KB / 116 files. Reloading the page
   // when a deploy removed the client's chunk adds its client plugin (+2 KB,
   // two files): 606.7 KB in 118 files, so the ceiling moves to 118 files.
+  // The Convex Auth client adds its provider, the username and password
+  // composables and the copy of upstream's OAuth client with the types it
+  // imports (+32 KB, 20 files, about half of it that copy's JSDoc): 646.9 KB in
+  // 138 files, so the ceiling moves to 655 KB / 138 files. The copy goes when
+  // upstream exports the client (PARITY.md D-20).
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 615_000
-  const MAX_FILES = 118
+  const MAX_BYTES = 655_000
+  const MAX_FILES = 138
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

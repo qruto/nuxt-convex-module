@@ -13,7 +13,7 @@ export interface Registration {
   type?: boolean
 }
 
-export type Integration = 'core' | 'betterAuth' | 'clerk' | 'auth0' | 'polar'
+export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar'
 
 /** The `convex.autoImports` option: every name, every name prefixed with `Convex`, or none. */
 export type AutoImports = boolean | 'prefixed'
@@ -99,8 +99,6 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'useConvexStorageUrl', from: composable('use-storage-url') },
     { name: 'useConvexAuth', from: vue('auth/index') },
     { name: 'provideConvexWithAuth', from: vue('auth/index') },
-    // Deprecated name of `provideConvexWithAuth`; Convex Auth takes it over.
-    { name: 'provideConvexAuth', from: vue('auth/index') },
     { name: 'usePreloadedQuery', from: vue('hydration') },
     // Nuxt-only (imports `#app`), hence under runtime/nuxt/ — see PARITY.md.
     // Its types too, so `import type { AsyncQueryReturn } from '#imports'` works
@@ -119,6 +117,13 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'AsyncPaginatedQueryData', from: asyncPaginatedQuery, type: true },
     { name: 'AsyncPaginatedQueryOptions', from: asyncPaginatedQuery, type: true },
     { name: 'AsyncPaginatedQueryReturn', from: asyncPaginatedQuery, type: true },
+  ],
+  convexAuth: [
+    { name: 'provideConvexAuth', from: 'runtime/convex-auth/vue/index' },
+    { name: 'useAuthActions', from: 'runtime/convex-auth/vue/index' },
+    { name: 'useAuthToken', from: 'runtime/convex-auth/vue/index' },
+    { name: 'useSignInWithUsernamePassword', from: 'runtime/convex-auth/vue/methods/username-password' },
+    { name: 'useSignUpWithUsernamePassword', from: 'runtime/convex-auth/vue/methods/username-password' },
   ],
   betterAuth: [
     { name: 'useBetterAuth', from: 'runtime/better-auth/vue/use-better-auth' },
@@ -145,6 +150,7 @@ export const APP_COMPONENTS: Record<Integration, Registration[]> = {
       .map(name => ({ name, from: vue('auth/helpers') })),
     { name: 'ConvexImage', from: vue('components/convex-image') },
   ],
+  convexAuth: [{ name: 'ConvexAuthProvider', from: 'runtime/convex-auth/vue/index' }],
   betterAuth: [{ name: 'AuthBoundary', from: 'runtime/better-auth/vue/auth-boundary' }],
   clerk: [{ name: 'ConvexProviderWithClerk', from: 'runtime/clerk/vue/index' }],
   auth0: [{ name: 'ConvexProviderWithAuth0', from: 'runtime/auth0/vue/index' }],
@@ -157,6 +163,7 @@ export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   core: ['fetchQuery', 'fetchMutation', 'fetchAction', 'preloadQuery', 'preloadedQueryResult']
     .map(name => ({ name, from: 'runtime/nuxt/index' })),
   // `convexAuth` is the deprecated name, kept for one minor release.
+  convexAuth: [],
   betterAuth: ['convexBetterAuthNuxt', 'convexAuth']
     .map(name => ({ name, from: 'runtime/better-auth/nuxt/server' })),
   clerk: [],

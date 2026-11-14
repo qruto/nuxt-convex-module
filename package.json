@@ -64,6 +64,18 @@
       "types": "./dist/runtime/nuxt/testing.d.ts",
       "import": "./dist/runtime/nuxt/testing.js"
     },
+    "./convex-auth/client": {
+      "types": "./dist/runtime/convex-auth/vue/index.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/index.js"
+    },
+    "./convex-auth/vue": {
+      "types": "./dist/runtime/convex-auth/vue/index.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/index.js"
+    },
+    "./convex-auth/methods/username-password": {
+      "types": "./dist/runtime/convex-auth/vue/methods/username-password.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/username-password.js"
+    },
     "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
@@ -121,6 +133,15 @@
       ],
       "testing": [
         "./dist/runtime/nuxt/testing.d.ts"
+      ],
+      "convex-auth/client": [
+        "./dist/runtime/convex-auth/vue/index.d.ts"
+      ],
+      "convex-auth/vue": [
+        "./dist/runtime/convex-auth/vue/index.d.ts"
+      ],
+      "convex-auth/methods/username-password": [
+        "./dist/runtime/convex-auth/vue/methods/username-password.d.ts"
       ],
       "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"
@@ -200,6 +221,7 @@
   "peerDependencies": {
     "@auth0/auth0-vue": "^2.0.0",
     "@clerk/vue": "^2.0.0",
+    "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": ">=0.13.0 <0.14.0",
     "@convex-dev/polar": ">=0.9.0 <0.10.0",
     "@polar-sh/checkout": "^0.6.0",
@@ -213,6 +235,9 @@
       "optional": true
     },
     "@clerk/vue": {
+      "optional": true
+    },
+    "@convex-dev/auth": {
       "optional": true
     },
     "@convex-dev/better-auth": {
@@ -237,6 +262,7 @@
     "@clerk/vue": "2.5.19",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
+    "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": "^0.13.0",
     "@convex-dev/polar": "^0.9.2",
     "@nuxt/devtools": "^4.0.0",

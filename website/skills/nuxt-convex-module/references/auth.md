@@ -1,6 +1,6 @@
-# Auth: Better Auth, Clerk, Auth0
+# Auth: Convex Auth, Better Auth, Clerk, Auth0
 
-Each integration switches on when its package is in the app's `package.json`. There is no `modules` entry to add, and the next dev run picks it up. Use one provider at a time: Better Auth together with Clerk or Auth0 gets a startup warning.
+Each integration switches on when its package is in the app's `package.json`. There is no `modules` entry to add, and the next dev run picks it up. Use one provider at a time: Better Auth together with Convex Auth, Clerk or Auth0 gets a startup warning.
 
 Every provider has two halves:
 
@@ -8,6 +8,35 @@ Every provider has two halves:
 - **The Convex side**: functions and env vars on the deployment. That half is framework-independent, so Convex's guides for React apply unchanged. Convex's `convex-setup-auth` skill (`npx skills add convex/agent-skills`) covers it too.
 
 Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `isAuthenticated`, and the `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>` and `<AuthRefreshing>` components. During SSR it reads as loading.
+
+## Convex Auth
+
+```bash
+npm i @convex-dev/auth@^2.0.0
+```
+
+Users and sessions live in the Convex deployment. The module ports the client for sessions kept in browser storage, with sign-in by username and password. Cookie sessions with SSR, email and password, OAuth and passkeys are not ported yet.
+
+**Nuxt side.** Call the provider once in `app.vue`, and the other composables in components below it. A component cannot read what it provides itself.
+
+```vue
+<script setup lang="ts">
+import { api } from '~~/convex/_generated/api'
+
+provideConvexAuth({
+  api: {
+    refreshSession: api.auth.refreshSession,
+    signOut: api.auth.signOut,
+    isAuthenticated: api.auth.isAuthenticated,
+  },
+})
+</script>
+```
+
+- `useSignInWithUsernamePassword(api.auth)` → `{ signIn, pending }`, and `useSignUpWithUsernamePassword(api.auth)` → `{ signUp, pending }`. Both resolve to `{ status: 'complete' }` or `{ status: 'error', userError }` and never throw.
+- `useAuthActions()` → `{ signOut, setSession }`. `useAuthToken()` → a ref of the access token, or `null`.
+
+**Convex side** (`@convex-dev/auth` 2.0, which needs `convex` 1.48 or newer). Follow https://docs.convex.dev/auth/convex-auth: the component in `convex/convex.config.ts` and a `convex/auth.ts` that exports `refreshSession`, `signOut`, `isAuthenticated`, `signInWithUsernamePassword` and `signUpWithUsernamePassword`. Version 2 is a rewrite: instructions that mention `@auth/core` or `npx @convex-dev/auth` describe version 1 and do not apply.
 
 ## Better Auth
 

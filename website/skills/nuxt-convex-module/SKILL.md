@@ -5,7 +5,7 @@ description: >-
   plain Vue) app to a Convex backend. Use when adding Convex to a Nuxt app,
   when writing Nuxt or Vue code that reads or writes Convex data — useQuery,
   useAsyncQuery, useMutation, useAction, usePaginatedQuery, file uploads,
-  fetchQuery in server routes, auth state with Better Auth, Clerk or Auth0,
+  fetchQuery in server routes, auth state with Convex Auth, Better Auth, Clerk or Auth0,
   Polar checkout links — or when a Nuxt app's Convex setup misbehaves: no
   deployment URL, missing codegen, `#convex/api` typed as any, a built server
   that cannot find `convex`, a local backend still running on its port.
@@ -79,7 +79,7 @@ The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and
 ## Auth
 
 - Provider-agnostic state: `useConvexAuth()` → `isLoading`, `isAuthenticated`; components `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>`, `<AuthRefreshing>`.
-- Better Auth, Clerk and Auth0 switch on when their package is installed. Setup on both sides: [references/auth.md](references/auth.md).
+- Convex Auth, Better Auth, Clerk and Auth0 switch on when their package is installed. Setup on both sides: [references/auth.md](references/auth.md).
 - In the app's own tests, call `resetBetterAuthState()` from `nuxt-convex-module/testing` between cases that sign in; never import the module's files by path.
 - During SSR the auth state reads as loading. Server-render signed-in data through the request instead: `convexBetterAuthNuxt(event)` on the server (Better Auth).
 
@@ -97,6 +97,6 @@ Every page is Markdown at the links below; the docs MCP server at `https://nuxt-
 
 - [Installation](https://nuxt-convex-module.dev/raw/getting-started/installation.md), [Configuration](https://nuxt-convex-module.dev/raw/getting-started/configuration.md) (module options, runtime config, `#convex/*` aliases), [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md) (every message the module prints, and two from the Convex CLI and Node, with the fix), [Security](https://nuxt-convex-module.dev/raw/getting-started/security.md)
 - Guide: [Queries](https://nuxt-convex-module.dev/raw/guide/queries.md), [Mutations and actions](https://nuxt-convex-module.dev/raw/guide/mutations-and-actions.md), [Pagination](https://nuxt-convex-module.dev/raw/guide/pagination.md), [File storage](https://nuxt-convex-module.dev/raw/guide/file-storage.md), [Server and SSR](https://nuxt-convex-module.dev/raw/guide/server-and-ssr.md), [Auth state](https://nuxt-convex-module.dev/raw/guide/auth-state.md), [Connection state](https://nuxt-convex-module.dev/raw/guide/connection-state.md)
-- Components: [Better Auth](https://nuxt-convex-module.dev/raw/components/better-auth.md), [Clerk](https://nuxt-convex-module.dev/raw/components/clerk.md), [Auth0](https://nuxt-convex-module.dev/raw/components/auth0.md), [Polar](https://nuxt-convex-module.dev/raw/components/polar.md)
+- Components: [Convex Auth](https://nuxt-convex-module.dev/raw/components/convex-auth.md), [Better Auth](https://nuxt-convex-module.dev/raw/components/better-auth.md), [Clerk](https://nuxt-convex-module.dev/raw/components/clerk.md), [Auth0](https://nuxt-convex-module.dev/raw/components/auth0.md), [Polar](https://nuxt-convex-module.dev/raw/components/polar.md)
 - Recipes: [Infinite scroll](https://nuxt-convex-module.dev/raw/recipes/infinite-scroll.md), [Optimistic list](https://nuxt-convex-module.dev/raw/recipes/optimistic-list.md), [Protected page](https://nuxt-convex-module.dev/raw/recipes/protected-page.md), [Image upload](https://nuxt-convex-module.dev/raw/recipes/image-upload.md)
 - Every auto-import: [app](https://nuxt-convex-module.dev/raw/api-reference/auto-imports.md), [server](https://nuxt-convex-module.dev/raw/api-reference/server-imports.md)
