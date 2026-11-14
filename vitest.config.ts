@@ -8,6 +8,9 @@ const nuxtServerTestAlias = fileURLToPath(new URL('./test/helpers/nuxt-server.ts
 // (the module aliases it to the user's client or the bundled default). Tests
 // resolve it to the bundled default and mock it where needed.
 const authClientTestAlias = fileURLToPath(new URL('./src/runtime/better-auth/vue/client.ts', import.meta.url))
+// The Convex Auth server handlers import the app's `server/convex-auth` file
+// via `#convex/auth-server`. Tests resolve it to the stand-in and mock it.
+const authServerTestAlias = fileURLToPath(new URL('./src/runtime/convex-auth/nuxt/no-server.ts', import.meta.url))
 
 export default defineConfig({
   test: {
@@ -80,6 +83,7 @@ export default defineConfig({
             '#imports': nuxtImportsTestAlias,
             'nuxt/server': nuxtServerTestAlias,
             '#convex/auth-client': authClientTestAlias,
+            '#convex/auth-server': authServerTestAlias,
           },
         },
         // The plain unit project is the client build: `import.meta.client`
@@ -101,6 +105,7 @@ export default defineConfig({
             '#imports': nuxtImportsTestAlias,
             'nuxt/server': nuxtServerTestAlias,
             '#convex/auth-client': authClientTestAlias,
+            '#convex/auth-server': authServerTestAlias,
           },
         },
         // `import.meta.server` is compile-time: the plain unit project compiles
@@ -123,6 +128,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '#convex/auth-client': authClientTestAlias,
+            '#convex/auth-server': authServerTestAlias,
           },
         },
         // The app as `nuxt dev` runs it: dev-only branches — the cross-domain

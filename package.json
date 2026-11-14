@@ -72,6 +72,10 @@
       "types": "./dist/runtime/convex-auth/vue/index.d.ts",
       "import": "./dist/runtime/convex-auth/vue/index.js"
     },
+    "./convex-auth/server": {
+      "types": "./dist/runtime/convex-auth/nuxt/server.d.ts",
+      "import": "./dist/runtime/convex-auth/nuxt/server.js"
+    },
     "./convex-auth/methods/username-password": {
       "types": "./dist/runtime/convex-auth/vue/methods/username-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/username-password.js"
@@ -139,6 +143,9 @@
       ],
       "convex-auth/vue": [
         "./dist/runtime/convex-auth/vue/index.d.ts"
+      ],
+      "convex-auth/server": [
+        "./dist/runtime/convex-auth/nuxt/server.d.ts"
       ],
       "convex-auth/methods/username-password": [
         "./dist/runtime/convex-auth/vue/methods/username-password.d.ts"

@@ -89,6 +89,19 @@ export function useSessionWatcher(
 }
 
 /**
+ * Where {@link provideAuth} provides and when it starts. The default is the
+ * calling component: its descendants, its mount, its scope. The Nuxt plugin
+ * passes the app instead.
+ */
+export interface AuthProviderTarget {
+  provide: <T>(key: InjectionKey<T>, value: T) => void
+  onMounted: (start: () => void) => void
+  onUnmounted: (stop: () => void) => void
+}
+
+const COMPONENT: AuthProviderTarget = { provide, onMounted, onUnmounted: onScopeDispose }
+
+/**
  * Binds an {@link AuthClient} to Vue and provides the sign-in api, the
  * actions, and the token. Called by `provideConvexAuth`, which passes the
  * returned auth state to `provideConvexWithAuth`.
@@ -104,7 +117,7 @@ export function provideAuth({
   authClient: AuthClient
   /** How the sign-in composables execute their sign-in functions. See {@link AuthSignInApi}. */
   signInApi: AuthSignInApi
-}): {
+}, target: AuthProviderTarget = COMPONENT): {
   isLoading: () => boolean
   isAuthenticated: () => boolean
   fetchAccessToken: AuthTokenFetcher
@@ -118,10 +131,10 @@ export function provideAuth({
     const unsubscribe = authClient.subscribe(() => {
       state.value = authClient.getSnapshot()
     })
-    onMounted(() => {
+    target.onMounted(() => {
       void authClient.init()
     })
-    onScopeDispose(() => {
+    target.onUnmounted(() => {
       unsubscribe()
       authClient.dispose()
     })
@@ -140,9 +153,9 @@ export function provideAuth({
     signOut: authClient.signOut,
   }
 
-  provide(ConvexAuthSignInApiKey, signInApi)
-  provide(ConvexAuthActionsKey, actions)
-  provide(ConvexAuthTokenKey, computed(() => state.value.token))
+  target.provide(ConvexAuthSignInApiKey, signInApi)
+  target.provide(ConvexAuthActionsKey, actions)
+  target.provide(ConvexAuthTokenKey, computed(() => state.value.token))
 
   return authState
 }

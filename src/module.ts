@@ -1,4 +1,5 @@
 import { defineNuxtModule, addPlugin, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
+import { existsSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
@@ -10,6 +11,7 @@ import { watchConvexCodegen } from './codegen-watch'
 import { setupDevScript } from './dev-script'
 import { APP_COMPONENTS, APP_IMPORTS, SERVER_IMPORTS, isExcluded, registeredAs, type AutoImports, type ExcludedNames, type Integration, type Registration, type RegistrationPolicy } from './registry'
 import { convexTypeFallbackContents } from './templates'
+import { CONVEX_AUTH_ROUTE } from './runtime/convex-auth/nuxt/route'
 
 /** Scoped, silenceable build-time logger (consola) for this module. */
 const logger = useLogger('nuxt-convex-module')
@@ -248,6 +250,7 @@ export default defineNuxtModule<ModuleOptions>({
     // registered BEFORE the functions-dir catch-all or it resolves to
     // `<functionsDir>/auth-client` (which doesn't exist).
     registerAuthClientAlias(resolver, nuxt, options)
+    registerAuthServerAlias(resolver, nuxt)
     // PARITY: D-18
     keepAuthClientOffPrefetch(nuxt)
     registerAuthClientOnEvaluation(resolver, nuxt)
@@ -343,7 +346,8 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
 
   const convexAuth = resolve('convexAuth', '@convex-dev/auth')
   if (convexAuth) {
-    registerConvexAuth(resolver, policy)
+    // Cookie sessions need the base client plugin, which Better Auth replaces.
+    registerConvexAuth(resolver, policy, betterAuth ? undefined : findConvexAuthServer(nuxt))
   }
 
   const clerk = resolve('clerk', '@clerk/vue')
@@ -540,6 +544,28 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
   nuxt.options.nitro.alias['#convex/auth-client'] = target
 }
 
+/** The app's `server/convex-auth` file, which switches Convex Auth's cookie sessions on. */
+function findConvexAuthServer(nuxt: Nuxt): string | undefined {
+  const base = join(nuxt.options.serverDir, 'convex-auth')
+  return ['.ts', '.mts', '.js', '.mjs'].map(extension => base + extension).find(file => existsSync(file))
+}
+
+/**
+ * Register the `#convex/auth-server` alias the Convex Auth server handlers
+ * import the app's `setupConvexAuthNuxt()` result through. Registered
+ * unconditionally, like `#convex/auth-client`, and before the functions-dir
+ * catch-all for the same reason. Without the app's file it names a stand-in
+ * no handler reads.
+ */
+function registerAuthServerAlias(resolver: Resolver, nuxt: Nuxt): void {
+  const target = findConvexAuthServer(nuxt) ?? resolver.resolve('./runtime/convex-auth/nuxt/no-server')
+
+  nuxt.options.nitro ||= {}
+  nuxt.options.nitro.alias ||= {}
+  nuxt.options.alias['#convex/auth-server'] = target
+  nuxt.options.nitro.alias['#convex/auth-server'] = target
+}
+
 /**
  * Register the fs-guarded fallback type template (app + nitro contexts, since
  * server routes import `#convex/api` too): `any`-typed placeholders until
@@ -712,9 +738,29 @@ function registerBaseConvexClient(resolver: Resolver): void {
  * `provideConvexAuth`, the `<ConvexAuthProvider>` drop-in component and the
  * sign-in composables. The provider feeds the generic `provideConvexWithAuth`.
  */
-function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy): void {
+function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, server: string | undefined): void {
   registerIntegrationImports(resolver, 'convexAuth', policy)
   registerComponents(resolver, 'convexAuth', policy)
+
+  // Cookie sessions, a port of `@convex-dev/auth/ssr/nextjs`, switch on with
+  // the app's `server/convex-auth` file: the three auth routes upstream has
+  // an app mount by hand, its `proxy.ts` as server middleware, and a plugin in
+  // place of its provider.
+  if (server === undefined) return
+  addServerHandler({
+    route: `${CONVEX_AUTH_ROUTE}/:action`,
+    method: 'post',
+    handler: { nuxt: resolver.resolve('./runtime/convex-auth/nuxt/handler') },
+  })
+  addServerHandler({
+    middleware: true,
+    handler: { nuxt: resolver.resolve('./runtime/convex-auth/nuxt/proxy') },
+  })
+  // The routes carry live session traffic: never cache it, and keep it out of
+  // any prerender pass.
+  extendRouteRules(`${CONVEX_AUTH_ROUTE}/**`, { cache: false, prerender: false })
+  // Appended: it reads the client the base plugin provides.
+  addPlugin(resolver.resolve('./runtime/convex-auth/nuxt/plugin'), { append: true })
 }
 
 /**

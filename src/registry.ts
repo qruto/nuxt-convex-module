@@ -163,7 +163,7 @@ export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   core: ['fetchQuery', 'fetchMutation', 'fetchAction', 'preloadQuery', 'preloadedQueryResult']
     .map(name => ({ name, from: 'runtime/nuxt/index' })),
   // `convexAuth` is the deprecated name, kept for one minor release.
-  convexAuth: [],
+  convexAuth: [{ name: 'setupConvexAuthNuxt', from: 'runtime/convex-auth/nuxt/server' }],
   betterAuth: ['convexBetterAuthNuxt', 'convexAuth']
     .map(name => ({ name, from: 'runtime/better-auth/nuxt/server' })),
   clerk: [],

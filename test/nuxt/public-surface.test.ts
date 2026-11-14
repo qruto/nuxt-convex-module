@@ -134,6 +134,11 @@ const ENTRY: Record<string, Entry> = {
     types: ['ConvexAuthActionsContextType', 'ConvexAuthApi', 'ConvexAuthProviderOptions', 'TokenBundle', 'TokenStorage'],
   },
   './convex-auth/vue': { source: 'src/runtime/convex-auth/vue/index.ts', aliasOf: './convex-auth/client', values: [], types: [] },
+  './convex-auth/server': {
+    source: 'src/runtime/convex-auth/nuxt/server.ts',
+    values: ['setupConvexAuthNuxt'],
+    types: ['ConvexAuthNuxt', 'ConvexAuthNuxtConfig', 'ConvexAuthNuxtContext'],
+  },
   './convex-auth/methods/username-password': {
     source: 'src/runtime/convex-auth/vue/methods/username-password.ts',
     values: ['useSignInWithUsernamePassword', 'useSignUpWithUsernamePassword'],

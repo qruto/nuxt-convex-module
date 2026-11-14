@@ -381,3 +381,74 @@ describe('nuxt-security\'s defaults', () => {
     expect(upgrade.headers.strictTransportSecurity).toBe(false)
   }, 60_000)
 })
+
+describe('with Convex Auth', () => {
+  const cookieSessions = fileURLToPath(new URL('../fixtures/registration/cookie-sessions', import.meta.url))
+  const pluginsOf = (r: Registered) => r.options.plugins.map(p => (typeof p === 'string' ? p : p.src))
+
+  describe('and no server/convex-auth file', () => {
+    let nuxt: Nuxt
+    let r: Registered
+    beforeAll(async () => ({ nuxt, registered: r } = await load({ betterAuth: false, convexAuth: true })), 60_000)
+    afterAll(() => nuxt.close())
+
+    it('registers the composables and the server setup, and no cookie sessions', () => {
+      expect([...r.imports].sort()).toEqual(names(APP_IMPORTS, ['core', 'convexAuth']).sort())
+      expect(r.serverImports).toContain('setupConvexAuthNuxt')
+      expect(pluginsOf(r).some(p => p.includes('convex-auth'))).toBe(false)
+      expect(r.options.serverHandlers.some(h => JSON.stringify(h.handler).includes('convex-auth'))).toBe(false)
+    })
+
+    it('points #convex/auth-server at a stand-in, before the catch-all', () => {
+      expect(r.options.alias['#convex/auth-server']).toMatch(/runtime\/convex-auth\/nuxt\/no-server/)
+      expect(r.options.nitro.alias?.['#convex/auth-server']).toBe(r.options.alias['#convex/auth-server'])
+      const keys = Object.keys(r.options.alias).filter(k => k.startsWith('#convex'))
+      expect(keys.indexOf('#convex/auth-server')).toBeLessThan(keys.indexOf('#convex'))
+    })
+  })
+
+  describe('and a server/convex-auth file', () => {
+    let nuxt: Nuxt
+    let r: Registered
+    beforeAll(async () => ({ nuxt, registered: r } = await load({ betterAuth: false, convexAuth: true }, { serverDir: cookieSessions })), 60_000)
+    afterAll(() => nuxt.close())
+
+    it('points #convex/auth-server at the app\'s file', () => {
+      expect(r.options.alias['#convex/auth-server']).toBe(`${cookieSessions.split(sep).join('/')}/convex-auth.ts`.split('/').join(sep))
+      expect(r.options.nitro.alias?.['#convex/auth-server']).toBe(r.options.alias['#convex/auth-server'])
+    })
+
+    it('mounts the auth routes for POST and the refresh as middleware', () => {
+      const route = r.options.serverHandlers.find(h => h.route === '/api/_convex/auth/:action')
+      expect(route?.method).toBe('post')
+      expect(JSON.stringify(route?.handler)).toMatch(/runtime\/convex-auth\/nuxt\/handler/)
+      const middleware = r.options.serverHandlers.find(h => h.middleware)
+      expect(JSON.stringify(middleware?.handler)).toMatch(/runtime\/convex-auth\/nuxt\/proxy/)
+      for (const rules of [r.options.routeRules, r.options.nitro.routeRules]) {
+        expect(rules?.['/api/_convex/auth/**']).toMatchObject({ cache: false, prerender: false })
+      }
+    })
+
+    it('adds its plugin after the client plugin it reads', () => {
+      const plugins = pluginsOf(r)
+      const client = plugins.findIndex(p => /runtime\/vue\/plugin(?:\.[cm]?[jt]s)?$/.test(p))
+      const cookies = plugins.findIndex(p => /runtime\/convex-auth\/nuxt\/plugin(?:\.[cm]?[jt]s)?$/.test(p))
+      expect(client).toBeGreaterThanOrEqual(0)
+      expect(cookies).toBeGreaterThan(client)
+    })
+  })
+
+  // Cookie sessions read the client the base plugin provides, and Better Auth
+  // replaces that plugin.
+  describe('a server/convex-auth file, and Better Auth on', () => {
+    let nuxt: Nuxt
+    let r: Registered
+    beforeAll(async () => ({ nuxt, registered: r } = await load({ convexAuth: true }, { serverDir: cookieSessions })), 60_000)
+    afterAll(() => nuxt.close())
+
+    it('registers no cookie sessions', () => {
+      expect(pluginsOf(r).some(p => p.includes('convex-auth'))).toBe(false)
+      expect(r.options.serverHandlers.some(h => h.route === '/api/_convex/auth/:action')).toBe(false)
+    })
+  })
+})
