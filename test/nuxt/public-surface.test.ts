@@ -152,6 +152,31 @@ const ENTRY: Record<string, Entry> = {
       'PasswordRecoveryApi', 'SignInResult', 'SignUpResult', 'StartChangeEmailResult', 'StartPasswordRecoveryResult',
     ],
   },
+  './convex-auth/methods/oauth': {
+    source: 'src/runtime/convex-auth/vue/methods/oauth.ts',
+    values: ['oauth', 'useOauth', 'useOauthSignIn'],
+    types: [
+      'OauthActions', 'OauthCompleteResult', 'OauthFlowError', 'OauthProviderApi', 'OauthProviderRefs', 'OauthStartResult',
+      'SignInOptions', 'UseOauthReturn', 'UseOauthSignInReturn',
+    ],
+    // Upstream's `methods/oauth/react.ts` exports it `@internal`, for the provider hooks.
+    runtimeOnly: ['useOauthSignIn'],
+  },
+  './convex-auth/methods/google': {
+    source: 'src/runtime/convex-auth/vue/methods/google.ts',
+    values: ['useOauth', 'useSignInWithGoogle'],
+    types: ['OauthCompleteResult', 'OauthFlowError', 'OauthStartResult', 'SignInOptions', 'UseOauthReturn', 'UseSignInWithGoogleReturn'],
+  },
+  './convex-auth/methods/apple': {
+    source: 'src/runtime/convex-auth/vue/methods/apple.ts',
+    values: ['useOauth', 'useSignInWithApple'],
+    types: ['OauthCompleteResult', 'OauthFlowError', 'OauthStartResult', 'SignInOptions', 'UseOauthReturn', 'UseSignInWithAppleReturn'],
+  },
+  './convex-auth/methods/github': {
+    source: 'src/runtime/convex-auth/vue/methods/github.ts',
+    values: ['useOauth', 'useSignInWithGithub'],
+    types: ['OauthCompleteResult', 'OauthFlowError', 'OauthStartResult', 'SignInOptions', 'UseOauthReturn', 'UseSignInWithGithubReturn'],
+  },
   './clerk/client': {
     source: 'src/runtime/clerk/vue/index.ts',
     values: ['ConvexProviderWithClerk', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],

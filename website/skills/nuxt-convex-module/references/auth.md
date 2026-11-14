@@ -15,7 +15,7 @@ Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `i
 npm i @convex-dev/auth@^2.0.0
 ```
 
-Users and sessions live in the Convex deployment. Sign-in by username and password, and by email and password, is ported. OAuth and passkeys are not ported yet. Pick one of two session modes.
+Users and sessions live in the Convex deployment. Sign-in by username and password, by email and password, and with Google, Apple or GitHub is ported. Passkeys are not ported yet. Pick one of two session modes.
 
 **Cookie sessions, for an app that renders on the server.** Create `server/convex-auth.ts` and restart `nuxt dev`. That file is the whole setup: the module mounts `POST /api/_convex/auth/{signin,refresh,signout}`, refreshes the session before each render, and starts the client, so there is no provider to call and the composables work in every component.
 
@@ -51,6 +51,7 @@ provideConvexAuth({
 
 - `useSignInWithUsernamePassword(api.auth)` → `{ signIn, pending }`, and `useSignUpWithUsernamePassword(api.auth)` → `{ signUp, pending }`. Both resolve to `{ status: 'complete' }` or `{ status: 'error', userError }` and never throw.
 - Email and password: `useSignInWithEmailPassword`, `useSignUpWithEmailPassword` (sends the validation email, does not sign in), `useStartPasswordRecovery`, `useStartChangeEmail`, each returning its function and `pending`. On the page an emailed link opens: `useCompleteSignUpWithEmailPassword(api.auth, { emailCode })`, `useCompletePasswordRecovery(api.auth, { emailCode })` or `useCompleteChangeEmail(api.auth, { emailCode })`, each a ref of `{ status }`; `emailCode` is the link's `code` query parameter. A link works only in the browser that asked for it. With cookie sessions, add `signInWithEmailPassword`, `completeSignUpWithEmailPassword` and `completePasswordRecovery` to `signIn`.
+- OAuth: `useSignInWithGoogle(api.auth)`, `useSignInWithApple(api.auth)` or `useSignInWithGithub(api.auth)` → `{ signIn }`; `signIn()` leaves for the provider and returns to the same page (`signIn({ redirectTo })` for another). `useOauth()` → `{ flowError }`, a ref with `error` `ACCESS_DENIED`, `EXPIRED`, `INVALID_FLOW` or `OTHER_ERROR` after a failed return, else `null`. Return to a page that is not behind the `convex-auth` middleware. With cookie sessions, add each `completeSignInWith…` function to `signIn`.
 - `useAuthActions()` → `{ signOut, setSession }`. `useAuthToken()` → a ref of the access token, or `null`.
 
 **Convex side** (`@convex-dev/auth` 2.0, which needs `convex` 1.48 or newer). Follow https://docs.convex.dev/auth/convex-auth: the component in `convex/convex.config.ts` and a `convex/auth.ts` that exports `refreshSession`, `signOut`, `isAuthenticated`, `signInWithUsernamePassword` and `signUpWithUsernamePassword`. Version 2 is a rewrite: instructions that mention `@auth/core` or `npx @convex-dev/auth` describe version 1 and do not apply.

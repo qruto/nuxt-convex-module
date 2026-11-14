@@ -31,6 +31,10 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/convex-auth/server` | Nitro/server: `setupConvexAuthNuxt(config)`, with the `ConvexAuthNuxtConfig` type |
 | `nuxt-convex-module/convex-auth/methods/username-password` | `useSignInWithUsernamePassword`, `useSignUpWithUsernamePassword` |
 | `nuxt-convex-module/convex-auth/methods/email-password` | `useSignInWithEmailPassword`, `useSignUpWithEmailPassword`, `useCompleteSignUpWithEmailPassword`, `useStartPasswordRecovery`, `useCompletePasswordRecovery`, `useStartChangeEmail`, `useCompleteChangeEmail` |
+| `nuxt-convex-module/convex-auth/methods/oauth` | `useOauth`, and `oauth()` for a custom `ambientSignIns` |
+| `nuxt-convex-module/convex-auth/methods/google` | `useSignInWithGoogle`, `useOauth` |
+| `nuxt-convex-module/convex-auth/methods/apple` | `useSignInWithApple`, `useOauth` |
+| `nuxt-convex-module/convex-auth/methods/github` | `useSignInWithGithub`, `useOauth` |
 | `nuxt-convex-module/clerk/client` | `provideConvexWithClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/client` | `provideConvexWithAuth0`, `<ConvexProviderWithAuth0>` |
 | `nuxt-convex-module/better-auth/client` | `useBetterAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |

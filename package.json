@@ -84,6 +84,22 @@
       "types": "./dist/runtime/convex-auth/vue/methods/email-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/email-password.js"
     },
+    "./convex-auth/methods/oauth": {
+      "types": "./dist/runtime/convex-auth/vue/methods/oauth.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/oauth.js"
+    },
+    "./convex-auth/methods/google": {
+      "types": "./dist/runtime/convex-auth/vue/methods/google.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/google.js"
+    },
+    "./convex-auth/methods/apple": {
+      "types": "./dist/runtime/convex-auth/vue/methods/apple.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/apple.js"
+    },
+    "./convex-auth/methods/github": {
+      "types": "./dist/runtime/convex-auth/vue/methods/github.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/github.js"
+    },
     "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
@@ -156,6 +172,18 @@
       ],
       "convex-auth/methods/email-password": [
         "./dist/runtime/convex-auth/vue/methods/email-password.d.ts"
+      ],
+      "convex-auth/methods/oauth": [
+        "./dist/runtime/convex-auth/vue/methods/oauth.d.ts"
+      ],
+      "convex-auth/methods/google": [
+        "./dist/runtime/convex-auth/vue/methods/google.d.ts"
+      ],
+      "convex-auth/methods/apple": [
+        "./dist/runtime/convex-auth/vue/methods/apple.d.ts"
+      ],
+      "convex-auth/methods/github": [
+        "./dist/runtime/convex-auth/vue/methods/github.d.ts"
       ],
       "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"

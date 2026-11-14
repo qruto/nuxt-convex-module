@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, type ComputedRef, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { provideAuth, useAuth, useAuthSignInApi, useSessionWatcher, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
 import { ConvexAuthProvider, provideConvexAuth, useAuthActions, useAuthToken } from '../../src/runtime/convex-auth/vue/index'
+import { useAmbientSignInValue } from '../../src/runtime/convex-auth/vue/methods'
+import { useOauth } from '../../src/runtime/convex-auth/vue/methods/oauth'
 import {
   useSignInWithUsernamePassword,
   useSignUpWithUsernamePassword,
@@ -362,6 +364,24 @@ describe('provideConvexAuth ambient sign-ins', () => {
     }))
   }
 
+  it('published setup values are readable in the first setup', () => {
+    let status: string | undefined
+    mountProvider(
+      {
+        ambientSignIns: [{
+          id: 'probe',
+          setup: (ctx) => {
+            ctx.values.set('status', 'registered')
+          },
+        }],
+      },
+      () => {
+        status = useAmbientSignInValue<string>('probe', 'status').value
+      },
+    )
+    expect(status).toBe('registered')
+  })
+
   it('onInit runs once per client', async () => {
     const onInit = vi.fn()
     mountProvider({ ambientSignIns: [{ id: 'probe', setup: () => ({ onInit }) }] })
@@ -424,14 +444,14 @@ describe('provideConvexAuth ambient sign-ins', () => {
     expect(mutationSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('oauth() is registered when no ambient sign-ins are given', async () => {
-    // The default OAuth client reads its callback params on init and strips
-    // them from the URL, so a stripped URL shows it was registered.
-    const replaceState = vi.spyOn(window.history, 'replaceState')
-    window.location.href = 'https://app.test/?convexAuthError=access_denied&keep=1'
-    mountProvider({})
-    await flushPromises()
-    expect(replaceState).toHaveBeenCalledWith(window.history.state, '', 'https://app.test/?keep=1')
+  // The composable throws when oauth() was never registered, so reading it at
+  // all is the assertion.
+  it('oauth() is registered when no ambient sign-ins are given', () => {
+    let flowError: unknown = 'unset'
+    mountProvider({}, () => {
+      flowError = useOauth().flowError.value
+    })
+    expect(flowError).toBeNull()
   })
 })
 

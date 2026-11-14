@@ -11,6 +11,7 @@ import { silentConnectLogger } from '../../helpers/silent-logger'
 // refreshes and signs out through the module's routes, provided app-wide.
 
 const states = new Map<string, { value: unknown }>()
+const router = { replace: vi.fn(async (_to: string) => {}) }
 vi.mock('#app', () => ({
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useState: (key: string, init?: () => unknown) => {
@@ -19,6 +20,7 @@ vi.mock('#app', () => ({
   },
   useRequestEvent: () => undefined,
   useResponseHeader: () => ({ value: undefined }),
+  useRouter: () => router,
 }))
 
 const useSessionWatcher = vi.fn()
@@ -144,6 +146,27 @@ describe('convex-auth cookie-session plugin', () => {
 
     expect(fetch).toHaveBeenCalledWith('/api/_convex/auth/signout', expect.objectContaining({ method: 'POST' }))
     expect(use(() => useAuthToken()).value).toBeNull()
+  })
+
+  // The route keeps the callback params after a bare `history.replaceState`.
+  it('strips an OAuth callback from the URL through the router', async () => {
+    const storage = new Map<string, string>()
+    vi.stubGlobal('window', {
+      location: { href: 'http://localhost/welcome?convexAuthError=access_denied&keep=1#top' },
+      localStorage: {
+        getItem: (key: string) => storage.get(key) ?? null,
+        setItem: (key: string, value: string) => void storage.set(key, value),
+        removeItem: (key: string) => void storage.delete(key),
+      },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })
+    stubFetch({ tokens: null })
+    const { call } = run()
+
+    call('app:suspense:resolve')
+
+    await vi.waitFor(() => expect(router.replace).toHaveBeenCalledWith('/welcome?keep=1#top'))
   })
 
   it('watches the session through the query the payload names', () => {
