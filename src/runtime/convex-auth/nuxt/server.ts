@@ -87,6 +87,8 @@ export interface ConvexAuthNuxtContext {
   token: string | null
   /** The name of the app's `isAuthenticated` query, for the client to subscribe to. */
   isAuthenticatedFunctionName: string
+  /** {@link ConvexAuthNuxt.isAuthenticatedNuxt} for this request, asked of the deployment once. */
+  isAuthenticated: () => Promise<boolean>
 }
 
 type ConvexAuthNuxtEvent = Pick<RequestEvent, 'req' | 'res' | 'context'>
@@ -194,9 +196,11 @@ export function setupConvexAuthNuxt(config: ConvexAuthNuxtConfig) {
    */
   async function convexAuthNuxtProxy(event: ConvexAuthNuxtEvent): Promise<void> {
     const session = newSession(new EventCookieStore(event))
+    let authenticated: Promise<boolean> | undefined
     contextOf(event).convexAuth = {
       token: await session.getToken(), // refresh if near expiry, rewriting cookies
       isAuthenticatedFunctionName: getFunctionName(config.isAuthenticated),
+      isAuthenticated: () => authenticated ??= isAuthenticatedNuxt(event),
     }
   }
 

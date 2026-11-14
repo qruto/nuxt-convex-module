@@ -52,6 +52,29 @@ export const ConvexAuthActionsKey: InjectionKey<ConvexAuthActionsContextType> = 
 /** The current access token (a JWT), or null when signed out. */
 export const ConvexAuthTokenKey: InjectionKey<ComputedRef<string | null>> = Symbol('ConvexAuthToken')
 
+/** The auth state `provideConvexWithAuth` consumes, as {@link provideAuth} returns it. */
+type ConvexAuthInternal = {
+  isLoading: () => boolean
+  isAuthenticated: () => boolean
+  fetchAccessToken: AuthTokenFetcher
+}
+
+const ConvexAuthInternalKey: InjectionKey<ConvexAuthInternal> = Symbol('ConvexAuthInternal')
+
+/**
+ * The session's own auth state: whether it is still loading, and whether
+ * there is a session. Unlike `useConvexAuth`, it does not wait for the
+ * Convex connection to accept the token, so it answers right after a
+ * sign-in. The `convex-auth` route middleware decides by it.
+ */
+export function useAuth(): ConvexAuthInternal {
+  const auth = inject(ConvexAuthInternalKey, undefined)
+  if (auth === undefined) {
+    throw new Error('useAuth must be used below `provideConvexAuth` (or within a <ConvexAuthProvider>).')
+  }
+  return auth
+}
+
 /**
  * Watches the app's `isAuthenticated` query and signs the client out when its
  * session is revoked server-side.
@@ -107,8 +130,8 @@ const COMPONENT: AuthProviderTarget = { provide, onMounted, onUnmounted: onScope
  * returned auth state to `provideConvexWithAuth`.
  *
  * Upstream's `<AuthProvider>` puts that state in a context for a module-level
- * `useAuth` to read. Here it is the return value, for the same reason as in
- * {@link useSessionWatcher}.
+ * `useAuth` to read. Here it is the return value as well, for the same reason
+ * as in {@link useSessionWatcher}.
  */
 export function provideAuth({
   authClient,
@@ -117,11 +140,7 @@ export function provideAuth({
   authClient: AuthClient
   /** How the sign-in composables execute their sign-in functions. See {@link AuthSignInApi}. */
   signInApi: AuthSignInApi
-}, target: AuthProviderTarget = COMPONENT): {
-  isLoading: () => boolean
-  isAuthenticated: () => boolean
-  fetchAccessToken: AuthTokenFetcher
-} {
+}, target: AuthProviderTarget = COMPONENT): ConvexAuthInternal {
   // Before `init()` reads storage the snapshot is the loading state, on the
   // server and in the browser alike. `init()` runs after mount, so the first
   // client render matches the server's.
@@ -153,6 +172,7 @@ export function provideAuth({
     signOut: authClient.signOut,
   }
 
+  target.provide(ConvexAuthInternalKey, authState)
   target.provide(ConvexAuthSignInApiKey, signInApi)
   target.provide(ConvexAuthActionsKey, actions)
   target.provide(ConvexAuthTokenKey, computed(() => state.value.token))

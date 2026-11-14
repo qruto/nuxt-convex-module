@@ -76,7 +76,7 @@ export interface ModuleOptionDiagnostics {
   warnings: string[]
   /** `authRoute` with a leading slash ensured and any trailing slash stripped. */
   authRoute: string
-  /** `betterAuth.loginPath`, normalised the same way. */
+  /** The login path, normalised the same way. */
   loginPath: string
 }
 
@@ -120,6 +120,8 @@ export function validateModuleOptions(input: {
   siteUrl: string
   authRoute: string
   loginPath?: string
+  /** The option `loginPath` came from, for the warning. Defaults to Better Auth's. */
+  loginPathOption?: string
   authClient?: string
   rootDir: string
 }): ModuleOptionDiagnostics {
@@ -149,7 +151,7 @@ export function validateModuleOptions(input: {
   }
 
   const authRoute = normalizeRoutePath(input.authRoute, 'convex.betterAuth.authRoute', warnings)
-  const loginPath = normalizeRoutePath(input.loginPath ?? '/login', 'convex.betterAuth.loginPath', warnings)
+  const loginPath = normalizeRoutePath(input.loginPath ?? '/login', input.loginPathOption ?? 'convex.betterAuth.loginPath', warnings)
   // The bundled Better Auth client is created with Better Auth's default
   // `basePath`, `/api/auth`. Moving the proxy without moving the client leaves
   // every auth call hitting a route that no longer exists — silently, as 404s.

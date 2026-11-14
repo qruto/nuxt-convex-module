@@ -52,6 +52,7 @@ What the proxy leaves on `event.context` for the rest of the request.
 | ------ | ------ | ------ | ------ |
 | <a id="token"></a> `token` | `string` \| `null` | The (possibly just-refreshed) access token, or null. | [src/runtime/convex-auth/nuxt/server.ts:87](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L87) |
 | <a id="isauthenticatedfunctionname"></a> `isAuthenticatedFunctionName` | `string` | The name of the app's `isAuthenticated` query, for the client to subscribe to. | [src/runtime/convex-auth/nuxt/server.ts:89](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L89) |
+| <a id="isauthenticated-1"></a> `isAuthenticated` | () => `Promise`\<`boolean`\> | ConvexAuthNuxt.isAuthenticatedNuxt for this request, asked of the deployment once. | [src/runtime/convex-auth/nuxt/server.ts:91](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L91) |
 
 ## Type Aliases
 
@@ -61,7 +62,7 @@ What the proxy leaves on `event.context` for the rest of the request.
 type ConvexAuthNuxt = ReturnType<typeof setupConvexAuthNuxt>;
 ```
 
-Defined in: [src/runtime/convex-auth/nuxt/server.ts:244](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L244)
+Defined in: [src/runtime/convex-auth/nuxt/server.ts:248](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L248)
 
 What [setupConvexAuthNuxt](#setupconvexauthnuxt) returns.
 
@@ -80,7 +81,7 @@ function setupConvexAuthNuxt(config): {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/nuxt/server.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L148)
+Defined in: [src/runtime/convex-auth/nuxt/server.ts:150](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L150)
 
 Build the Nuxt server helpers from one config. Export the result as the
 default export of `server/convex-auth.ts`: the module mounts the auth
@@ -111,9 +112,9 @@ export default setupConvexAuthNuxt({
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `refreshHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:234](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L234) |
-| `signOutHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:235](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L235) |
-| `convexProxyHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:236](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L236) |
-| `convexAuthNuxtProxy()` | (`event`) => `Promise`\<`void`\> | [src/runtime/convex-auth/nuxt/server.ts:237](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L237) |
-| `convexAuthNuxtAccessToken()` | (`event`) => `Promise`\<`string` \| `null`\> | [src/runtime/convex-auth/nuxt/server.ts:238](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L238) |
-| `isAuthenticatedNuxt()` | (`event`) => `Promise`\<`boolean`\> | [src/runtime/convex-auth/nuxt/server.ts:239](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L239) |
+| `refreshHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:238](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L238) |
+| `signOutHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:239](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L239) |
+| `convexProxyHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:240](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L240) |
+| `convexAuthNuxtProxy()` | (`event`) => `Promise`\<`void`\> | [src/runtime/convex-auth/nuxt/server.ts:241](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L241) |
+| `convexAuthNuxtAccessToken()` | (`event`) => `Promise`\<`string` \| `null`\> | [src/runtime/convex-auth/nuxt/server.ts:242](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L242) |
+| `isAuthenticatedNuxt()` | (`event`) => `Promise`\<`boolean`\> | [src/runtime/convex-auth/nuxt/server.ts:243](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L243) |
