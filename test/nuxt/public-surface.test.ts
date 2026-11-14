@@ -144,6 +144,14 @@ const ENTRY: Record<string, Entry> = {
     values: ['useSignInWithUsernamePassword', 'useSignUpWithUsernamePassword'],
     types: ['Credentials', 'SignInWithUsernamePasswordResult', 'SignUpWithUsernamePasswordResult'],
   },
+  './convex-auth/methods/email-password': {
+    source: 'src/runtime/convex-auth/vue/methods/email-password.ts',
+    values: ['useCompleteChangeEmail', 'useCompletePasswordRecovery', 'useCompleteSignUpWithEmailPassword', 'useSignInWithEmailPassword', 'useSignUpWithEmailPassword', 'useStartChangeEmail', 'useStartPasswordRecovery'],
+    types: [
+      'CompleteChangeEmailState', 'CompletePasswordRecoveryResult', 'CompletePasswordRecoveryState', 'CompleteSignUpState', 'LinkFlowState',
+      'PasswordRecoveryApi', 'SignInResult', 'SignUpResult', 'StartChangeEmailResult', 'StartPasswordRecoveryResult',
+    ],
+  },
   './clerk/client': {
     source: 'src/runtime/clerk/vue/index.ts',
     values: ['ConvexProviderWithClerk', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],

@@ -80,6 +80,10 @@
       "types": "./dist/runtime/convex-auth/vue/methods/username-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/username-password.js"
     },
+    "./convex-auth/methods/email-password": {
+      "types": "./dist/runtime/convex-auth/vue/methods/email-password.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/email-password.js"
+    },
     "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
       "import": "./dist/runtime/better-auth/vue/index.js"
@@ -149,6 +153,9 @@
       ],
       "convex-auth/methods/username-password": [
         "./dist/runtime/convex-auth/vue/methods/username-password.d.ts"
+      ],
+      "convex-auth/methods/email-password": [
+        "./dist/runtime/convex-auth/vue/methods/email-password.d.ts"
       ],
       "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"
