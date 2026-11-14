@@ -970,7 +970,7 @@ and its marker.
   with the session still standing", "drops the token when the server says the session is gone",
   "never answers a failed refresh with another session's token", "never answers a failed refresh
   with a page token that belongs to another user"
-- **Reported** · not yet
+- **Reported** · [convex/better-auth#478](https://github.com/convex/better-auth/pull/478)
 - **On sync** · keep; if upstream handles failed fetches, compare before dropping the entry
 - **Why** · upstream turns every failed fetch into `null`, and on `null` the sync client signs a live
   connection out and never retries, so one failed request leaves the page without Convex auth until a
