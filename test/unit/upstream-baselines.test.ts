@@ -50,6 +50,7 @@ describe('upstream baselines', () => {
     ['`/auth0/client`', upstreamBaselines.convex.version],
     ['`/better-auth/client`', upstreamBaselines['better-auth'].version],
     ['`/polar/client`', upstreamBaselines.polar.version],
+    ['`/rate-limiter/client`', upstreamBaselines['rate-limiter'].version],
   ]
 
   it.each(overviewRows)('states the components overview’s %s row as the pinned version', (token, version) => {

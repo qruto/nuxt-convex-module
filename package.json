@@ -34,7 +34,8 @@
     "clerk",
     "auth0",
     "polar",
-    "billing"
+    "billing",
+    "rate-limiter"
   ],
   "type": "module",
   "sideEffects": false,
@@ -128,6 +129,10 @@
       "types": "./dist/runtime/polar/vue/components.d.ts",
       "import": "./dist/runtime/polar/vue/components.js"
     },
+    "./rate-limiter/client": {
+      "types": "./dist/runtime/rate-limiter/vue/index.d.ts",
+      "import": "./dist/runtime/rate-limiter/vue/index.js"
+    },
     "./clerk/client": {
       "types": "./dist/runtime/clerk/vue/index.d.ts",
       "import": "./dist/runtime/clerk/vue/index.js"
@@ -214,6 +219,9 @@
       "polar/vue": [
         "./dist/runtime/polar/vue/components.d.ts"
       ],
+      "rate-limiter/client": [
+        "./dist/runtime/rate-limiter/vue/index.d.ts"
+      ],
       "clerk/client": [
         "./dist/runtime/clerk/vue/index.d.ts"
       ],
@@ -280,6 +288,7 @@
     "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": ">=0.13.0 <0.14.0",
     "@convex-dev/polar": ">=0.9.0 <0.10.0",
+    "@convex-dev/rate-limiter": ">=0.4.0 <0.5.0",
     "@polar-sh/checkout": "^0.6.0",
     "@simplewebauthn/browser": "^14.0.0",
     "better-auth": "~1.7.16",
@@ -301,6 +310,9 @@
       "optional": true
     },
     "@convex-dev/polar": {
+      "optional": true
+    },
+    "@convex-dev/rate-limiter": {
       "optional": true
     },
     "@polar-sh/checkout": {
@@ -325,6 +337,7 @@
     "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": "^0.13.0",
     "@convex-dev/polar": "^0.9.2",
+    "@convex-dev/rate-limiter": "^0.4.3",
     "@nuxt/devtools": "^4.0.0",
     "@nuxt/devtools-kit": "^4.0.0",
     "@nuxt/eslint": "^1.17.0",

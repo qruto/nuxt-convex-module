@@ -122,6 +122,12 @@ export interface ModuleOptions {
    */
   auth0?: boolean
   /**
+   * Rate limiter composable (`useRateLimit`), a port of
+   * `@convex-dev/rate-limiter/react`. Auto-enabled when
+   * `@convex-dev/rate-limiter` is a dependency of your app; set `false` to force it off.
+   */
+  rateLimiter?: boolean
+  /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
    * `modules`) — the module registers it as a module dependency and extends its
@@ -330,6 +336,19 @@ function isDevtoolsUiEnabled(nuxt: Nuxt): boolean {
 }
 
 /**
+ * The integrations that add only auto-imports and components, each with the
+ * package whose presence turns it on: the Clerk and Auth0 adapters (ports of
+ * `convex/react-clerk` and `convex/react-auth0`), Polar's billing components,
+ * and the components' own React entries.
+ */
+const PLAIN_INTEGRATIONS = [
+  ['clerk', '@clerk/vue'],
+  ['auth0', '@auth0/auth0-vue'],
+  ['polar', '@convex-dev/polar'],
+  ['rateLimiter', '@convex-dev/rate-limiter'],
+] as const
+
+/**
  * Enable the opt-in integrations, auto-detected when their package is a
  * dependency of the app and resolvable (the explicit option wins when set). Mirrors how `@convex-dev/better-auth` and
  * `@convex-dev/polar` are separate upstream packages — here they light up
@@ -365,27 +384,22 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
     registerConvexAuth(resolver, policy, betterAuth ? undefined : findConvexAuthServer(nuxt), betterAuth)
   }
 
-  const clerk = resolve('clerk', '@clerk/vue')
-  if (clerk) {
-    registerClerk(resolver, policy)
-  }
-
-  const auth0 = resolve('auth0', '@auth0/auth0-vue')
-  if (auth0) {
-    registerAuth0(resolver, policy)
-  }
-
-  const polar = resolve('polar', '@convex-dev/polar')
-  if (polar) {
-    registerPolarComponents(resolver, policy)
-  }
+  // The rest only add auto-imports and components.
+  const plain = Object.fromEntries(PLAIN_INTEGRATIONS.map(([key, pkg]) => {
+    const enabled = resolve(key, pkg)
+    if (enabled) {
+      registerIntegrationImports(resolver, key, policy)
+      registerComponents(resolver, key, policy)
+    }
+    return [key, enabled]
+  })) as Record<(typeof PLAIN_INTEGRATIONS)[number][0], boolean>
 
   const security = report('security', 'nuxt-security', resolveSecurityState(nuxt, options.security))
   if (security) {
     registerSecurity(resolver)
   }
 
-  const flags = { convexAuth, betterAuth, clerk, auth0, polar, security }
+  const flags = { convexAuth, betterAuth, ...plain, security }
   // The runtime's own imports resolve from this module's folder, so the
   // warnings ask whether a package is there or at the root. Vite resolves the
   // include list from the root alone, so that list asks how to reach it.
@@ -789,32 +803,4 @@ function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, serv
       global: false,
     })
   }
-}
-
-/**
- * Wire the Clerk auth adapter (a Vue/Nuxt port of `convex/react-clerk`): the
- * `provideConvexWithClerk` composable and the `<ConvexProviderWithClerk>`
- * drop-in component. Both reuse the generic `provideConvexWithAuth` primitive.
- */
-function registerClerk(resolver: Resolver, policy: RegistrationPolicy): void {
-  registerIntegrationImports(resolver, 'clerk', policy)
-  registerComponents(resolver, 'clerk', policy)
-}
-
-/**
- * Wire the Auth0 auth adapter (a Vue/Nuxt port of `convex/react-auth0`): the
- * `provideConvexWithAuth0` composable and the `<ConvexProviderWithAuth0>`
- * drop-in component. Both reuse the generic `provideConvexWithAuth` primitive.
- */
-function registerAuth0(resolver: Resolver, policy: RegistrationPolicy): void {
-  registerIntegrationImports(resolver, 'auth0', policy)
-  registerComponents(resolver, 'auth0', policy)
-}
-
-/**
- * Register the Polar billing components (`<CheckoutLink>` / `<CustomerPortalLink>`,
- * Vue ports of `@convex-dev/polar/react`) as global components.
- */
-function registerPolarComponents(resolver: Resolver, policy: RegistrationPolicy): void {
-  registerComponents(resolver, 'polar', policy)
 }

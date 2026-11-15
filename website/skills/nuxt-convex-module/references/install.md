@@ -150,6 +150,6 @@ If something fails, every message the module prints is listed with its fix in [T
 - If you created a local deployment: it lives on their machine. To move it to a Convex account, they run `npx convex login` in their own terminal; it offers to link the existing deployment.
 - For production: `npx convex deploy --cmd "npm run build"` (with their package manager) pushes the functions to the production deployment and builds with its URL, because the module reads the `CONVEX_URL` that the command sets. Alternatively, set `NUXT_PUBLIC_CONVEX_URL` (and `NUXT_PUBLIC_CONVEX_SITE_URL` with Better Auth) in the build environment.
 - Convex's own guidelines for writing backend functions: `npx convex ai-files install` writes them to `convex/_generated/ai/` and points `AGENTS.md` and `CLAUDE.md` at them. Offer it; it edits those two files.
-- What they can add: Better Auth, Clerk or Auth0 ([auth.md](auth.md)), Polar billing ([polar.md](polar.md)), and `nuxt-security` for a CSP that knows the deployment's origins.
+- What they can add: Better Auth, Clerk or Auth0 ([auth.md](auth.md)), Polar billing ([polar.md](polar.md)), the client side of Convex components such as the rate limiter ([components.md](components.md)), and `nuxt-security` for a CSP that knows the deployment's origins.
 
 Install the optional packages only when the user asks for them. If you skipped step 3, offer the example: a `messages` table with a live list and a form.
