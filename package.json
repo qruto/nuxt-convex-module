@@ -400,7 +400,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@auth0/auth0-vue": "^2.11.0",
-    "@clerk/vue": "2.5.19",
+    "@clerk/vue": "2.5.20",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@convex-dev/auth": "^2.0.0",
