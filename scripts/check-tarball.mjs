@@ -128,6 +128,7 @@ const allowed = {
   './presence/client': [],
   // The component imports the package's own stylesheet.
   './presence/facepile': ['@convex-dev/presence'],
+  './r2/client': ['@convex-dev/r2'],
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
@@ -317,9 +318,11 @@ try {
   // Presence adds the composable, the single-flight helper it uses and
   // `<FacePile>` (+15 KB, 6 files): 787.5 KB in 202 files, so the ceiling moves to
   // 795 KB / 202 files.
+  // R2's upload composable and the helper it copies add 4 files (+3.4 KB):
+  // 791.0 KB in 206 files, so the ceiling moves to 206 files.
   console.log('── Size ───────────────────────────────────────')
   const MAX_BYTES = 795_000
-  const MAX_FILES = 202
+  const MAX_FILES = 206
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

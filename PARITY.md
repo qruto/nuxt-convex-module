@@ -18,6 +18,7 @@ are in [AGENTS.md](./AGENTS.md).
 | `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 | `@convex-dev/presence` | **0.4.0** | tag `v0.4.0` in [convex/presence](https://github.com/convex/presence) |
+| `@convex-dev/r2` | **0.10.4** | tag `v0.10.4` in [get-convex/r2](https://github.com/get-convex/r2) |
 | `@convex-dev/rate-limiter` | **0.4.3** | tag `v0.4.3` in [convex/rate-limiter](https://github.com/convex/rate-limiter) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
@@ -62,6 +63,7 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/presence` — `react`: `usePresence`; `facepile`: `<FacePile>` | `src/runtime/presence/vue/**` | Complete · D-01, F-06 |
 | `@convex-dev/presence` — `react-native` | — | Out of scope: the module has no React Native target |
+| `@convex-dev/r2` — `vue`, `react`, `svelte`: `useUploadFile` | `src/runtime/r2/vue/index.ts` | Complete · D-21 |
 | `@convex-dev/rate-limiter` — `react`: `useRateLimit` | `src/runtime/rate-limiter/vue/index.ts` | Complete · D-01 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -176,6 +178,8 @@ source.
 | presence `react/index.ts` — `usePresence` | `presence/vue/index.ts` — `roomId`, `userId`, `interval` and `convexUrl` are values, refs or getters (N-05), the result is a ref (N-06), and one watcher runs what upstream splits across three effects |
 | presence `react/useSingleFlight.ts` | `presence/vue/use-single-flight.ts` |
 | presence `facepile/index.tsx` — `FacePile` | `presence/vue/facepile.ts` — the stylesheet is the package's own `@convex-dev/presence/facepile.css` |
+| r2 `vue/index.ts` — `useUploadFile` | `r2/vue/index.ts` — the module's client where upstream imports `convex-vue`'s |
+| r2 `client/upload.ts` — `uploadWithProgress` | `r2/upstream/client/upload.ts`, copied (D-21) |
 | rate-limiter `react/index.ts` — `useRateLimit` | `rate-limiter/vue/index.ts` — `opts` is a value, a ref or a getter (N-05), `status` is a ref (N-06) |
 
 **Port-only files** — no upstream origin; each is an `A-*` entry in [§3.3](#33-port-only-additions-a-)
@@ -634,6 +638,16 @@ upstream routes through that client has to land somewhere else here.
   passkey client is the one file that imports `@simplewebauthn/browser`. `@convex-dev/auth`
   depends on that package, and the module names it as an optional peer so that a package manager
   with isolated installs links it to the module too. The `custom` entry does not import it.
+
+##### D-21 — R2's upload helper is a copy
+
+- **Upstream** · `@convex-dev/r2@0.10.4` `client/upload.ts`
+- **Port** · [`r2/upstream/client/upload.ts`](./src/runtime/r2/upstream/client/upload.ts) — `uploadWithProgress`
+- **Pinned by** · `test/unit/r2-upstream-copies.test.ts`
+- **On sync** · copy the file again if it changed
+- **Why** · the package exports it from no entry. Its own `vue` entry imports it, but that entry
+  also imports the community `convex-vue`, and the root entry pulls in the AWS SDK. The copy is
+  byte for byte, 34 lines.
 
 #### Type and signature refinements
 
@@ -1193,6 +1207,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-15 | `@convex-dev/r2` | → 0.10.4 | #176 | Initial pin: `useUploadFile`, with the upload helper copied (D-21) |
 | 2026-11-15 | `@convex-dev/presence` | → 0.4.0 | #175 | Initial pin: `usePresence` and `<FacePile>`, with F-06 |
 | 2026-11-15 | `@convex-dev/rate-limiter` | → 0.4.3 | #174 | Initial pin: `useRateLimit` |
 | 2026-11-14 | `@convex-dev/auth` | → 2.0.0 | #168 | Initial pin: the `react` client (N-16), the username and password composables, and the copied OAuth client (D-20) |

@@ -48,6 +48,7 @@ export default createConfigForNuxt({
         'src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts',
         'src/runtime/convex-auth/upstream/methods/username-passkey/base64url.ts',
         'src/runtime/convex-auth/upstream/methods/username-passkey/management/flows.ts',
+        'src/runtime/r2/upstream/client/upload.ts',
       ],
     },
     // A Nuxt page is named by its route: a fixture's `pages/index.vue` is `/`.

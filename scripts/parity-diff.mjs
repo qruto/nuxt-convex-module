@@ -49,6 +49,12 @@ const TIERS = {
     tag: v => `v${v}`,
     paths: ['src/react', 'src/facepile'],
   },
+  'r2': {
+    repo: 'get-convex/r2',
+    tag: v => `v${v}`,
+    // The Vue entry the port translates, and the upload helper it copies.
+    paths: ['src/vue', 'src/client/upload.ts'],
+  },
 }
 
 const [tier, toArg, fromArg] = process.argv.slice(2)

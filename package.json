@@ -36,7 +36,8 @@
     "polar",
     "billing",
     "rate-limiter",
-    "presence"
+    "presence",
+    "r2"
   ],
   "type": "module",
   "sideEffects": false,
@@ -142,6 +143,10 @@
       "types": "./dist/runtime/presence/vue/facepile.d.ts",
       "import": "./dist/runtime/presence/vue/facepile.js"
     },
+    "./r2/client": {
+      "types": "./dist/runtime/r2/vue/index.d.ts",
+      "import": "./dist/runtime/r2/vue/index.js"
+    },
     "./clerk/client": {
       "types": "./dist/runtime/clerk/vue/index.d.ts",
       "import": "./dist/runtime/clerk/vue/index.js"
@@ -237,6 +242,9 @@
       "presence/facepile": [
         "./dist/runtime/presence/vue/facepile.d.ts"
       ],
+      "r2/client": [
+        "./dist/runtime/r2/vue/index.d.ts"
+      ],
       "clerk/client": [
         "./dist/runtime/clerk/vue/index.d.ts"
       ],
@@ -304,6 +312,7 @@
     "@convex-dev/better-auth": ">=0.13.0 <0.14.0",
     "@convex-dev/polar": ">=0.9.0 <0.10.0",
     "@convex-dev/presence": ">=0.4.0 <0.5.0",
+    "@convex-dev/r2": ">=0.10.0 <0.11.0",
     "@convex-dev/rate-limiter": ">=0.4.0 <0.5.0",
     "@polar-sh/checkout": "^0.6.0",
     "@simplewebauthn/browser": "^14.0.0",
@@ -329,6 +338,9 @@
       "optional": true
     },
     "@convex-dev/presence": {
+      "optional": true
+    },
+    "@convex-dev/r2": {
       "optional": true
     },
     "@convex-dev/rate-limiter": {
@@ -357,6 +369,7 @@
     "@convex-dev/better-auth": "^0.13.0",
     "@convex-dev/polar": "^0.9.2",
     "@convex-dev/presence": "^0.4.0",
+    "@convex-dev/r2": "^0.10.4",
     "@convex-dev/rate-limiter": "^0.4.3",
     "@nuxt/devtools": "^4.0.0",
     "@nuxt/devtools-kit": "^4.0.0",

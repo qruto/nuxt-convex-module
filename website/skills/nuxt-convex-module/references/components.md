@@ -32,3 +32,15 @@ Convex side: `new Presence(components.presence)` and three functions in one modu
 Client side: `usePresence(api.presence, roomId, userId)` → a ref of the room's users, current user first, `undefined` until the first heartbeat answers. `roomId` and `userId` can be refs or getters; a change leaves the old room. `<FacePile :presence-state="presenceState ?? []" />` renders avatars with the package's own stylesheet. The functions may live in any module: the tab-close beacon uses the `disconnect` reference given.
 
 Docs: https://nuxt-convex-module.dev/raw/components/presence.md
+
+## R2
+
+```bash
+npm i @convex-dev/r2@~0.10.0
+```
+
+Convex side: `new R2(components.r2)` with the bucket's `R2_*` environment variables (ask the user for them, never invent them), and `export const { generateUploadUrl, syncMetadata } = r2.clientApi<DataModel>({ checkUpload, onUpload })`.
+
+Client side: `const uploadFile = useUploadFile(api.example)`, then `await uploadFile(file, { onProgress })` → the object's key. Do not import from `@convex-dev/r2/vue`: it needs the community `convex-vue` client. For Convex's own file storage use `useUpload` instead.
+
+Docs: https://nuxt-convex-module.dev/raw/components/r2.md

@@ -51,6 +51,7 @@ describe('upstream baselines', () => {
     ['`/better-auth/client`', upstreamBaselines['better-auth'].version],
     ['`/polar/client`', upstreamBaselines.polar.version],
     ['`/presence/client`', upstreamBaselines.presence.version],
+    ['`/r2/client`', upstreamBaselines.r2.version],
     ['`/rate-limiter/client`', upstreamBaselines['rate-limiter'].version],
   ]
 
