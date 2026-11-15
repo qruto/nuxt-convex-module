@@ -145,3 +145,7 @@ npm i @auth0/auth0-vue
 Full reference: https://nuxt-convex-module.dev/raw/components/auth0.md.
 
 After any Convex-side change, run `npx convex dev --once` (or keep the `dev` script running) so the deployment and `convex/_generated/` pick it up.
+
+## WorkOS AuthKit
+
+There is no adapter: WorkOS has no Vue SDK. Create `@workos-inc/authkit-js`'s client in a client-only plugin, then call `provideConvexWithAuth({ client: useConvex()!, useAuth: () => ({ isLoading, isAuthenticated, fetchAccessToken }) })` in `app.vue`, with `fetchAccessToken` returning `authkit.getAccessToken()` or `null` on error. The full code: https://nuxt-convex-module.dev/raw/recipes/workos-authkit.md

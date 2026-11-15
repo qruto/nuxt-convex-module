@@ -6,7 +6,7 @@
 
 <p align="center"><a href="https://convex.dev">Convex</a> backend integration with live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment.</p>
 
-<p align="center"><sub>The same <a href="https://vuejs.org">Vue</a> client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in.</sub></p>
+<p align="center"><sub>The same <a href="https://vuejs.org">Vue</a> client runs without Nuxt; Convex Auth, Better Auth, Clerk, Auth0, Polar and Convex components are opt-in.</sub></p>
 
 <p align="center"><a href="https://nuxt.com"><img src="https://img.shields.io/badge/Nuxt-020420?logo=nuxt&style=plastic" alt="Nuxt"></a> <a href="https://convex.dev"><img src="https://img.shields.io/badge/Convex-020420?logo=convex&style=plastic" alt="Convex"></a> &nbsp;<sup>•</sup>&nbsp; <a href="https://npmjs.com/package/nuxt-convex-module"><img src="https://img.shields.io/npm/v/nuxt-convex-module/latest.svg?style=plastic&colorA=020420&colorB=00DC82" alt="npm version"></a> <a href="https://npm.chart.dev/nuxt-convex-module"><img src="https://img.shields.io/npm/dm/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82" alt="npm downloads"></a> &nbsp;<sup>•</sup>&nbsp; <a href="https://github.com/qruto/nuxt-convex-module/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/qruto/nuxt-convex-module/ci.yml?branch=main&style=plastic&colorA=020420&label=tests" alt="Tests"></a> <a href="https://codecov.io/gh/qruto/nuxt-convex-module"><img src="https://img.shields.io/codecov/c/github/qruto/nuxt-convex-module?style=plastic&colorA=020420&label=coverage" alt="Coverage"></a> &nbsp;<sup>•</sup>&nbsp; <a href="https://npmjs.com/package/nuxt-convex-module"><img src="https://img.shields.io/npm/l/nuxt-convex-module.svg?style=plastic&colorA=020420&colorB=00DC82" alt="License"></a></p>
 
@@ -32,14 +32,14 @@ npx nuxi@latest module add nuxt-convex-module
 - 🖥️ **SSR and preloading** — [`useAsyncQuery`, `useAsyncPaginatedQuery`, `fetchQuery`, `preloadQuery`](https://nuxt-convex-module.dev/guide/server-and-ssr) for hydration-safe server rendering; `fetchMutation` / `fetchAction` on the Nitro side.
 - 📁 **File storage** — [`useUpload`, `useUploadQueue`, `useStorageUrl`](https://nuxt-convex-module.dev/guide/file-storage) and `<ConvexImage>`.
 - 🔐 **Auth state** — provider-agnostic [`useConvexAuth` / `provideConvexWithAuth`](https://nuxt-convex-module.dev/guide/auth-state) and the `<Authenticated>` / `<Unauthenticated>` / `<AuthLoading>` / `<AuthRefreshing>` components.
-- 🧩 **Opt-in integrations** — install [Better Auth, Clerk, Auth0 or Polar](https://nuxt-convex-module.dev/components) and they wire themselves up.
+- 🧩 **Opt-in integrations** — install [Convex Auth, Better Auth, Clerk, Auth0, Polar, or a component such as the rate limiter or presence](https://nuxt-convex-module.dev/components) and it wires itself up.
 - 🛡️ **Security** — install [`nuxt-security`](https://nuxt-convex-module.dev/getting-started/security) and the CSP learns your deployment's origins.
 - 🧰 **DevTools** — a Convex tab in [Nuxt DevTools](https://nuxt-convex-module.dev/guide/devtools): connection, live subscriptions, server logs, auth state.
 - 🤖 **AI agents** — an [agent skill](https://nuxt-convex-module.dev/getting-started/ai-agents) that installs the module and knows its API, a docs MCP server, and every page as Markdown.
 
 All of it is auto-imported — composables and components in the app, `fetch*` helpers in Nitro — and also reachable through [subpath exports](https://nuxt-convex-module.dev/api-reference#subpath-exports). The same Vue client runs in a [plain Vue app](https://nuxt-convex-module.dev/guide/plain-vue) with no Nuxt involved.
 
-**Packages covered:** `convex` (its `/react`, `/nextjs`, `/react-clerk` and `/react-auth0` entry points), `@convex-dev/better-auth` and `@convex-dev/polar` — each with its pinned upstream version under [Components](https://nuxt-convex-module.dev/components).
+**Packages covered:** `convex` (its `/react`, `/nextjs`, `/react-clerk` and `/react-auth0` entry points), `@convex-dev/auth`, `@convex-dev/better-auth`, `@convex-dev/polar`, `@convex-dev/rate-limiter`, `@convex-dev/presence`, `@convex-dev/r2`, `@convex-dev/persistent-text-streaming` and `convex-helpers` — each with its pinned upstream version under [Components](https://nuxt-convex-module.dev/components).
 
 ## How it's built
 
@@ -53,7 +53,7 @@ Composables follow [VueUse](https://vueuse.org) conventions (`MaybeRefOrGetter` 
 
 - [Installation](https://nuxt-convex-module.dev/getting-started/installation) · [AI agents](https://nuxt-convex-module.dev/getting-started/ai-agents) · [Configuration](https://nuxt-convex-module.dev/getting-started/configuration) · [Security](https://nuxt-convex-module.dev/getting-started/security) · [Troubleshooting](https://nuxt-convex-module.dev/getting-started/troubleshooting)
 - [Guide](https://nuxt-convex-module.dev/guide) — queries, mutations and actions, pagination, file storage, server and SSR, auth state, connection state, DevTools, plain Vue
-- [Components](https://nuxt-convex-module.dev/components) — Better Auth, Clerk, Auth0, Polar
+- [Components](https://nuxt-convex-module.dev/components) — Convex Auth, Better Auth, Clerk, Auth0, Polar, Rate Limiter, Presence, R2, Text Streaming, Convex Helpers
 - [API reference](https://nuxt-convex-module.dev/api-reference) and [Recipes](https://nuxt-convex-module.dev/recipes)
 
 ## A taste
