@@ -400,7 +400,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@auth0/auth0-vue": "^2.11.0",
-    "@clerk/vue": "2.5.19",
+    "@clerk/vue": "2.5.20",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@convex-dev/auth": "^2.0.0",
@@ -410,7 +410,7 @@
     "@convex-dev/presence": "^0.4.0",
     "@convex-dev/r2": "^0.10.4",
     "@convex-dev/rate-limiter": "^0.4.3",
-    "@nuxt/devtools": "^4.0.0",
+    "@nuxt/devtools": "^4.2.0",
     "@nuxt/devtools-kit": "^4.0.0",
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/eslint-config": "^1.17.0",
