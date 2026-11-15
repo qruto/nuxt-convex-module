@@ -55,7 +55,8 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — the OAuth client, `oauth()` | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports it · D-20 |
 | `@convex-dev/auth` — `ssr/nextjs`: the server helpers and the client provider | `src/runtime/convex-auth/nuxt/**` | Complete + additive · N-17, X-07, A-19 |
 | `@convex-dev/auth` — `ssr`: the auth handlers, the server session, the auth checker | imported as-is from `@convex-dev/auth/ssr` | Reused, never reimplemented |
-| `@convex-dev/auth` — the OAuth and passkey hooks | — | Not ported yet |
+| `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
+| `@convex-dev/auth` — the passkey hooks | — | Not ported yet |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -152,8 +153,11 @@ source.
 | auth `react/index.tsx` | `convex-auth/vue/index.ts` |
 | auth `react/client.tsx` | `convex-auth/vue/client.ts` (N-16) |
 | auth `react/functionReference.ts` | none: it keeps a reference stable between renders, and a composable's `setup` runs once |
+| auth `react/methods.ts` | `convex-auth/vue/methods.ts` |
 | auth `methods/username-password/react.tsx` | `convex-auth/vue/methods/username-password.ts` |
 | auth `methods/email-password/react.tsx` | `convex-auth/vue/methods/email-password.ts` — the landing-page hooks return a ref of their state (N-06) and take `emailCode` as a value, a ref or a getter (N-05) |
+| auth `methods/oauth/react.ts` | `convex-auth/vue/methods/oauth.ts` — `flowError` is a ref (N-06) |
+| auth `methods/{google,apple,github}/react.ts` | `convex-auth/vue/methods/{google,apple,github}.ts` |
 | auth `ssr/nextjs/index.tsx` — `setupConvexAuthNextjs` | `convex-auth/nuxt/server.ts` — `setupConvexAuthNuxt` (N-17) |
 | auth `ssr/nextjs/client.tsx` — `ConvexAuthNextjsProvider`, and `index.tsx` — `ConvexAuthNextjsServerProvider` | `convex-auth/nuxt/plugin.ts` (N-17) |
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
@@ -295,7 +299,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-14"></a>**N-14** | `RequestForQueries`, `EmptyObject`, `LoadMoreOfPaginatedQuery`, `PaginatedQueryResult` | Re-exported from `convex/react`, or inlined where upstream imports from a non-exported path | [§2.3](#23-enforcement) — never redeclared where an import is possible |
 | <a id="n-15"></a>**N-15** | `usePaginatedQuery_experimental` object form | Returns `ComputedRef<UsePaginatedQueryObjectReturnType>` whole | Splitting it into refs would lose the `status`/`data`/`error` discriminated-union narrowing |
 | <a id="n-16"></a>**N-16** | `<ConvexAuthProvider>`, and inside it `<AuthProvider>` and `<SessionWatcher>` | `provideConvexAuth` (+ a thin `<ConvexAuthProvider>` wrapper), `provideAuth`, `useSessionWatcher` | *Any other provider component*. All three run in one `setup`, and a Vue component cannot inject what it provides itself. So `provideAuth` returns the auth state that upstream's module-level `useAuth` reads from `ConvexAuthInternalContext`, as well as providing it for `useAuth` below the provider, and `useSessionWatcher` takes the auth client and the Convex auth state as arguments. `client` is optional and defaults to the injected client ([§2.1](#21-the-contract)) |
-| <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does |
+| <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does. Upstream's `replaceUrl`, a workaround for Next's router keeping its own copy of the URL, becomes `router.replace` on Nuxt's router, which keeps one too |
 
 ### 3.2 Behaviour (`D-*`)
 
@@ -595,7 +599,8 @@ upstream routes through that client has to land somewhere else here.
 - **Pinned by** · `test/unit/convex-auth/upstream-copies.test.ts`
 - **Reported** · [convex/convex-auth#933](https://github.com/convex/convex-auth/pull/933)
 - **On sync** · copy the changed files again. When upstream exports the client, delete the folder
-  and import it
+  and import it. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and its types from the copy,
+  as upstream's `methods/oauth/react.ts` does from the original
 - **Why** · the three files are free of React, but the package's `exports` map offers them only
   through entries that import `react`. Each copy is the package's own source with three edits:
   `FunctionReference` is imported as a type, because `verbatimModuleSyntax` rejects a type

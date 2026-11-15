@@ -128,6 +128,10 @@ const allowed = {
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
   './convex-auth/methods/email-password': ['@convex-dev/auth'],
+  './convex-auth/methods/oauth': ['@convex-dev/auth'],
+  './convex-auth/methods/google': ['@convex-dev/auth'],
+  './convex-auth/methods/apple': ['@convex-dev/auth'],
+  './convex-auth/methods/github': ['@convex-dev/auth'],
   './convex-auth/server': ['@convex-dev/auth'],
   './clerk/client': ['@clerk/vue'],
   './clerk/vue': ['@clerk/vue'],
@@ -293,9 +297,13 @@ try {
   // Its email and password composables add one file and its types (+24 KB,
   // most of it the JSDoc and the result types): 690.8 KB in 154 files, so the
   // ceiling moves to 700 KB / 154 files.
+  // Its OAuth composables add the shared entry, one per provider (upstream
+  // ships Google, Apple and GitHub as sibling files) and the helper they read
+  // the setup through (+12 KB, 10 files): 703.1 KB in 164 files, so the
+  // ceiling moves to 715 KB / 164 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 700_000
-  const MAX_FILES = 154
+  const MAX_BYTES = 715_000
+  const MAX_FILES = 164
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

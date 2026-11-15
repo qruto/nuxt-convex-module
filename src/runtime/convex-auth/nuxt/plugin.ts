@@ -25,7 +25,7 @@
 import type { IsAuthenticatedFn } from '@convex-dev/auth'
 import { AuthClient, defaultStorage } from '@convex-dev/auth/browser'
 import type { AuthSessionResponse } from '@convex-dev/auth/ssr'
-import { defineNuxtPlugin, useRequestEvent, useResponseHeader, useState } from '#app'
+import { defineNuxtPlugin, useRequestEvent, useResponseHeader, useRouter, useState } from '#app'
 import { ConvexHttpClient } from 'convex/browser'
 import { makeFunctionReference } from 'convex/server'
 import { computed, inject } from 'vue'
@@ -70,6 +70,7 @@ export default defineNuxtPlugin({
     // means no deployment URL, which that plugin reports.
     const convex = inject(ConvexClientKey, undefined)
     if (convex === undefined) return
+    const router = useRouter()
 
     // What upstream's server provider passes its client provider as props
     // reaches the browser in the payload: the access token from the SSR host,
@@ -138,6 +139,13 @@ export default defineNuxtPlugin({
         // Calls that don't return a sign-in envelope, like starting an OAuth
         // flow, go to the deployment because the proxy refuses them.
         convex: { mutation: (fn, args) => convex.mutation(fn, args) },
+        // The router keeps its own copy of the URL: after a bare
+        // `history.replaceState` the route still carries the callback params.
+        // Upstream works around Next's router here. This goes through Nuxt's.
+        replaceUrl: (url) => {
+          const { pathname, search, hash } = new URL(url)
+          void router.replace(pathname + search + hash)
+        },
       },
     })
 
