@@ -81,6 +81,10 @@ This loads reactive queries and executes mutations over a WebSocket.
 In a Nuxt app the client is provided automatically by the plugin and
 available via the [useConvex](#useconvex) composable.
 
+#### Extended by
+
+- [`ConvexVueSessionClient`](/api-reference/reference/convex-helpers/sessions#convexvuesessionclient)
+
 #### Constructors
 
 ##### Constructor
@@ -2297,7 +2301,7 @@ This can be used to power "infinite scroll" UIs.
 | Parameter | Type |
 | ------ | ------ |
 | `query` | `Query` |
-| `args` | `MaybeRefOrGetter`\<[`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\> \| `"skip"`\> |
+| `args` | `MaybeRefOrGetter`\<`"skip"` \| [`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\>\> |
 | `options` | \{ `initialNumItems`: `number`; \} |
 | `options.initialNumItems` | `number` |
 
@@ -2997,7 +3001,7 @@ This can be used to power "infinite scroll" UIs.
 | Parameter | Type |
 | ------ | ------ |
 | `query` | `Query` |
-| `args` | `MaybeRefOrGetter`\<[`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\> \| `"skip"`\> |
+| `args` | `MaybeRefOrGetter`\<`"skip"` \| [`PaginatedQueryArgs`](#paginatedqueryargs)\<`Query`\>\> |
 | `options` | \{ `initialNumItems`: `number`; \} |
 | `options.initialNumItems` | `number` |
 

@@ -42,6 +42,9 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/better-auth/client` | `useBetterAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
 | `nuxt-convex-module/better-auth/server` | Nitro/server: `convexBetterAuthNuxt(event)` (auto-imported in server code; import explicitly for the `ConvexBetterAuthOptions` / `ConvexBetterAuthService` types) |
 | `nuxt-convex-module/polar/client` | `<CheckoutLink>`, `<CustomerPortalLink>` |
+| `nuxt-convex-module/convex-helpers/sessions` | `provideSession`, `<SessionProvider>`, `useSessionQuery`, `useSessionPaginatedQuery`, `useSessionMutation`, `useSessionAction`, `useSessionId`, `useSessionIdArg`, `useSessionStorage`, `ConvexVueSessionClient` |
+| `nuxt-convex-module/convex-helpers/cache` | `provideConvexQueryCache`, `<ConvexQueryCacheProvider>`, and the cached `useQuery`, `useQueries`, `usePaginatedQuery` (not auto-imported: they share the core names) |
+| `nuxt-convex-module/convex-helpers/client` | `makeUseQueryWithStatus`, and the status-object `useQuery` and the stream helpers' `usePaginatedQuery` (not auto-imported) |
 | `nuxt-convex-module/persistent-text-streaming/client` | `useStream` |
 | `nuxt-convex-module/presence/client` | `usePresence` (also the default export) |
 | `nuxt-convex-module/presence/facepile` | `<FacePile>` (also the default export), with the package's stylesheet |

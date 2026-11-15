@@ -13,7 +13,7 @@ export interface Registration {
   type?: boolean
 }
 
-export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'presence' | 'r2' | 'persistentTextStreaming'
+export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'presence' | 'r2' | 'persistentTextStreaming' | 'convexHelpers'
 
 /** The `convex.autoImports` option: every name, every name prefixed with `Convex`, or none. */
 export type AutoImports = boolean | 'prefixed'
@@ -161,6 +161,14 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
   presence: [{ name: 'usePresence', from: 'runtime/presence/vue/index' }],
   r2: [{ name: 'useUploadFile', from: 'runtime/r2/vue/index' }],
   persistentTextStreaming: [{ name: 'useStream', from: 'runtime/persistent-text-streaming/vue/index' }],
+  // The cached and status `useQuery`, `useQueries` and `usePaginatedQuery`
+  // share the core composables' names, so they are imported from their subpath.
+  convexHelpers: [
+    ...['provideSession', 'useSessionQuery', 'useSessionPaginatedQuery', 'useSessionMutation', 'useSessionAction', 'useSessionId', 'useSessionIdArg']
+      .map(name => ({ name, from: 'runtime/convex-helpers/vue/sessions' })),
+    { name: 'provideConvexQueryCache', from: 'runtime/convex-helpers/vue/cache/provider' },
+    { name: 'makeUseQueryWithStatus', from: 'runtime/convex-helpers/vue/index' },
+  ],
 }
 
 /** Auto-registered components (`addComponent`); `name` is also the export. */
@@ -180,6 +188,10 @@ export const APP_COMPONENTS: Record<Integration, Registration[]> = {
   presence: [{ name: 'FacePile', from: 'runtime/presence/vue/facepile' }],
   r2: [],
   persistentTextStreaming: [],
+  convexHelpers: [
+    { name: 'SessionProvider', from: 'runtime/convex-helpers/vue/sessions' },
+    { name: 'ConvexQueryCacheProvider', from: 'runtime/convex-helpers/vue/cache/provider' },
+  ],
 }
 
 /** Nitro auto-imports (`addServerImports`). */
@@ -197,4 +209,5 @@ export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   presence: [],
   r2: [],
   persistentTextStreaming: [],
+  convexHelpers: [],
 }

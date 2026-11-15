@@ -108,7 +108,12 @@
     // dup:83a94bae: neon-icon and concave-icon each repaint the Iconify mask
     // as a ::before so a filter can draw on the glyph. Each effect stays a
     // self-contained utility; only the filter differs.
-    "ignoredClones": ["dup:2fa4ad82:2", "dup:6c2c5d72:2", "dup:83a94bae:2"]
+    // dup:90be2eeb and dup:75cc2c63: convex-helpers ships its own copy of
+    // convex's paginated query, state updaters included, and the port keeps
+    // both diffable against their sources (PARITY.md N-18).
+    // dup:869f7a26 and dup:c6e88640: two type tests that each restate their
+    // upstream's `expectTypeOf` scenarios.
+    "ignoredClones": ["dup:2fa4ad82:2", "dup:6c2c5d72:2", "dup:83a94bae:2", "dup:90be2eeb:2", "dup:75cc2c63:2", "dup:869f7a26:2", "dup:c6e88640:2"]
   },
 
   "health": {
@@ -131,6 +136,12 @@
         "files": ["src/runtime/convex-auth/vue/methods/username-passkey/impl.ts"],
         "maxCognitive": 40,
         "reason": "A port of @convex-dev/auth's react_impl.tsx (PARITY.md): the autofill loop is one function upstream, and splitting it would hide its awaits and gate checks from a diff."
+      },
+      {
+        "files": ["src/runtime/convex-helpers/vue/paginated.ts", "src/runtime/convex-helpers/vue/sessions.ts"],
+        "maxCyclomatic": 30,
+        "maxCognitive": 35,
+        "reason": "Ports of convex-helpers' paginated query and ConvexReactSessionClient (PARITY.md): one function each upstream, kept whole so they diff against it."
       }
     ]
   }

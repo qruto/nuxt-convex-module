@@ -65,6 +65,11 @@ export const upstreamBaselines = {
     version: '0.3.5',
     entries: 'svelte + react',
   },
+  'convex-helpers': {
+    package: 'convex-helpers',
+    version: '0.1.135',
+    entries: 'react + react/cache + react/sessions',
+  },
 } as const satisfies Record<string, UpstreamBaseline>
 
 export type UpstreamSource = keyof typeof upstreamBaselines

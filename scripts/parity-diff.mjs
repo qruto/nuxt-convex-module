@@ -61,6 +61,11 @@ const TIERS = {
     // The Svelte entry the port follows, and the React one it mirrors in shape.
     paths: ['src/svelte', 'src/react'],
   },
+  'convex-helpers': {
+    repo: 'get-convex/convex-helpers',
+    tag: v => `v${v}`,
+    paths: ['packages/convex-helpers/react.ts', 'packages/convex-helpers/react'],
+  },
 }
 
 const [tier, toArg, fromArg] = process.argv.slice(2)
