@@ -70,6 +70,8 @@ describe('the nuxt-convex-module skill', () => {
   const exported = new Set(walk('src/runtime', ['.ts']).flatMap(f => [
     ...[...read(f).matchAll(/export (?:declare )?(?:async )?(?:function|const|class|interface|type) (\w+)/g)].map(m => m[1]!),
     ...[...read(f).matchAll(/export (?:type )?\{([^}]+)\}/g)].flatMap(m => m[1]!.split(',').map(s => s.trim().split(/\s+as\s+/).pop()!.replace(/^type\s+/, ''))),
+    // What a setup function returns, such as `setupConvexAuthNuxt`'s helpers.
+    ...[...read(f).matchAll(/^ +(?:async )?function (\w+)/gm)].map(m => m[1]!),
   ]))
   const named = files.flatMap((file) => {
     const text = read(file)

@@ -28,6 +28,7 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/app` | Nuxt app context: `useAsyncQuery`, `useAsyncPaginatedQuery` and their `useConvex*` twins, with the `AsyncQuery*` and `AsyncPaginatedQuery*` types |
 | `nuxt-convex-module/testing` | for your own tests, and not auto-imported: `import { resetBetterAuthState } from 'nuxt-convex-module/testing'`, which forgets the token cache and session subscription Better Auth keeps for the app's lifetime. Load it in `@nuxt/test-utils`' `nuxt` environment |
 | `nuxt-convex-module/convex-auth/client` | `provideConvexAuth`, `<ConvexAuthProvider>`, `useAuthActions`, `useAuthToken` |
+| `nuxt-convex-module/convex-auth/server` | Nitro/server: `setupConvexAuthNuxt(config)`, with the `ConvexAuthNuxtConfig` type |
 | `nuxt-convex-module/convex-auth/methods/username-password` | `useSignInWithUsernamePassword`, `useSignUpWithUsernamePassword` |
 | `nuxt-convex-module/clerk/client` | `provideConvexWithClerk`, `<ConvexProviderWithClerk>` |
 | `nuxt-convex-module/auth0/client` | `provideConvexWithAuth0`, `<ConvexProviderWithAuth0>` |
@@ -35,4 +36,4 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/better-auth/server` | Nitro/server: `convexBetterAuthNuxt(event)` (auto-imported in server code; import explicitly for the `ConvexBetterAuthOptions` / `ConvexBetterAuthService` types) |
 | `nuxt-convex-module/polar/client` | `<CheckoutLink>`, `<CustomerPortalLink>` |
 
-The core, Convex Auth, Clerk, Auth0 and Polar entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/server`, `/app` and `/testing` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.
+The core, Convex Auth, Clerk, Auth0 and Polar entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/convex-auth/server`, `/server`, `/app` and `/testing` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.

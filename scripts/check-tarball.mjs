@@ -127,6 +127,7 @@ const allowed = {
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
+  './convex-auth/server': ['@convex-dev/auth'],
   './clerk/client': ['@clerk/vue'],
   './clerk/vue': ['@clerk/vue'],
   './auth0/client': ['@auth0/auth0-vue'],
@@ -283,9 +284,12 @@ try {
   // imports (+32 KB, 20 files, about half of it that copy's JSDoc): 646.9 KB in
   // 138 files, so the ceiling moves to 655 KB / 138 files. The copy goes when
   // upstream exports the client (PARITY.md D-20).
+  // Its cookie sessions add the server setup, the plugin, the two handlers the
+  // module mounts, their route prefix and the alias stand-in (+16 KB, 12
+  // files): 662.8 KB in 150 files, so the ceiling moves to 670 KB / 150 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 655_000
-  const MAX_FILES = 138
+  const MAX_BYTES = 670_000
+  const MAX_FILES = 150
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

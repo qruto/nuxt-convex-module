@@ -38,7 +38,7 @@ export const upstreamBaselines = {
   'convex-auth': {
     package: '@convex-dev/auth',
     version: '2.0.0',
-    entries: 'react + methods/username-password/react',
+    entries: 'react + ssr/nextjs + methods/username-password/react',
   },
   'polar': {
     package: '@convex-dev/polar',

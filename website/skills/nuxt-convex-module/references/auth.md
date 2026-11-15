@@ -15,9 +15,25 @@ Auth state is the same for every provider: `useConvexAuth()` → `isLoading`, `i
 npm i @convex-dev/auth@^2.0.0
 ```
 
-Users and sessions live in the Convex deployment. The module ports the client for sessions kept in browser storage, with sign-in by username and password. Cookie sessions with SSR, email and password, OAuth and passkeys are not ported yet.
+Users and sessions live in the Convex deployment. Sign-in by username and password is ported. Email and password, OAuth and passkeys are not ported yet. Pick one of two session modes.
 
-**Nuxt side.** Call the provider once in `app.vue`, and the other composables in components below it. A component cannot read what it provides itself.
+**Cookie sessions, for an app that renders on the server.** Create `server/convex-auth.ts` and restart `nuxt dev`. That file is the whole setup: the module mounts `POST /api/_convex/auth/{signin,refresh,signout}`, refreshes the session before each render, and starts the client, so there is no provider to call and the composables work in every component.
+
+```ts
+// server/convex-auth.ts
+import { api } from '#convex/api'
+
+export default setupConvexAuthNuxt({
+  refreshSession: api.auth.refreshSession,
+  signOut: api.auth.signOut,
+  isAuthenticated: api.auth.isAuthenticated,
+  signIn: [api.auth.signInWithUsernamePassword, api.auth.signUpWithUsernamePassword],
+})
+```
+
+`signIn` lists every function that can start a session; the sign-in route refuses the rest. `useAsyncQuery` renders signed-in data on the server with no extra code. In a server route, `import auth from '../convex-auth'`, then `await auth.isAuthenticatedNuxt(event)` and `await auth.convexAuthNuxtAccessToken(event)` for `fetchQuery(…, { token })`. During SSR the auth state reads as loading.
+
+**Browser storage, for a client-rendered app.** Do not create the server file. Call the provider once in `app.vue`, and the other composables in components below it. A component cannot read what it provides itself.
 
 ```vue
 <script setup lang="ts">
