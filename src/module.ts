@@ -128,6 +128,12 @@ export interface ModuleOptions {
    */
   rateLimiter?: boolean
   /**
+   * Presence composable and component (`usePresence`, `<FacePile>`), ports of
+   * `@convex-dev/presence/react` and `/facepile`. Auto-enabled when
+   * `@convex-dev/presence` is a dependency of your app; set `false` to force it off.
+   */
+  presence?: boolean
+  /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
    * `modules`) — the module registers it as a module dependency and extends its
@@ -346,6 +352,7 @@ const PLAIN_INTEGRATIONS = [
   ['auth0', '@auth0/auth0-vue'],
   ['polar', '@convex-dev/polar'],
   ['rateLimiter', '@convex-dev/rate-limiter'],
+  ['presence', '@convex-dev/presence'],
 ] as const
 
 /**

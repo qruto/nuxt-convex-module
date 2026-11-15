@@ -42,6 +42,8 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/better-auth/client` | `useBetterAuth`, `authClient`, `usePreloadedAuthQuery`, `consumeCrossDomainOneTimeToken`, `resolveAuthRedirect`, `<AuthBoundary>`, and the `convexClient` / `crossDomainClient` client plugins (re-exported from `@convex-dev/better-auth/client/plugins`) |
 | `nuxt-convex-module/better-auth/server` | Nitro/server: `convexBetterAuthNuxt(event)` (auto-imported in server code; import explicitly for the `ConvexBetterAuthOptions` / `ConvexBetterAuthService` types) |
 | `nuxt-convex-module/polar/client` | `<CheckoutLink>`, `<CustomerPortalLink>` |
+| `nuxt-convex-module/presence/client` | `usePresence` (also the default export) |
+| `nuxt-convex-module/presence/facepile` | `<FacePile>` (also the default export), with the package's stylesheet |
 | `nuxt-convex-module/rate-limiter/client` | `useRateLimit` |
 
 The core, Convex Auth, Clerk, Auth0, Polar and component entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/convex-auth/server`, `/server`, `/app` and `/testing` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.

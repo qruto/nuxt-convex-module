@@ -125,6 +125,9 @@ const allowed = {
   './polar/client': ['@convex-dev/polar', '@polar-sh/checkout'],
   './polar/vue': ['@convex-dev/polar', '@polar-sh/checkout'],
   './rate-limiter/client': ['@convex-dev/rate-limiter'],
+  './presence/client': [],
+  // The component imports the package's own stylesheet.
+  './presence/facepile': ['@convex-dev/presence'],
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
@@ -311,9 +314,12 @@ try {
   // ceiling moves to 780 KB / 194 files.
   // The rate limiter's composable adds one file and its types (+6 KB): 772.1 KB
   // in 196 files, so the ceiling moves to 196 files.
+  // Presence adds the composable, the single-flight helper it uses and
+  // `<FacePile>` (+15 KB, 6 files): 787.5 KB in 202 files, so the ceiling moves to
+  // 795 KB / 202 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 780_000
-  const MAX_FILES = 196
+  const MAX_BYTES = 795_000
+  const MAX_FILES = 202
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {
