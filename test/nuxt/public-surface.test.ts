@@ -61,8 +61,6 @@ const ENTRY: Record<string, Entry> = {
       'AuthLoading', 'AuthRefreshing', 'Authenticated', 'Unauthenticated', 'ConvexImage',
       'ConvexAuthStateKey', 'ConvexClientKey', 'ConvexVueClient',
       'createConvexAuthState', 'createScopedConvexAuthState', 'provideConvexWithAuth', 'useConvexAuth',
-      // Deprecated names, kept for one minor release.
-      'provideConvexAuth',
       'insertAtBottomIfLoaded', 'insertAtPosition', 'insertAtTop', 'optimisticallyUpdateValueInPaginatedQuery',
       'resetPaginationId',
       'useConvex', 'useConvexConnectionState', 'usePreloadedQuery', 'useSubscription',
@@ -75,7 +73,7 @@ const ENTRY: Record<string, Entry> = {
       'useConvexStorageUrl', 'useConvexUpload', 'useConvexUploadQueue',
     ],
     types: [
-      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexAuthProviderOptions', 'ConvexProviderWithAuthOptions',
+      'ArgsAndOptions', 'AuthTokenFetcher', 'ConnectionState', 'ConvexProviderWithAuthOptions',
       'ConvexAuthState', 'ConvexLogger', 'ConvexVueClientOptions', 'EnqueueData', 'EnqueueInput', 'FunctionArgs', 'FunctionReference',
       'FunctionReference_future', 'FunctionReturnType', 'GenerateUploadUrl', 'GetStorageUrl', 'IConvexVueClient', 'MutationOptions',
       'OptimisticUpdate', 'OptionalRestArgs', 'OptionalRestArgsOrSkip', 'PaginatedQueryArgs', 'PaginatedQueryItem',
@@ -130,6 +128,17 @@ const ENTRY: Record<string, Entry> = {
     types: ['CheckoutArgs', 'PolarComponentApi'],
   },
   './polar/vue': { source: 'src/runtime/polar/vue/components.ts', aliasOf: './polar/client', values: [], types: [] },
+  './convex-auth/client': {
+    source: 'src/runtime/convex-auth/vue/index.ts',
+    values: ['ConvexAuthProvider', 'provideConvexAuth', 'useAuthActions', 'useAuthToken'],
+    types: ['ConvexAuthActionsContextType', 'ConvexAuthApi', 'ConvexAuthProviderOptions', 'TokenBundle', 'TokenStorage'],
+  },
+  './convex-auth/vue': { source: 'src/runtime/convex-auth/vue/index.ts', aliasOf: './convex-auth/client', values: [], types: [] },
+  './convex-auth/methods/username-password': {
+    source: 'src/runtime/convex-auth/vue/methods/username-password.ts',
+    values: ['useSignInWithUsernamePassword', 'useSignUpWithUsernamePassword'],
+    types: ['Credentials', 'SignInWithUsernamePasswordResult', 'SignUpWithUsernamePasswordResult'],
+  },
   './clerk/client': {
     source: 'src/runtime/clerk/vue/index.ts',
     values: ['ConvexProviderWithClerk', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],
@@ -194,7 +203,6 @@ describe('runtime surface', () => {
   // A deprecated name is the new one under its old name, so code on it keeps
   // working unchanged until the minor release that removes it.
   it.each([
-    ['./client', 'provideConvexAuth', 'provideConvexWithAuth'],
     ['./clerk/client', 'provideConvexAuthFromClerk', 'provideConvexWithClerk'],
     ['./auth0/client', 'provideConvexAuthFromAuth0', 'provideConvexWithAuth0'],
     ['./better-auth/server', 'convexAuth', 'convexBetterAuthNuxt'],

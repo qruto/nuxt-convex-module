@@ -50,7 +50,7 @@ describe('module options', () => {
 
   it.each(betterAuthOptions)('`betterAuth.%s` has a row in both configuration tables', (key) => {
     expect(rows, `\`betterAuth.${key}\` is a BetterAuthModuleOptions key with no row in ${CONFIGURATION_FILE}`).toContain(`betterAuth.${key}`)
-    expect(tableFirstCells(BETTER_AUTH, '## Configure'), `\`betterAuth.${key}\` has no row in 3.components/2.better-auth.md's Configure table`).toContain(`betterAuth.${key}`)
+    expect(tableFirstCells(BETTER_AUTH, '## Configure'), `\`betterAuth.${key}\` has no row in 3.components/3.better-auth.md's Configure table`).toContain(`betterAuth.${key}`)
   })
 
   it.each(rows)('table row `%s` is a real option', (row) => {

@@ -37,17 +37,17 @@ const GLOB_COVERED = [/^src\/runtime\/devtools\//]
  * files. Upstream paths (`react/client.ts`) and test paths are excluded by the
  * leading-segment filter, so only the port's own tree is compared.
  */
-const RUNTIME_DIRS = ['vue', 'nuxt', 'clerk', 'auth0', 'better-auth', 'polar']
+const RUNTIME_DIRS = ['vue', 'nuxt', 'clerk', 'auth0', 'better-auth', 'convex-auth', 'polar']
 
 function mentionedRuntimePaths(): Set<string> {
   const mentioned = new Set<string>()
   const add = (path: string) => {
     if (RUNTIME_DIRS.includes(path.split('/')[0]!)) mentioned.add(path)
   }
-  for (const [, dir, group, ext] of PARITY.matchAll(/`([a-z0-9/.-]+)\{([a-z0-9,._-]+)\}(\.ts)`/g)) {
+  for (const [, dir, group, ext] of PARITY.matchAll(/`([a-z0-9/.-]+)\{([\w,./-]+)\}(\.ts)`/gi)) {
     for (const part of group!.split(',')) add(`${dir}${part}${ext}`)
   }
-  for (const [, path] of PARITY.matchAll(/`([a-z0-9/._-]+\.ts)`/g)) add(path!)
+  for (const [, path] of PARITY.matchAll(/`([\w/.-]+\.ts)`/gi)) add(path!)
   return mentioned
 }
 

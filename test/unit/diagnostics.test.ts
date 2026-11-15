@@ -41,12 +41,12 @@ describe('formatStartupSummary', () => {
     expect(formatStartupSummary(
       'https://happy-otter-123.convex.cloud',
       'convex',
-      { betterAuth: true, clerk: false, auth0: false, polar: true, security: true },
+      { convexAuth: false, betterAuth: true, clerk: false, auth0: false, polar: true, security: true },
     )).toBe('Convex https://happy-otter-123.convex.cloud · functions: convex/ · integrations: better-auth, polar, nuxt-security')
   })
 
   it('spells out the empty cases instead of hiding them', () => {
-    expect(formatStartupSummary('', 'convex', { betterAuth: false, clerk: false, auth0: false, polar: false, security: false }))
+    expect(formatStartupSummary('', 'convex', { convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false }))
       .toBe('Convex (no URL) · functions: convex/ · integrations: none')
   })
 })
@@ -119,8 +119,8 @@ describe('isPackageInstalled', () => {
 })
 
 describe('integrationWarnings', () => {
-  const flags = (on: Partial<Record<'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
-    ({ betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
+  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
+    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
   const everything = () => true
 
   it('warns when Better Auth shares the client with another auth adapter', () => {
@@ -130,6 +130,10 @@ describe('integrationWarnings', () => {
     const [all] = integrationWarnings(flags({ betterAuth: true, clerk: true, auth0: true }), everything)
     expect(all).toContain('Clerk and Auth0')
     expect(all).toContain('`convex.clerk: false` / `convex.auth0: false`')
+    expect(integrationWarnings(flags({ betterAuth: true, convexAuth: true }), everything)).toEqual([
+      expect.stringContaining('Better Auth and Convex Auth are both enabled'),
+    ])
+    expect(integrationWarnings(flags({ betterAuth: true, convexAuth: true }), everything)[0]).toContain('`convex.convexAuth: false`')
   })
 
   it('stays quiet for Clerk with Auth0, or for one auth adapter alone', () => {
@@ -148,8 +152,8 @@ describe('integrationWarnings', () => {
 })
 
 describe('clientDependencies', () => {
-  const flags = (on: Partial<Record<'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
-    ({ betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
+  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
+    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
   const everything = () => ''
 
   it('lists only Convex when no integration is on', () => {
@@ -157,10 +161,11 @@ describe('clientDependencies', () => {
   })
 
   it('adds what each enabled integration imports on the client', () => {
-    expect(clientDependencies(flags({ betterAuth: true, clerk: true, auth0: true, polar: true, security: true }), everything)).toEqual([
+    expect(clientDependencies(flags({ convexAuth: true, betterAuth: true, clerk: true, auth0: true, polar: true, security: true }), everything)).toEqual([
       'convex/browser',
       'convex/server',
       'convex/values',
+      '@convex-dev/auth/browser',
       '@convex-dev/better-auth/client/plugins',
       'better-auth/vue',
       '@clerk/vue',

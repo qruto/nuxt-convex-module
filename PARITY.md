@@ -15,6 +15,7 @@ are in [AGENTS.md](./AGENTS.md).
 |---|---|---|
 | `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.50.0** | tag `npm/1.50.0` in [convex/convex-js](https://github.com/convex/convex-js) |
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
+| `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
@@ -48,6 +49,10 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/better-auth` — `nextjs` server helpers | `src/runtime/better-auth/nuxt/**` | Complete + additive · D-04, D-17, F-01 |
 | `@convex-dev/better-auth` — client plugins (`convexClient`, `crossDomainClient`) | imported as-is from `@convex-dev/better-auth/client/plugins` | Reused, never reimplemented |
 | `@convex-dev/better-auth` — `react-start` | — | Out of scope (X-02) |
+| `@convex-dev/auth` — `react` client: the provider, `useAuthActions`, `useAuthToken` | `src/runtime/convex-auth/vue/{index,client}.ts` | Complete · N-16 |
+| `@convex-dev/auth` — `methods/username-password/react` | `src/runtime/convex-auth/vue/methods/username-password.ts` | Complete |
+| `@convex-dev/auth` — the OAuth client, `oauth()` | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports it · D-20 |
+| `@convex-dev/auth` — `ssr/nextjs`, and the email and password, OAuth and passkey hooks | — | Not ported yet |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -133,6 +138,11 @@ source.
 | better-auth `nextjs/index.ts` — `convexBetterAuthNextJs` | `better-auth/nuxt/server.ts` — `convexBetterAuthNuxt` |
 | better-auth `nextjs/client.tsx` — `usePreloadedAuthQuery` | `better-auth/vue/hydration.ts` |
 | better-auth — the user-authored `createAuthClient({ plugins: [convexClient(), …] })` passed to `ConvexBetterAuthProvider` | `better-auth/vue/client.ts` — bundled default, overridden by pointing `convex.betterAuth.authClient` at your own module (resolved through the `#convex/auth-client` alias) |
+| auth `react/index.tsx` | `convex-auth/vue/index.ts` |
+| auth `react/client.tsx` | `convex-auth/vue/client.ts` (N-16) |
+| auth `react/functionReference.ts` | none: it keeps a reference stable between renders, and a composable's `setup` runs once |
+| auth `methods/username-password/react.tsx` | `convex-auth/vue/methods/username-password.ts` |
+| auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
 
 **Port-only files** — no upstream origin; each is an `A-*` entry in [§3.3](#33-port-only-additions-a-)
@@ -155,6 +165,7 @@ source.
 | `better-auth/nuxt/shared-render.ts`, `better-auth/nuxt/no-session-vary.ts` | whether a render may be served to other visitors, and the Nitro hook that has a no-session response made cacheable late vary on `Cookie` | D-18 |
 | `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
 | `better-auth/nuxt/chunk-reload.client.ts` | reloads the page once a deploy removed the client's chunk | D-19 |
+| `convex-auth/upstream/{browser/ambientSignInClient,browser/storage,lib/types,lib/oauth/redemption}.ts` | the types the copied files import, read off the package's public types | D-20 |
 
 ---
 
@@ -256,7 +267,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-01"></a>**N-01** | `ConvexReactClient` | `ConvexVueClient` | *Framework-qualified names* |
 | <a id="n-02"></a>**N-02** | `ReactMutation` / `ReactAction` | `VueMutation` / `VueAction` | *`ReactMutation` / `ReactAction`*. `MutationOptions` keeps its upstream name; `VueMutationOptions` is an additive alias in the same family |
 | <a id="n-03"></a>**N-03** | `<ConvexProvider client>` component | Nuxt plugin + `ConvexClientKey` + `useConvex()` | *`<ConvexProvider client>` component* |
-| <a id="n-04"></a>**N-04** | `<ConvexProviderWithAuth>` / `WithClerk` / `WithAuth0` | `provideConvexWithAuth` / `provideConvexWithClerk` / `provideConvexWithAuth0` | *Any other provider component*. Thin component wrappers are kept for drop-in parity. Until 0.15 these were `provideConvexAuth` / `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0`, which stay as deprecated aliases for one minor release |
+| <a id="n-04"></a>**N-04** | `<ConvexProviderWithAuth>` / `WithClerk` / `WithAuth0` | `provideConvexWithAuth` / `provideConvexWithClerk` / `provideConvexWithAuth0` | *Any other provider component*. Thin component wrappers are kept for drop-in parity. Until 0.15 these were `provideConvexAuth` / `provideConvexAuthFromClerk` / `provideConvexAuthFromAuth0`. The last two stay as deprecated aliases for one minor release; the first now names Convex Auth's provider (N-16) |
 | <a id="n-05"></a>**N-05** | Static hook arguments | `MaybeRefOrGetter`, read via `toValue` | *Static hook arguments* |
 | <a id="n-06"></a>**N-06** | Returns a plain value | Returns `ComputedRef` / `ShallowRef` | *Returns a plain value*. Applies to `ConvexAuthState` and to `UsePaginatedQueryReturnType`, redefined as `{ results, status, isLoading: ComputedRef, loadMore }` with a stable `loadMore`; upstream's plain union stays exported as `UsePaginatedQueryResult` |
 | <a id="n-07"></a>**N-07** | `NextjsOptions`, `convexBetterAuthNextJs` | `NuxtOptions`, `convexBetterAuthNuxt` | *Framework-qualified names* + *Ambient per-request context*. `handler` returns `() => Promise<Response>` rather than a `{ GET, POST }` pair |
@@ -267,6 +278,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-13"></a>**N-13** | New `fetchAccessToken` identity between renders re-triggers auth | Pass the fetcher as a `Ref`/`ComputedRef`, or bump the additive `authVersion` key | *`fetchAccessToken` identity change between renders* |
 | <a id="n-14"></a>**N-14** | `RequestForQueries`, `EmptyObject`, `LoadMoreOfPaginatedQuery`, `PaginatedQueryResult` | Re-exported from `convex/react`, or inlined where upstream imports from a non-exported path | [§2.3](#23-enforcement) — never redeclared where an import is possible |
 | <a id="n-15"></a>**N-15** | `usePaginatedQuery_experimental` object form | Returns `ComputedRef<UsePaginatedQueryObjectReturnType>` whole | Splitting it into refs would lose the `status`/`data`/`error` discriminated-union narrowing |
+| <a id="n-16"></a>**N-16** | `<ConvexAuthProvider>`, and inside it `<AuthProvider>` and `<SessionWatcher>` | `provideConvexAuth` (+ a thin `<ConvexAuthProvider>` wrapper), `provideAuth`, `useSessionWatcher` | *Any other provider component*. All three run in one `setup`, and a Vue component cannot inject what it provides itself. So `provideAuth` returns the auth state that upstream's module-level `useAuth` reads from `ConvexAuthInternalContext`, and `useSessionWatcher` takes the auth client and the Convex auth state as arguments. `client` is optional and defaults to the injected client ([§2.1](#21-the-contract)) |
 
 ### 3.2 Behaviour (`D-*`)
 
@@ -524,7 +536,7 @@ for free — removing one would break the behaviour, not restore it.
 
 #### Consequences of an unimportable upstream internal
 
-All three follow from `PaginatedQueryClient` being unreachable ([X-05](#x-05--paginatedqueryclient)).
+D-05, D-06 and D-07 follow from `PaginatedQueryClient` being unreachable ([X-05](#x-05--paginatedqueryclient)).
 The port re-implements page management from `react/use_paginated_query.ts` instead, so anything
 upstream routes through that client has to land somewhere else here.
 
@@ -558,6 +570,23 @@ upstream routes through that client has to land somewhere else here.
   inherits both its start cursor and its `numItems` — React-v1 behaviour. Inheriting the cursor
   is what makes the port immune to the upstream bug fixed in 1.43.0
   ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)).
+
+##### D-20 — Convex Auth's OAuth client is a copy
+
+- **Upstream** · `@convex-dev/auth@2.0.0` `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts`
+- **Port** · [`convex-auth/upstream/`](./src/runtime/convex-auth/upstream) — `oauth`
+- **Pinned by** · `test/unit/convex-auth/upstream-copies.test.ts`
+- **Reported** · [convex/convex-auth#933](https://github.com/convex/convex-auth/pull/933)
+- **On sync** · copy the changed files again. When upstream exports the client, delete the folder
+  and import it
+- **Why** · the three files are free of React, but the package's `exports` map offers them only
+  through entries that import `react`. Each copy is the package's own source with three edits:
+  `FunctionReference` is imported as a type, because `verbatimModuleSyntax` rejects a type
+  imported as a value; relative imports lose their `.ts` extension, because the build emits
+  them as written; and the navigation to the identity provider carries a `fallow-ignore` comment,
+  because its target comes from the app's own `startSignIn` mutation. The four files beside them are not copies. They hold the types the copies
+  import from unexported files, read off the public `AuthClientConfig`, `TokenBundle`,
+  `SignInComplete` and `SignInError`.
 
 #### Type and signature refinements
 
@@ -1056,6 +1085,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-14 | `@convex-dev/auth` | → 2.0.0 | #168 | Initial pin: the `react` client (N-16), the username and password composables, and the copied OAuth client (D-20) |
 | 2026-11-13 | `convex` | 1.49.0 → 1.50.0 | #166 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`, and the published `src`, `dist/esm`, `dist/cjs` and `.d.ts` for `browser`, `react`, `nextjs`, `react-clerk`, `react-auth0` and `common` are byte-identical; exports, peers and `engines` unchanged. The release adds CLI account switching, makes `ctx.auth.signJwt` require an `aud` claim, and makes a scheduled mutation that cancels itself throw |
 | 2026-11-07 | `@convex-dev/better-auth` | 0.12.6 → 0.13.0 | #142 | Better Auth 1.7, and with it both peer floors. Ported: the proxy drops any `x-forwarded-host` / `-proto` the request arrived with (0.12.7's `3e8af5d`); from `5f418ce`, a prefetched token names its session (trusted once that session settles, never for another one), an in-flight refresh answers before the cached token, a finished request leaves a newer one in flight, and a signed-out session's refetch can't bring the prefetched token back (D-03, D-16). `AuthClientWithCrossDomain` is now exported. Upstream's structural `AuthClient` isn't ported: the `#convex/auth-client` alias already types the app's own client. Client plugins are reused as-is, so their changes arrive with the dependency. The Convex-side changes are for the app, through the add-on's upgrade guide |
 | 2026-11-03 | `convex` | 1.48.0 → 1.49.0 | #132 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common` since `npm/1.47.0`, and the published `dist/esm` and `.d.ts` for `browser`, `react`, `nextjs`, `react-clerk` and `react-auth0` are byte-identical; exports and peers unchanged. The release adds `v.function()`, the `convex plugins` CLI command and an `engines.node` floor of 22, below this module's own |

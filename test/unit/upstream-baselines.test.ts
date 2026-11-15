@@ -45,6 +45,7 @@ describe('upstream baselines', () => {
   // The components overview still carries a version per row, as the row's last
   // cell. Keyed by a subpath unique to that row.
   const overviewRows: Array<[token: string, version: string]> = [
+    ['`/convex-auth/client`', upstreamBaselines['convex-auth'].version],
     ['`/clerk/client`', upstreamBaselines.convex.version],
     ['`/auth0/client`', upstreamBaselines.convex.version],
     ['`/better-auth/client`', upstreamBaselines['better-auth'].version],

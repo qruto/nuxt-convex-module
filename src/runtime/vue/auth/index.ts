@@ -172,22 +172,6 @@ export function provideConvexWithAuth(options: ConvexProviderWithAuthOptions): C
 }
 
 /**
- * The old name of {@link provideConvexWithAuth}.
- *
- * @deprecated Use `provideConvexWithAuth`, the port of `ConvexProviderWithAuth`.
- * The next minor release gives this name to Convex Auth's `ConvexAuthProvider`.
- * @public
- */
-export const provideConvexAuth = provideConvexWithAuth
-
-/**
- * The old name of {@link ConvexProviderWithAuthOptions}.
- *
- * @deprecated Use `ConvexProviderWithAuthOptions`. Removed in the next minor release.
- */
-export type ConvexAuthProviderOptions = ConvexProviderWithAuthOptions
-
-/**
  * Build reactive {@link ConvexAuthState} and wire watchers between the
  * external auth provider and the Convex client, without calling `provide()` —
  * the body of upstream's `ConvexProviderWithAuth` component.

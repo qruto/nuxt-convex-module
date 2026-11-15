@@ -16,6 +16,8 @@ seo:
 | [better-auth/server](/api-reference/reference/better-auth/server) | Server-side Better Auth + Convex integration for Nuxt. |
 | [better-auth/client](/api-reference/reference/better-auth/client) | Public client-side API for the opt-in Better Auth integration — a Vue/Nuxt port of `@convex-dev/better-auth`'s `react` integration. |
 | [clerk/client](/api-reference/reference/clerk/client) | Vue login component for use with Clerk. |
+| [convex-auth/client](/api-reference/reference/convex-auth/client) | Vue bindings for Convex Auth. |
+| [convex-auth/methods/username-password](/api-reference/reference/convex-auth/methods/username-password) | Vue client for the `usernamePassword` method: a port of `@convex-dev/auth/methods/username-password/react`. |
 | [app](/api-reference/reference/app) | Composables that need the Nuxt app context (`#app`) — the half of the package that runs in a Nuxt app but not in plain Vue. |
 | [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |
 | [testing](/api-reference/reference/testing) | Helpers for an app's own tests, kept off the runtime entries. |

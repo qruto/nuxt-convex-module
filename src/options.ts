@@ -13,6 +13,7 @@ import { parseEnv } from 'node:util'
  * panel, which reports the active adapter).
  */
 export interface IntegrationFlags {
+  convexAuth: boolean
   betterAuth: boolean
   clerk: boolean
   auth0: boolean
@@ -198,9 +199,10 @@ function authClientModuleExists(authClient: string, rootDir: string): boolean {
  * Warnings about how the enabled integrations combine, or what they still
  * need. Pure: the caller logs each line.
  *
- * - Better Auth's plugins own the Convex client's auth. With Clerk or Auth0 on
- *   as well, `provideConvexWithClerk()` / `...FromAuth0()` would call
- *   `setAuth` on the same client and the two fight over it.
+ * - Better Auth's plugins own the Convex client's auth. With Convex Auth, Clerk
+ *   or Auth0 on as well, `provideConvexAuth()` / `provideConvexWithClerk()` /
+ *   `...WithAuth0()` would call `setAuth` on the same client and the two fight
+ *   over it.
  * - `<CheckoutLink>` imports `@polar-sh/checkout`, a peer of `@convex-dev/polar`
  *   that yarn and `--legacy-peer-deps` installs skip. Vite fails the client
  *   build the first time the component is used — say so at startup instead.
@@ -210,11 +212,12 @@ export function integrationWarnings(
   isInstalled: (pkg: string) => boolean,
 ): string[] {
   const warnings: string[] = []
-  const rivals = [flags.clerk && 'Clerk', flags.auth0 && 'Auth0'].filter((name): name is string => Boolean(name))
+  const rivals = ([['convexAuth', 'Convex Auth'], ['clerk', 'Clerk'], ['auth0', 'Auth0']] as const).filter(([key]) => flags[key])
   if (flags.betterAuth && rivals.length > 0) {
-    const options = rivals.map(name => `\`convex.${name.toLowerCase()}: false\``).join(' / ')
+    const names = rivals.map(([, name]) => name)
+    const options = rivals.map(([key]) => `\`convex.${key}: false\``).join(' / ')
     warnings.push(
-      `Better Auth and ${rivals.join(' and ')} are both enabled. Better Auth's plugin owns the Convex client's auth, so the ${rivals.join(' / ')} adapter would fight it — set ${options}, or \`convex.betterAuth: false\`, to pick one.`,
+      `Better Auth and ${names.join(' and ')} are both enabled. Better Auth's plugin owns the Convex client's auth, so the ${names.join(' / ')} adapter would fight it — set ${options}, or \`convex.betterAuth: false\`, to pick one.`,
     )
   }
   if (flags.polar && !isInstalled('@polar-sh/checkout')) {
@@ -242,6 +245,7 @@ export function clientDependencies(
     'convex/browser',
     'convex/server',
     'convex/values',
+    ...(flags.convexAuth ? ['@convex-dev/auth/browser'] : []),
     ...(flags.betterAuth ? ['@convex-dev/better-auth/client/plugins', 'better-auth/vue'] : []),
     ...(flags.clerk ? ['@clerk/vue'] : []),
     ...(flags.auth0 ? ['@auth0/auth0-vue'] : []),
@@ -326,6 +330,7 @@ function walkToModule(rootDir: string, moduleDir: string): ModuleWalk | undefine
  */
 export function formatStartupSummary(url: string, functionsDir: string, integrations: IntegrationFlags): string {
   const names: Record<keyof IntegrationFlags, string> = {
+    convexAuth: 'convex-auth',
     betterAuth: 'better-auth',
     clerk: 'clerk',
     auth0: 'auth0',

@@ -50,6 +50,9 @@
     // Reached through the vitest `#imports` and `nuxt/server` aliases by the
     // runtime under test (vitest.config.ts declares them per project; the plugin
     // reads top-level only).
+    // A copy of upstream's file, held to it by a test (PARITY.md D-20). Only
+    // `oauth` is used so far; the rest is the surface of the OAuth hooks.
+    { "file": "src/runtime/convex-auth/upstream/methods/oauth/client.ts", "exports": ["*"] },
     { "file": "test/helpers/nuxt-imports.ts", "exports": ["useRuntimeConfig"] },
     { "file": "test/helpers/nuxt-server.ts", "exports": ["*"] }
   ],

@@ -35,6 +35,16 @@ export default createConfigForNuxt({
       // this workspace.
       ignores: ['.agents/**', '.claude/**', '.deepsec/**', 'examples/**', 'templates/**'],
     },
+    // Copies of files `@convex-dev/auth` ships but does not export (PARITY.md
+    // D-20). A test holds each to the package's own source, so they keep
+    // upstream's formatting.
+    {
+      ignores: [
+        'src/runtime/convex-auth/upstream/methods/oauth/client.ts',
+        'src/runtime/convex-auth/upstream/browser/retry.ts',
+        'src/runtime/convex-auth/upstream/lib/oauthParams.ts',
+      ],
+    },
     // A Nuxt page is named by its route: a fixture's `pages/index.vue` is `/`.
     {
       files: ['test/fixtures/**/pages/**/*.vue'],
