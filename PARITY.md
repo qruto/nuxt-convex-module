@@ -90,6 +90,30 @@ decision to revisit, not a gap to quietly fill.
 Server-only component; no client surface exists. Install it in the Convex deployment and call
 its functions with the ordinary `useMutation` / `useAction`.
 
+#### X-08 — `@convex-dev/agent`
+
+The `react` entry: chat hooks over the AI SDK, about 1,300 lines, plus about 900 lines the port
+would copy because the package exports them from no React-free entry. Not ported yet; a scope
+decision, not a gap. Its server half works in any app.
+
+#### X-09 — `@convex-dev/prosemirror-sync`
+
+The `tiptap` and `blocknote` entries. The Tiptap sync extension is React-free but exported only
+from an entry that imports React; [convex/prosemirror-sync#291](https://github.com/convex/prosemirror-sync/pull/291)
+adds a React-free entry. BlockNote has no Vue renderer. Not ported yet.
+
+#### X-10 — `@convex-dev/static-hosting`, `@convex-dev/batched-replay`
+
+Small, young `react` entries (`useDeploymentUpdates` and `<UpdateBanner>`; `useSender`,
+`usePlayback`, `useHistory`). Not ported yet. The `react` entries of `@convex-dev/rag`,
+`@convex-dev/mastra`, `@convex-dev/table-history` and `@convex-dev/workos-authkit` hold no code yet.
+
+#### X-11 — `@convex-dev/workos`
+
+`ConvexProviderWithAuthKit` takes a React hook from `@workos-inc/authkit-react`, and WorkOS has
+no Vue SDK. The docs' WorkOS AuthKit recipe passes `@workos-inc/authkit-js`'s client to
+`provideConvexWithAuth` the way the adapter does.
+
 #### X-02 — TanStack Start adapters
 
 `convex/react-start` and `@convex-dev/better-auth` `src/react-start`. Adapters for a different

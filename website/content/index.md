@@ -2,7 +2,7 @@
 title: nuxt-convex-module
 seo:
   title: Use Convex backend in a Nuxt application
-  description: "Convex backend integration with live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Better Auth, Clerk, Auth0 and Polar are opt-in."
+  description: "Convex backend integration with live queries, mutations, actions, pagination, file storage and SSR, auto-imported and typed against your deployment. The same Vue client runs without Nuxt; Convex Auth, Better Auth, Clerk, Auth0, Polar and Convex components are opt-in."
 ---
 
 :::u-page-hero

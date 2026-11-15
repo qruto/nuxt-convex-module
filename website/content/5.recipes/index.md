@@ -12,3 +12,4 @@ Each recipe is one thing you want on a page, built from the composables the [Gui
 - [Optimistic list](/recipes/optimistic-list) — add and toggle items with no round-trip wait.
 - [Protected page](/recipes/protected-page) — an `auth`-guarded route and the login page that sends visitors back.
 - [Image upload with preview](/recipes/image-upload) — pick, preview, upload, and show the stored file.
+- [WorkOS AuthKit](/recipes/workos-authkit) — sign in with WorkOS and authenticate the Convex client with its token.
