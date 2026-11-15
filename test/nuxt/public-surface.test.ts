@@ -138,6 +138,21 @@ const ENTRY: Record<string, Entry> = {
     values: ['default', 'FacePile'],
     types: [],
   },
+  './convex-helpers/client': {
+    source: 'src/runtime/convex-helpers/vue/index.ts',
+    values: ['makeUseQueryWithStatus', 'usePaginatedQuery', 'useQuery'],
+    types: [],
+  },
+  './convex-helpers/cache': {
+    source: 'src/runtime/convex-helpers/vue/cache/index.ts',
+    values: ['ConvexQueryCacheKey', 'ConvexQueryCacheProvider', 'provideConvexQueryCache', 'usePaginatedQuery', 'useQueries', 'useQuery'],
+    types: ['ConvexQueryCacheOptions'],
+  },
+  './convex-helpers/sessions': {
+    source: 'src/runtime/convex-helpers/vue/sessions.ts',
+    values: ['ConvexVueSessionClient', 'DEFAULT_STORAGE_KEY', 'SessionKey', 'SessionProvider', 'provideSession', 'useSessionAction', 'useSessionId', 'useSessionIdArg', 'useSessionMutation', 'useSessionPaginatedQuery', 'useSessionQuery', 'useSessionStorage'],
+    types: ['RefreshSessionFn', 'SessionArgsAndOptions', 'SessionArgsArray', 'SessionPaginatedQueryArgs', 'SessionProviderOptions', 'SessionQueryArgsArray', 'UseStorage'],
+  },
   './persistent-text-streaming/client': {
     source: 'src/runtime/persistent-text-streaming/vue/index.ts',
     values: ['useStream'],

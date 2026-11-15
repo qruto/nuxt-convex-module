@@ -147,6 +147,13 @@ export interface ModuleOptions {
    */
   persistentTextStreaming?: boolean
   /**
+   * Sessions and the query cache of `convex-helpers` (`provideSession`,
+   * `useSessionQuery`, `provideConvexQueryCache`, …), ports of its React
+   * entries. Auto-enabled when `convex-helpers` is a dependency of your app;
+   * set `false` to force it off.
+   */
+  convexHelpers?: boolean
+  /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
    * `modules`) — the module registers it as a module dependency and extends its
@@ -368,6 +375,7 @@ const PLAIN_INTEGRATIONS = [
   ['presence', '@convex-dev/presence'],
   ['r2', '@convex-dev/r2'],
   ['persistentTextStreaming', '@convex-dev/persistent-text-streaming'],
+  ['convexHelpers', 'convex-helpers'],
 ] as const
 
 /**

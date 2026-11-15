@@ -63,6 +63,7 @@ and `convex` is optional, needed only by the integration it powers:
 |---|---|
 | `vue` | `^3.5.0` |
 | `convex` | `^1.46.0` |
+| `convex-helpers` | `>=0.1.135 <0.2.0` |
 | `@convex-dev/better-auth` | `>=0.13.0 <0.14.0` |
 | `better-auth` | `~1.7.16` |
 | `@convex-dev/polar` | `>=0.9.0 <0.10.0` |

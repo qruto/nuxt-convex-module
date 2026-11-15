@@ -27,7 +27,10 @@
     "src/runtime/presence/vue/index.ts",
     "src/runtime/presence/vue/facepile.ts",
     "src/runtime/r2/vue/index.ts",
-    "src/runtime/persistent-text-streaming/vue/index.ts"
+    "src/runtime/persistent-text-streaming/vue/index.ts",
+    "src/runtime/convex-helpers/vue/index.ts",
+    "src/runtime/convex-helpers/vue/cache/index.ts",
+    "src/runtime/convex-helpers/vue/sessions.ts"
   ],
   "entryPointStrategy": "resolve",
 

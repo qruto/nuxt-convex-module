@@ -14,6 +14,7 @@ are in [AGENTS.md](./AGENTS.md).
 | Upstream package | Baseline version | Diffed against |
 |---|---|---|
 | `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.50.0** | tag `npm/1.50.0` in [convex/convex-js](https://github.com/convex/convex-js) |
+| `convex-helpers` (`/react`, `/react/cache`, `/react/sessions`) | **0.1.135** | tag `v0.1.135` in [get-convex/convex-helpers](https://github.com/get-convex/convex-helpers), under `packages/convex-helpers` |
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
 | `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/persistent-text-streaming` | **0.3.5** | tag `v0.3.5` in [get-convex/persistent-text-streaming](https://github.com/get-convex/persistent-text-streaming) |
@@ -67,6 +68,9 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/presence` — `react-native` | — | Out of scope: the module has no React Native target |
 | `@convex-dev/r2` — `vue`, `react`, `svelte`: `useUploadFile` | `src/runtime/r2/vue/index.ts` | Complete · D-21 |
 | `@convex-dev/rate-limiter` — `react`: `useRateLimit` | `src/runtime/rate-limiter/vue/index.ts` | Complete · D-01 |
+| `convex-helpers` — `react/sessions`: `<SessionProvider>`, the `useSession*` hooks, `ConvexReactSessionClient` | `src/runtime/convex-helpers/vue/sessions.ts` | Complete · N-19, D-01 |
+| `convex-helpers` — `react/cache`: `<ConvexQueryCacheProvider>` and the cached `useQuery`, `useQueries`, `usePaginatedQuery` | `src/runtime/convex-helpers/vue/cache/**` | Complete · N-18, N-19, D-01 |
+| `convex-helpers` — `react`: `makeUseQueryWithStatus`, `useQuery`, `usePaginatedQuery` | `src/runtime/convex-helpers/vue/{index,paginated}.ts` | Complete · N-18 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
 **Status** · *Complete*: the whole public surface, same names, same arguments, same return
@@ -177,6 +181,10 @@ source.
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
 | auth `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `methods/username-passkey/management/flows.ts` | `convex-auth/upstream/methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `convex-auth/upstream/methods/username-passkey/management/flows.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
+| convex-helpers `react/sessions.ts` | `convex-helpers/vue/sessions.ts` — `SessionProvider` is `provideSession` plus a thin component (N-04's rule), and the storage and session ID are refs (N-19) |
+| convex-helpers `react/cache/provider.tsx` | `convex-helpers/vue/cache/provider.ts` — `ConvexQueryCacheProvider` is `provideConvexQueryCache` plus a thin component |
+| convex-helpers `react/cache/hooks.ts`, `react/cache.ts` | `convex-helpers/vue/cache/{hooks,index}.ts` |
+| convex-helpers `react.ts` | `convex-helpers/vue/index.ts`; both copies of the paginated hook in `convex-helpers/vue/paginated.ts` (N-18) |
 | persistent-text-streaming `svelte/index.svelte.ts` — `useStream` | `persistent-text-streaming/vue/index.ts` — the arguments of the React hook, as values, refs or getters (N-05), and a ref of its result (N-06); the behaviour of the Svelte entry (D-22) |
 | presence `react/index.ts` — `usePresence` | `presence/vue/index.ts` — `roomId`, `userId`, `interval` and `convexUrl` are values, refs or getters (N-05), the result is a ref (N-06), and one watcher runs what upstream splits across three effects |
 | presence `react/useSingleFlight.ts` | `presence/vue/use-single-flight.ts` |
@@ -323,6 +331,9 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-16"></a>**N-16** | `<ConvexAuthProvider>`, and inside it `<AuthProvider>` and `<SessionWatcher>` | `provideConvexAuth` (+ a thin `<ConvexAuthProvider>` wrapper), `provideAuth`, `useSessionWatcher` | *Any other provider component*. All three run in one `setup`, and a Vue component cannot inject what it provides itself. So `provideAuth` returns the auth state that upstream's module-level `useAuth` reads from `ConvexAuthInternalContext`, as well as providing it for `useAuth` below the provider, and `useSessionWatcher` takes the auth client and the Convex auth state as arguments. `client` is optional and defaults to the injected client ([§2.1](#21-the-contract)) |
 | <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does. Upstream's `replaceUrl`, a workaround for Next's router keeping its own copy of the URL, becomes `router.replace` on Nuxt's router, which keeps one too |
 
+| <a id="n-18"></a>**N-18** | convex-helpers' `usePaginatedQuery` in `react.ts` and again in `react/cache/hooks.ts` | one `makeUsePaginatedQuery(useQueries, nextPaginationId?)` in `convex-helpers/vue/paginated.ts` | Same as N-11. The two copies differ only in `customPagination` (always on in `react.ts`, an option in the cached one) and in the pagination id (none, and always `0`). Pinned by `test/plain-vue/convex-helpers.test.ts` — "sends pagination id 0, so every mount shares the cached pages" |
+| <a id="n-19"></a>**N-19** | convex-helpers' `useStorage` and `useSessionStorage` return `[value, setValue]`; `useSessionId` returns `[sessionId, refresh, promise]`; `SessionContext`, `ConvexQueryCacheContext` | `useStorage` and `useSessionStorage` return a writable ref, so VueUse's `useLocalStorage` fits as it is; `useSessionId` returns `[ComputedRef, refresh, ComputedRef<Promise>]`; `SessionKey`, `ConvexQueryCacheKey` | *Returns a plain value* (N-06): a state pair is one writable ref. A context becomes an injection key. `ConvexReactSessionClient` is `ConvexVueSessionClient` (N-01) |
+
 ### 3.2 Behaviour (`D-*`)
 
 #### Forced by the Vue/Nitro runtime
@@ -334,8 +345,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
 - **Upstream** · `convex@1.50.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
-- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts), the stream request of [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts)
-- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`, `test/unit-server/persistent-text-streaming.test.ts`
+- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts), the stream request of [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts), the cached subscriptions of [`convex-helpers/vue/cache/hooks.ts`](./src/runtime/convex-helpers/vue/cache/hooks.ts) and the session ID of [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
+- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`, `test/unit-server/persistent-text-streaming.test.ts`, `test/unit-server/convex-helpers.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
 - **Why** · `onCleanup` never fires during SSR setup, so without the guard each request would
   open a WebSocket on the server that nothing closes. The render-time reads upstream performs
@@ -1222,6 +1233,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-15 | `convex-helpers` | → 0.1.135 | #178 | Initial pin: sessions, the query cache and the status query, with both paginated copies in one (N-18) |
 | 2026-11-15 | `@convex-dev/persistent-text-streaming` | → 0.3.5 | #177 | Initial pin: `useStream`, from the Svelte entry (D-22) |
 | 2026-11-15 | `@convex-dev/r2` | → 0.10.4 | #176 | Initial pin: `useUploadFile`, with the upload helper copied (D-21) |
 | 2026-11-15 | `@convex-dev/presence` | → 0.4.0 | #175 | Initial pin: `usePresence` and `<FacePile>`, with F-06 |

@@ -38,7 +38,8 @@
     "rate-limiter",
     "presence",
     "r2",
-    "streaming"
+    "streaming",
+    "sessions"
   ],
   "type": "module",
   "sideEffects": false,
@@ -152,6 +153,18 @@
       "types": "./dist/runtime/persistent-text-streaming/vue/index.d.ts",
       "import": "./dist/runtime/persistent-text-streaming/vue/index.js"
     },
+    "./convex-helpers/client": {
+      "types": "./dist/runtime/convex-helpers/vue/index.d.ts",
+      "import": "./dist/runtime/convex-helpers/vue/index.js"
+    },
+    "./convex-helpers/cache": {
+      "types": "./dist/runtime/convex-helpers/vue/cache/index.d.ts",
+      "import": "./dist/runtime/convex-helpers/vue/cache/index.js"
+    },
+    "./convex-helpers/sessions": {
+      "types": "./dist/runtime/convex-helpers/vue/sessions.d.ts",
+      "import": "./dist/runtime/convex-helpers/vue/sessions.js"
+    },
     "./clerk/client": {
       "types": "./dist/runtime/clerk/vue/index.d.ts",
       "import": "./dist/runtime/clerk/vue/index.js"
@@ -253,6 +266,15 @@
       "persistent-text-streaming/client": [
         "./dist/runtime/persistent-text-streaming/vue/index.d.ts"
       ],
+      "convex-helpers/client": [
+        "./dist/runtime/convex-helpers/vue/index.d.ts"
+      ],
+      "convex-helpers/cache": [
+        "./dist/runtime/convex-helpers/vue/cache/index.d.ts"
+      ],
+      "convex-helpers/sessions": [
+        "./dist/runtime/convex-helpers/vue/sessions.d.ts"
+      ],
       "clerk/client": [
         "./dist/runtime/clerk/vue/index.d.ts"
       ],
@@ -327,6 +349,7 @@
     "@simplewebauthn/browser": "^14.0.0",
     "better-auth": "~1.7.16",
     "convex": "^1.46.0",
+    "convex-helpers": ">=0.1.135 <0.2.0",
     "nuxt-security": "^2.6.0",
     "vue": "^3.5.0"
   },
@@ -367,6 +390,9 @@
     "better-auth": {
       "optional": true
     },
+    "convex-helpers": {
+      "optional": true
+    },
     "nuxt-security": {
       "optional": true
     }
@@ -402,6 +428,7 @@
     "better-auth": "~1.7.18",
     "changelogen": "^0.6.2",
     "convex": "^1.50.0",
+    "convex-helpers": "^0.1.135",
     "eslint": "^10.13.0",
     "fallow": "3.41.0",
     "happy-dom": "^21.0.4",

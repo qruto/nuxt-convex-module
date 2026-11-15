@@ -50,6 +50,7 @@ describe('upstream baselines', () => {
     ['`/auth0/client`', upstreamBaselines.convex.version],
     ['`/better-auth/client`', upstreamBaselines['better-auth'].version],
     ['`/polar/client`', upstreamBaselines.polar.version],
+    ['`/convex-helpers/sessions`', upstreamBaselines['convex-helpers'].version],
     ['`/persistent-text-streaming/client`', upstreamBaselines['persistent-text-streaming'].version],
     ['`/presence/client`', upstreamBaselines.presence.version],
     ['`/r2/client`', upstreamBaselines.r2.version],

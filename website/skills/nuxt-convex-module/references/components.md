@@ -56,3 +56,20 @@ Convex side: `new PersistentTextStreaming(components.persistentTextStreaming)`, 
 Client side: `const stream = useStream(api.chat.getChatBody, new URL(`${useRuntimeConfig().public.convex.siteUrl}/chat-stream`), () => driven, () => streamId)` → a ref of `{ text, status }`. `driven` is true only in the browser that created the stream. An optional fifth argument `{ authToken, headers }` is read when a stream starts. No request is sent during server rendering.
 
 Docs: https://nuxt-convex-module.dev/raw/components/persistent-text-streaming.md
+
+## Convex Helpers (client side)
+
+```bash
+npm i convex-helpers@~0.1.135
+```
+
+The server helpers of `convex-helpers` work as they are. The module ports its React entries:
+
+- Sessions: `provideSession({ ssrFriendly: true })` in `app.vue`, then `useSessionQuery`, `useSessionMutation`, `useSessionAction`, `useSessionPaginatedQuery`, which add `sessionId` to the arguments. The functions take `sessionId: vSessionId` from `convex-helpers/server/sessions`. `useSessionId()` → `[sessionIdRef, refresh, promiseRef]`. `useStorage` takes a composable returning a writable ref (VueUse `useLocalStorage` fits).
+- Query cache: `provideConvexQueryCache()` in `app.vue`, then `import { useQuery, usePaginatedQuery } from 'nuxt-convex-module/convex-helpers/cache'` where the cache is wanted.
+- Status query: `import { useQuery } from 'nuxt-convex-module/convex-helpers/client'` → a ref of `{ status, data, error, isSuccess, isPending, isError }`; `makeUseQueryWithStatus(useQueries)` for another `useQueries`.
+- The `stream` and `paginator` server helpers: `usePaginatedQuery` from `nuxt-convex-module/convex-helpers/client`.
+
+The cached and status `useQuery` / `useQueries` / `usePaginatedQuery` are not auto-imported, because they share the core names.
+
+Docs: https://nuxt-convex-module.dev/raw/components/convex-helpers.md

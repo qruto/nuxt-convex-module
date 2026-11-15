@@ -22,6 +22,7 @@ export interface IntegrationFlags {
   presence: boolean
   r2: boolean
   persistentTextStreaming: boolean
+  convexHelpers: boolean
   /** nuxt-security registered and its CSP extended with the Convex origins. */
   security: boolean
 }
@@ -348,6 +349,7 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
     presence: 'presence',
     r2: 'r2',
     persistentTextStreaming: 'persistent-text-streaming',
+    convexHelpers: 'convex-helpers',
     security: 'nuxt-security',
   }
   const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)
