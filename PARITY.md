@@ -52,11 +52,11 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — `react` client: the provider, `useAuthActions`, `useAuthToken` | `src/runtime/convex-auth/vue/{index,client}.ts` | Complete · N-16 |
 | `@convex-dev/auth` — `methods/username-password/react` | `src/runtime/convex-auth/vue/methods/username-password.ts` | Complete |
 | `@convex-dev/auth` — `methods/email-password/react` | `src/runtime/convex-auth/vue/methods/email-password.ts` | Complete |
-| `@convex-dev/auth` — the OAuth client, `oauth()` | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports it · D-20 |
+| `@convex-dev/auth` — the OAuth client `oauth()`, and the passkey ceremonies and flows | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports them · D-20 |
 | `@convex-dev/auth` — `ssr/nextjs`: the server helpers and the client provider | `src/runtime/convex-auth/nuxt/**` | Complete + additive · N-17, X-07, A-19 |
 | `@convex-dev/auth` — `ssr`: the auth handlers, the server session, the auth checker | imported as-is from `@convex-dev/auth/ssr` | Reused, never reimplemented |
 | `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
-| `@convex-dev/auth` — the passkey hooks | — | Not ported yet |
+| `@convex-dev/auth` — `methods/username-passkey/react` and `react-custom` | `src/runtime/convex-auth/vue/methods/username-passkey/**` | Complete |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -158,9 +158,15 @@ source.
 | auth `methods/email-password/react.tsx` | `convex-auth/vue/methods/email-password.ts` — the landing-page hooks return a ref of their state (N-06) and take `emailCode` as a value, a ref or a getter (N-05) |
 | auth `methods/oauth/react.ts` | `convex-auth/vue/methods/oauth.ts` — `flowError` is a ref (N-06) |
 | auth `methods/{google,apple,github}/react.ts` | `convex-auth/vue/methods/{google,apple,github}.ts` |
+| auth `methods/username-passkey/react.tsx` | `convex-auth/vue/methods/username-passkey/index.ts` |
+| auth `methods/username-passkey/react-custom.tsx` | `convex-auth/vue/methods/username-passkey/custom.ts` |
+| auth `methods/username-passkey/hooks.tsx` | `convex-auth/vue/methods/username-passkey/hooks.ts` — `pending` and the `autofill` fields are refs (N-06) |
+| auth `methods/username-passkey/react_impl.tsx` | `convex-auth/vue/methods/username-passkey/impl.ts` — `enabled` is a value, a ref or a getter (N-05), the state fields are refs (N-06), and the autofill loop runs in a watcher that starts when the component mounts, where upstream's runs in an effect |
+| auth `methods/username-passkey/management/react.tsx` | `convex-auth/vue/methods/username-passkey/management.ts` — `pending` is a ref (N-06) |
 | auth `ssr/nextjs/index.tsx` — `setupConvexAuthNextjs` | `convex-auth/nuxt/server.ts` — `setupConvexAuthNuxt` (N-17) |
 | auth `ssr/nextjs/client.tsx` — `ConvexAuthNextjsProvider`, and `index.tsx` — `ConvexAuthNextjsServerProvider` | `convex-auth/nuxt/plugin.ts` (N-17) |
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
+| auth `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `methods/username-passkey/management/flows.ts` | `convex-auth/upstream/methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `convex-auth/upstream/methods/username-passkey/management/flows.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
 
 **Port-only files** — no upstream origin; each is an `A-*` entry in [§3.3](#33-port-only-additions-a-)
@@ -183,7 +189,7 @@ source.
 | `better-auth/nuxt/shared-render.ts`, `better-auth/nuxt/no-session-vary.ts` | whether a render may be served to other visitors, and the Nitro hook that has a no-session response made cacheable late vary on `Cookie` | D-18 |
 | `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
 | `better-auth/nuxt/chunk-reload.client.ts` | reloads the page once a deploy removed the client's chunk | D-19 |
-| `convex-auth/upstream/{browser/ambientSignInClient,browser/storage,lib/types,lib/oauth/redemption}.ts` | the types the copied files import, read off the package's public types | D-20 |
+| `convex-auth/upstream/{browser/ambientSignInClient,browser/storage,lib/types,lib/oauth/redemption}.ts`, `convex-auth/upstream/components/passkey/validation.ts`, `convex-auth/upstream/methods/username-passkey/server.ts`, `convex-auth/upstream/methods/username-passkey/management/{add,remove,rename}.ts` | the types the copied files import, read off the package's public types | D-20 |
 | `convex-auth/nuxt/middleware.ts` | the `convex-auth` route middleware for Convex Auth's cookie sessions | A-12 |
 | `convex-auth/nuxt/{handler,proxy,route,no-server}.ts` | the auth routes and the refresh middleware the module mounts, their prefix, and what `#convex/auth-server` names in an app without the file | A-19 |
 
@@ -592,23 +598,33 @@ upstream routes through that client has to land somewhere else here.
   is what makes the port immune to the upstream bug fixed in 1.43.0
   ([§3.4](#34-upstream-fixes-the-translation-already-rules-out)).
 
-##### D-20 — Convex Auth's OAuth client is a copy
+##### D-20 — Convex Auth's OAuth and passkey clients are copies
 
-- **Upstream** · `@convex-dev/auth@2.0.0` `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts`
-- **Port** · [`convex-auth/upstream/`](./src/runtime/convex-auth/upstream) — `oauth`
-- **Pinned by** · `test/unit/convex-auth/upstream-copies.test.ts`
+- **Upstream** · `@convex-dev/auth@2.0.0` `methods/oauth/client.ts`, `browser/retry.ts`,
+  `lib/oauthParams.ts`; `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`,
+  `methods/username-passkey/management/flows.ts`
+- **Port** · [`convex-auth/upstream/`](./src/runtime/convex-auth/upstream) — `oauth`,
+  `browserCeremonies`, `resolveCeremonies`, `runSignInOrSignUpFlow`, `runAddPasskeyFlow`,
+  `runRemovePasskeyFlow`
+- **Pinned by** · `test/unit/convex-auth/upstream-copies.test.ts`;
+  `test/types/convex-auth-passkey-shims.test-d.ts` for the types read off the package
 - **Reported** · [convex/convex-auth#933](https://github.com/convex/convex-auth/pull/933)
-- **On sync** · copy the changed files again. When upstream exports the client, delete the folder
-  and import it. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and its types from the copy,
+- **On sync** · copy the changed files again. When upstream exports the clients, delete the folder
+  and import them. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and its types from the copy,
   as upstream's `methods/oauth/react.ts` does from the original
-- **Why** · the three files are free of React, but the package's `exports` map offers them only
-  through entries that import `react`. Each copy is the package's own source with three edits:
-  `FunctionReference` is imported as a type, because `verbatimModuleSyntax` rejects a type
-  imported as a value; relative imports lose their `.ts` extension, because the build emits
-  them as written; and the navigation to the identity provider carries a `fallow-ignore` comment,
-  because its target comes from the app's own `startSignIn` mutation. The four files beside them are not copies. They hold the types the copies
+- **Why** · the files are free of React, but the package's `exports` map offers them only
+  through entries that import `react`. Each copy is the package's own source. Every copy loses the
+  `.ts` extension of its relative imports, because the build emits them as written. The OAuth
+  client carries two more edits: `FunctionReference` is imported as a type, because
+  `verbatimModuleSyntax` rejects a type imported as a value, and the navigation to the identity
+  provider carries a `fallow-ignore` comment, because its target comes from the app's own
+  `startSignIn` mutation. The files beside them are not copies. They hold the types the copies
   import from unexported files, read off the public `AuthClientConfig`, `TokenBundle`,
-  `SignInComplete` and `SignInError`.
+  `SignInComplete` and `SignInError`, and for the passkey files off the functions that
+  `setupUsernamePasskey` in the React-free `methods/username-passkey/server` entry returns. The
+  passkey client is the one file that imports `@simplewebauthn/browser`. `@convex-dev/auth`
+  depends on that package, and the module names it as an optional peer so that a package manager
+  with isolated installs links it to the module too. The `custom` entry does not import it.
 
 #### Type and signature refinements
 
@@ -1117,6 +1133,13 @@ upstream change is noticed:
 - `storage` on Convex Auth's `AuthClient` (`convex-auth/vue/methods/email-password.ts`), where the
   email flows keep their browser secrets, as upstream's hooks do. It is `@internal`: present at
   runtime, absent from the published types.
+- `CHALLENGE_TTL_MS` in `convex-auth/vue/methods/username-passkey/impl.ts`: the server's ten
+  minutes for a passkey challenge, from `components/passkey/constants.ts`, which the package does
+  not export. The autofill loop refreshes its challenge two minutes before that.
+- The copied passkey flows type their client as `ConvexReactClient` and call only `mutation` on
+  it. The composables hand them the Vue client through a cast
+  (`convex-auth/vue/methods/username-passkey/{hooks,management}.ts`), so a flow that starts
+  calling another method is a runtime error the types do not show.
 - The DevTools bridge (A-15) reads the TS-private `listeners` map and `cachedSync`,
   instance-patches `transition` / `close`, and reaches `localQueryResultByToken` and
   `optimisticQueryResults.queryLogs` on `BaseConvexClient`. Re-check against

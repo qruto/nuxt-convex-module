@@ -144,6 +144,27 @@ const ENTRY: Record<string, Entry> = {
     values: ['useSignInWithUsernamePassword', 'useSignUpWithUsernamePassword'],
     types: ['Credentials', 'SignInWithUsernamePasswordResult', 'SignUpWithUsernamePasswordResult'],
   },
+  './convex-auth/methods/username-passkey': {
+    source: 'src/runtime/convex-auth/vue/methods/username-passkey/index.ts',
+    values: ['useAddPasskey', 'useRemovePasskey', 'useSignInWithUsernamePasskey'],
+    types: [
+      'AddPasskeyApi', 'AddPasskeyResult', 'AlreadyPendingFailure', 'AuthenticationResponseJSON', 'PasskeyAutofillStatus',
+      'PasskeyClientError', 'PasskeyClientFailure', 'PublicKeyCredentialCreationOptionsJSON', 'PublicKeyCredentialRequestOptionsJSON',
+      'RegistrationResponseJSON', 'RemovePasskeyApi', 'RemovePasskeyResult', 'RenamePasskeyResult', 'SignInWithUsernamePasskeyResult',
+      'UsernamePasskeyApi', 'UsernamePasskeyAutofillError', 'WireAuthenticationResponse', 'WireCreationOptions',
+      'WireRegistrationResponse', 'WireRequestOptions',
+    ],
+  },
+  './convex-auth/methods/username-passkey/custom': {
+    source: 'src/runtime/convex-auth/vue/methods/username-passkey/custom.ts',
+    values: ['createUsernamePasskeyHooks'],
+    types: [
+      'AddPasskeyApi', 'AddPasskeyResult', 'AlreadyPendingFailure', 'PasskeyAuthenticationResponse', 'PasskeyAutofillStatus',
+      'PasskeyCeremonies', 'PasskeyClientError', 'PasskeyClientFailure', 'PasskeyRegistrationResponse', 'RemovePasskeyApi',
+      'RemovePasskeyResult', 'RenamePasskeyResult', 'SignInWithUsernamePasskeyResult', 'UsernamePasskeyApi',
+      'UsernamePasskeyAutofillError', 'WireCreationOptions', 'WireRequestOptions',
+    ],
+  },
   './convex-auth/methods/email-password': {
     source: 'src/runtime/convex-auth/vue/methods/email-password.ts',
     values: ['useCompleteChangeEmail', 'useCompletePasswordRecovery', 'useCompleteSignUpWithEmailPassword', 'useSignInWithEmailPassword', 'useSignUpWithEmailPassword', 'useStartChangeEmail', 'useStartPasswordRecovery'],
