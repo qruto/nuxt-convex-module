@@ -287,9 +287,11 @@ try {
   // Its cookie sessions add the server setup, the plugin, the two handlers the
   // module mounts, their route prefix and the alias stand-in (+16 KB, 12
   // files): 662.8 KB in 150 files, so the ceiling moves to 670 KB / 150 files.
+  // Its `convex-auth` route middleware adds two files (+4 KB): 666.9 KB in
+  // 152 files, so the ceiling moves to 152 files.
   console.log('── Size ───────────────────────────────────────')
   const MAX_BYTES = 670_000
-  const MAX_FILES = 150
+  const MAX_FILES = 152
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

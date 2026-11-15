@@ -75,6 +75,10 @@ describe('validateModuleOptions', () => {
     expect(missingSlash.loginPath).toBe('/sign-in')
     expect(missingSlash.warnings).toEqual([expect.stringContaining('`convex.betterAuth.loginPath`')])
 
+    // Convex Auth's middleware reads the same path from its own option.
+    const convexAuth = validateModuleOptions({ ...base, loginPath: 'sign-in', loginPathOption: 'convex.convexAuth.loginPath' })
+    expect(convexAuth.warnings).toEqual([expect.stringContaining('`convex.convexAuth.loginPath`')])
+
     const trailingSlash = validateModuleOptions({ ...base, loginPath: '/sign-in/' })
     expect(trailingSlash.loginPath).toBe('/sign-in')
     expect(trailingSlash.warnings).toEqual([])

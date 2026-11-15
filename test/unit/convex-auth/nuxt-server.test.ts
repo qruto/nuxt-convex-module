@@ -42,7 +42,7 @@ function event(cookies: Record<string, string> = {}, path = '/') {
   return {
     req: new Request(`https://app.test${path}`, { headers: cookie ? { cookie } : {} }),
     res: { headers: new Headers() },
-    context: {} as { convexAuth?: { token: string | null, isAuthenticatedFunctionName: string }, params?: Record<string, string> },
+    context: {} as { convexAuth?: { token: string | null, isAuthenticatedFunctionName: string, isAuthenticated: () => Promise<boolean> }, params?: Record<string, string> },
   }
 }
 
@@ -80,7 +80,7 @@ describe('convexAuthNuxtProxy', () => {
 
     expect(mutation).not.toHaveBeenCalled()
     expect(request.res.headers.get('set-cookie')).toBeNull()
-    expect(request.context.convexAuth).toEqual({ token, isAuthenticatedFunctionName: 'auth:isAuthenticated' })
+    expect(request.context.convexAuth).toMatchObject({ token, isAuthenticatedFunctionName: 'auth:isAuthenticated' })
   })
 
   it('refreshes a token close to expiry, rewrites the cookies and hands the new token on', async () => {
@@ -122,7 +122,19 @@ describe('convexAuthNuxtProxy', () => {
     await setupConvexAuthNuxt(CONFIG).convexAuthNuxtProxy(request)
 
     expect(mutation).not.toHaveBeenCalled()
-    expect(request.context.convexAuth).toEqual({ token: null, isAuthenticatedFunctionName: 'auth:isAuthenticated' })
+    expect(request.context.convexAuth).toMatchObject({ token: null, isAuthenticatedFunctionName: 'auth:isAuthenticated' })
+  })
+
+  // What the `convex-auth` route middleware reads during a render.
+  it('leaves the session check on the request, asked of the deployment once', async () => {
+    const query = vi.spyOn(ConvexHttpClient.prototype, 'query').mockResolvedValue(true as never)
+    const request = event({ [AUTH_JWT_COOKIE]: jwt(600) })
+    await setupConvexAuthNuxt(CONFIG).convexAuthNuxtProxy(request)
+    expect(query).not.toHaveBeenCalled()
+
+    expect(await request.context.convexAuth!.isAuthenticated()).toBe(true)
+    expect(await request.context.convexAuth!.isAuthenticated()).toBe(true)
+    expect(query).toHaveBeenCalledTimes(1)
   })
 
   const refresh = async (cookieOptions?: { secure: boolean }) => {

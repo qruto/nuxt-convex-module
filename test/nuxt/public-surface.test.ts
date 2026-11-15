@@ -53,7 +53,7 @@ const ENTRY: Record<string, Entry> = {
   '.': {
     source: 'src/module.ts',
     values: ['default'],
-    types: ['BetterAuthModuleOptions', 'ModuleOptions'],
+    types: ['BetterAuthModuleOptions', 'ConvexAuthModuleOptions', 'ModuleOptions'],
   },
   './client': {
     source: 'src/runtime/vue/index.ts',

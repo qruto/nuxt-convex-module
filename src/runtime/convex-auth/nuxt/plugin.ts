@@ -150,6 +150,9 @@ export default defineNuxtPlugin({
       // hydrates when the root `<Suspense>` resolves, and a session loaded
       // before then renders a signed-in page over the server's loading one.
       onMounted: (start) => {
+        // A page the server did not render has nothing to hydrate, and its
+        // route middleware waits for the session.
+        if (!nuxtApp.isHydrating) return start()
         const stop = nuxtApp.hook('app:suspense:resolve', () => {
           stop()
           start()

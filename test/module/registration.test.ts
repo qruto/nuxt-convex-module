@@ -393,6 +393,7 @@ describe('with Convex Auth', () => {
     afterAll(() => nuxt.close())
 
     it('registers the composables and the server setup, and no cookie sessions', () => {
+      expect(r.middleware).toEqual([])
       expect([...r.imports].sort()).toEqual(names(APP_IMPORTS, ['core', 'convexAuth']).sort())
       expect(r.serverImports).toContain('setupConvexAuthNuxt')
       expect(pluginsOf(r).some(p => p.includes('convex-auth'))).toBe(false)
@@ -429,6 +430,12 @@ describe('with Convex Auth', () => {
       }
     })
 
+    it('registers the convex-auth route middleware', () => {
+      expect(r.middleware).toEqual([expect.objectContaining({ name: 'convex-auth', global: false })])
+      expect(r.middleware[0]!.path).toMatch(/runtime\/convex-auth\/nuxt\/middleware/)
+      expect(r.imports).toContain('resolveAuthRedirect')
+    })
+
     it('adds its plugin after the client plugin it reads', () => {
       const plugins = pluginsOf(r)
       const client = plugins.findIndex(p => /runtime\/vue\/plugin(?:\.[cm]?[jt]s)?$/.test(p))
@@ -447,6 +454,9 @@ describe('with Convex Auth', () => {
     afterAll(() => nuxt.close())
 
     it('registers no cookie sessions', () => {
+      expect(r.middleware.map(m => m.path)).toEqual([expect.stringMatching(/runtime\/better-auth\/nuxt\/middleware/)])
+      // Both integrations register the redirect guard, from one file.
+      expect(r.imports.filter(name => name === 'resolveAuthRedirect')).toHaveLength(1)
       expect(pluginsOf(r).some(p => p.includes('convex-auth'))).toBe(false)
       expect(r.options.serverHandlers.some(h => h.route === '/api/_convex/auth/:action')).toBe(false)
     })

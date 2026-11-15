@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { anyApi, makeFunctionReference } from 'convex/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, type ComputedRef, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { provideAuth, useAuthSignInApi, useSessionWatcher, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
+import { provideAuth, useAuth, useAuthSignInApi, useSessionWatcher, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
 import { ConvexAuthProvider, provideConvexAuth, useAuthActions, useAuthToken } from '../../src/runtime/convex-auth/vue/index'
 import {
   useSignInWithUsernamePassword,
@@ -111,6 +111,22 @@ afterEach(() => {
 })
 
 describe('Vue bindings', () => {
+  it('useAuth throws when used outside a provider', () => {
+    expect(() => mountBare(() => useAuth())).toThrow(/useAuth must be used below `provideConvexAuth`/)
+  })
+
+  // What the route middleware reads: the session, not the connection.
+  it('useAuth reports a session as soon as it is set', async () => {
+    const { client } = makeClient()
+    const { result } = mountAuth(client, () => ({ auth: useAuth(), actions: useAuthActions() }))
+    expect(result.child.auth.isLoading()).toBe(true)
+    await flushPromises()
+    expect([result.child.auth.isLoading(), result.child.auth.isAuthenticated()]).toEqual([false, false])
+
+    await result.child.actions.setSession(bundle(1))
+    expect(result.child.auth.isAuthenticated()).toBe(true)
+  })
+
   it('useAuthActions throws when used outside a provider', () => {
     expect(() => mountBare(() => useAuthActions())).toThrow(/useAuthActions must be used below `provideConvexAuth`/)
   })

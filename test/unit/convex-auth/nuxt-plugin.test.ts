@@ -41,7 +41,7 @@ const TOKEN = (() => {
   return `${encode({ alg: 'RS256' })}.${encode({ exp: Math.floor(Date.now() / 1000) + 600, sub: 'user-1' })}.signature`
 })()
 
-function run({ token = null as string | null, name = 'auth:isAuthenticated' as string | null, client = true } = {}) {
+function run({ token = null as string | null, name = 'auth:isAuthenticated' as string | null, client = true, hydrating = true } = {}) {
   states.set('convex:initialToken', { value: token })
   states.set('convex:auth:isAuthenticated', { value: name })
   const vueApp = createApp({ render: () => null })
@@ -49,6 +49,7 @@ function run({ token = null as string | null, name = 'auth:isAuthenticated' as s
   const hooks = new Map<string, Set<() => void>>()
   const nuxtApp = {
     vueApp,
+    isHydrating: hydrating,
     hook: (hook: string, fn: () => void) => {
       if (!hooks.has(hook)) hooks.set(hook, new Set())
       hooks.get(hook)!.add(fn)
@@ -102,6 +103,14 @@ describe('convex-auth cookie-session plugin', () => {
 
     // The hook fires again on each navigation.
     call('app:suspense:resolve')
+    expect(init).toHaveBeenCalledTimes(1)
+  })
+
+  // Nothing to hydrate, and the route middleware waits for the session.
+  it('loads the session at once on a page the server did not render', () => {
+    stubFetch({ tokens: null })
+    const init = vi.spyOn(AuthClient.prototype, 'init')
+    run({ hydrating: false })
     expect(init).toHaveBeenCalledTimes(1)
   })
 

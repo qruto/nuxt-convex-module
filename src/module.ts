@@ -62,6 +62,19 @@ export interface BetterAuthModuleOptions {
 }
 
 /**
+ * Options for the Convex Auth integration, under `convex.convexAuth`.
+ *
+ * @public
+ */
+export interface ConvexAuthModuleOptions {
+  /**
+   * Where the `convex-auth` route middleware sends unauthenticated visitors.
+   * @default '/login'
+   */
+  loginPath?: string
+}
+
+/**
  * Options for the `convex` key in `nuxt.config`. Every key is optional: the
  * URLs default to the environment, and each integration auto-enables from
  * your `package.json`.
@@ -82,9 +95,10 @@ export interface ModuleOptions {
   /**
    * Convex Auth client (`provideConvexAuth`, `useAuthActions`, the sign-in
    * composables). Auto-enabled when `@convex-dev/auth` is a dependency of your
-   * app; set `false` to force it off (or `true` to require it).
+   * app; set `false` to force it off, `true` to require it, or a
+   * {@link ConvexAuthModuleOptions} object to configure it.
    */
-  convexAuth?: boolean
+  convexAuth?: boolean | ConvexAuthModuleOptions
   /**
    * Better Auth integration. Auto-enabled when `@convex-dev/better-auth` is a
    * dependency of your app; set `false` to force it off, `true` to require it
@@ -222,7 +236,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.vite.resolve ??= {}
     nuxt.options.vite.resolve.dedupe = [...(nuxt.options.vite.resolve.dedupe ?? []), 'convex']
 
-    const { url, siteUrl } = applyRuntimeConfig(nuxt, options)
+    const { url, siteUrl, loginPathOption } = applyRuntimeConfig(nuxt, options)
 
     const betterAuthOptions = readBetterAuthOptions(options)
     const diagnostics = validateModuleOptions({
@@ -230,6 +244,7 @@ export default defineNuxtModule<ModuleOptions>({
       siteUrl,
       authRoute: betterAuthOptions.authRoute || '/api/auth',
       loginPath: nuxt.options.runtimeConfig.public.convex.loginPath,
+      loginPathOption,
       authClient: betterAuthOptions.authClient,
       rootDir: nuxt.options.rootDir,
     })
@@ -347,7 +362,7 @@ function registerIntegrations(resolver: Resolver, nuxt: Nuxt, options: ModuleOpt
   const convexAuth = resolve('convexAuth', '@convex-dev/auth')
   if (convexAuth) {
     // Cookie sessions need the base client plugin, which Better Auth replaces.
-    registerConvexAuth(resolver, policy, betterAuth ? undefined : findConvexAuthServer(nuxt))
+    registerConvexAuth(resolver, policy, betterAuth ? undefined : findConvexAuthServer(nuxt), betterAuth)
   }
 
   const clerk = resolve('clerk', '@clerk/vue')
@@ -453,7 +468,7 @@ function readBetterAuthOptions(options: ModuleOptions): BetterAuthModuleOptions 
  * Resolve the Convex deployment URL from module options or environment, and
  * publish `convex.url` / `convex.siteUrl` into Nuxt's runtime config.
  */
-function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string } {
+function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, siteUrl: string, loginPathOption: string } {
   const env = deploymentEnv(nuxt.options.rootDir, process.env, nuxt.options.dev)
   const resolved = resolveDeploymentUrls(options, env)
   const url = nuxt.options._prepare ? '' : resolved.url
@@ -478,8 +493,10 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
   const crossDomainCallbackRoute
     = (typeof options.betterAuth === 'object' && options.betterAuth.crossDomainCallbackRoute) || ''
 
-  const loginPath
-    = (typeof options.betterAuth === 'object' && options.betterAuth.loginPath) || '/login'
+  // One middleware name, one login path: whichever integration owns it.
+  const [loginPath, loginPathOption] = typeof options.betterAuth === 'object' && options.betterAuth.loginPath
+    ? [options.betterAuth.loginPath, 'convex.betterAuth.loginPath']
+    : [(typeof options.convexAuth === 'object' && options.convexAuth.loginPath) || '/login', 'convex.convexAuth.loginPath']
 
   // Publish the resolved convex url/siteUrl while preserving any sibling keys a
   // user already set, instead of overwriting the whole `convex` object.
@@ -500,7 +517,7 @@ function applyRuntimeConfig(nuxt: Nuxt, options: ModuleOptions): { url: string, 
     loginPath,
   }
 
-  return { url, siteUrl }
+  return { url, siteUrl, loginPathOption }
 }
 
 /**
@@ -620,9 +637,12 @@ function registerAuthComponents(resolver: Resolver, policy: RegistrationPolicy):
   registerComponents(resolver, 'core', policy)
 }
 
-/** `addImports` + `addServerImports` for everything an integration registers that the policy keeps. */
-function registerIntegrationImports(resolver: Resolver, integration: Integration, policy: RegistrationPolicy): void {
-  const kept = (entries: Registration[]) => entries.flatMap((entry) => {
+/**
+ * `addImports` + `addServerImports` for everything an integration registers that the policy keeps.
+ * `registered` names what another integration has already added, to leave out here.
+ */
+function registerIntegrationImports(resolver: Resolver, integration: Integration, policy: RegistrationPolicy, registered: Registration[] = []): void {
+  const kept = (entries: Registration[]) => entries.filter(entry => !registered.some(other => other.name === entry.name)).flatMap((entry) => {
     const as = registeredAs(entry.name, policy, entries.map(e => e.name))
     return as ? [{ ...entry, as, from: resolver.resolve(`./${entry.from}`) }] : []
   })
@@ -738,8 +758,9 @@ function registerBaseConvexClient(resolver: Resolver): void {
  * `provideConvexAuth`, the `<ConvexAuthProvider>` drop-in component and the
  * sign-in composables. The provider feeds the generic `provideConvexWithAuth`.
  */
-function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, server: string | undefined): void {
-  registerIntegrationImports(resolver, 'convexAuth', policy)
+function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, server: string | undefined, betterAuth: boolean): void {
+  // Both integrations register `resolveAuthRedirect`, from one file.
+  registerIntegrationImports(resolver, 'convexAuth', policy, betterAuth ? APP_IMPORTS.betterAuth : [])
   registerComponents(resolver, 'convexAuth', policy)
 
   // Cookie sessions, a port of `@convex-dev/auth/ssr/nextjs`, switch on with
@@ -761,6 +782,13 @@ function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, serv
   extendRouteRules(`${CONVEX_AUTH_ROUTE}/**`, { cache: false, prerender: false })
   // Appended: it reads the client the base plugin provides.
   addPlugin(resolver.resolve('./runtime/convex-auth/nuxt/plugin'), { append: true })
+  if (!isExcluded('convex-auth', policy.exclude)) {
+    addRouteMiddleware({
+      name: 'convex-auth',
+      path: resolver.resolve('./runtime/convex-auth/nuxt/middleware'),
+      global: false,
+    })
+  }
 }
 
 /**

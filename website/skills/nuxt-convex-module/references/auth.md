@@ -31,7 +31,7 @@ export default setupConvexAuthNuxt({
 })
 ```
 
-`signIn` lists every function that can start a session; the sign-in route refuses the rest. `useAsyncQuery` renders signed-in data on the server with no extra code. In a server route, `import auth from '../convex-auth'`, then `await auth.isAuthenticatedNuxt(event)` and `await auth.convexAuthNuxtAccessToken(event)` for `fetchQuery(…, { token })`. During SSR the auth state reads as loading.
+`signIn` lists every function that can start a session; the sign-in route refuses the rest. `useAsyncQuery` renders signed-in data on the server with no extra code. In a server route, `import auth from '../convex-auth'`, then `await auth.isAuthenticatedNuxt(event)` and `await auth.convexAuthNuxtAccessToken(event)` for `fetchQuery(…, { token })`. During SSR the auth state reads as loading. To protect a page: `definePageMeta({ middleware: 'convex-auth' })`, which sends signed-out visitors to `/login?redirect=…` (`convex.convexAuth.loginPath` changes the path); on the login page navigate to `resolveAuthRedirect(route.query.redirect)`.
 
 **Browser storage, for a client-rendered app.** Do not create the server file. Call the provider once in `app.vue`, and the other composables in components below it. A component cannot read what it provides itself.
 
