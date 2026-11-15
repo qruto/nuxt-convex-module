@@ -37,7 +37,7 @@ const GLOB_COVERED = [/^src\/runtime\/devtools\//]
  * files. Upstream paths (`react/client.ts`) and test paths are excluded by the
  * leading-segment filter, so only the port's own tree is compared.
  */
-const RUNTIME_DIRS = ['vue', 'nuxt', 'clerk', 'auth0', 'better-auth', 'convex-auth', 'polar']
+const RUNTIME_DIRS = readdirSync(root('src/runtime'), { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name)
 
 function mentionedRuntimePaths(): Set<string> {
   const mentioned = new Set<string>()

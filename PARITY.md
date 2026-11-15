@@ -17,6 +17,7 @@ are in [AGENTS.md](./AGENTS.md).
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
 | `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
+| `@convex-dev/rate-limiter` | **0.4.3** | tag `v0.4.3` in [convex/rate-limiter](https://github.com/convex/rate-limiter) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
 install, which is the wider `peerDependencies` range in `package.json`.
@@ -58,6 +59,7 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
 | `@convex-dev/auth` — `methods/username-passkey/react` and `react-custom` | `src/runtime/convex-auth/vue/methods/username-passkey/**` | Complete |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
+| `@convex-dev/rate-limiter` — `react`: `useRateLimit` | `src/runtime/rate-limiter/vue/index.ts` | Complete · D-01 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
 **Status** · *Complete*: the whole public surface, same names, same arguments, same return
@@ -168,6 +170,7 @@ source.
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
 | auth `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `methods/username-passkey/management/flows.ts` | `convex-auth/upstream/methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `convex-auth/upstream/methods/username-passkey/management/flows.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
+| rate-limiter `react/index.ts` — `useRateLimit` | `rate-limiter/vue/index.ts` — `opts` is a value, a ref or a getter (N-05), `status` is a ref (N-06) |
 
 **Port-only files** — no upstream origin; each is an `A-*` entry in [§3.3](#33-port-only-additions-a-)
 
@@ -318,8 +321,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
 - **Upstream** · `convex@1.50.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
-- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts)
-- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`
+- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts)
+- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
 - **Why** · `onCleanup` never fires during SSR setup, so without the guard each request would
   open a WebSocket on the server that nothing closes. The render-time reads upstream performs
@@ -1130,6 +1133,10 @@ upstream change is noticed:
   / `setAdminAuth` on `ConvexHttpClient` (`nuxt/index.ts`); `paginationOptions`, which the
   published `RequestForQueries` strips and the module-local `RequestForQueriesCompat` declares,
   as upstream's own does (`vue/queries-observer.ts`, `composables/use-queries.ts`).
+- `GetValueArgs` and `GetValueReturns` in `rate-limiter/vue/index.ts`: the shapes of the
+  `getRateLimit` query from the rate limiter's `shared.ts`, which the package does not export.
+  They are rebuilt around the config type of the exported `calculateRateLimit`, so a new field
+  in either has to be added by hand.
 - `storage` on Convex Auth's `AuthClient` (`convex-auth/vue/methods/email-password.ts`), where the
   email flows keep their browser secrets, as upstream's hooks do. It is `@internal`: present at
   runtime, absent from the published types.
@@ -1167,6 +1174,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-15 | `@convex-dev/rate-limiter` | → 0.4.3 | #174 | Initial pin: `useRateLimit` |
 | 2026-11-14 | `@convex-dev/auth` | → 2.0.0 | #168 | Initial pin: the `react` client (N-16), the username and password composables, and the copied OAuth client (D-20) |
 | 2026-11-13 | `convex` | 1.49.0 → 1.50.0 | #166 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`, and the published `src`, `dist/esm`, `dist/cjs` and `.d.ts` for `browser`, `react`, `nextjs`, `react-clerk`, `react-auth0` and `common` are byte-identical; exports, peers and `engines` unchanged. The release adds CLI account switching, makes `ctx.auth.signJwt` require an `aud` claim, and makes a scheduled mutation that cancels itself throw |
 | 2026-11-07 | `@convex-dev/better-auth` | 0.12.6 → 0.13.0 | #142 | Better Auth 1.7, and with it both peer floors. Ported: the proxy drops any `x-forwarded-host` / `-proto` the request arrived with (0.12.7's `3e8af5d`); from `5f418ce`, a prefetched token names its session (trusted once that session settles, never for another one), an in-flight refresh answers before the cached token, a finished request leaves a newer one in flight, and a signed-out session's refetch can't bring the prefetched token back (D-03, D-16). `AuthClientWithCrossDomain` is now exported. Upstream's structural `AuthClient` isn't ported: the `#convex/auth-client` alias already types the app's own client. Client plugins are reused as-is, so their changes arrive with the dependency. The Convex-side changes are for the app, through the add-on's upgrade guide |

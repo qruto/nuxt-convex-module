@@ -128,6 +128,11 @@ const ENTRY: Record<string, Entry> = {
     types: ['CheckoutArgs', 'PolarComponentApi'],
   },
   './polar/vue': { source: 'src/runtime/polar/vue/components.ts', aliasOf: './polar/client', values: [], types: [] },
+  './rate-limiter/client': {
+    source: 'src/runtime/rate-limiter/vue/index.ts',
+    values: ['useRateLimit'],
+    types: ['GetRateLimitValueQuery', 'GetServerTimeMutation', 'UseRateLimitOptions'],
+  },
   './convex-auth/client': {
     source: 'src/runtime/convex-auth/vue/index.ts',
     values: ['ConvexAuthProvider', 'provideConvexAuth', 'useAuthActions', 'useAuthToken'],

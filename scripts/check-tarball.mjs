@@ -124,6 +124,7 @@ const allowed = {
   './better-auth/server': ['better-auth', '@convex-dev/better-auth'],
   './polar/client': ['@convex-dev/polar', '@polar-sh/checkout'],
   './polar/vue': ['@convex-dev/polar', '@polar-sh/checkout'],
+  './rate-limiter/client': ['@convex-dev/rate-limiter'],
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
@@ -308,9 +309,11 @@ try {
   // is) and the five type files beside those (+62 KB, 30 files, two thirds of
   // it type declarations and their JSDoc): 765.7 KB in 194 files, so the
   // ceiling moves to 780 KB / 194 files.
+  // The rate limiter's composable adds one file and its types (+6 KB): 772.1 KB
+  // in 196 files, so the ceiling moves to 196 files.
   console.log('── Size ───────────────────────────────────────')
   const MAX_BYTES = 780_000
-  const MAX_FILES = 194
+  const MAX_FILES = 196
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

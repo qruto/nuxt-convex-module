@@ -45,6 +45,11 @@ export const upstreamBaselines = {
     version: '0.9.2',
     entries: 'react components',
   },
+  'rate-limiter': {
+    package: '@convex-dev/rate-limiter',
+    version: '0.4.3',
+    entries: 'react',
+  },
 } as const satisfies Record<string, UpstreamBaseline>
 
 export type UpstreamSource = keyof typeof upstreamBaselines

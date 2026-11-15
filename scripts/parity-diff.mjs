@@ -38,6 +38,12 @@ const TIERS = {
     tag: v => `v${v}`,
     paths: ['src/react'],
   },
+  'rate-limiter': {
+    repo: 'convex/rate-limiter',
+    tag: v => `v${v}`,
+    // The hook, and `calculateRateLimit` with the types it reads.
+    paths: ['src/react', 'src/shared.ts'],
+  },
 }
 
 const [tier, toArg, fromArg] = process.argv.slice(2)

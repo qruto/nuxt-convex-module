@@ -18,6 +18,7 @@ export interface IntegrationFlags {
   clerk: boolean
   auth0: boolean
   polar: boolean
+  rateLimiter: boolean
   /** nuxt-security registered and its CSP extended with the Convex origins. */
   security: boolean
 }
@@ -254,6 +255,7 @@ export function clientDependencies(
     ...(flags.clerk ? ['@clerk/vue'] : []),
     ...(flags.auth0 ? ['@auth0/auth0-vue'] : []),
     ...(flags.polar ? ['@polar-sh/checkout/embed'] : []),
+    ...(flags.rateLimiter ? ['@convex-dev/rate-limiter'] : []),
   ]
   return entries.flatMap((entry) => {
     const prefix = locate(entry.split('/').slice(0, entry.startsWith('@') ? 2 : 1).join('/'))
@@ -339,6 +341,7 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
     clerk: 'clerk',
     auth0: 'auth0',
     polar: 'polar',
+    rateLimiter: 'rate-limiter',
     security: 'nuxt-security',
   }
   const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)

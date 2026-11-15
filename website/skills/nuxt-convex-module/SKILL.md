@@ -87,6 +87,10 @@ The Convex side needs a mutation returning `ctx.storage.generateUploadUrl()` and
 
 Polar's `<CheckoutLink>` and `<CustomerPortalLink>` switch on when `@convex-dev/polar` is installed and take their actions through `:polar-api` (usually `api.billing`): [references/polar.md](references/polar.md).
 
+## Convex components
+
+The client side of Convex components switches on when the component's package is installed: the rate limiter's `useRateLimit`. Usage and the Convex-side exports: [references/components.md](references/components.md).
+
 ## Plain Vue
 
 The same client runs without Nuxt. Create a `ConvexVueClient`, provide it under `ConvexClientKey`, and import every composable from `nuxt-convex-module/vue`; there are no auto-imports, no `#convex/*` aliases and no server helpers. The setup is in [the plain Vue guide](https://nuxt-convex-module.dev/raw/guide/plain-vue.md).
@@ -97,6 +101,6 @@ Every page is Markdown at the links below; the docs MCP server at `https://nuxt-
 
 - [Installation](https://nuxt-convex-module.dev/raw/getting-started/installation.md), [Configuration](https://nuxt-convex-module.dev/raw/getting-started/configuration.md) (module options, runtime config, `#convex/*` aliases), [Troubleshooting](https://nuxt-convex-module.dev/raw/getting-started/troubleshooting.md) (every message the module prints, and two from the Convex CLI and Node, with the fix), [Security](https://nuxt-convex-module.dev/raw/getting-started/security.md)
 - Guide: [Queries](https://nuxt-convex-module.dev/raw/guide/queries.md), [Mutations and actions](https://nuxt-convex-module.dev/raw/guide/mutations-and-actions.md), [Pagination](https://nuxt-convex-module.dev/raw/guide/pagination.md), [File storage](https://nuxt-convex-module.dev/raw/guide/file-storage.md), [Server and SSR](https://nuxt-convex-module.dev/raw/guide/server-and-ssr.md), [Auth state](https://nuxt-convex-module.dev/raw/guide/auth-state.md), [Connection state](https://nuxt-convex-module.dev/raw/guide/connection-state.md)
-- Components: [Convex Auth](https://nuxt-convex-module.dev/raw/components/convex-auth.md), [Better Auth](https://nuxt-convex-module.dev/raw/components/better-auth.md), [Clerk](https://nuxt-convex-module.dev/raw/components/clerk.md), [Auth0](https://nuxt-convex-module.dev/raw/components/auth0.md), [Polar](https://nuxt-convex-module.dev/raw/components/polar.md)
+- Components: [Convex Auth](https://nuxt-convex-module.dev/raw/components/convex-auth.md), [Better Auth](https://nuxt-convex-module.dev/raw/components/better-auth.md), [Clerk](https://nuxt-convex-module.dev/raw/components/clerk.md), [Auth0](https://nuxt-convex-module.dev/raw/components/auth0.md), [Polar](https://nuxt-convex-module.dev/raw/components/polar.md), [Rate Limiter](https://nuxt-convex-module.dev/raw/components/rate-limiter.md)
 - Recipes: [Infinite scroll](https://nuxt-convex-module.dev/raw/recipes/infinite-scroll.md), [Optimistic list](https://nuxt-convex-module.dev/raw/recipes/optimistic-list.md), [Protected page](https://nuxt-convex-module.dev/raw/recipes/protected-page.md), [Image upload](https://nuxt-convex-module.dev/raw/recipes/image-upload.md)
 - Every auto-import: [app](https://nuxt-convex-module.dev/raw/api-reference/auto-imports.md), [server](https://nuxt-convex-module.dev/raw/api-reference/server-imports.md)

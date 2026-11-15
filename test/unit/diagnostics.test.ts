@@ -41,12 +41,12 @@ describe('formatStartupSummary', () => {
     expect(formatStartupSummary(
       'https://happy-otter-123.convex.cloud',
       'convex',
-      { convexAuth: false, betterAuth: true, clerk: false, auth0: false, polar: true, security: true },
+      { convexAuth: false, betterAuth: true, clerk: false, auth0: false, polar: true, rateLimiter: false, security: true },
     )).toBe('Convex https://happy-otter-123.convex.cloud · functions: convex/ · integrations: better-auth, polar, nuxt-security')
   })
 
   it('spells out the empty cases instead of hiding them', () => {
-    expect(formatStartupSummary('', 'convex', { convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false }))
+    expect(formatStartupSummary('', 'convex', { convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, rateLimiter: false, security: false }))
       .toBe('Convex (no URL) · functions: convex/ · integrations: none')
   })
 })
@@ -119,8 +119,8 @@ describe('isPackageInstalled', () => {
 })
 
 describe('integrationWarnings', () => {
-  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
-    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
+  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'security', boolean>>) =>
+    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, rateLimiter: false, security: false, ...on })
   const everything = () => true
 
   it('warns when Better Auth shares the client with another auth adapter', () => {
@@ -152,8 +152,8 @@ describe('integrationWarnings', () => {
 })
 
 describe('clientDependencies', () => {
-  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'security', boolean>>) =>
-    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, security: false, ...on })
+  const flags = (on: Partial<Record<'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'security', boolean>>) =>
+    ({ convexAuth: false, betterAuth: false, clerk: false, auth0: false, polar: false, rateLimiter: false, security: false, ...on })
   const everything = () => ''
 
   it('lists only Convex when no integration is on', () => {
@@ -161,7 +161,7 @@ describe('clientDependencies', () => {
   })
 
   it('adds what each enabled integration imports on the client', () => {
-    expect(clientDependencies(flags({ convexAuth: true, betterAuth: true, clerk: true, auth0: true, polar: true, security: true }), everything)).toEqual([
+    expect(clientDependencies(flags({ convexAuth: true, betterAuth: true, clerk: true, auth0: true, polar: true, rateLimiter: true, security: true }), everything)).toEqual([
       'convex/browser',
       'convex/server',
       'convex/values',
@@ -172,6 +172,7 @@ describe('clientDependencies', () => {
       '@clerk/vue',
       '@auth0/auth0-vue',
       '@polar-sh/checkout/embed',
+      '@convex-dev/rate-limiter',
     ])
   })
 
