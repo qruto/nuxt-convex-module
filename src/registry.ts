@@ -13,7 +13,7 @@ export interface Registration {
   type?: boolean
 }
 
-export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'presence' | 'r2'
+export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'presence' | 'r2' | 'persistentTextStreaming'
 
 /** The `convex.autoImports` option: every name, every name prefixed with `Convex`, or none. */
 export type AutoImports = boolean | 'prefixed'
@@ -160,6 +160,7 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
   rateLimiter: [{ name: 'useRateLimit', from: 'runtime/rate-limiter/vue/index' }],
   presence: [{ name: 'usePresence', from: 'runtime/presence/vue/index' }],
   r2: [{ name: 'useUploadFile', from: 'runtime/r2/vue/index' }],
+  persistentTextStreaming: [{ name: 'useStream', from: 'runtime/persistent-text-streaming/vue/index' }],
 }
 
 /** Auto-registered components (`addComponent`); `name` is also the export. */
@@ -178,6 +179,7 @@ export const APP_COMPONENTS: Record<Integration, Registration[]> = {
   rateLimiter: [],
   presence: [{ name: 'FacePile', from: 'runtime/presence/vue/facepile' }],
   r2: [],
+  persistentTextStreaming: [],
 }
 
 /** Nitro auto-imports (`addServerImports`). */
@@ -194,4 +196,5 @@ export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   rateLimiter: [],
   presence: [],
   r2: [],
+  persistentTextStreaming: [],
 }

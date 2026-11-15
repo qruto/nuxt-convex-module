@@ -60,6 +60,11 @@ export const upstreamBaselines = {
     version: '0.10.4',
     entries: 'vue',
   },
+  'persistent-text-streaming': {
+    package: '@convex-dev/persistent-text-streaming',
+    version: '0.3.5',
+    entries: 'svelte + react',
+  },
 } as const satisfies Record<string, UpstreamBaseline>
 
 export type UpstreamSource = keyof typeof upstreamBaselines

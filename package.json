@@ -37,7 +37,8 @@
     "billing",
     "rate-limiter",
     "presence",
-    "r2"
+    "r2",
+    "streaming"
   ],
   "type": "module",
   "sideEffects": false,
@@ -147,6 +148,10 @@
       "types": "./dist/runtime/r2/vue/index.d.ts",
       "import": "./dist/runtime/r2/vue/index.js"
     },
+    "./persistent-text-streaming/client": {
+      "types": "./dist/runtime/persistent-text-streaming/vue/index.d.ts",
+      "import": "./dist/runtime/persistent-text-streaming/vue/index.js"
+    },
     "./clerk/client": {
       "types": "./dist/runtime/clerk/vue/index.d.ts",
       "import": "./dist/runtime/clerk/vue/index.js"
@@ -245,6 +250,9 @@
       "r2/client": [
         "./dist/runtime/r2/vue/index.d.ts"
       ],
+      "persistent-text-streaming/client": [
+        "./dist/runtime/persistent-text-streaming/vue/index.d.ts"
+      ],
       "clerk/client": [
         "./dist/runtime/clerk/vue/index.d.ts"
       ],
@@ -310,6 +318,7 @@
     "@clerk/vue": "^2.0.0",
     "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": ">=0.13.0 <0.14.0",
+    "@convex-dev/persistent-text-streaming": ">=0.3.0 <0.4.0",
     "@convex-dev/polar": ">=0.9.0 <0.10.0",
     "@convex-dev/presence": ">=0.4.0 <0.5.0",
     "@convex-dev/r2": ">=0.10.0 <0.11.0",
@@ -332,6 +341,9 @@
       "optional": true
     },
     "@convex-dev/better-auth": {
+      "optional": true
+    },
+    "@convex-dev/persistent-text-streaming": {
       "optional": true
     },
     "@convex-dev/polar": {
@@ -367,6 +379,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@convex-dev/auth": "^2.0.0",
     "@convex-dev/better-auth": "^0.13.0",
+    "@convex-dev/persistent-text-streaming": "^0.3.5",
     "@convex-dev/polar": "^0.9.2",
     "@convex-dev/presence": "^0.4.0",
     "@convex-dev/r2": "^0.10.4",

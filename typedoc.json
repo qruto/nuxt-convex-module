@@ -26,7 +26,8 @@
     "src/runtime/rate-limiter/vue/index.ts",
     "src/runtime/presence/vue/index.ts",
     "src/runtime/presence/vue/facepile.ts",
-    "src/runtime/r2/vue/index.ts"
+    "src/runtime/r2/vue/index.ts",
+    "src/runtime/persistent-text-streaming/vue/index.ts"
   ],
   "entryPointStrategy": "resolve",
 
