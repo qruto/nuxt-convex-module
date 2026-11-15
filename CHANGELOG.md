@@ -6,34 +6,34 @@
 
 ### 🚀 Enhancements
 
-#### Convex-auth
+#### Convex Auth
 
 - ⚠️  Port the Convex Auth client and username and password sign-in ([#168](https://github.com/qruto/nuxt-convex-module/pull/168))
-- ⚠️  Cookie sessions with server rendering ([#169](https://github.com/qruto/nuxt-convex-module/pull/169))
-- ⚠️  Protect pages with the convex-auth route middleware ([#170](https://github.com/qruto/nuxt-convex-module/pull/170))
-- ⚠️  Sign in with an email and password ([#171](https://github.com/qruto/nuxt-convex-module/pull/171))
-- ⚠️  Sign in with Google, Apple or GitHub ([#172](https://github.com/qruto/nuxt-convex-module/pull/172))
-- ⚠️  Sign in with a passkey ([#173](https://github.com/qruto/nuxt-convex-module/pull/173))
+- Cookie sessions with server rendering ([#169](https://github.com/qruto/nuxt-convex-module/pull/169))
+- Protect pages with the convex-auth route middleware ([#170](https://github.com/qruto/nuxt-convex-module/pull/170))
+- Sign in with an email and password ([#171](https://github.com/qruto/nuxt-convex-module/pull/171))
+- Sign in with Google, Apple or GitHub ([#172](https://github.com/qruto/nuxt-convex-module/pull/172))
+- Sign in with a passkey ([#173](https://github.com/qruto/nuxt-convex-module/pull/173))
 
-#### Convex-helpers
+#### convex-helpers
 
-- ⚠️  Port sessions, the query cache and the status query ([#178](https://github.com/qruto/nuxt-convex-module/pull/178))
+- Port sessions, the query cache and the status query ([#178](https://github.com/qruto/nuxt-convex-module/pull/178))
 
-#### Persistent-text-streaming
+#### Text Streaming
 
-- ⚠️  Port useStream ([#177](https://github.com/qruto/nuxt-convex-module/pull/177))
+- Port useStream ([#177](https://github.com/qruto/nuxt-convex-module/pull/177))
 
 #### Presence
 
-- ⚠️  Port usePresence and FacePile ([#175](https://github.com/qruto/nuxt-convex-module/pull/175))
+- Port usePresence and FacePile ([#175](https://github.com/qruto/nuxt-convex-module/pull/175))
 
 #### R2
 
-- ⚠️  Port useUploadFile ([#176](https://github.com/qruto/nuxt-convex-module/pull/176))
+- Port useUploadFile ([#176](https://github.com/qruto/nuxt-convex-module/pull/176))
 
-#### Rate-limiter
+#### Rate Limiter
 
-- ⚠️  Port useRateLimit ([#174](https://github.com/qruto/nuxt-convex-module/pull/174))
+- Port useRateLimit ([#174](https://github.com/qruto/nuxt-convex-module/pull/174))
 
 ### 💅 Refactors
 
@@ -41,7 +41,7 @@
 
 ### 📖 Documentation
 
-- ⚠️  List what the module supports, and add a WorkOS AuthKit recipe ([#179](https://github.com/qruto/nuxt-convex-module/pull/179))
+- List what the module supports, and add a WorkOS AuthKit recipe ([#179](https://github.com/qruto/nuxt-convex-module/pull/179))
 
 ### 🏡 Chore
 
@@ -55,18 +55,13 @@
 
 #### ⚠️ Breaking Changes
 
-- **convex-auth:** ⚠️  Port the Convex Auth client and username and password sign-in ([#168](https://github.com/qruto/nuxt-convex-module/pull/168))
-- **convex-auth:** ⚠️  Cookie sessions with server rendering ([#169](https://github.com/qruto/nuxt-convex-module/pull/169))
-- **convex-auth:** ⚠️  Protect pages with the convex-auth route middleware ([#170](https://github.com/qruto/nuxt-convex-module/pull/170))
-- **convex-auth:** ⚠️  Sign in with an email and password ([#171](https://github.com/qruto/nuxt-convex-module/pull/171))
-- **convex-auth:** ⚠️  Sign in with Google, Apple or GitHub ([#172](https://github.com/qruto/nuxt-convex-module/pull/172))
-- **convex-auth:** ⚠️  Sign in with a passkey ([#173](https://github.com/qruto/nuxt-convex-module/pull/173))
-- **rate-limiter:** ⚠️  Port useRateLimit ([#174](https://github.com/qruto/nuxt-convex-module/pull/174))
-- **presence:** ⚠️  Port usePresence and FacePile ([#175](https://github.com/qruto/nuxt-convex-module/pull/175))
-- **r2:** ⚠️  Port useUploadFile ([#176](https://github.com/qruto/nuxt-convex-module/pull/176))
-- **persistent-text-streaming:** ⚠️  Port useStream ([#177](https://github.com/qruto/nuxt-convex-module/pull/177))
-- **convex-helpers:** ⚠️  Port sessions, the query cache and the status query ([#178](https://github.com/qruto/nuxt-convex-module/pull/178))
-- ⚠️  List what the module supports, and add a WorkOS AuthKit recipe ([#179](https://github.com/qruto/nuxt-convex-module/pull/179))
+- **Convex Auth:** ⚠️  Port the Convex Auth client and username and password sign-in ([#168](https://github.com/qruto/nuxt-convex-module/pull/168))
+
+### ⬆️ Upgrading from 0.14
+
+- **`provideConvexAuth` is now Convex Auth's provider.** The generic provider it named in 0.14 is `provideConvexWithAuth`, with the options type `ConvexProviderWithAuthOptions` (was `ConvexAuthProviderOptions`). An app that calls `provideConvexAuth({ client, useAuth })` renames the call.
+- **The Clerk, Auth0 and Better Auth helpers have their upstream names.** `provideConvexWithClerk` (was `provideConvexAuthFromClerk`), `provideConvexWithAuth0` (was `provideConvexAuthFromAuth0`), and on the server `convexBetterAuthNuxt(event)` (was `convexAuth(event)`) with the `ConvexBetterAuthEvent`, `ConvexBetterAuthOptions` and `ConvexBetterAuthService` types. The old names still work and are marked deprecated; 0.16 removes them.
+- **New auto-imports switch on with their package.** An app that already has `convex-helpers` (common for its server helpers) now gets `provideSession`, `useSessionQuery` and the other session composables, `provideConvexQueryCache` and `makeUseQueryWithStatus` auto-imported, and the same holds for the components' packages. If your own code uses one of those names, set the package's option to `false` (for example `convex.convexHelpers: false`) or `convex.autoImports: 'prefixed'`.
 
 ### ❤️ Contributors
 

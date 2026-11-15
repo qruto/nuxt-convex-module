@@ -454,6 +454,9 @@
   "changelog": {
     "scopeMap": {
       "better-auth": "Better Auth",
+      "convex-auth": "Convex Auth",
+      "persistent-text-streaming": "Text Streaming",
+      "rate-limiter": "Rate Limiter",
       "ci": "CI",
       "deps": "Dependencies",
       "deps-dev": "Dev dependencies",
