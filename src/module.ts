@@ -134,6 +134,12 @@ export interface ModuleOptions {
    */
   presence?: boolean
   /**
+   * R2 upload composable (`useUploadFile`), a port of `@convex-dev/r2/vue` on
+   * the module's own client. Auto-enabled when `@convex-dev/r2` is a dependency
+   * of your app; set `false` to force it off.
+   */
+  r2?: boolean
+  /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
    * `modules`) — the module registers it as a module dependency and extends its
@@ -353,6 +359,7 @@ const PLAIN_INTEGRATIONS = [
   ['polar', '@convex-dev/polar'],
   ['rateLimiter', '@convex-dev/rate-limiter'],
   ['presence', '@convex-dev/presence'],
+  ['r2', '@convex-dev/r2'],
 ] as const
 
 /**

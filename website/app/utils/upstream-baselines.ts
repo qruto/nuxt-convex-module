@@ -55,6 +55,11 @@ export const upstreamBaselines = {
     version: '0.4.0',
     entries: 'react + facepile',
   },
+  'r2': {
+    package: '@convex-dev/r2',
+    version: '0.10.4',
+    entries: 'vue',
+  },
 } as const satisfies Record<string, UpstreamBaseline>
 
 export type UpstreamSource = keyof typeof upstreamBaselines

@@ -44,6 +44,7 @@ A [plain Vue](/guide/plain-vue) app imports the same files under Vue-named subpa
 | `nuxt-convex-module/polar/client` | `<CheckoutLink>`, `<CustomerPortalLink>` |
 | `nuxt-convex-module/presence/client` | `usePresence` (also the default export) |
 | `nuxt-convex-module/presence/facepile` | `<FacePile>` (also the default export), with the package's stylesheet |
+| `nuxt-convex-module/r2/client` | `useUploadFile` |
 | `nuxt-convex-module/rate-limiter/client` | `useRateLimit` |
 
 The core, Convex Auth, Clerk, Auth0, Polar and component entries are self-contained and work in a plain Vue app; `/better-auth/*`, `/convex-auth/server`, `/server`, `/app` and `/testing` rely on Nuxt-provided aliases, runtime config or `#app`, and need Nuxt.

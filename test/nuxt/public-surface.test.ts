@@ -138,6 +138,11 @@ const ENTRY: Record<string, Entry> = {
     values: ['default', 'FacePile'],
     types: [],
   },
+  './r2/client': {
+    source: 'src/runtime/r2/vue/index.ts',
+    values: ['useUploadFile'],
+    types: [],
+  },
   './rate-limiter/client': {
     source: 'src/runtime/rate-limiter/vue/index.ts',
     values: ['useRateLimit'],

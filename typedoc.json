@@ -25,7 +25,8 @@
     "src/runtime/polar/vue/components.ts",
     "src/runtime/rate-limiter/vue/index.ts",
     "src/runtime/presence/vue/index.ts",
-    "src/runtime/presence/vue/facepile.ts"
+    "src/runtime/presence/vue/facepile.ts",
+    "src/runtime/r2/vue/index.ts"
   ],
   "entryPointStrategy": "resolve",
 

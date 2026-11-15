@@ -32,5 +32,6 @@ seo:
 | [polar/client](/api-reference/reference/polar/client) | Vue ports of `@convex-dev/polar/react`'s billing components — [CheckoutLink](/api-reference/reference/polar/client#checkoutlink) and [CustomerPortalLink](/api-reference/reference/polar/client#customerportallink). |
 | [presence/facepile](/api-reference/reference/presence/facepile) | A Vue port of `@convex-dev/presence/facepile`: [FacePile](/api-reference/reference/presence/facepile#facepile). |
 | [presence/client](/api-reference/reference/presence/client) | A Vue port of `@convex-dev/presence/react`: [usePresence](/api-reference/reference/presence/client#usepresence). |
+| [r2/client](/api-reference/reference/r2/client) | A Vue port of `@convex-dev/r2/vue`: [useUploadFile](/api-reference/reference/r2/client#useuploadfile), on the module's own client rather than the community `convex-vue` that upstream's entry imports. |
 | [rate-limiter/client](/api-reference/reference/rate-limiter/client) | A Vue port of `@convex-dev/rate-limiter/react`: [useRateLimit](/api-reference/reference/rate-limiter/client#useratelimit). |
 | [client](/api-reference/reference/client) | Tools to integrate Convex into Vue applications. |

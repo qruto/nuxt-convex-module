@@ -38,6 +38,8 @@ const UPSTREAM_SURFACE: Record<string, string[]> = {
   '@convex-dev/polar/react': ['CheckoutLink', 'CustomerPortalLink'],
   '@convex-dev/rate-limiter/react': ['useRateLimit'],
   '@convex-dev/presence/react': ['default'],
+  // `@convex-dev/r2/vue` needs the community `convex-vue`; its React twin has the same surface.
+  '@convex-dev/r2/react': ['useUploadFile'],
 }
 
 // `convex/react-auth0` is deliberately absent: importing it needs
