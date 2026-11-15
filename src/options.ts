@@ -247,7 +247,9 @@ export function clientDependencies(
     'convex/browser',
     'convex/server',
     'convex/values',
-    ...(flags.convexAuth ? ['@convex-dev/auth/browser'] : []),
+    // The passkey composables import the second one, which `@convex-dev/auth`
+    // depends on. An entry that cannot be placed is left out.
+    ...(flags.convexAuth ? ['@convex-dev/auth/browser', '@simplewebauthn/browser'] : []),
     ...(flags.betterAuth ? ['@convex-dev/better-auth/client/plugins', 'better-auth/vue'] : []),
     ...(flags.clerk ? ['@clerk/vue'] : []),
     ...(flags.auth0 ? ['@auth0/auth0-vue'] : []),

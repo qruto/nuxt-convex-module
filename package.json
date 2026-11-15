@@ -80,6 +80,14 @@
       "types": "./dist/runtime/convex-auth/vue/methods/username-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/username-password.js"
     },
+    "./convex-auth/methods/username-passkey": {
+      "types": "./dist/runtime/convex-auth/vue/methods/username-passkey/index.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/username-passkey/index.js"
+    },
+    "./convex-auth/methods/username-passkey/custom": {
+      "types": "./dist/runtime/convex-auth/vue/methods/username-passkey/custom.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/username-passkey/custom.js"
+    },
     "./convex-auth/methods/email-password": {
       "types": "./dist/runtime/convex-auth/vue/methods/email-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/email-password.js"
@@ -169,6 +177,12 @@
       ],
       "convex-auth/methods/username-password": [
         "./dist/runtime/convex-auth/vue/methods/username-password.d.ts"
+      ],
+      "convex-auth/methods/username-passkey": [
+        "./dist/runtime/convex-auth/vue/methods/username-passkey/index.d.ts"
+      ],
+      "convex-auth/methods/username-passkey/custom": [
+        "./dist/runtime/convex-auth/vue/methods/username-passkey/custom.d.ts"
       ],
       "convex-auth/methods/email-password": [
         "./dist/runtime/convex-auth/vue/methods/email-password.d.ts"
@@ -267,6 +281,7 @@
     "@convex-dev/better-auth": ">=0.13.0 <0.14.0",
     "@convex-dev/polar": ">=0.9.0 <0.10.0",
     "@polar-sh/checkout": "^0.6.0",
+    "@simplewebauthn/browser": "^14.0.0",
     "better-auth": "~1.7.16",
     "convex": "^1.46.0",
     "nuxt-security": "^2.6.0",
@@ -289,6 +304,9 @@
       "optional": true
     },
     "@polar-sh/checkout": {
+      "optional": true
+    },
+    "@simplewebauthn/browser": {
       "optional": true
     },
     "better-auth": {
@@ -315,6 +333,7 @@
     "@nuxt/schema": "^4.6.3",
     "@nuxt/test-utils": "^4.3.4",
     "@polar-sh/checkout": "^0.6.0",
+    "@simplewebauthn/browser": "^14.0.0",
     "@types/node": "^26.6.5",
     "@types/ws": "^8.18.2",
     "@unhead/vue": "^3.4.2",

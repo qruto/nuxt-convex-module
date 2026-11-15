@@ -28,6 +28,11 @@ describe('convex-auth upstream copies', () => {
     'methods/oauth/client.ts',
     'browser/retry.ts',
     'lib/oauthParams.ts',
+    'methods/username-passkey/client.ts',
+    'methods/username-passkey/ceremonies.ts',
+    'methods/username-passkey/flows.ts',
+    'methods/username-passkey/base64url.ts',
+    'methods/username-passkey/management/flows.ts',
   ])('%s matches the installed package', (path) => {
     let upstream = read(`node_modules/@convex-dev/auth/src/${path}`)
     for (const [from, to] of EDITS[path] ?? []) {

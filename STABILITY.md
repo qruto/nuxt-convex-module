@@ -68,6 +68,7 @@ and `convex` is optional, needed only by the integration it powers:
 | `@convex-dev/polar` | `>=0.9.0 <0.10.0` |
 | `@polar-sh/checkout` | `^0.6.0` |
 | `@convex-dev/auth` | `^2.0.0` |
+| `@simplewebauthn/browser` | `^14.0.0` |
 | `@clerk/vue` | `^2.0.0` |
 | `@auth0/auth0-vue` | `^2.0.0` |
 | `nuxt-security` | `^2.6.0` |

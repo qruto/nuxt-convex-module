@@ -10,6 +10,8 @@
     "src/runtime/nuxt/testing.ts",
     "src/runtime/convex-auth/vue/index.ts",
     "src/runtime/convex-auth/vue/methods/username-password.ts",
+    "src/runtime/convex-auth/vue/methods/username-passkey/index.ts",
+    "src/runtime/convex-auth/vue/methods/username-passkey/custom.ts",
     "src/runtime/convex-auth/vue/methods/email-password.ts",
     "src/runtime/convex-auth/vue/methods/oauth.ts",
     "src/runtime/convex-auth/vue/methods/google.ts",

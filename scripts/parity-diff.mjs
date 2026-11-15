@@ -29,8 +29,9 @@ const TIERS = {
   'convex-auth': {
     repo: 'convex/convex-auth',
     tag: v => `v${v}`,
-    // What `src/runtime/convex-auth/upstream` copies, and the files those import.
-    paths: ['packages/core/src/methods/oauth/client.ts', 'packages/core/src/browser', 'packages/core/src/lib/oauthParams.ts', 'packages/core/src/lib/types.ts', 'packages/core/src/lib/oauth/redemption.ts'],
+    // The React and Next entries the port translates, what
+    // `src/runtime/convex-auth/upstream` copies, and the files those import.
+    paths: ['packages/core/src/react', 'packages/core/src/ssr', 'packages/core/src/browser', 'packages/core/src/methods', 'packages/core/src/lib/oauthParams.ts', 'packages/core/src/lib/types.ts', 'packages/core/src/lib/oauth/redemption.ts', 'packages/core/src/components/passkey/validation.ts', 'packages/core/src/components/passkey/constants.ts'],
   },
   'polar': {
     repo: 'convex/polar',

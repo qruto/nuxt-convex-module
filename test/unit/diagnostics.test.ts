@@ -166,6 +166,7 @@ describe('clientDependencies', () => {
       'convex/server',
       'convex/values',
       '@convex-dev/auth/browser',
+      '@simplewebauthn/browser',
       '@convex-dev/better-auth/client/plugins',
       'better-auth/vue',
       '@clerk/vue',
@@ -179,6 +180,17 @@ describe('clientDependencies', () => {
     const missing = (pkg: string) => (checked.push(pkg), pkg === '@polar-sh/checkout' ? undefined : '')
     expect(clientDependencies(flags({ polar: true }), missing)).not.toContain('@polar-sh/checkout/embed')
     expect(checked).toEqual(['convex', 'convex', 'convex', '@polar-sh/checkout'])
+  })
+
+  // The passkey composables' optional peer.
+  it('leaves out the passkey library in an app that has not installed it', () => {
+    const missing = (pkg: string) => pkg === '@simplewebauthn/browser' ? undefined : ''
+    expect(clientDependencies(flags({ convexAuth: true }), missing)).toEqual([
+      'convex/browser',
+      'convex/server',
+      'convex/values',
+      '@convex-dev/auth/browser',
+    ])
   })
 
   it('names an entry by the walk Vite takes to it', () => {

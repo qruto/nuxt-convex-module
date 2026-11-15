@@ -7,3 +7,5 @@ export type SlimTokenBundle = Exclude<Parameters<AuthClient['setSession']>[0], T
 export type ClientView<T> = T extends { tokens: TokenBundle }
   ? Omit<T, 'tokens'> & { tokens: SlimTokenBundle }
   : T
+
+export type { SignInError, TokenBundle } from '@convex-dev/auth'

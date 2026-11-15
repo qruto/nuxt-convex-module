@@ -50,9 +50,10 @@
     // Reached through the vitest `#imports` and `nuxt/server` aliases by the
     // runtime under test (vitest.config.ts declares them per project; the plugin
     // reads top-level only).
-    // A copy of upstream's file, held to it by a test (PARITY.md D-20). Only
-    // `oauth` is used so far; the rest is the surface of the OAuth hooks.
+    // Copies of upstream's files, held to them by a test (PARITY.md D-20), and
+    // the type files beside them. A copy keeps every export of the original.
     { "file": "src/runtime/convex-auth/upstream/methods/oauth/client.ts", "exports": ["*"] },
+    { "file": "src/runtime/convex-auth/upstream/methods/username-passkey/**/*.ts", "exports": ["*"] },
     { "file": "test/helpers/nuxt-imports.ts", "exports": ["useRuntimeConfig"] },
     { "file": "test/helpers/nuxt-server.ts", "exports": ["*"] }
   ],
@@ -125,6 +126,11 @@
         "maxCyclomatic": 25,
         "maxCognitive": 30,
         "reason": "Verbatim ports of convex/react (PARITY.md): the structure follows upstream so releases stay diffable file-for-file."
+      },
+      {
+        "files": ["src/runtime/convex-auth/vue/methods/username-passkey/impl.ts"],
+        "maxCognitive": 40,
+        "reason": "A port of @convex-dev/auth's react_impl.tsx (PARITY.md): the autofill loop is one function upstream, and splitting it would hide its awaits and gate checks from a diff."
       }
     ]
   }

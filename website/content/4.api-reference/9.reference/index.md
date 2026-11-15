@@ -23,6 +23,8 @@ seo:
 | [convex-auth/methods/github](/api-reference/reference/convex-auth/methods/github) | Vue client for the GitHub sign-in method: a port of `@convex-dev/auth/methods/github/react`. |
 | [convex-auth/methods/google](/api-reference/reference/convex-auth/methods/google) | Vue client for the Google sign-in method: a port of `@convex-dev/auth/methods/google/react`. |
 | [convex-auth/methods/oauth](/api-reference/reference/convex-auth/methods/oauth) | Vue client for the shared OAuth state: a port of `@convex-dev/auth/methods/oauth/react`. |
+| [convex-auth/methods/username-passkey/custom](/api-reference/reference/convex-auth/methods/username-passkey/custom) | The passkey composables on ceremonies that the app provides, for example on a native passkey library: a port of `@convex-dev/auth/methods/username-passkey/react-custom`. |
+| [convex-auth/methods/username-passkey](/api-reference/reference/convex-auth/methods/username-passkey) | Vue client for the `usernamePasskey` method: a port of `@convex-dev/auth/methods/username-passkey/react`. |
 | [convex-auth/methods/username-password](/api-reference/reference/convex-auth/methods/username-password) | Vue client for the `usernamePassword` method: a port of `@convex-dev/auth/methods/username-password/react`. |
 | [app](/api-reference/reference/app) | Composables that need the Nuxt app context (`#app`) — the half of the package that runs in a Nuxt app but not in plain Vue. |
 | [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |
