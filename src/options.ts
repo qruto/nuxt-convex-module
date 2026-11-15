@@ -19,6 +19,7 @@ export interface IntegrationFlags {
   auth0: boolean
   polar: boolean
   rateLimiter: boolean
+  presence: boolean
   /** nuxt-security registered and its CSP extended with the Convex origins. */
   security: boolean
 }
@@ -342,6 +343,7 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
     auth0: 'auth0',
     polar: 'polar',
     rateLimiter: 'rate-limiter',
+    presence: 'presence',
     security: 'nuxt-security',
   }
   const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)

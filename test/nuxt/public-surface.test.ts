@@ -128,6 +128,16 @@ const ENTRY: Record<string, Entry> = {
     types: ['CheckoutArgs', 'PolarComponentApi'],
   },
   './polar/vue': { source: 'src/runtime/polar/vue/components.ts', aliasOf: './polar/client', values: [], types: [] },
+  './presence/client': {
+    source: 'src/runtime/presence/vue/index.ts',
+    values: ['default', 'usePresence'],
+    types: ['PresenceAPI', 'PresenceState'],
+  },
+  './presence/facepile': {
+    source: 'src/runtime/presence/vue/facepile.ts',
+    values: ['default', 'FacePile'],
+    types: [],
+  },
   './rate-limiter/client': {
     source: 'src/runtime/rate-limiter/vue/index.ts',
     values: ['useRateLimit'],

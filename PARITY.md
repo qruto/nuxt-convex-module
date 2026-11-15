@@ -17,6 +17,7 @@ are in [AGENTS.md](./AGENTS.md).
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
 | `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
+| `@convex-dev/presence` | **0.4.0** | tag `v0.4.0` in [convex/presence](https://github.com/convex/presence) |
 | `@convex-dev/rate-limiter` | **0.4.3** | tag `v0.4.3` in [convex/rate-limiter](https://github.com/convex/rate-limiter) |
 
 A baseline is the version the ported files were diffed against — not what a consumer may
@@ -59,6 +60,8 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
 | `@convex-dev/auth` — `methods/username-passkey/react` and `react-custom` | `src/runtime/convex-auth/vue/methods/username-passkey/**` | Complete |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
+| `@convex-dev/presence` — `react`: `usePresence`; `facepile`: `<FacePile>` | `src/runtime/presence/vue/**` | Complete · D-01, F-06 |
+| `@convex-dev/presence` — `react-native` | — | Out of scope: the module has no React Native target |
 | `@convex-dev/rate-limiter` — `react`: `useRateLimit` | `src/runtime/rate-limiter/vue/index.ts` | Complete · D-01 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -170,6 +173,9 @@ source.
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
 | auth `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `methods/username-passkey/management/flows.ts` | `convex-auth/upstream/methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `convex-auth/upstream/methods/username-passkey/management/flows.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
+| presence `react/index.ts` — `usePresence` | `presence/vue/index.ts` — `roomId`, `userId`, `interval` and `convexUrl` are values, refs or getters (N-05), the result is a ref (N-06), and one watcher runs what upstream splits across three effects |
+| presence `react/useSingleFlight.ts` | `presence/vue/use-single-flight.ts` |
+| presence `facepile/index.tsx` — `FacePile` | `presence/vue/facepile.ts` — the stylesheet is the package's own `@convex-dev/presence/facepile.css` |
 | rate-limiter `react/index.ts` — `useRateLimit` | `rate-limiter/vue/index.ts` — `opts` is a value, a ref or a getter (N-05), `status` is a ref (N-06) |
 
 **Port-only files** — no upstream origin; each is an `A-*` entry in [§3.3](#33-port-only-additions-a-)
@@ -321,8 +327,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
 - **Upstream** · `convex@1.50.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
-- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts)
-- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`
+- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts)
+- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
 - **Why** · `onCleanup` never fires during SSR setup, so without the guard each request would
   open a WebSocket on the server that nothing closes. The render-time reads upstream performs
@@ -1082,6 +1088,19 @@ and its marker.
   the client sees no new token and keeps running, and a fresh one is fetched when the server rejects
   it at expiry.
 
+#### F-06 — the unload beacon disconnects through the given function
+
+- **Kind** · a session left online
+- **Upstream** · `@convex-dev/presence@0.4.0` `react/index.ts` — the `beforeunload` beacon posts `path: "presence:disconnect"`
+- **Port** · [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts)
+- **Pinned by** · `test/plain-vue/presence.test.ts` — "the unload beacon calls the disconnect function it was given"
+- **Reported** · [convex/presence#67](https://github.com/convex/presence/pull/67)
+- **On sync** · drop the entry once upstream names the path from the reference
+- **Why** · the composable takes a `disconnect` reference and uses it everywhere except in the
+  beacon. An app whose presence functions live anywhere but `convex/presence.ts` gets "Could not find
+  public function" from the beacon, and the user stays online until the session times out. The port
+  takes the path from the reference with `getFunctionName`.
+
 ---
 
 ## 4. Keeping parity
@@ -1174,6 +1193,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-15 | `@convex-dev/presence` | → 0.4.0 | #175 | Initial pin: `usePresence` and `<FacePile>`, with F-06 |
 | 2026-11-15 | `@convex-dev/rate-limiter` | → 0.4.3 | #174 | Initial pin: `useRateLimit` |
 | 2026-11-14 | `@convex-dev/auth` | → 2.0.0 | #168 | Initial pin: the `react` client (N-16), the username and password composables, and the copied OAuth client (D-20) |
 | 2026-11-13 | `convex` | 1.49.0 → 1.50.0 | #166 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`, and the published `src`, `dist/esm`, `dist/cjs` and `.d.ts` for `browser`, `react`, `nextjs`, `react-clerk`, `react-auth0` and `common` are byte-identical; exports, peers and `engines` unchanged. The release adds CLI account switching, makes `ctx.auth.signJwt` require an `aud` claim, and makes a scheduled mutation that cancels itself throw |

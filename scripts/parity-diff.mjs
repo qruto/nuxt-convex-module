@@ -44,6 +44,11 @@ const TIERS = {
     // The hook, and `calculateRateLimit` with the types it reads.
     paths: ['src/react', 'src/shared.ts'],
   },
+  'presence': {
+    repo: 'convex/presence',
+    tag: v => `v${v}`,
+    paths: ['src/react', 'src/facepile'],
+  },
 }
 
 const [tier, toArg, fromArg] = process.argv.slice(2)

@@ -20,3 +20,15 @@ export const { getRateLimit, getServerTime } = rateLimiter.hookAPI('sendMessage'
 Client side: `useRateLimit(api.example.getRateLimit, { getServerTimeMutation: api.example.getServerTime, count: 1 })` → `{ status, check }`. `status` is a ref: `undefined` while loading, then `{ ok: true }` or `{ ok: false, retryAt }` in browser time, and it turns back to `ok` when `retryAt` passes. The options can be a ref or a getter. `check(ts?, count?)` returns the value at a given time. The server still enforces the limit with `rateLimiter.limit(ctx, …)`.
 
 Docs: https://nuxt-convex-module.dev/raw/components/rate-limiter.md
+
+## Presence
+
+```bash
+npm i @convex-dev/presence@~0.4.0
+```
+
+Convex side: `new Presence(components.presence)` and three functions in one module: `heartbeat` (args `roomId`, `userId`, `sessionId`, `interval`; check room access here), `list` (arg `roomToken`) and `disconnect` (arg `sessionToken`; no auth check, it is called over HTTP when the tab closes).
+
+Client side: `usePresence(api.presence, roomId, userId)` → a ref of the room's users, current user first, `undefined` until the first heartbeat answers. `roomId` and `userId` can be refs or getters; a change leaves the old room. `<FacePile :presence-state="presenceState ?? []" />` renders avatars with the package's own stylesheet. The functions may live in any module: the tab-close beacon uses the `disconnect` reference given.
+
+Docs: https://nuxt-convex-module.dev/raw/components/presence.md

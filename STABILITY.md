@@ -67,6 +67,7 @@ and `convex` is optional, needed only by the integration it powers:
 | `better-auth` | `~1.7.16` |
 | `@convex-dev/polar` | `>=0.9.0 <0.10.0` |
 | `@polar-sh/checkout` | `^0.6.0` |
+| `@convex-dev/presence` | `>=0.4.0 <0.5.0` |
 | `@convex-dev/rate-limiter` | `>=0.4.0 <0.5.0` |
 | `@convex-dev/auth` | `^2.0.0` |
 | `@simplewebauthn/browser` | `^14.0.0` |

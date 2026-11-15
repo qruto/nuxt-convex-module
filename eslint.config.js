@@ -129,4 +129,12 @@ export default createConfigForNuxt({
         'jsdoc/check-param-names': 'off',
       },
     },
+    // Upstream's presence hook hands its async heartbeat to `setInterval` and
+    // to an event listener, and handles the rejections itself.
+    {
+      files: ['src/runtime/presence/vue/index.ts'],
+      rules: {
+        '@typescript-eslint/no-misused-promises': 'off',
+      },
+    },
   )

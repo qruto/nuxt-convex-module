@@ -13,7 +13,7 @@ export interface Registration {
   type?: boolean
 }
 
-export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter'
+export type Integration = 'core' | 'convexAuth' | 'betterAuth' | 'clerk' | 'auth0' | 'polar' | 'rateLimiter' | 'presence'
 
 /** The `convex.autoImports` option: every name, every name prefixed with `Convex`, or none. */
 export type AutoImports = boolean | 'prefixed'
@@ -158,6 +158,7 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
   ],
   polar: [],
   rateLimiter: [{ name: 'useRateLimit', from: 'runtime/rate-limiter/vue/index' }],
+  presence: [{ name: 'usePresence', from: 'runtime/presence/vue/index' }],
 }
 
 /** Auto-registered components (`addComponent`); `name` is also the export. */
@@ -174,6 +175,7 @@ export const APP_COMPONENTS: Record<Integration, Registration[]> = {
   polar: ['CheckoutLink', 'CustomerPortalLink']
     .map(name => ({ name, from: 'runtime/polar/vue/components' })),
   rateLimiter: [],
+  presence: [{ name: 'FacePile', from: 'runtime/presence/vue/facepile' }],
 }
 
 /** Nitro auto-imports (`addServerImports`). */
@@ -188,4 +190,5 @@ export const SERVER_IMPORTS: Record<Integration, Registration[]> = {
   auth0: [],
   polar: [],
   rateLimiter: [],
+  presence: [],
 }

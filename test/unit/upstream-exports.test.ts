@@ -37,6 +37,7 @@ const UPSTREAM_SURFACE: Record<string, string[]> = {
   '@convex-dev/better-auth/react': ['AuthBoundary', 'ConvexBetterAuthProvider'],
   '@convex-dev/polar/react': ['CheckoutLink', 'CustomerPortalLink'],
   '@convex-dev/rate-limiter/react': ['useRateLimit'],
+  '@convex-dev/presence/react': ['default'],
 }
 
 // `convex/react-auth0` is deliberately absent: importing it needs
