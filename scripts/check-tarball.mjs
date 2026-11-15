@@ -129,6 +129,7 @@ const allowed = {
   // The component imports the package's own stylesheet.
   './presence/facepile': ['@convex-dev/presence'],
   './r2/client': ['@convex-dev/r2'],
+  './persistent-text-streaming/client': ['@convex-dev/persistent-text-streaming'],
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
@@ -320,9 +321,11 @@ try {
   // 795 KB / 202 files.
   // R2's upload composable and the helper it copies add 4 files (+3.4 KB):
   // 791.0 KB in 206 files, so the ceiling moves to 206 files.
+  // The text-streaming composable adds one file and its types (+6.9 KB):
+  // 797.9 KB in 208 files, so the ceiling moves to 805 KB / 208 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 795_000
-  const MAX_FILES = 206
+  const MAX_BYTES = 805_000
+  const MAX_FILES = 208
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

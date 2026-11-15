@@ -138,6 +138,11 @@ const ENTRY: Record<string, Entry> = {
     values: ['default', 'FacePile'],
     types: [],
   },
+  './persistent-text-streaming/client': {
+    source: 'src/runtime/persistent-text-streaming/vue/index.ts',
+    values: ['useStream'],
+    types: [],
+  },
   './r2/client': {
     source: 'src/runtime/r2/vue/index.ts',
     values: ['useUploadFile'],

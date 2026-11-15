@@ -41,7 +41,7 @@ updates:
     # opens its own PR.
     groups:
       upstream:
-        patterns: [convex, '@convex-dev/auth', '@convex-dev/better-auth', '@convex-dev/polar', '@convex-dev/presence', '@convex-dev/r2', '@convex-dev/rate-limiter']
+        patterns: [convex, '@convex-dev/auth', '@convex-dev/better-auth', '@convex-dev/persistent-text-streaming', '@convex-dev/polar', '@convex-dev/presence', '@convex-dev/r2', '@convex-dev/rate-limiter']
         update-types: [minor, patch]
       all-non-major:
         patterns: ['*']

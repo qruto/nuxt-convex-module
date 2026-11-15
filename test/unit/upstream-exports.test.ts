@@ -40,6 +40,7 @@ const UPSTREAM_SURFACE: Record<string, string[]> = {
   '@convex-dev/presence/react': ['default'],
   // `@convex-dev/r2/vue` needs the community `convex-vue`; its React twin has the same surface.
   '@convex-dev/r2/react': ['useUploadFile'],
+  '@convex-dev/persistent-text-streaming/react': ['useStream'],
 }
 
 // `convex/react-auth0` is deliberately absent: importing it needs

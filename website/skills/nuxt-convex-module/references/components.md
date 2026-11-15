@@ -44,3 +44,15 @@ Convex side: `new R2(components.r2)` with the bucket's `R2_*` environment variab
 Client side: `const uploadFile = useUploadFile(api.example)`, then `await uploadFile(file, { onProgress })` → the object's key. Do not import from `@convex-dev/r2/vue`: it needs the community `convex-vue` client. For Convex's own file storage use `useUpload` instead.
 
 Docs: https://nuxt-convex-module.dev/raw/components/r2.md
+
+## Text Streaming
+
+```bash
+npm i @convex-dev/persistent-text-streaming@~0.3.0
+```
+
+Convex side: `new PersistentTextStreaming(components.persistentTextStreaming)`, a query that returns `getStreamBody(ctx, streamId)`, and an HTTP action (usually `/chat-stream`) that calls `stream(ctx, request, streamId, writer)`.
+
+Client side: `const stream = useStream(api.chat.getChatBody, new URL(`${useRuntimeConfig().public.convex.siteUrl}/chat-stream`), () => driven, () => streamId)` → a ref of `{ text, status }`. `driven` is true only in the browser that created the stream. An optional fifth argument `{ authToken, headers }` is read when a stream starts. No request is sent during server rendering.
+
+Docs: https://nuxt-convex-module.dev/raw/components/persistent-text-streaming.md

@@ -29,6 +29,7 @@ seo:
 | [app](/api-reference/reference/app) | Composables that need the Nuxt app context (`#app`) — the half of the package that runs in a Nuxt app but not in plain Vue. |
 | [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |
 | [testing](/api-reference/reference/testing) | Helpers for an app's own tests, kept off the runtime entries. |
+| [persistent-text-streaming/client](/api-reference/reference/persistent-text-streaming/client) | A Vue port of `@convex-dev/persistent-text-streaming`'s `useStream`: [useStream](/api-reference/reference/persistent-text-streaming/client#usestream). It follows the package's Svelte entry, which reads the request options when a stream starts. |
 | [polar/client](/api-reference/reference/polar/client) | Vue ports of `@convex-dev/polar/react`'s billing components — [CheckoutLink](/api-reference/reference/polar/client#checkoutlink) and [CustomerPortalLink](/api-reference/reference/polar/client#customerportallink). |
 | [presence/facepile](/api-reference/reference/presence/facepile) | A Vue port of `@convex-dev/presence/facepile`: [FacePile](/api-reference/reference/presence/facepile#facepile). |
 | [presence/client](/api-reference/reference/presence/client) | A Vue port of `@convex-dev/presence/react`: [usePresence](/api-reference/reference/presence/client#usepresence). |

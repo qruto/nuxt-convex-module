@@ -140,6 +140,13 @@ export interface ModuleOptions {
    */
   r2?: boolean
   /**
+   * Text streaming composable (`useStream`), a port of
+   * `@convex-dev/persistent-text-streaming`'s. Auto-enabled when
+   * `@convex-dev/persistent-text-streaming` is a dependency of your app; set
+   * `false` to force it off.
+   */
+  persistentTextStreaming?: boolean
+  /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
    * `modules`) — the module registers it as a module dependency and extends its
@@ -360,6 +367,7 @@ const PLAIN_INTEGRATIONS = [
   ['rateLimiter', '@convex-dev/rate-limiter'],
   ['presence', '@convex-dev/presence'],
   ['r2', '@convex-dev/r2'],
+  ['persistentTextStreaming', '@convex-dev/persistent-text-streaming'],
 ] as const
 
 /**

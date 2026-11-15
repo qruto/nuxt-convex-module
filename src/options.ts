@@ -21,6 +21,7 @@ export interface IntegrationFlags {
   rateLimiter: boolean
   presence: boolean
   r2: boolean
+  persistentTextStreaming: boolean
   /** nuxt-security registered and its CSP extended with the Convex origins. */
   security: boolean
 }
@@ -346,6 +347,7 @@ export function formatStartupSummary(url: string, functionsDir: string, integrat
     rateLimiter: 'rate-limiter',
     presence: 'presence',
     r2: 'r2',
+    persistentTextStreaming: 'persistent-text-streaming',
     security: 'nuxt-security',
   }
   const enabled = (Object.keys(names) as Array<keyof IntegrationFlags>)

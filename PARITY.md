@@ -16,6 +16,7 @@ are in [AGENTS.md](./AGENTS.md).
 | `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.50.0** | tag `npm/1.50.0` in [convex/convex-js](https://github.com/convex/convex-js) |
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
 | `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
+| `@convex-dev/persistent-text-streaming` | **0.3.5** | tag `v0.3.5` in [get-convex/persistent-text-streaming](https://github.com/get-convex/persistent-text-streaming) |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 | `@convex-dev/presence` | **0.4.0** | tag `v0.4.0` in [convex/presence](https://github.com/convex/presence) |
 | `@convex-dev/r2` | **0.10.4** | tag `v0.10.4` in [get-convex/r2](https://github.com/get-convex/r2) |
@@ -61,6 +62,7 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
 | `@convex-dev/auth` — `methods/username-passkey/react` and `react-custom` | `src/runtime/convex-auth/vue/methods/username-passkey/**` | Complete |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
+| `@convex-dev/persistent-text-streaming` — `svelte` and `react`: `useStream` | `src/runtime/persistent-text-streaming/vue/index.ts` | Complete · D-01, D-22 |
 | `@convex-dev/presence` — `react`: `usePresence`; `facepile`: `<FacePile>` | `src/runtime/presence/vue/**` | Complete · D-01, F-06 |
 | `@convex-dev/presence` — `react-native` | — | Out of scope: the module has no React Native target |
 | `@convex-dev/r2` — `vue`, `react`, `svelte`: `useUploadFile` | `src/runtime/r2/vue/index.ts` | Complete · D-21 |
@@ -175,6 +177,7 @@ source.
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
 | auth `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `methods/username-passkey/management/flows.ts` | `convex-auth/upstream/methods/username-passkey/{client,ceremonies,flows,base64url}.ts`, `convex-auth/upstream/methods/username-passkey/management/flows.ts`, copied (D-20) |
 | polar `react/index.tsx` — `CheckoutLink`, `CustomerPortalLink` | `polar/vue/components.ts` |
+| persistent-text-streaming `svelte/index.svelte.ts` — `useStream` | `persistent-text-streaming/vue/index.ts` — the arguments of the React hook, as values, refs or getters (N-05), and a ref of its result (N-06); the behaviour of the Svelte entry (D-22) |
 | presence `react/index.ts` — `usePresence` | `presence/vue/index.ts` — `roomId`, `userId`, `interval` and `convexUrl` are values, refs or getters (N-05), the result is a ref (N-06), and one watcher runs what upstream splits across three effects |
 | presence `react/useSingleFlight.ts` | `presence/vue/use-single-flight.ts` |
 | presence `facepile/index.tsx` — `FacePile` | `presence/vue/facepile.ts` — the stylesheet is the package's own `@convex-dev/presence/facepile.css` |
@@ -331,8 +334,8 @@ for free — removing one would break the behaviour, not restore it.
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
 - **Upstream** · `convex@1.50.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
-- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts)
-- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`
+- **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts), the stream request of [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts)
+- **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`, `test/unit-server/persistent-text-streaming.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
 - **Why** · `onCleanup` never fires during SSR setup, so without the guard each request would
   open a WebSocket on the server that nothing closes. The render-time reads upstream performs
@@ -648,6 +651,18 @@ upstream routes through that client has to land somewhere else here.
 - **Why** · the package exports it from no entry. Its own `vue` entry imports it, but that entry
   also imports the community `convex-vue`, and the root entry pulls in the AWS SDK. The copy is
   byte for byte, 34 lines.
+
+##### D-22 — `useStream` follows the Svelte entry, not the React one
+
+- **Upstream** · `@convex-dev/persistent-text-streaming@0.3.5` `react/index.ts` and `svelte/index.svelte.ts`
+- **Port** · [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts)
+- **Pinned by** · `test/plain-vue/persistent-text-streaming.test.ts` — "changing the token does not restart the request", "resuming a stream before its first chunk persists does not POST again"
+- **On sync** · diff both entries; port the Svelte one's behaviour
+- **Why** · the package ships the hook twice. The React one lists the auth token and the headers
+  among its effect's dependencies, so a new token mid-stream aborts the request and never restarts
+  it: the text stops at the first chunks (sent as convex/persistent-text-streaming#82). The Svelte
+  one reads the options when a stream starts and requests each stream once. The port keeps the
+  React hook's arguments and the Svelte hook's behaviour.
 
 #### Type and signature refinements
 
@@ -1207,6 +1222,7 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-15 | `@convex-dev/persistent-text-streaming` | → 0.3.5 | #177 | Initial pin: `useStream`, from the Svelte entry (D-22) |
 | 2026-11-15 | `@convex-dev/r2` | → 0.10.4 | #176 | Initial pin: `useUploadFile`, with the upload helper copied (D-21) |
 | 2026-11-15 | `@convex-dev/presence` | → 0.4.0 | #175 | Initial pin: `usePresence` and `<FacePile>`, with F-06 |
 | 2026-11-15 | `@convex-dev/rate-limiter` | → 0.4.3 | #174 | Initial pin: `useRateLimit` |

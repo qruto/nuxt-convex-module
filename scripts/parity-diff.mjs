@@ -55,6 +55,12 @@ const TIERS = {
     // The Vue entry the port translates, and the upload helper it copies.
     paths: ['src/vue', 'src/client/upload.ts'],
   },
+  'persistent-text-streaming': {
+    repo: 'get-convex/persistent-text-streaming',
+    tag: v => `v${v}`,
+    // The Svelte entry the port follows, and the React one it mirrors in shape.
+    paths: ['src/svelte', 'src/react'],
+  },
 }
 
 const [tier, toArg, fromArg] = process.argv.slice(2)
