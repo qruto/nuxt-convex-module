@@ -124,6 +124,13 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'useAuthToken', from: 'runtime/convex-auth/vue/index' },
     { name: 'useSignInWithUsernamePassword', from: 'runtime/convex-auth/vue/methods/username-password' },
     { name: 'useSignUpWithUsernamePassword', from: 'runtime/convex-auth/vue/methods/username-password' },
+    { name: 'useSignInWithEmailPassword', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useSignUpWithEmailPassword', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useCompleteSignUpWithEmailPassword', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useStartPasswordRecovery', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useCompletePasswordRecovery', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useStartChangeEmail', from: 'runtime/convex-auth/vue/methods/email-password' },
+    { name: 'useCompleteChangeEmail', from: 'runtime/convex-auth/vue/methods/email-password' },
     // For the login page the `convex-auth` middleware redirects to. The file has no imports.
     { name: 'resolveAuthRedirect', from: 'runtime/better-auth/vue/redirect' },
   ],

@@ -127,6 +127,7 @@ const allowed = {
   './convex-auth/client': ['@convex-dev/auth'],
   './convex-auth/vue': ['@convex-dev/auth'],
   './convex-auth/methods/username-password': ['@convex-dev/auth'],
+  './convex-auth/methods/email-password': ['@convex-dev/auth'],
   './convex-auth/server': ['@convex-dev/auth'],
   './clerk/client': ['@clerk/vue'],
   './clerk/vue': ['@clerk/vue'],
@@ -289,9 +290,12 @@ try {
   // files): 662.8 KB in 150 files, so the ceiling moves to 670 KB / 150 files.
   // Its `convex-auth` route middleware adds two files (+4 KB): 666.9 KB in
   // 152 files, so the ceiling moves to 152 files.
+  // Its email and password composables add one file and its types (+24 KB,
+  // most of it the JSDoc and the result types): 690.8 KB in 154 files, so the
+  // ceiling moves to 700 KB / 154 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 670_000
-  const MAX_FILES = 152
+  const MAX_BYTES = 700_000
+  const MAX_FILES = 154
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

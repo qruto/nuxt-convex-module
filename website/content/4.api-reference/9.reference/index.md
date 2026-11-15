@@ -18,6 +18,7 @@ seo:
 | [clerk/client](/api-reference/reference/clerk/client) | Vue login component for use with Clerk. |
 | [convex-auth/server](/api-reference/reference/convex-auth/server) | Server bindings for Convex Auth on Nuxt: a port of `@convex-dev/auth/ssr/nextjs`. |
 | [convex-auth/client](/api-reference/reference/convex-auth/client) | Vue bindings for Convex Auth. |
+| [convex-auth/methods/email-password](/api-reference/reference/convex-auth/methods/email-password) | Vue client for the `emailPassword` method: a port of `@convex-dev/auth/methods/email-password/react`. |
 | [convex-auth/methods/username-password](/api-reference/reference/convex-auth/methods/username-password) | Vue client for the `usernamePassword` method: a port of `@convex-dev/auth/methods/username-password/react`. |
 | [app](/api-reference/reference/app) | Composables that need the Nuxt app context (`#app`) — the half of the package that runs in a Nuxt app but not in plain Vue. |
 | [server](/api-reference/reference/server) | Helpers for integrating Convex into Nuxt applications using server rendering. |

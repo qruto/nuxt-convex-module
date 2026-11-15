@@ -10,6 +10,7 @@
     "src/runtime/nuxt/testing.ts",
     "src/runtime/convex-auth/vue/index.ts",
     "src/runtime/convex-auth/vue/methods/username-password.ts",
+    "src/runtime/convex-auth/vue/methods/email-password.ts",
     "src/runtime/convex-auth/nuxt/server.ts",
     "src/runtime/clerk/vue/index.ts",
     "src/runtime/auth0/vue/index.ts",

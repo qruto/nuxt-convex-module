@@ -49,6 +49,11 @@ export type ConvexAuthActionsContextType = {
 
 export const ConvexAuthActionsKey: InjectionKey<ConvexAuthActionsContextType> = Symbol('ConvexAuthActions')
 
+/**
+ * The bound {@link AuthClient}. The sign-in methods read it. Apps do not use it.
+ */
+export const AuthClientKey: InjectionKey<AuthClient> = Symbol('AuthClient')
+
 /** The current access token (a JWT), or null when signed out. */
 export const ConvexAuthTokenKey: InjectionKey<ComputedRef<string | null>> = Symbol('ConvexAuthToken')
 
@@ -172,6 +177,7 @@ export function provideAuth({
     signOut: authClient.signOut,
   }
 
+  target.provide(AuthClientKey, authClient)
   target.provide(ConvexAuthInternalKey, authState)
   target.provide(ConvexAuthSignInApiKey, signInApi)
   target.provide(ConvexAuthActionsKey, actions)

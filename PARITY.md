@@ -51,10 +51,11 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/better-auth` — `react-start` | — | Out of scope (X-02) |
 | `@convex-dev/auth` — `react` client: the provider, `useAuthActions`, `useAuthToken` | `src/runtime/convex-auth/vue/{index,client}.ts` | Complete · N-16 |
 | `@convex-dev/auth` — `methods/username-password/react` | `src/runtime/convex-auth/vue/methods/username-password.ts` | Complete |
+| `@convex-dev/auth` — `methods/email-password/react` | `src/runtime/convex-auth/vue/methods/email-password.ts` | Complete |
 | `@convex-dev/auth` — the OAuth client, `oauth()` | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports it · D-20 |
 | `@convex-dev/auth` — `ssr/nextjs`: the server helpers and the client provider | `src/runtime/convex-auth/nuxt/**` | Complete + additive · N-17, X-07, A-19 |
 | `@convex-dev/auth` — `ssr`: the auth handlers, the server session, the auth checker | imported as-is from `@convex-dev/auth/ssr` | Reused, never reimplemented |
-| `@convex-dev/auth` — the email and password, OAuth and passkey hooks | — | Not ported yet |
+| `@convex-dev/auth` — the OAuth and passkey hooks | — | Not ported yet |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/resend` | — | Out of scope (X-01) — ships no client |
 
@@ -152,6 +153,7 @@ source.
 | auth `react/client.tsx` | `convex-auth/vue/client.ts` (N-16) |
 | auth `react/functionReference.ts` | none: it keeps a reference stable between renders, and a composable's `setup` runs once |
 | auth `methods/username-password/react.tsx` | `convex-auth/vue/methods/username-password.ts` |
+| auth `methods/email-password/react.tsx` | `convex-auth/vue/methods/email-password.ts` — the landing-page hooks return a ref of their state (N-06) and take `emailCode` as a value, a ref or a getter (N-05) |
 | auth `ssr/nextjs/index.tsx` — `setupConvexAuthNextjs` | `convex-auth/nuxt/server.ts` — `setupConvexAuthNuxt` (N-17) |
 | auth `ssr/nextjs/client.tsx` — `ConvexAuthNextjsProvider`, and `index.tsx` — `ConvexAuthNextjsServerProvider` | `convex-auth/nuxt/plugin.ts` (N-17) |
 | auth `methods/oauth/client.ts`, `browser/retry.ts`, `lib/oauthParams.ts` | `convex-auth/upstream/{methods/oauth/client,browser/retry,lib/oauthParams}.ts`, copied (D-20) |
@@ -1107,6 +1109,9 @@ upstream change is noticed:
   / `setAdminAuth` on `ConvexHttpClient` (`nuxt/index.ts`); `paginationOptions`, which the
   published `RequestForQueries` strips and the module-local `RequestForQueriesCompat` declares,
   as upstream's own does (`vue/queries-observer.ts`, `composables/use-queries.ts`).
+- `storage` on Convex Auth's `AuthClient` (`convex-auth/vue/methods/email-password.ts`), where the
+  email flows keep their browser secrets, as upstream's hooks do. It is `@internal`: present at
+  runtime, absent from the published types.
 - The DevTools bridge (A-15) reads the TS-private `listeners` map and `cachedSync`,
   instance-patches `transition` / `close`, and reaches `localQueryResultByToken` and
   `optimisticQueryResults.queryLogs` on `BaseConvexClient`. Re-check against
