@@ -19,7 +19,7 @@ imports.
 function useUploadFile(api): (file, options?) => Promise<string>;
 ```
 
-Defined in: [src/runtime/r2/vue/index.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/r2/vue/index.ts#L38)
+Defined in: [src/runtime/r2/vue/index.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/r2/vue/index.ts#L39)
 
 A composable that allows you to upload a file to R2.
 
