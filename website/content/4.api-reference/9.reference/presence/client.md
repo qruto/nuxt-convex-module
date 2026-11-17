@@ -75,7 +75,7 @@ presence component defined in your Convex app.
 | `presence` | [`PresenceAPI`](#presenceapi) | `undefined` | The presence functions of the app, usually `api.presence`. |
 | `roomId` | `MaybeRefOrGetter`\<`string`\> | `undefined` | The room, as a value, a ref or a getter. |
 | `userId` | `MaybeRefOrGetter`\<`string`\> | `undefined` | The user, as a value, a ref or a getter. |
-| `interval?` | `MaybeRefOrGetter`\<`number`\> | `10000` | Milliseconds between heartbeats. Default 10000. |
+| `interval?` | `MaybeRefOrGetter`\<`number` \| `undefined`\> | `10000` | Milliseconds between heartbeats. Default 10000, also when a ref or getter gives `undefined`. |
 | `convexUrl?` | `MaybeRefOrGetter`\<`string` \| `undefined`\> | `undefined` | The deployment URL the unload beacon goes to. Defaults to the client's. |
 
 #### Returns

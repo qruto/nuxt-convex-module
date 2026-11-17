@@ -3,16 +3,20 @@
  *
  * @module rate-limiter/client
  */
-import { calculateRateLimit } from '@convex-dev/rate-limiter'
+import { calculateRateLimit, type RateLimitConfig } from '@convex-dev/rate-limiter'
 import type { FunctionReference } from 'convex/server'
 import { computed, ref, toValue, watch, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import { useConvex } from '../../vue/client'
 import { useQuery } from '../../vue/composables/use-query'
 
+// PARITY: A-20
+// What a component handling a rate-limited mutation needs from the package's
+// root, so one import (or none, as auto-imports) serves both.
+export { isRateLimitError } from '@convex-dev/rate-limiter'
+export type { RateLimitConfig, RateLimitError } from '@convex-dev/rate-limiter'
+
 // `GetValueArgs` and `GetValueReturns` live in the package's `shared.ts`,
-// which it does not export. Both are rebuilt here from the config type that
-// the exported `calculateRateLimit` takes.
-type RateLimitConfig = Parameters<typeof calculateRateLimit>[1]
+// which it does not export. Both are rebuilt here.
 
 /** The arguments of the `getRateLimit` query that `rateLimiter.hookAPI()` creates. */
 type GetValueArgs = {
@@ -189,7 +193,12 @@ export function useRateLimit(
   })
 
   if (!import.meta.server) {
-    watch([() => status.value?.ok, () => status.value?.retryAt], ([ok, retryAt], _previous, onCleanup) => {
+    // PARITY: F-08
+    // Fixes an upstream bug: a timer can fire just before `retryAt`, and a
+    // fixed window recomputes the very same `retryAt`, so upstream's effect
+    // never runs again and the status stays not-ok. Each refresh re-runs
+    // this.
+    watch([() => status.value?.ok, () => status.value?.retryAt, refresh.count], ([ok, retryAt], _previous, onCleanup) => {
       if (ok !== false) return
       const interval = setTimeout(refresh, retryAt! - Date.now())
       onCleanup(() => clearTimeout(interval))

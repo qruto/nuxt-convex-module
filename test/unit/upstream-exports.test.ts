@@ -37,6 +37,8 @@ const UPSTREAM_SURFACE: Record<string, string[]> = {
   '@convex-dev/better-auth/react': ['AuthBoundary', 'ConvexBetterAuthProvider'],
   '@convex-dev/polar/react': ['CheckoutLink', 'CustomerPortalLink'],
   '@convex-dev/rate-limiter/react': ['useRateLimit'],
+  // `@convex-dev/presence/facepile` (a default export) imports its stylesheet,
+  // which Node cannot load, so `test/plain-vue/presence.test.ts` pins `<FacePile>`.
   '@convex-dev/presence/react': ['default'],
   // `@convex-dev/r2/vue` needs the community `convex-vue`; its React twin has the same surface.
   '@convex-dev/r2/react': ['useUploadFile'],

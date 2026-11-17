@@ -165,8 +165,8 @@ const ENTRY: Record<string, Entry> = {
   },
   './rate-limiter/client': {
     source: 'src/runtime/rate-limiter/vue/index.ts',
-    values: ['useRateLimit'],
-    types: ['GetRateLimitValueQuery', 'GetServerTimeMutation', 'UseRateLimitOptions'],
+    values: ['isRateLimitError', 'useRateLimit'],
+    types: ['GetRateLimitValueQuery', 'GetServerTimeMutation', 'RateLimitConfig', 'RateLimitError', 'UseRateLimitOptions'],
   },
   './convex-auth/client': {
     source: 'src/runtime/convex-auth/vue/index.ts',

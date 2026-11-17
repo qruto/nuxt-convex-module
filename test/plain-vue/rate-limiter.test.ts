@@ -1,7 +1,8 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, defineComponent, h, provide, ref } from 'vue'
-import { useRateLimit, type GetRateLimitValueQuery, type GetServerTimeMutation } from '../../src/runtime/rate-limiter/vue/index'
+import { isRateLimitError as fromPackage } from '@convex-dev/rate-limiter'
+import { isRateLimitError, useRateLimit, type GetRateLimitValueQuery, type GetServerTimeMutation } from '../../src/runtime/rate-limiter/vue/index'
 import { ConvexClientKey, type ConvexVueClient } from '../../src/runtime/vue/client'
 
 // The Vue counterpart of upstream's `src/react/index.test.ts`, scenario for
@@ -160,6 +161,39 @@ describe('useRateLimit', () => {
     await vi.advanceTimersByTimeAsync(result.status.value!.retryAt! - Date.now() + 1)
 
     expect(result.status.value?.ok).toBe(true)
+  })
+
+  // PARITY: F-08
+  // A fixed window's `retryAt` is the window's end whenever it is computed.
+  // A timer that fires a moment early leaves the status not-ok with the same
+  // `retryAt`, and upstream's effect, keyed on the two, never runs again.
+  it('keeps waiting when the retry timer fires a moment early', async () => {
+    vi.useFakeTimers()
+    const setTimeout = vi.spyOn(globalThis, 'setTimeout')
+    const windowStart = Date.now() - 30_000
+    const { result } = mountRateLimit({
+      value: 0,
+      ts: windowStart,
+      shard: 0,
+      config: { kind: 'fixed window', rate: 10, period: 60_000 },
+    })
+    const retryAt = result.status.value!.retryAt!
+    expect(retryAt).toBe(windowStart + 60_000)
+
+    // The timer fires a millisecond early.
+    const fire = setTimeout.mock.calls.at(-1)![0] as () => void
+    vi.clearAllTimers()
+    vi.setSystemTime(retryAt - 1)
+    fire()
+    await flushPromises()
+    expect(result.status.value).toEqual({ ok: false, retryAt })
+
+    await vi.advanceTimersByTimeAsync(2)
+    expect(result.status.value?.ok).toBe(true)
+  })
+
+  it('re-exports the package\'s isRateLimitError', () => {
+    expect(isRateLimitError).toBe(fromPackage)
   })
 
   it('sends the query its name, key, shards and config, and follows a changed option', () => {
