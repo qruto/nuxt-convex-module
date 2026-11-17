@@ -25,7 +25,8 @@
 import type { IsAuthenticatedFn } from '@convex-dev/auth'
 import { AuthClient, defaultStorage } from '@convex-dev/auth/browser'
 import type { AuthSessionResponse } from '@convex-dev/auth/ssr'
-import { defineNuxtPlugin, useRequestEvent, useResponseHeader, useRouter, useState } from '#app'
+import { defineNuxtPlugin, useRequestEvent, useResponseHeader, useRouter, useRuntimeConfig, useState } from '#app'
+import appOptions from '#convex/auth-app'
 import { ConvexHttpClient } from 'convex/browser'
 import { makeFunctionReference } from 'convex/server'
 import { computed, inject } from 'vue'
@@ -35,6 +36,7 @@ import { ConvexClientKey } from '../../vue/client'
 import type { AuthSignInApi } from '../upstream/browser/ambientSignInClient'
 import { oauth } from '../upstream/methods/oauth/client'
 import { provideAuth, useSessionWatcher } from '../vue/client'
+import { routerReplaceUrl } from '../vue/router'
 import { CONVEX_AUTH_ROUTE } from './route'
 import type { ConvexAuthNuxtContext } from './server'
 
@@ -63,6 +65,19 @@ async function postAuth(route: string): Promise<AuthSessionResponse> {
     .catch(() => ({ tokens: null }))) as AuthSessionResponse
 }
 
+/** The name of the app's `isAuthenticated` query, from the auth routes; null if they can't say. */
+async function fetchIsAuthenticatedName(authRoute: string): Promise<string | null> {
+  try {
+    // fallow-ignore-next-line security-sink -- one of the module's own same-origin routes; verified 2026-11-17
+    const res = await fetch(`${authRoute}/session`, { method: 'POST' })
+    const body = (await res.json()) as { isAuthenticatedFunctionName?: unknown }
+    return typeof body.isAuthenticatedFunctionName === 'string' ? body.isAuthenticatedFunctionName : null
+  }
+  catch {
+    return null
+  }
+}
+
 export default defineNuxtPlugin({
   name: 'nuxt-convex-module:convex-auth',
   setup(nuxtApp) {
@@ -71,6 +86,8 @@ export default defineNuxtPlugin({
     const convex = inject(ConvexClientKey, undefined)
     if (convex === undefined) return
     const router = useRouter()
+    // Nitro mounts the routes under the app's base URL.
+    const authRoute = useRuntimeConfig().app.baseURL.replace(/\/+$/, '') + CONVEX_AUTH_ROUTE
 
     // What upstream's server provider passes its client provider as props
     // reaches the browser in the payload: the access token from the SSR host,
@@ -97,7 +114,7 @@ export default defineNuxtPlugin({
     // same-origin fetch sends the auth cookies automatically. The trailing
     // `?path=` puts the endpoint the client appends into the query string, so
     // the sign-in route can be a static route rather than a catch-all.
-    const proxy = new ConvexHttpClient(`${CONVEX_AUTH_ROUTE}/signin?path=`, {
+    const proxy = new ConvexHttpClient(`${authRoute}/signin?path=`, {
       skipConvexDeploymentUrlCheck: true,
       logger: convex.logger,
     })
@@ -123,29 +140,25 @@ export default defineNuxtPlugin({
       mode: 'ssr',
       authApi: {
         // The refresh token is read from the httpOnly cookie when it reaches the SSR host.
-        refreshSession: async () => (await postAuth(`${CONVEX_AUTH_ROUTE}/refresh`)).tokens,
+        refreshSession: async () => (await postAuth(`${authRoute}/refresh`)).tokens,
         signOut: async () => {
-          await postAuth(`${CONVEX_AUTH_ROUTE}/signout`)
+          await postAuth(`${authRoute}/signout`)
         },
       },
-      storage: defaultStorage(),
+      storage: appOptions.storage ?? defaultStorage(),
       storageNamespace: convex.url,
       // The SSR host may have refreshed on our behalf, so this is the freshest
       // access token; the client adopts it on init.
       initialAccessToken: initialToken.value,
       ambientSignIns: {
-        signIns: [oauth()],
+        signIns: appOptions.ambientSignIns ?? [oauth()],
         signInApi,
         // Calls that don't return a sign-in envelope, like starting an OAuth
         // flow, go to the deployment because the proxy refuses them.
         convex: { mutation: (fn, args) => convex.mutation(fn, args) },
-        // The router keeps its own copy of the URL: after a bare
-        // `history.replaceState` the route still carries the callback params.
+        // PARITY: N-17
         // Upstream works around Next's router here. This goes through Nuxt's.
-        replaceUrl: (url) => {
-          const { pathname, search, hash } = new URL(url)
-          void router.replace(pathname + search + hash)
-        },
+        replaceUrl: routerReplaceUrl(router),
       },
     })
 
@@ -184,11 +197,22 @@ export default defineNuxtPlugin({
     const { state, scope } = createScopedConvexAuthState({ client: convex, useAuth: () => auth })
     nuxtApp.vueApp.provide(ConvexAuthStateKey, state)
 
-    // A page the server did not render carries no payload, so no name: the
-    // session is then checked at the next refresh instead.
+    // In the app's context: on a page the server did not render this runs
+    // after an await, and the watcher's query injects the client.
+    const watchSession = (name: string) => nuxtApp.vueApp.runWithContext(() =>
+      scope.run(() => useSessionWatcher(authClient, makeFunctionReference(name) as IsAuthenticatedFn, state)))
     const name = isAuthenticatedFunctionName.value
-    if (name !== null) {
-      scope.run(() => useSessionWatcher(authClient, makeFunctionReference(name) as IsAuthenticatedFn, state))
+    if (name !== null) watchSession(name)
+    else {
+      // PARITY: N-17
+      // A page the server did not render carries no payload, so no name.
+      // Upstream's server provider renders on every page; here the name is
+      // asked of the auth routes.
+      void fetchIsAuthenticatedName(authRoute).then((fetched) => {
+        if (fetched === null) return
+        isAuthenticatedFunctionName.value = fetched
+        watchSession(fetched)
+      })
     }
   },
 })

@@ -238,6 +238,11 @@ export function setupConvexAuthNuxt(config: ConvexAuthNuxtConfig) {
     refreshHandler,
     signOutHandler,
     convexProxyHandler,
+    /**
+     * The name of the app's `isAuthenticated` query. The client subscribes to
+     * it on a page the server did not render, where no payload carries it.
+     */
+    isAuthenticatedFunctionName: getFunctionName(config.isAuthenticated),
     convexAuthNuxtProxy,
     convexAuthNuxtAccessToken,
     isAuthenticatedNuxt,

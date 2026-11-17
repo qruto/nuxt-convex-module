@@ -41,7 +41,7 @@ without ceremony.
 
 ### ConvexAuthProviderOptions
 
-Defined in: [src/runtime/convex-auth/vue/index.ts:40](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L40)
+Defined in: [src/runtime/convex-auth/vue/index.ts:41](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L41)
 
 Options for [provideConvexAuth](#provideconvexauth) / `<ConvexAuthProvider>`.
 
@@ -49,11 +49,11 @@ Options for [provideConvexAuth](#provideconvexauth) / `<ConvexAuthProvider>`.
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="client"></a> `client?` | [`ConvexVueClient`](/api-reference/reference/client#convexvueclient) | Convex client to authenticate. Defaults to the client `useConvex()` returns. | [src/runtime/convex-auth/vue/index.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L42) |
-| <a id="api"></a> `api` | [`ConvexAuthApi`](#convexauthapi) | The app's `refreshSession` and `signOut` mutation references, and its `isAuthenticated` query reference. The provider subscribes to `isAuthenticated`, so a session revoked server-side signs the client out reactively. | [src/runtime/convex-auth/vue/index.ts:48](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L48) |
-| <a id="storage"></a> `storage?` | [`TokenStorage`](#tokenstorage) | A custom [TokenStorage](#tokenstorage) implementation. If none is supplied, the system defaults to `localStorage` in the browser and in-memory where there is no `localStorage` (SSR). | [src/runtime/convex-auth/vue/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L55) |
-| <a id="storagenamespace"></a> `storageNamespace?` | `string` | Namespace for storage keys, which determines whether tokens are shared. Non-alphanumeric characters are ignored. Defaults to the deployment URL. | [src/runtime/convex-auth/vue/index.ts:60](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L60) |
-| <a id="ambientsignins"></a> `ambientSignIns?` | `AmbientSignInClient`[] | Advanced. Ambient sign-ins run initialization for sign-in methods that can take action outside of a user activated sign in flow, such as reading an oauth code from a url query param. Setting this replaces the default (`[oauth()]`) entirely rather than adding to it. Pass `[]` to register nothing. Read once when the client is created and not expected to change. | [src/runtime/convex-auth/vue/index.ts:70](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L70) |
+| <a id="client"></a> `client?` | [`ConvexVueClient`](/api-reference/reference/client#convexvueclient) | Convex client to authenticate. Defaults to the client `useConvex()` returns. | [src/runtime/convex-auth/vue/index.ts:43](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L43) |
+| <a id="api"></a> `api` | [`ConvexAuthApi`](#convexauthapi) | The app's `refreshSession` and `signOut` mutation references, and its `isAuthenticated` query reference. The provider subscribes to `isAuthenticated`, so a session revoked server-side signs the client out reactively. | [src/runtime/convex-auth/vue/index.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L49) |
+| <a id="storage"></a> `storage?` | [`TokenStorage`](#tokenstorage) | A custom [TokenStorage](#tokenstorage) implementation. If none is supplied, the system defaults to `localStorage` in the browser and in-memory where there is no `localStorage` (SSR). | [src/runtime/convex-auth/vue/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L56) |
+| <a id="storagenamespace"></a> `storageNamespace?` | `string` | Namespace for storage keys, which determines whether tokens are shared. Non-alphanumeric characters are ignored. Defaults to the deployment URL. | [src/runtime/convex-auth/vue/index.ts:61](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L61) |
+| <a id="ambientsignins"></a> `ambientSignIns?` | `AmbientSignInClient`[] | Advanced. Ambient sign-ins run initialization for sign-in methods that can take action outside of a user activated sign in flow, such as reading an oauth code from a url query param. Setting this replaces the default (`[oauth()]`) entirely rather than adding to it. Pass `[]` to register nothing. Read once when the client is created and not expected to change. | [src/runtime/convex-auth/vue/index.ts:71](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L71) |
 
 ## Type Aliases
 
@@ -113,6 +113,36 @@ The value exposed by [useAuthActions](#useauthactions).
 | <a id="setsession"></a> `setSession` | (`session`) => `Promise`\<`void`\> | Initialize or refresh a session. A SPA client will receive a full [TokenBundle](#tokenbundle) so it can access the refresh token for direct session refreshing. An SSR client will receive a SlimTokenBundle which doesn't include the refresh token (that value is in an httpOnly cookie, not reachable by client JS code). | [src/runtime/convex-auth/vue/client.ts:45](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L45) |
 | <a id="signout-1"></a> `signOut` | () => `Promise`\<`void`\> | Sign out: revoke the session on the server and clear it locally. | [src/runtime/convex-auth/vue/client.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L47) |
 
+***
+
+### ConvexAuthNuxtClientOptions
+
+```ts
+type ConvexAuthNuxtClientOptions = Pick<ConvexAuthProviderOptions, "storage" | "ambientSignIns">;
+```
+
+Defined in: [src/runtime/convex-auth/vue/index.ts:96](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L96)
+
+The client options of Convex Auth's cookie sessions: the default export of
+an optional `app/convex-auth.ts`. They are upstream's `storage` and
+`ambientSignIns` props of `ConvexAuthNextjsProvider`, which the module's
+plugin passes on.
+
+Under cookie sessions `storage` only holds the access token: the refresh
+token stays in the httpOnly cookie. The file is imported on the server too,
+so a storage that needs `window` must check for it.
+
+#### Example
+
+```ts
+// app/convex-auth.ts
+import type { ConvexAuthNuxtClientOptions } from 'nuxt-convex-module/convex-auth/client'
+
+export default {
+  storage: sessionStorageAdapter,
+} satisfies ConvexAuthNuxtClientOptions
+```
+
 ## Variables
 
 ### ConvexAuthProvider
@@ -139,11 +169,9 @@ const ConvexAuthProvider: DefineComponent<ExtractPropTypes<{
      type: PropType<AmbientSignInClient[]>;
      default: undefined;
   };
-}>, () => 
-  | VNode<RendererNode, RendererElement, {
+}>, () => VNode<RendererNode, RendererElement, {
 [key: string]: any;
-}>[]
-  | undefined, {
+}>, {
 }, {
 }, {
 }, ComponentOptionsMixin, ComponentOptionsMixin, {
@@ -181,7 +209,7 @@ const ConvexAuthProvider: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/index.ts:147](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L147)
+Defined in: [src/runtime/convex-auth/vue/index.ts:184](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L184)
 
 A wrapper Vue component which enables authentication: the component form of
 [provideConvexAuth](#provideconvexauth), kept as a drop-in parity port of
@@ -195,7 +223,7 @@ A wrapper Vue component which enables authentication: the component form of
 function provideConvexAuth(options): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/index.ts:96](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L96)
+Defined in: [src/runtime/convex-auth/vue/index.ts:121](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L121)
 
 Call this in a top-level component's `setup` to enable authentication: the
 Vue translation of wrapping the app in `@convex-dev/auth/react`'s
@@ -236,7 +264,7 @@ provideConvexAuth({
 function useAuthActions(): ConvexAuthActionsContextType;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/index.ts:181](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L181)
+Defined in: [src/runtime/convex-auth/vue/index.ts:232](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L232)
 
 Access the auth actions:
 
@@ -260,7 +288,7 @@ const { setSession, signOut } = useAuthActions();
 function useAuthToken(): ComputedRef<string | null>;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/index.ts:200](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L200)
+Defined in: [src/runtime/convex-auth/vue/index.ts:251](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/index.ts#L251)
 
 The current access token (a JWT), or null when signed out.
 

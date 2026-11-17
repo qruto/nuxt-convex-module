@@ -23,6 +23,9 @@ vi.mock('../../src/runtime/convex-auth/vue/client', () => ({ useAuth }))
 const middleware = (await import('../../src/runtime/convex-auth/nuxt/middleware')).default as unknown as
   (to: { path: string, fullPath: string }) => Promise<unknown>
 
+const guest = (await import('../../src/runtime/convex-auth/nuxt/guest-middleware')).default as unknown as
+  (to: { path: string, fullPath: string, query: Record<string, unknown> }) => Promise<unknown>
+
 const route = (path: string) => ({ path, fullPath: path })
 const session = (authed: boolean) => {
   const isAuthenticated = vi.fn(async () => authed)
@@ -63,5 +66,20 @@ describe('convex-auth route middleware, during a server render', () => {
     session(true)
     await middleware(route('/dashboard'))
     expect(useAuth).not.toHaveBeenCalled()
+  })
+})
+
+describe('convex-auth-guest route middleware, during a server render', () => {
+  it('sends a session the deployment accepts to the page in ?redirect=', async () => {
+    session(true)
+    expect(await guest({ ...route('/login'), query: { redirect: '/dashboard' } })).toEqual({ redirectedTo: '/dashboard' })
+  })
+
+  it('renders the page for a visitor with no session, or with no proxy check', async () => {
+    session(false)
+    expect(await guest({ ...route('/login'), query: {} })).toBeUndefined()
+    useRequestEvent.mockReturnValue(undefined)
+    expect(await guest({ ...route('/login'), query: {} })).toBeUndefined()
+    expect(navigateTo).not.toHaveBeenCalled()
   })
 })

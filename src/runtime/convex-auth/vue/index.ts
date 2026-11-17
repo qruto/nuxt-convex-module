@@ -16,7 +16,7 @@
 import type { ConvexAuthApi } from '@convex-dev/auth'
 import { AuthClient, defaultStorage, type TokenStorage } from '@convex-dev/auth/browser'
 import { ConvexHttpClient } from 'convex/browser'
-import { computed, defineComponent, inject, type ComputedRef, type PropType } from 'vue'
+import { computed, defineComponent, h, inject, type ComputedRef, type PropType } from 'vue'
 import type { ConvexAuthState } from '../../vue/auth/index'
 import { provideConvexWithAuth } from '../../vue/auth/index'
 import { useConvexOrThrow, type ConvexVueClient } from '../../vue/client'
@@ -29,6 +29,7 @@ import {
   useSessionWatcher,
   type ConvexAuthActionsContextType,
 } from './client'
+import { routerReplaceUrl, useAppRouter } from './router'
 
 export type { ConvexAuthApi, TokenBundle } from '@convex-dev/auth'
 export type { TokenStorage } from '@convex-dev/auth/browser'
@@ -69,6 +70,30 @@ export interface ConvexAuthProviderOptions {
    */
   ambientSignIns?: AmbientSignInClient[]
 }
+
+/**
+ * The client options of Convex Auth's cookie sessions: the default export of
+ * an optional `app/convex-auth.ts`. They are upstream's `storage` and
+ * `ambientSignIns` props of `ConvexAuthNextjsProvider`, which the module's
+ * plugin passes on.
+ *
+ * Under cookie sessions `storage` only holds the access token: the refresh
+ * token stays in the httpOnly cookie. The file is imported on the server too,
+ * so a storage that needs `window` must check for it.
+ *
+ * @example
+ * ```ts
+ * // app/convex-auth.ts
+ * import type { ConvexAuthNuxtClientOptions } from 'nuxt-convex-module/convex-auth/client'
+ *
+ * export default {
+ *   storage: sessionStorageAdapter,
+ * } satisfies ConvexAuthNuxtClientOptions
+ * ```
+ *
+ * @public
+ */
+export type ConvexAuthNuxtClientOptions = Pick<ConvexAuthProviderOptions, 'storage' | 'ambientSignIns'>
 
 /**
  * Call this in a top-level component's `setup` to enable authentication: the
@@ -128,6 +153,10 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
       signInApi,
       // Mutations that mint no session use the same websocket client.
       convex: { mutation: (fn, args) => client.mutation(fn, args) },
+      // PARITY: N-17
+      // Upstream works around Next's router here. This goes through the
+      // app's own, when it has one.
+      replaceUrl: routerReplaceUrl(useAppRouter()),
     },
   })
 
@@ -136,6 +165,14 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
   useSessionWatcher(authClient, api.isAuthenticated, authState)
   return authState
 }
+
+const providerProps = {
+  client: { type: Object as PropType<ConvexVueClient>, default: undefined },
+  api: { type: Object as PropType<ConvexAuthApi>, required: true },
+  storage: { type: Object as PropType<TokenStorage>, default: undefined },
+  storageNamespace: { type: String, default: undefined },
+  ambientSignIns: { type: Array as PropType<AmbientSignInClient[]>, default: undefined },
+} as const
 
 /**
  * A wrapper Vue component which enables authentication: the component form of
@@ -146,13 +183,27 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
  */
 export const ConvexAuthProvider = /* @__PURE__ */ defineComponent({
   name: 'ConvexAuthProvider',
-  props: {
-    client: { type: Object as PropType<ConvexVueClient>, default: undefined },
-    api: { type: Object as PropType<ConvexAuthApi>, required: true },
-    storage: { type: Object as PropType<TokenStorage>, default: undefined },
-    storageNamespace: { type: String, default: undefined },
-    ambientSignIns: { type: Array as PropType<AmbientSignInClient[]>, default: undefined },
+  props: providerProps,
+  setup(props, { slots }) {
+    // PARITY: D-23
+    // Upstream builds a new `AuthClient` when `client` changes (`useMemo`).
+    // A Vue component provides once, so a new client remounts the subtree.
+    return () => h(ConvexAuthProviderScope, { ...props, key: clientKey(props.client) }, slots)
   },
+})
+
+const clientKeys = new WeakMap<ConvexVueClient, number>()
+let lastClientKey = 0
+const clientKey = (client: ConvexVueClient | undefined): number => {
+  if (client === undefined) return 0
+  let key = clientKeys.get(client)
+  if (key === undefined) clientKeys.set(client, key = ++lastClientKey)
+  return key
+}
+
+const ConvexAuthProviderScope = /* @__PURE__ */ defineComponent({
+  name: 'ConvexAuthProviderScope',
+  props: providerProps,
   setup(props, { slots }) {
     provideConvexAuth({
       client: props.client,

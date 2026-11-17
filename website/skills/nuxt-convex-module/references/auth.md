@@ -17,7 +17,7 @@ npm i @convex-dev/auth@^2.0.0
 
 Users and sessions live in the Convex deployment. Sign-in by username and password, by email and password, with Google, Apple or GitHub, and with a passkey is ported. Pick one of two session modes.
 
-**Cookie sessions, for an app that renders on the server.** Create `server/convex-auth.ts` and restart `nuxt dev`. That file is the whole setup: the module mounts `POST /api/_convex/auth/{signin,refresh,signout}`, refreshes the session before each render, and starts the client, so there is no provider to call and the composables work in every component.
+**Cookie sessions, for an app that renders on the server.** Create `server/convex-auth.ts`; `nuxt dev` restarts by itself. That file is the whole setup: the module mounts `POST /api/_convex/auth/{signin,refresh,signout}`, refreshes the session before each render, and starts the client, so there is no provider to call and the composables work in every component.
 
 ```ts
 // server/convex-auth.ts
@@ -31,7 +31,7 @@ export default setupConvexAuthNuxt({
 })
 ```
 
-`signIn` lists every function that can start a session; the sign-in route refuses the rest. `useAsyncQuery` renders signed-in data on the server with no extra code. In a server route, `import auth from '../convex-auth'`, then `await auth.isAuthenticatedNuxt(event)` and `await auth.convexAuthNuxtAccessToken(event)` for `fetchQuery(…, { token })`. During SSR the auth state reads as loading. To protect a page: `definePageMeta({ middleware: 'convex-auth' })`, which sends signed-out visitors to `/login?redirect=…` (`convex.convexAuth.loginPath` changes the path); on the login page navigate to `resolveAuthRedirect(route.query.redirect)`.
+`signIn` lists every function that can start a session; the sign-in route refuses the rest. `useAsyncQuery` renders signed-in data on the server with no extra code. In a server route, `import auth from '../convex-auth'`, then `await auth.isAuthenticatedNuxt(event)` and `await auth.convexAuthNuxtAccessToken(event)` for `fetchQuery(…, { token })`. During SSR the auth state reads as loading. To protect a page: `definePageMeta({ middleware: 'convex-auth' })`, which sends signed-out visitors to `/login?redirect=…` (`convex.convexAuth.loginPath` changes the path); on the login page navigate to `resolveAuthRedirect(route.query.redirect)`, and use `definePageMeta({ middleware: 'convex-auth-guest' })` to send signed-in visitors on. An optional `app/convex-auth.ts` default-exports `{ storage, ambientSignIns }` (type `ConvexAuthNuxtClientOptions`) for the browser side; it is imported on the server too.
 
 **Browser storage, for a client-rendered app.** Do not create the server file. Call the provider once in `app.vue`, and the other composables in components below it. A component cannot read what it provides itself.
 

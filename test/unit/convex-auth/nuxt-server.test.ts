@@ -16,6 +16,7 @@ const auth = {
   refreshHandler: vi.fn(async (_request: Request) => new Response('refresh')),
   signOutHandler: vi.fn(async (_request: Request) => new Response('signout')),
   convexAuthNuxtProxy: vi.fn(async (_event: unknown) => {}),
+  isAuthenticatedFunctionName: 'users:isSignedIn',
 }
 vi.mock('#convex/auth-server', () => ({ default: auth }))
 
@@ -197,6 +198,16 @@ describe('the auth routes', () => {
     expect(auth[name]).toHaveBeenCalledWith(request.req)
   })
 
+  // PARITY: N-17
+  // For a page the server did not render, which has no payload to carry it.
+  it('session names the isAuthenticated query', () => {
+    expect(handler(post('session'))).toEqual({ isAuthenticatedFunctionName: 'users:isSignedIn' })
+  })
+
+  it('setupConvexAuthNuxt exposes the query\'s name', () => {
+    expect(setupConvexAuthNuxt(CONFIG).isAuthenticatedFunctionName).toBe('auth:isAuthenticated')
+  })
+
   it.each(['nope', 'constructor', ''])('"%s" is a 404', (action) => {
     expect(() => handler(post(action))).toThrow(expect.objectContaining({ status: 404 }))
   })
@@ -212,6 +223,12 @@ describe('the proxy middleware', () => {
   // here first would leave them a token the deployment has already rotated.
   it.each(['signin', 'refresh', 'signout'])('leaves /api/_convex/auth/%s alone', async (action) => {
     await proxy(event({}, `/api/_convex/auth/${action}`))
+    expect(auth.convexAuthNuxtProxy).not.toHaveBeenCalled()
+  })
+
+  // Nitro mounts the routes under `app.baseURL`.
+  it('leaves the auth routes alone under a base URL', async () => {
+    await proxy(event({}, '/app/api/_convex/auth/refresh'))
     expect(auth.convexAuthNuxtProxy).not.toHaveBeenCalled()
   })
 })

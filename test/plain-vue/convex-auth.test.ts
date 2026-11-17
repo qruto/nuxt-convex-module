@@ -3,7 +3,7 @@ import { AuthClient, InMemoryStorage, JWT_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY
 import { flushPromises, mount } from '@vue/test-utils'
 import { anyApi, makeFunctionReference } from 'convex/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed, type ComputedRef, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { computed, type ComputedRef, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
 import { provideAuth, useAuth, useAuthSignInApi, useSessionWatcher, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
 import { ConvexAuthProvider, provideConvexAuth, useAuthActions, useAuthToken } from '../../src/runtime/convex-auth/vue/index'
 import { useAmbientSignInValue } from '../../src/runtime/convex-auth/vue/methods'
@@ -441,6 +441,68 @@ describe('provideConvexAuth ambient sign-ins', () => {
     }))
 
     await captured[0]!.mutation(makeFunctionReference<'mutation'>('auth:signInProbe') as never, {} as never)
+    expect(mutationSpy).toHaveBeenCalledTimes(1)
+  })
+
+  // PARITY: N-17
+  // The router keeps its own copy of the URL. After a bare
+  // `history.replaceState`, its next navigation writes the callback params
+  // back into history.
+  it('replaces the URL through the app\'s router, without its base', () => {
+    const router = { replace: vi.fn(), options: { history: { base: '/app' } } }
+    let replaceUrl: ((url: string) => void) | undefined
+    const probe = [{ id: 'probe', setup: (ctx: { replaceUrl: (url: string) => void }) => void (replaceUrl = ctx.replaceUrl) }]
+    vi.mocked(useQuery).mockReturnValue({ value: undefined } as ComputedRef<undefined>)
+    mount(defineComponent({
+      setup() {
+        provide(ConvexClientKey, makeConvexClient())
+        return () => h(ConvexAuthProvider, { api: API, ambientSignIns: probe })
+      },
+    }), { global: { config: { globalProperties: { $router: router } as never } } })
+
+    replaceUrl!('http://localhost/app/welcome?keep=1#top')
+    expect(router.replace).toHaveBeenCalledWith('/welcome?keep=1#top')
+    replaceUrl!('http://localhost/app')
+    expect(router.replace).toHaveBeenLastCalledWith('/')
+  })
+
+  it('replaces the URL with history.replaceState without a router', () => {
+    let replaceUrl: ((url: string) => void) | undefined
+    mountProvider({ ambientSignIns: [{ id: 'probe', setup: ctx => void (replaceUrl = ctx.replaceUrl) }] })
+    replaceUrl!(`${window.location.origin}/welcome?keep=1`)
+    expect(window.location.pathname + window.location.search).toBe('/welcome?keep=1')
+  })
+
+  // PARITY: D-23
+  // Upstream's `useMemo([client])` builds a new `AuthClient` for a new client.
+  it('a new client builds a new AuthClient', async () => {
+    const first = makeConvexClient()
+    const second = makeConvexClient()
+    const onInit = vi.fn()
+    const signIns = [{ id: 'probe', setup: () => ({ onInit }) }]
+    const captured: AuthSignInApi[] = []
+    vi.mocked(useQuery).mockReturnValue({ value: undefined } as ComputedRef<undefined>)
+    const client = shallowRef(first)
+    const Child = defineComponent({
+      setup() {
+        captured.push(useAuthSignInApi())
+        return () => null
+      },
+    })
+    mount(defineComponent({
+      setup() {
+        provide(ConvexClientKey, first)
+        return () => h(ConvexAuthProvider, { api: API, client: client.value, ambientSignIns: signIns }, { default: () => h(Child) })
+      },
+    }))
+    await flushPromises()
+    expect(onInit).toHaveBeenCalledTimes(1)
+
+    client.value = second
+    await flushPromises()
+    expect(onInit).toHaveBeenCalledTimes(2)
+    const mutationSpy = vi.spyOn(second, 'mutation').mockResolvedValue('result' as never)
+    await captured.at(-1)!.mutation(makeFunctionReference<'mutation'>('auth:signInProbe') as never, {} as never)
     expect(mutationSpy).toHaveBeenCalledTimes(1)
   })
 
