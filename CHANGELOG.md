@@ -1,5 +1,49 @@
 # Changelog
 
+## v0.15.1
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.15.0...v0.15.1)
+
+### 🚀 Enhancements
+
+#### Convex Auth
+
+- Close the gaps to upstream's client and Next.js provider ([#186](https://github.com/qruto/nuxt-convex-module/pull/186))
+
+#### convex-helpers
+
+- Follow changed options, fix refreshSessionId, add the Nuxt session client ([#188](https://github.com/qruto/nuxt-convex-module/pull/188))
+
+### 🩹 Fixes
+
+#### Convex Auth
+
+- Watch the session on the provider's client, and two edge cases ([#189](https://github.com/qruto/nuxt-convex-module/pull/189))
+
+#### Components
+
+- Presence recovers from a failed heartbeat, and the rate limit's retry timer re-arms ([#187](https://github.com/qruto/nuxt-convex-module/pull/187))
+
+### 🏡 Chore
+
+#### Dependencies
+
+- Bump nuxt to 4.6.4 ([#183](https://github.com/qruto/nuxt-convex-module/pull/183))
+
+#### Dev dependencies
+
+- Bump the all-non-major group across 1 directory with 11 updates ([#185](https://github.com/qruto/nuxt-convex-module/pull/185))
+
+### 🤖 CI
+
+#### Dependencies
+
+- Bump the actions group across 2 directories with 3 updates ([#180](https://github.com/qruto/nuxt-convex-module/pull/180))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.15.0
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.14.3...v0.15.0)
