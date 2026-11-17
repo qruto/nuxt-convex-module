@@ -21,7 +21,9 @@ import { pageSession } from './page-session'
 export default defineNuxtRouteMiddleware(async (to) => {
   // Captured before any await, which loses the async context `navigateTo` needs.
   const nuxtApp = useNuxtApp()
-  if (await pageSession(nuxtApp) === true) {
-    return nuxtApp.runWithContext(() => navigateTo(resolveAuthRedirect(to.query.redirect)))
-  }
+  if (await pageSession(nuxtApp) !== true) return
+  const target = resolveAuthRedirect(to.query.redirect)
+  // A guest-only `/` would otherwise redirect to itself without end.
+  if (target === to.fullPath) return
+  return nuxtApp.runWithContext(() => navigateTo(target))
 })

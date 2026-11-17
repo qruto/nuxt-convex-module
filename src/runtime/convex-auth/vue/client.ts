@@ -7,7 +7,8 @@ import type { AuthClient } from '@convex-dev/auth/browser'
 import type { AuthTokenFetcher } from 'convex/browser'
 import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch, type ComputedRef, type InjectionKey } from 'vue'
 import type { ConvexAuthState } from '../../vue/auth/index'
-import { useQuery } from '../../vue/composables/use-query'
+import type { ConvexVueClient } from '../../vue/client'
+import { useQueriesHelper } from '../../vue/composables/use-queries'
 import type { AuthSignInApi } from '../upstream/browser/ambientSignInClient'
 import type { SlimTokenBundle } from '../upstream/lib/types'
 
@@ -94,18 +95,28 @@ export function useAuth(): ConvexAuthInternal {
  * On an already-revoked session the Convex `signOut` call is a no-op.
  *
  * Upstream's `<SessionWatcher>` reads the auth client and the Convex auth
- * state from context. A Vue component cannot inject what it provides itself,
- * and the provider calls this in its own `setup`, so both arrive as arguments.
+ * state from context, and its `useQuery` reads the Convex client the
+ * provider renders. A Vue component cannot inject what it provides itself,
+ * and the provider calls this in its own `setup`, so all three arrive as
+ * arguments: the query runs on the client the provider authenticates, not
+ * on one an ancestor provides.
  */
 export function useSessionWatcher(
   authClient: AuthClient,
   isAuthenticated: IsAuthenticatedFn,
   { isAuthenticated: isClientAuthenticated }: ConvexAuthState,
+  client: ConvexVueClient,
 ): void {
-  const hasLiveSession = useQuery(
-    isAuthenticated,
-    () => isClientAuthenticated.value ? {} : 'skip',
+  // `useQuery(isAuthenticated, … ? {} : 'skip')`, on `client`.
+  const results = useQueriesHelper(
+    () => (isClientAuthenticated.value ? { session: { query: isAuthenticated, args: {} } } : {} as Record<string, never>),
+    (query, args, { journal }) => client.watchQuery(query, args, journal ? { journal } : {}),
   )
+  const hasLiveSession = computed(() => {
+    const result = results.value.session as boolean | undefined | Error
+    if (result instanceof Error) throw result
+    return result
+  })
   if (!import.meta.server) {
     watch(
       () => hasLiveSession.value === false,

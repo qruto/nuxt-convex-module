@@ -228,7 +228,15 @@ describe('the proxy middleware', () => {
 
   // Nitro mounts the routes under `app.baseURL`.
   it('leaves the auth routes alone under a base URL', async () => {
+    setNuxtRuntimeConfigForTests({ app: { baseURL: '/app/' }, public: { convex: { url: 'https://happy-animal-123.convex.cloud' } } } as never)
     await proxy(event({}, '/app/api/_convex/auth/refresh'))
     expect(auth.convexAuthNuxtProxy).not.toHaveBeenCalled()
+  })
+
+  // Only the prefix is the module's: a page whose path holds it further in
+  // is the app's, and its render needs the session.
+  it('refreshes on a page whose path holds the auth prefix further in', async () => {
+    await proxy(event({}, '/blog/api/_convex/auth/history'))
+    expect(auth.convexAuthNuxtProxy).toHaveBeenCalledTimes(1)
   })
 })

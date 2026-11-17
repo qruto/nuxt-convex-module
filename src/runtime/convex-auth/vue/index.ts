@@ -162,7 +162,7 @@ export function provideConvexAuth(options: ConvexAuthProviderOptions): ConvexAut
 
   const auth = provideAuth({ authClient, signInApi })
   const authState = provideConvexWithAuth({ client, useAuth: () => auth })
-  useSessionWatcher(authClient, api.isAuthenticated, authState)
+  useSessionWatcher(authClient, api.isAuthenticated, authState, client)
   return authState
 }
 

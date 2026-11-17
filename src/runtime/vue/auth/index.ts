@@ -1,5 +1,6 @@
 import type { AuthTokenFetcher } from 'convex/browser'
 import { computed, effectScope, inject, nextTick, provide, ref, toValue, unref, watch, type ComputedRef, type EffectScope, type InjectionKey, type MaybeRef, type MaybeRefOrGetter } from 'vue'
+import { ConvexClientKey, type ConvexVueClient } from '../client'
 
 // PARITY: A-10
 // Mirrors upstream's `IConvexReactClient` — just describe the interface enough
@@ -137,7 +138,8 @@ function clearAuthLast(client: IConvexVueClient, ended: () => void): void {
 /**
  * A replacement for the plain Convex client provide (upstream's
  * `ConvexProvider`) which additionally provides {@link ConvexAuthState} to
- * descendants of the calling component.
+ * descendants of the calling component. The descendants also get `client`,
+ * as upstream's provider renders a `ConvexProvider` for it.
  *
  * Use this to integrate any auth provider with Convex. The `useAuth` option
  * should be a Vue composable that returns the provider's authentication state
@@ -168,6 +170,9 @@ function clearAuthLast(client: IConvexVueClient, ended: () => void): void {
 export function provideConvexWithAuth(options: ConvexProviderWithAuthOptions): ConvexAuthState {
   const authState = createConvexAuthState(options)
   provide(ConvexAuthStateKey, authState)
+  // Upstream renders `<ConvexProvider client={client as any}>` inside the
+  // provider, so its descendants query the client it authenticates.
+  provide(ConvexClientKey, options.client as ConvexVueClient)
   return authState
 }
 

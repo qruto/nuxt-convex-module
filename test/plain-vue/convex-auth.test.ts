@@ -3,7 +3,7 @@ import { AuthClient, InMemoryStorage, JWT_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY
 import { flushPromises, mount } from '@vue/test-utils'
 import { anyApi, makeFunctionReference } from 'convex/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed, type ComputedRef, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
+import { type ComputedRef, defineComponent, h, inject, nextTick, provide, ref, shallowRef, watch } from 'vue'
 import { provideAuth, useAuth, useAuthSignInApi, useSessionWatcher, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
 import { ConvexAuthProvider, provideConvexAuth, useAuthActions, useAuthToken } from '../../src/runtime/convex-auth/vue/index'
 import { useAmbientSignInValue } from '../../src/runtime/convex-auth/vue/methods'
@@ -260,27 +260,40 @@ describe('useSessionWatcher', () => {
   }
 
   /**
-   * Script the stubbed `useQuery`: it behaves like the real one, `"skip"`
-   * yielding `undefined` and anything else the given server answer. The
-   * returned refs are what the backend reports.
+   * A Convex client whose `isAuthenticated` subscription answers what the
+   * backend reports. The returned refs are that report; `subscribed` says
+   * whether the watcher holds the subscription now.
    */
   function mountWatcher(client: AuthClient, served: { convexAuthenticated: boolean, hasLiveSession: boolean | undefined }) {
     const convexAuthenticated = ref(served.convexAuthenticated)
     const hasLiveSession = ref(served.hasLiveSession)
-    let args!: () => unknown
-    vi.mocked(useQuery).mockImplementation(((_ref: unknown, getArgs: () => unknown) => {
-      args = getArgs
-      return computed(() => getArgs() === 'skip' ? undefined : hasLiveSession.value)
-    }) as unknown as typeof useQuery)
+    const listeners = new Set<() => void>()
+    const watched: unknown[] = []
+    const convex = {
+      watchQuery: (query: unknown, args: unknown) => {
+        watched.push({ query, args })
+        return {
+          localQueryResult: () => hasLiveSession.value,
+          onUpdate: (listener: () => void) => {
+            listeners.add(listener)
+            return () => listeners.delete(listener)
+          },
+          journal: () => undefined,
+        }
+      },
+    } as unknown as ConvexVueClient
+    // A new answer from the backend reaches the subscription after the
+    // client's own state has settled, as a server re-run does.
+    watch(hasLiveSession, () => listeners.forEach(listener => listener()), { flush: 'post' })
     let auth!: Auth
     mount(defineComponent({
       setup() {
         auth = provideAuth({ authClient: client, signInApi: stubSignInApi().signInApi })
-        useSessionWatcher(client, isAuthenticatedRef, { isAuthenticated: convexAuthenticated } as unknown as ConvexAuthState)
+        useSessionWatcher(client, isAuthenticatedRef, { isAuthenticated: convexAuthenticated } as unknown as ConvexAuthState, convex)
         return () => null
       },
     }))
-    return { auth: () => auth, convexAuthenticated, hasLiveSession, args: () => args() }
+    return { auth: () => auth, convexAuthenticated, hasLiveSession, watched, subscribed: () => listeners.size > 0 }
   }
 
   it('signs out when the server reports the session is gone', async () => {
@@ -303,8 +316,8 @@ describe('useSessionWatcher', () => {
     const watcher = mountWatcher(client, { convexAuthenticated: true, hasLiveSession: true })
     await flushPromises()
 
-    expect(vi.mocked(useQuery).mock.calls[0]![0]).toBe(isAuthenticatedRef)
-    expect(watcher.args()).toEqual({})
+    expect(watcher.watched[0]).toEqual({ query: isAuthenticatedRef, args: {} })
+    expect(watcher.subscribed()).toBe(true)
     expect(signOut).not.toHaveBeenCalled()
     expect(watcher.auth().isAuthenticated()).toBe(true)
   })
@@ -318,7 +331,7 @@ describe('useSessionWatcher', () => {
     const watcher = mountWatcher(client, { convexAuthenticated: false, hasLiveSession: false })
     await flushPromises()
 
-    expect(watcher.args()).toBe('skip')
+    expect(watcher.watched).toEqual([])
     expect(signOut).not.toHaveBeenCalled()
     expect(watcher.auth().isAuthenticated()).toBe(true)
   })
@@ -334,7 +347,7 @@ describe('useSessionWatcher', () => {
     watcher.hasLiveSession.value = false
     await flushPromises()
 
-    expect(watcher.args()).toBe('skip')
+    expect(watcher.subscribed()).toBe(false)
     expect(signOut).not.toHaveBeenCalled()
     expect(watcher.auth().isAuthenticated()).toBe(true)
   })
@@ -504,6 +517,28 @@ describe('provideConvexAuth ambient sign-ins', () => {
     const mutationSpy = vi.spyOn(second, 'mutation').mockResolvedValue('result' as never)
     await captured.at(-1)!.mutation(makeFunctionReference<'mutation'>('auth:signInProbe') as never, {} as never)
     expect(mutationSpy).toHaveBeenCalledTimes(1)
+  })
+
+  // Upstream's provider renders `<ConvexProvider client>`: what it
+  // authenticates is what its descendants query.
+  it('its descendants get the client it was given, not an ancestor\'s', () => {
+    const ancestor = makeConvexClient()
+    const given = makeConvexClient()
+    let seen: unknown
+    vi.mocked(useQuery).mockReturnValue({ value: undefined } as ComputedRef<undefined>)
+    const Child = defineComponent({
+      setup() {
+        seen = inject(ConvexClientKey)
+        return () => null
+      },
+    })
+    mount(defineComponent({
+      setup() {
+        provide(ConvexClientKey, ancestor)
+        return () => h(ConvexAuthProvider, { api: API, client: given }, { default: () => h(Child) })
+      },
+    }))
+    expect(seen).toBe(given)
   })
 
   // The composable throws when oauth() was never registered, so reading it at
