@@ -18,7 +18,8 @@ vi.mock('#app', () => ({
   },
   useRequestEvent: () => event,
   useResponseHeader: () => cacheControl,
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), options: { history: { base: '' } } }),
+  useRuntimeConfig: () => ({ app: { baseURL: '/' } }),
 }))
 
 const { useAuthActions, useAuthToken } = await import('../../src/runtime/convex-auth/vue/index')

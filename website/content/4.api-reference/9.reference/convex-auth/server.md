@@ -62,7 +62,7 @@ What the proxy leaves on `event.context` for the rest of the request.
 type ConvexAuthNuxt = ReturnType<typeof setupConvexAuthNuxt>;
 ```
 
-Defined in: [src/runtime/convex-auth/nuxt/server.ts:248](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L248)
+Defined in: [src/runtime/convex-auth/nuxt/server.ts:253](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L253)
 
 What [setupConvexAuthNuxt](#setupconvexauthnuxt) returns.
 
@@ -75,6 +75,7 @@ function setupConvexAuthNuxt(config): {
   refreshHandler: RequestHandler;
   signOutHandler: RequestHandler;
   convexProxyHandler: RequestHandler;
+  isAuthenticatedFunctionName: string;
   convexAuthNuxtProxy: (event) => Promise<void>;
   convexAuthNuxtAccessToken: (event) => Promise<string | null>;
   isAuthenticatedNuxt: (event) => Promise<boolean>;
@@ -110,11 +111,12 @@ export default setupConvexAuthNuxt({
 
 #### Returns
 
-| Name | Type | Defined in |
-| ------ | ------ | ------ |
-| `refreshHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:238](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L238) |
-| `signOutHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:239](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L239) |
-| `convexProxyHandler` | `RequestHandler` | [src/runtime/convex-auth/nuxt/server.ts:240](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L240) |
-| `convexAuthNuxtProxy()` | (`event`) => `Promise`\<`void`\> | [src/runtime/convex-auth/nuxt/server.ts:241](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L241) |
-| `convexAuthNuxtAccessToken()` | (`event`) => `Promise`\<`string` \| `null`\> | [src/runtime/convex-auth/nuxt/server.ts:242](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L242) |
-| `isAuthenticatedNuxt()` | (`event`) => `Promise`\<`boolean`\> | [src/runtime/convex-auth/nuxt/server.ts:243](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L243) |
+| Name | Type | Description | Defined in |
+| ------ | ------ | ------ | ------ |
+| `refreshHandler` | `RequestHandler` | - | [src/runtime/convex-auth/nuxt/server.ts:238](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L238) |
+| `signOutHandler` | `RequestHandler` | - | [src/runtime/convex-auth/nuxt/server.ts:239](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L239) |
+| `convexProxyHandler` | `RequestHandler` | - | [src/runtime/convex-auth/nuxt/server.ts:240](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L240) |
+| `isAuthenticatedFunctionName` | `string` | The name of the app's `isAuthenticated` query. The client subscribes to it on a page the server did not render, where no payload carries it. | [src/runtime/convex-auth/nuxt/server.ts:245](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L245) |
+| `convexAuthNuxtProxy()` | (`event`) => `Promise`\<`void`\> | Refreshes the session up front, so the render and the server routes after it see a fresh token. The module runs it as server middleware on every request but the auth routes, which own their cookies. | [src/runtime/convex-auth/nuxt/server.ts:246](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L246) |
+| `convexAuthNuxtAccessToken()` | (`event`) => `Promise`\<`string` \| `null`\> | The current access token in server code, or null. Never triggers a refresh (the proxy does that); returns null for an expired token. The token is returned after only a local expiry check, not a signature check — that is safe because its only use is to authenticate a request to the Convex backend (e.g. `fetchQuery`), which verifies the signature itself. To decide *authentication state* server-side, use isAuthenticatedNuxt instead, which verifies against the backend. | [src/runtime/convex-auth/nuxt/server.ts:247](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L247) |
+| `isAuthenticatedNuxt()` | (`event`) => `Promise`\<`boolean`\> | Whether the current request carries a valid, signed-in session. Verifies the cookie's access token against the backend (which checks its signature), so a forged cookie can't fake authentication. | [src/runtime/convex-auth/nuxt/server.ts:248](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/nuxt/server.ts#L248) |

@@ -24,6 +24,8 @@ vi.mock('../../../src/runtime/convex-auth/vue/client', () => ({ useAuth }))
 
 const middleware = (await import('../../../src/runtime/convex-auth/nuxt/middleware')).default as unknown as
   (to: { path: string, fullPath: string }) => Promise<unknown>
+const guest = (await import('../../../src/runtime/convex-auth/nuxt/guest-middleware')).default as unknown as
+  (to: { path: string, fullPath: string, query: Record<string, unknown> }) => Promise<unknown>
 
 const route = (path: string) => ({ path: path.split('?')[0]!, fullPath: path })
 const login = (redirect: string) => ({ redirectedTo: { path: '/login', query: { redirect } } })
@@ -92,5 +94,43 @@ describe('convex-auth route middleware, in the browser', () => {
     auth({ isLoading: false, isAuthenticated: false })
     expect(await middleware(route('/dashboard'))).toEqual({ redirectedTo: { path: '/sign-in', query: { redirect: '/dashboard' } } })
     expect(await middleware(route('/sign-in'))).toBeUndefined()
+  })
+})
+
+// Upstream's proxy handler redirects with `nextjsProxyRedirect`, as in its
+// example that sends a signed-in visitor away from the sign-in page.
+describe('convex-auth-guest route middleware, in the browser', () => {
+  const page = (path: string, query: Record<string, unknown> = {}) => ({ ...route(path), query })
+
+  it('lets a signed-out visitor through', async () => {
+    auth({ isLoading: false, isAuthenticated: false })
+    expect(await guest(page('/login'))).toBeUndefined()
+    expect(navigateTo).not.toHaveBeenCalled()
+  })
+
+  it('sends a signed-in visitor to the page in ?redirect=, or home', async () => {
+    auth({ isLoading: false, isAuthenticated: true })
+    expect(await guest(page('/login', { redirect: '/dashboard?tab=2' }))).toEqual({ redirectedTo: '/dashboard?tab=2' })
+    expect(await guest(page('/login'))).toEqual({ redirectedTo: '/' })
+  })
+
+  it('never follows ?redirect= off the site', async () => {
+    auth({ isLoading: false, isAuthenticated: true })
+    expect(await guest(page('/login', { redirect: '//evil.example' }))).toEqual({ redirectedTo: '/' })
+  })
+
+  it('waits for the session before deciding', async () => {
+    const state = auth({ isLoading: true, isAuthenticated: false })
+    const result = guest(page('/login'))
+    await nextTick()
+    state.isAuthenticated.value = true
+    state.isLoading.value = false
+    expect(await result).toEqual({ redirectedTo: '/' })
+  })
+
+  it('leaves the page the server rendered to the server\'s answer', async () => {
+    app({ hydrating: true, serverRendered: true })
+    auth({ isLoading: false, isAuthenticated: true })
+    expect(await guest(page('/login'))).toBeUndefined()
   })
 })

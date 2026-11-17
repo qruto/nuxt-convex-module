@@ -8,6 +8,7 @@ import { CONVEX_AUTH_ROUTE } from './route'
  * cookies.
  */
 export default defineEventHandler(async (event) => {
-  if (getRequestURL(event).pathname.startsWith(`${CONVEX_AUTH_ROUTE}/`)) return
+  // `includes`, not `startsWith`: Nitro mounts the routes under the app's base URL.
+  if (getRequestURL(event).pathname.includes(`${CONVEX_AUTH_ROUTE}/`)) return
   await auth.convexAuthNuxtProxy(event)
 })

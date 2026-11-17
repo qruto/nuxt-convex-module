@@ -18,8 +18,9 @@ Everything a consumer can write against, whether or not it appears in `package.j
   auto-registered component. This registry lives in no manifest; it is the most-used surface.
 - **Subpath exports** — every key of `exports` in `package.json`, and every value and type
   reachable from it. `test/nuxt/public-surface.test.ts` records the full list.
-- **Wiring** — the `convex-auth` middleware name, the `betterAuth.authRoute` proxy route and its method list, the
-  `?redirect=` query the middleware attaches.
+- **Wiring** — the `convex-auth` and `convex-auth-guest` middleware names, the `betterAuth.authRoute` proxy route and
+  its method list, the `?redirect=` query the middleware attaches, and the `server/convex-auth` and `app/convex-auth`
+  files Convex Auth's cookie sessions read.
 - **Peer floors** — the `peerDependencies` ranges, `compatibility.nuxt`, and `engines.node`.
 
 Removing or renaming any of these, changing a default, tightening a peer range or raising a floor

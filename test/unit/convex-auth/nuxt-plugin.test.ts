@@ -2,7 +2,7 @@
 import { AuthClient } from '@convex-dev/auth/browser'
 import { getFunctionName, makeFunctionReference } from 'convex/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, inject } from 'vue'
+import { createApp, hasInjectionContext, inject } from 'vue'
 import { silentConnectLogger } from '../../helpers/silent-logger'
 
 // The cookie-session plugin, driven with a stubbed `#app` (the pattern from
@@ -11,8 +11,10 @@ import { silentConnectLogger } from '../../helpers/silent-logger'
 // refreshes and signs out through the module's routes, provided app-wide.
 
 const states = new Map<string, { value: unknown }>()
-const router = { replace: vi.fn(async (_to: string) => {}) }
+const router = { replace: vi.fn(async (_to: string) => {}), options: { history: { base: '' } } }
+const app = { baseURL: '/' }
 vi.mock('#app', () => ({
+  useRuntimeConfig: () => ({ app }),
   defineNuxtPlugin: (plugin: { setup: unknown }) => plugin.setup,
   useState: (key: string, init?: () => unknown) => {
     if (!states.has(key)) states.set(key, { value: init?.() ?? null })
@@ -23,10 +25,22 @@ vi.mock('#app', () => ({
   useRouter: () => router,
 }))
 
+// What an app's `app/convex-auth.ts` exports.
+const appOptions = vi.hoisted(() => ({}) as { storage?: unknown, ambientSignIns?: unknown })
+vi.mock('#convex/auth-app', () => ({ default: appOptions }))
+
 const useSessionWatcher = vi.fn()
+// Whether each watcher could inject: its query reads the client that way.
+const injectable: boolean[] = []
 vi.mock('../../../src/runtime/convex-auth/vue/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../src/runtime/convex-auth/vue/client')>()
-  return { ...actual, useSessionWatcher: (...args: unknown[]) => useSessionWatcher(...args) }
+  return {
+    ...actual,
+    useSessionWatcher: (...args: unknown[]) => {
+      injectable.push(hasInjectionContext())
+      return useSessionWatcher(...args)
+    },
+  }
 })
 
 const { useAuthSignInApi } = await import('../../../src/runtime/convex-auth/vue/client')
@@ -78,6 +92,11 @@ afterEach(() => {
   vi.clearAllMocks()
   vi.unstubAllGlobals()
   states.clear()
+  injectable.length = 0
+  app.baseURL = '/'
+  router.options.history.base = ''
+  delete appOptions.storage
+  delete appOptions.ambientSignIns
 })
 
 describe('convex-auth cookie-session plugin', () => {
@@ -178,10 +197,63 @@ describe('convex-auth cookie-session plugin', () => {
     expect(state).toBe(use(() => useConvexAuth()))
   })
 
-  // A page the server did not render has no payload.
-  it('starts no watcher without the query\'s name', () => {
+  // PARITY: N-17
+  // A page the server did not render has no payload. Upstream's server
+  // provider renders on every page, so its watcher always runs.
+  it('asks the auth routes for the query\'s name on a page the server did not render', async () => {
+    const fetch = stubFetch({ isAuthenticatedFunctionName: 'users:isSignedIn' })
+    run({ name: null, hydrating: false })
+    await vi.waitFor(() => expect(useSessionWatcher).toHaveBeenCalledTimes(1))
+    expect(fetch).toHaveBeenCalledWith('/api/_convex/auth/session', expect.objectContaining({ method: 'POST' }))
+    expect(getFunctionName(useSessionWatcher.mock.calls[0]![1])).toBe('users:isSignedIn')
+    expect(injectable).toEqual([true])
+  })
+
+  it('starts no watcher when the auth routes can\'t name the query', async () => {
+    const fetch = stubFetch({})
     run({ name: null })
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalled())
+    await Promise.resolve()
     expect(useSessionWatcher).not.toHaveBeenCalled()
+  })
+
+  // Nitro mounts the routes under `app.baseURL`, and the router prepends it.
+  it('calls the auth routes and replaces the URL under the app\'s base URL', async () => {
+    app.baseURL = '/app/'
+    router.options.history.base = '/app'
+    vi.stubGlobal('window', {
+      location: { href: 'http://localhost/app/welcome?convexAuthError=access_denied&keep=1' },
+      localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })
+    const fetch = stubFetch({ tokens: null })
+    const { use, call } = run()
+
+    call('app:suspense:resolve')
+    await vi.waitFor(() => expect(router.replace).toHaveBeenCalledWith('/welcome?keep=1'))
+
+    await use(() => useAuthActions()).signOut()
+    expect(fetch).toHaveBeenCalledWith('/app/api/_convex/auth/signout', expect.anything())
+  })
+
+  // Upstream's `storage` and `ambientSignIns` props of
+  // `ConvexAuthNextjsProvider`, from the app's `app/convex-auth.ts`.
+  it('takes the storage and the ambient sign-ins from app/convex-auth.ts', async () => {
+    const stored = new Map<string, string>()
+    appOptions.storage = {
+      getItem: (key: string) => stored.get(key) ?? null,
+      setItem: (key: string, value: string) => void stored.set(key, value),
+      removeItem: (key: string) => void stored.delete(key),
+    }
+    const setup = vi.fn()
+    appOptions.ambientSignIns = [{ id: 'custom', setup }]
+    const { use, call } = run({ token: TOKEN })
+
+    expect(setup).toHaveBeenCalledTimes(1)
+    call('app:suspense:resolve')
+    await vi.waitFor(() => expect(use(() => useAuthToken()).value).toBe(TOKEN))
+    expect([...stored.values()]).toContain(TOKEN)
   })
 
   it('does nothing without a Convex client', () => {

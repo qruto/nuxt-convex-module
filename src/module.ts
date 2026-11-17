@@ -1,6 +1,6 @@
 import { defineNuxtModule, addPlugin, addImports, addServerHandler, addServerImports, addRouteMiddleware, addComponent, addTypeTemplate, addNitroPlugin, createResolver, hasNuxtModule, useLogger, extendRouteRules, type Resolver } from '@nuxt/kit'
 import { existsSync } from 'node:fs'
-import { isAbsolute, join } from 'node:path'
+import { isAbsolute, join, relative, resolve } from 'node:path'
 import { detectAgent } from 'std-env'
 import type { ModuleDependencies, Nuxt } from '@nuxt/schema'
 import { hasGeneratedApi, resolveFunctionsDir } from './functions-dir'
@@ -605,10 +605,36 @@ function registerAuthClientAlias(resolver: Resolver, nuxt: Nuxt, options: Module
   nuxt.options.nitro.alias['#convex/auth-client'] = target
 }
 
+/** The candidate paths of a `convex-auth` file in `dir`. */
+const convexAuthFiles = (dir: string) =>
+  ['.ts', '.mts', '.js', '.mjs'].map(extension => join(dir, 'convex-auth') + extension)
+
 /** The app's `server/convex-auth` file, which switches Convex Auth's cookie sessions on. */
 function findConvexAuthServer(nuxt: Nuxt): string | undefined {
-  const base = join(nuxt.options.serverDir, 'convex-auth')
-  return ['.ts', '.mts', '.js', '.mjs'].map(extension => base + extension).find(file => existsSync(file))
+  return convexAuthFiles(nuxt.options.serverDir).find(file => existsSync(file))
+}
+
+/** The app's optional `app/convex-auth` file: the client options of the cookie sessions. */
+function findConvexAuthApp(nuxt: Nuxt): string | undefined {
+  return convexAuthFiles(nuxt.options.srcDir).find(file => existsSync(file))
+}
+
+/**
+ * Restart `nuxt dev` when either `convex-auth` file is created or deleted:
+ * whether cookie sessions are on, and what the two aliases name, is decided
+ * at setup. Edits to an existing file reload without a restart. Nuxt does the
+ * same for `app.vue`.
+ */
+function restartOnConvexAuthFiles(nuxt: Nuxt): void {
+  if (!nuxt.options.dev) return
+  const files = new Set([...convexAuthFiles(nuxt.options.serverDir), ...convexAuthFiles(nuxt.options.srcDir)])
+  nuxt.hook('builder:watch', async (event, relativePath) => {
+    if (event !== 'add' && event !== 'unlink') return
+    const file = resolve(nuxt.options.srcDir, relativePath)
+    if (!files.has(file)) return
+    logger.info(`\`${relative(nuxt.options.rootDir, file)}\` ${event === 'add' ? 'created' : 'removed'}, restarting`)
+    await nuxt.callHook('restart')
+  })
 }
 
 /**
@@ -625,6 +651,10 @@ function registerAuthServerAlias(resolver: Resolver, nuxt: Nuxt): void {
   nuxt.options.nitro.alias ||= {}
   nuxt.options.alias['#convex/auth-server'] = target
   nuxt.options.nitro.alias['#convex/auth-server'] = target
+  // The client side of the same: the cookie-session plugin's options, or a
+  // stand-in with none. App code only, so no Nitro alias.
+  nuxt.options.alias['#convex/auth-app'] = findConvexAuthApp(nuxt) ?? resolver.resolve('./runtime/convex-auth/nuxt/no-app')
+  restartOnConvexAuthFiles(nuxt)
 }
 
 /**
@@ -830,6 +860,13 @@ function registerConvexAuth(resolver: Resolver, policy: RegistrationPolicy, serv
     addRouteMiddleware({
       name: 'convex-auth',
       path: resolver.resolve('./runtime/convex-auth/nuxt/middleware'),
+      global: false,
+    })
+  }
+  if (!isExcluded('convex-auth-guest', policy.exclude)) {
+    addRouteMiddleware({
+      name: 'convex-auth-guest',
+      path: resolver.resolve('./runtime/convex-auth/nuxt/guest-middleware'),
       global: false,
     })
   }

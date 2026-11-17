@@ -150,9 +150,10 @@ result, no `throwOnError` parameter (D-02 covers the error path).
 
 `@convex-dev/auth` `ssr/nextjs/index.tsx`. `convexAuthNextjsProxy(handler)` takes a function that
 may answer a request with a redirect, and `nextjsProxyRedirect` builds one. Here the module mounts
-the proxy itself (A-19), so an app has nowhere to pass a handler. A page is protected by the
-`convex-auth` route middleware instead (A-12), and a server route decides by
-`isAuthenticatedNuxt(event)`.
+the proxy itself (A-19), so an app has nowhere to pass a handler. What upstream's handler is for
+is covered by route middleware instead (A-12): `convex-auth` sends a signed-out visitor to the
+login page, and `convex-auth-guest` sends a signed-in one away from pages such as the login page,
+as upstream's example does. A server route decides by `isAuthenticatedNuxt(event)`.
 
 ### File by file
 
@@ -238,8 +239,9 @@ source.
 | `better-auth/vue/auth-client-loader.ts` | loads `#convex/auth-client` on first use: `loadAuthClient`, and the forwarding client `useBetterAuth().client` holds until then | D-18 |
 | `better-auth/nuxt/chunk-reload.client.ts` | reloads the page once a deploy removed the client's chunk | D-19 |
 | `convex-auth/upstream/{browser/ambientSignInClient,browser/storage,lib/types,lib/oauth/redemption}.ts`, `convex-auth/upstream/components/passkey/validation.ts`, `convex-auth/upstream/methods/username-passkey/server.ts`, `convex-auth/upstream/methods/username-passkey/management/{add,remove,rename}.ts` | the types the copied files import, read off the package's public types | D-20 |
-| `convex-auth/nuxt/middleware.ts` | the `convex-auth` route middleware for Convex Auth's cookie sessions | A-12 |
-| `convex-auth/nuxt/{handler,proxy,route,no-server}.ts` | the auth routes and the refresh middleware the module mounts, their prefix, and what `#convex/auth-server` names in an app without the file | A-19 |
+| `convex-auth/nuxt/{middleware,guest-middleware,page-session}.ts` | the `convex-auth` and `convex-auth-guest` route middleware for Convex Auth's cookie sessions, and the session check they share | A-12 |
+| `convex-auth/nuxt/{handler,proxy,route,no-server,no-app}.ts` | the auth routes and the refresh middleware the module mounts, their prefix, and what `#convex/auth-server` and `#convex/auth-app` name in an app without the files | A-19 |
+| `convex-auth/vue/router.ts` | the `replaceUrl` that strips the OAuth callback through the app's router | N-17 |
 
 ---
 
@@ -353,7 +355,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-14"></a>**N-14** | `RequestForQueries`, `EmptyObject`, `LoadMoreOfPaginatedQuery`, `PaginatedQueryResult` | Re-exported from `convex/react`, or inlined where upstream imports from a non-exported path | [§2.3](#23-enforcement) — never redeclared where an import is possible |
 | <a id="n-15"></a>**N-15** | `usePaginatedQuery_experimental` object form | Returns `ComputedRef<UsePaginatedQueryObjectReturnType>` whole | Splitting it into refs would lose the `status`/`data`/`error` discriminated-union narrowing |
 | <a id="n-16"></a>**N-16** | `<ConvexAuthProvider>`, and inside it `<AuthProvider>` and `<SessionWatcher>` | `provideConvexAuth` (+ a thin `<ConvexAuthProvider>` wrapper), `provideAuth`, `useSessionWatcher` | *Any other provider component*. All three run in one `setup`, and a Vue component cannot inject what it provides itself. So `provideAuth` returns the auth state that upstream's module-level `useAuth` reads from `ConvexAuthInternalContext`, as well as providing it for `useAuth` below the provider, and `useSessionWatcher` takes the auth client and the Convex auth state as arguments. `client` is optional and defaults to the injected client ([§2.1](#21-the-contract)) |
-| <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does. Upstream's `replaceUrl`, a workaround for Next's router keeping its own copy of the URL, becomes `router.replace` on Nuxt's router, which keeps one too |
+| <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does. Upstream's `replaceUrl`, a workaround for Next's router keeping its own copy of the URL, becomes `router.replace` on the app's router, which keeps one too. That holds for browser-storage sessions as well, where upstream's React provider keeps its bare `history.replaceState`: without it the router's next navigation writes the OAuth callback params back into history. The router's base is stripped first, and the auth routes sit under `app.baseURL`. Upstream's server provider renders on every page, so its session watcher always runs. A page the server did not render carries no payload, so the plugin asks the module's `session` route for the query's name |
 
 | <a id="n-18"></a>**N-18** | convex-helpers' `usePaginatedQuery` in `react.ts` and again in `react/cache/hooks.ts` | one `makeUsePaginatedQuery(useQueries, nextPaginationId?)` in `convex-helpers/vue/paginated.ts` | Same as N-11. The two copies differ only in `customPagination` (always on in `react.ts`, an option in the cached one) and in the pagination id (none, and always `0`). Pinned by `test/plain-vue/convex-helpers.test.ts` — "sends pagination id 0, so every mount shares the cached pages" |
 | <a id="n-19"></a>**N-19** | convex-helpers' `useStorage` and `useSessionStorage` return `[value, setValue]`; `useSessionId` returns `[sessionId, refresh, promise]`; `SessionContext`, `ConvexQueryCacheContext` | `useStorage` and `useSessionStorage` return a writable ref, so VueUse's `useLocalStorage` fits as it is; `useSessionId` returns `[ComputedRef, refresh, ComputedRef<Promise>]`; `SessionKey`, `ConvexQueryCacheKey` | *Returns a plain value* (N-06): a state pair is one writable ref. A context becomes an injection key. `ConvexReactSessionClient` is `ConvexVueSessionClient` (N-01) |
@@ -611,6 +613,17 @@ for free — removing one would break the behaviour, not restore it.
   ahead of the client plugin, whose `?ott=` load runs during startup: `'automatic-immediate'` reloads on any chunk
   error already, `'manual'` and `false` leave chunk errors to the app, and without the manifest there is no build
   id to tell a deploy by.
+
+##### D-23 — `<ConvexAuthProvider>` remounts its subtree for a new client
+
+- **Port** · `ConvexAuthProvider` in [`convex-auth/vue/index.ts`](./src/runtime/convex-auth/vue/index.ts)
+- **Pinned by** · `test/plain-vue/convex-auth.test.ts` — "a new client builds a new AuthClient"
+- **On sync** · keep while the provider provides once
+- **Why** · upstream builds a new `AuthClient` when its `client` prop changes (`useMemo([client])`)
+  and its context hands the new one down. A Vue component provides once, in `setup`, so the
+  component keys an inner one by the client: a new client remounts the subtree, which disposes
+  the old `AuthClient` and builds a new one. The subtree's state is lost with it, where React keeps
+  it. `provideConvexAuth` itself is called once, like every `provide*` function.
 
 #### Consequences of an unimportable upstream internal
 
@@ -927,7 +940,9 @@ so none can be "restored" by syncing.
   (`serverGuard`, its own file so the middleware's lazy client chunk doesn't carry the server
   session check), [`better-auth/vue/redirect.ts`](./src/runtime/better-auth/vue/redirect.ts)
   (`resolveAuthRedirect`); [`convex-auth/nuxt/middleware.ts`](./src/runtime/convex-auth/nuxt/middleware.ts),
-  the same middleware for Convex Auth's cookie sessions
+  the same middleware for Convex Auth's cookie sessions, and
+  [`convex-auth/nuxt/guest-middleware.ts`](./src/runtime/convex-auth/nuxt/guest-middleware.ts),
+  `convex-auth-guest`, its opposite
 - **Pinned by** · `test/unit/auth-redirect.test.ts`, `test/unit/auth/nuxt/middleware.test.ts`,
   `test/unit/convex-auth/nuxt-middleware.test.ts`, `test/unit-server/convex-auth-middleware.test.ts`
 - **On sync** · keep both, and keep the docs pointing login pages at `resolveAuthRedirect`
@@ -943,7 +958,9 @@ so none can be "restored" by syncing.
   cannot be imported into the page bundle. Its browser half decides by `useAuth`, the session's own state, because `useConvexAuth`
   reports signed out between a sign-in and the connection accepting the token. It leaves the
   page the server rendered to the server's answer: the session is not loaded until that page has hydrated (N-17), so
-  waiting for it there would never end. This is where upstream's proxy handler went (X-07).
+  waiting for it there would never end. This is where upstream's proxy handler went (X-07):
+  `convex-auth-guest` sends a signed-in visitor to the page's `?redirect=`, through
+  `resolveAuthRedirect`, or to `/`.
 
 ##### A-13 — `crossDomainCallbackRoute` restricts `?ott=` exchange to one route
 
@@ -997,7 +1014,8 @@ so none can be "restored" by syncing.
   [`convex-auth/nuxt/handler.ts`](./src/runtime/convex-auth/nuxt/handler.ts),
   [`convex-auth/nuxt/proxy.ts`](./src/runtime/convex-auth/nuxt/proxy.ts) and
   [`convex-auth/nuxt/plugin.ts`](./src/runtime/convex-auth/nuxt/plugin.ts)
-- **Pinned by** · `test/module/registration.test.ts` — "with Convex Auth";
+- **Pinned by** · `test/module/registration.test.ts` — "with Convex Auth", "restarts when a
+  convex-auth file is created or removed";
   `test/unit/convex-auth/nuxt-server.test.ts`, `test/unit/convex-auth/nuxt-plugin.test.ts`,
   `test/unit-server/convex-auth-plugin.test.ts`
 - **On sync** · keep. If upstream adds a route or changes the proxy's matcher, follow it here
@@ -1006,11 +1024,16 @@ so none can be "restored" by syncing.
   `server/convex-auth`, whose default export is `setupConvexAuthNuxt(…)`. The module reads it
   through the `#convex/auth-server` alias, as it reads the Better Auth client through
   `#convex/auth-client`, and that file is also what switches cookie sessions on. The routes sit at
-  `/api/_convex/auth/:action`, POST only, never cached or prerendered. The proxy runs as server
+  `/api/_convex/auth/:action` under `app.baseURL`, POST only, never cached or prerendered. A
+  fourth action, `session`, is the module's own: it names the app's `isAuthenticated` query for a
+  page the server did not render (N-17). The proxy runs as server
   middleware on every request but those routes, which is upstream's own matcher: they read the
   refresh cookie themselves, and a refresh first would leave them a rotated token. The plugin
-  stands in for the provider (A-07), so its props are fixed: the module's routes, the default
-  storage and `[oauth()]`. It loads the session at once on a page the server did not render,
+  stands in for the provider (A-07). Upstream's `storage` and `ambientSignIns` props come from
+  the app's optional `app/convex-auth` file, through the `#convex/auth-app` alias. The route
+  paths are fixed, as they are in practice upstream, whose server provider cannot pass them on.
+  `nuxt dev` restarts when either file is created or deleted, because the decision is made at
+  setup. It loads the session at once on a page the server did not render,
   which has nothing to hydrate. A render that puts a token in the payload answers
   `Cache-Control: private, no-store`, where Next makes a route that reads cookies dynamic. Cookie
   sessions are left off when Better Auth is on, because its plugins replace the client plugin

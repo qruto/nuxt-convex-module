@@ -329,10 +329,13 @@ try {
   // convex-helpers adds its three entries: sessions, the query cache with its
   // provider, the status query and the shared paginated query (+55 KB, 12 files,
   // half of it the session types and JSDoc): 853.3 KB in 220 files, so the
-  // ceiling moves to 860 KB / 220 files.
+  // ceiling moves to 860 KB / 220 files. Convex Auth's `app/convex-auth.ts`
+  // options, the `convex-auth-guest` middleware and the router-aware URL
+  // cleanup add four runtime files (+6 KB, 8 files): 859.2 KB in 228 files,
+  // so the ceiling moves to 870 KB / 230 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 860_000
-  const MAX_FILES = 220
+  const MAX_BYTES = 870_000
+  const MAX_FILES = 230
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

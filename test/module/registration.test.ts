@@ -1,7 +1,7 @@
 // PARITY: A-01, A-09, A-11, D-19
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { sep } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import { loadNuxt } from '@nuxt/kit'
 import type { Nuxt, NuxtOptions } from '@nuxt/schema'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -400,11 +400,13 @@ describe('with Convex Auth', () => {
       expect(r.options.serverHandlers.some(h => JSON.stringify(h.handler).includes('convex-auth'))).toBe(false)
     })
 
-    it('points #convex/auth-server at a stand-in, before the catch-all', () => {
+    it('points #convex/auth-server and #convex/auth-app at stand-ins, before the catch-all', () => {
       expect(r.options.alias['#convex/auth-server']).toMatch(/runtime\/convex-auth\/nuxt\/no-server/)
       expect(r.options.nitro.alias?.['#convex/auth-server']).toBe(r.options.alias['#convex/auth-server'])
+      expect(r.options.alias['#convex/auth-app']).toMatch(/runtime\/convex-auth\/nuxt\/no-app/)
       const keys = Object.keys(r.options.alias).filter(k => k.startsWith('#convex'))
       expect(keys.indexOf('#convex/auth-server')).toBeLessThan(keys.indexOf('#convex'))
+      expect(keys.indexOf('#convex/auth-app')).toBeLessThan(keys.indexOf('#convex'))
     })
   })
 
@@ -430,9 +432,13 @@ describe('with Convex Auth', () => {
       }
     })
 
-    it('registers the convex-auth route middleware', () => {
-      expect(r.middleware).toEqual([expect.objectContaining({ name: 'convex-auth', global: false })])
+    it('registers the convex-auth and convex-auth-guest route middleware', () => {
+      expect(r.middleware).toEqual([
+        expect.objectContaining({ name: 'convex-auth', global: false }),
+        expect.objectContaining({ name: 'convex-auth-guest', global: false }),
+      ])
       expect(r.middleware[0]!.path).toMatch(/runtime\/convex-auth\/nuxt\/middleware/)
+      expect(r.middleware[1]!.path).toMatch(/runtime\/convex-auth\/nuxt\/guest-middleware/)
       expect(r.imports).toContain('resolveAuthRedirect')
     })
 
@@ -442,6 +448,40 @@ describe('with Convex Auth', () => {
       const cookies = plugins.findIndex(p => /runtime\/convex-auth\/nuxt\/plugin(?:\.[cm]?[jt]s)?$/.test(p))
       expect(client).toBeGreaterThanOrEqual(0)
       expect(cookies).toBeGreaterThan(client)
+    })
+  })
+
+  describe('and an app/convex-auth file', () => {
+    let nuxt: Nuxt
+    let r: Registered
+    beforeAll(async () => ({ nuxt, registered: r } = await load({ betterAuth: false, convexAuth: true }, { srcDir: cookieSessions })), 60_000)
+    afterAll(() => nuxt.close())
+
+    it('points #convex/auth-app at the app\'s file', () => {
+      expect(r.options.alias['#convex/auth-app']).toBe(join(cookieSessions, 'convex-auth.ts'))
+    })
+  })
+
+  // Whether cookie sessions are on is decided at setup. Nuxt restarts for a
+  // new `app.vue` the same way.
+  describe('in dev', () => {
+    let nuxt: Nuxt
+    const restarts: unknown[] = []
+    beforeAll(async () => {
+      nuxt = await loadNuxt({ cwd: fixture, dev: true, ready: true, overrides: { convex: { betterAuth: false, convexAuth: true } } as never })
+      nuxt.hook('restart', () => void restarts.push(1))
+    }, 60_000)
+    afterAll(() => nuxt.close())
+
+    it('restarts when a convex-auth file is created or removed, and on no other change', async () => {
+      const server = relative(nuxt.options.srcDir, join(nuxt.options.serverDir, 'convex-auth.ts'))
+      const app = relative(nuxt.options.srcDir, join(nuxt.options.srcDir, 'convex-auth.mjs'))
+      await nuxt.callHook('builder:watch', 'change', server)
+      await nuxt.callHook('builder:watch', 'add', relative(nuxt.options.srcDir, join(nuxt.options.serverDir, 'other.ts')))
+      expect(restarts).toHaveLength(0)
+      await nuxt.callHook('builder:watch', 'add', server)
+      await nuxt.callHook('builder:watch', 'unlink', app)
+      expect(restarts).toHaveLength(2)
     })
   })
 
