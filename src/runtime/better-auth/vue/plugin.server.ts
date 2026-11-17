@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { defineNuxtPlugin, useRuntimeConfig, useState, useRequestEvent, useRequestHeaders, useResponseHeader } from '#app'
-import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
+import ConvexClientClass from '#convex/client-class'
+import { ConvexClientKey } from '../../vue/client'
 import { CONVEX_INITIAL_TOKEN_KEY, closeAfterRender } from '../../nuxt/config'
 import { convexBetterAuthNuxt } from '../nuxt/server'
 import { ConvexAuthStateKey, type ConvexAuthState } from '../../vue/auth/index'
@@ -78,7 +79,7 @@ export default defineNuxtPlugin({
     // and `usePreloadedAuthQuery` short-circuit on the server, so no
     // subscriptions are created during SSR.
     const url = useRuntimeConfig().public.convex.url
-    const ssrClient = url ? new ConvexVueClient(url) : undefined
+    const ssrClient = url ? new ConvexClientClass(url) : undefined
     if (ssrClient) {
       nuxtApp.vueApp.provide(ConvexClientKey, ssrClient)
       // PARITY: D-14

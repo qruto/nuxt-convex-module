@@ -38,6 +38,7 @@ describe('module options', () => {
   const options = interfaceKeys(at('src/module.ts'), 'ModuleOptions')
   const betterAuthOptions = interfaceKeys(at('src/module.ts'), 'BetterAuthModuleOptions')
   const convexAuthOptions = interfaceKeys(at('src/module.ts'), 'ConvexAuthModuleOptions')
+  const convexHelpersOptions = interfaceKeys(at('src/module.ts'), 'ConvexHelpersModuleOptions')
   const rows = tableFirstCells(CONFIGURATION, '## Module options')
 
   it('reads the interfaces', () => {
@@ -58,10 +59,15 @@ describe('module options', () => {
     expect(rows, `\`convexAuth.${key}\` is a ConvexAuthModuleOptions key with no row in ${CONFIGURATION_FILE}`).toContain(`convexAuth.${key}`)
   })
 
+  it.each(convexHelpersOptions)('`convexHelpers.%s` has a row in the configuration table', (key) => {
+    expect(rows, `\`convexHelpers.${key}\` is a ConvexHelpersModuleOptions key with no row in ${CONFIGURATION_FILE}`).toContain(`convexHelpers.${key}`)
+  })
+
   it.each(rows)('table row `%s` is a real option', (row) => {
     const real = options.includes(row)
       || (row.startsWith('betterAuth.') && betterAuthOptions.includes(row.slice('betterAuth.'.length)))
       || (row.startsWith('convexAuth.') && convexAuthOptions.includes(row.slice('convexAuth.'.length)))
+      || (row.startsWith('convexHelpers.') && convexHelpersOptions.includes(row.slice('convexHelpers.'.length)))
     expect(real, `${CONFIGURATION_FILE} documents \`${row}\`, which is not a ModuleOptions key — remove the row or add the option`).toBe(true)
   })
 })

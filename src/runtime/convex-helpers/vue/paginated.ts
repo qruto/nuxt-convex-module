@@ -131,41 +131,55 @@ function noop(_numItems: number): void {
   // Intentional noop.
 }
 
+/** The options of a paginated query. */
+type PaginatedQueryOptions = {
+  initialNumItems: number
+  /**
+   * Set this to true if you are using the `stream` or `paginator` helpers.
+   */
+  customPagination?: boolean
+}
+
 /**
  * The paginated query on `useQueriesHook`. `nextPaginationId` gives each
  * pagination its id, as the cached copy does; without it the page options
  * carry none, as the copy in `react.ts` does.
+ *
+ * Upstream reads the query and the options on every render. Here both may be
+ * a ref or a getter (N-05): a new query resets the pagination, as upstream's
+ * does, and a new `initialNumItems` sizes the pages after the next reset and
+ * the split threshold at once.
  */
 export function makeUsePaginatedQuery(
   useQueriesHook: UseQueriesHook,
   nextPaginationId?: () => number,
 ) {
   return function usePaginatedQuery<Query extends PaginatedQueryReference>(
-    query: Query,
+    query: MaybeRefOrGetter<Query>,
     args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
-    options: {
-      initialNumItems: number
-      /**
-       * Set this to true if you are using the `stream` or `paginator` helpers.
-       */
-      customPagination?: boolean
-    },
+    options: MaybeRefOrGetter<PaginatedQueryOptions>,
   ): UsePaginatedQueryReturnType<Query> {
-    if (
-      typeof options?.initialNumItems !== 'number'
-      || options.initialNumItems <= 0
-    ) {
-      throw new Error(
-        `\`options.initialNumItems\` must be a positive number. Received \`${options?.initialNumItems}\`.`,
-      )
+    const currentOptions = () => {
+      const value = toValue(options)
+      if (
+        typeof value?.initialNumItems !== 'number'
+        || value.initialNumItems <= 0
+      ) {
+        throw new Error(
+          `\`options.initialNumItems\` must be a positive number. Received \`${value?.initialNumItems}\`.`,
+        )
+      }
+      return value
     }
+    currentOptions()
     const convexClient = useConvexOrThrow('usePaginatedQuery')
     const logger = convexClient.logger
 
     const createInitialState = (argsObject: Record<string, Value>, skip: boolean): UsePaginatedQueryState => {
       const id = nextPaginationId?.()
+      const currentQuery = toValue(query)
       return {
-        query,
+        query: currentQuery,
         args: argsObject,
         ...(id === undefined ? {} : { id }),
         nextPageKey: 1,
@@ -174,11 +188,11 @@ export function makeUsePaginatedQuery(
           ? {}
           : {
               0: {
-                query,
+                query: currentQuery,
                 args: {
                   ...argsObject,
                   paginationOpts: {
-                    numItems: options.initialNumItems,
+                    numItems: currentOptions().initialNumItems,
                     cursor: null,
                     ...(id === undefined ? {} : { id }),
                   },
@@ -204,7 +218,7 @@ export function makeUsePaginatedQuery(
       const { skip, argsObject } = currentArgs()
       if (
         skip !== state.value.skip
-        || getFunctionName(query) !== getFunctionName(state.value.query)
+        || getFunctionName(toValue(query)) !== getFunctionName(state.value.query)
         || JSON.stringify(convexToJson(argsObject as Value))
         !== JSON.stringify(convexToJson(state.value.args))
       ) {
@@ -217,6 +231,7 @@ export function makeUsePaginatedQuery(
 
     const internal = computed((): InternalResult => {
       const currState = state.value
+      const { initialNumItems, customPagination } = currentOptions()
       const pageResults = resultsObject.value
       let currResult: PageResult | undefined
       let maybeLastResult: PageResult | undefined
@@ -250,7 +265,14 @@ export function makeUsePaginatedQuery(
             )
             const { skip, argsObject } = currentArgs()
             state.value = createInitialState(argsObject, skip)
-            return { results: [], status: 'LoadingFirstPage', isLoading: true, loadMore: noop }
+            // Upstream returns no last result here, so the status comes from
+            // the pages it had: `LoadingMore` past the first one.
+            return {
+              results: [],
+              status: currState.pageKeys.length <= 1 ? 'LoadingFirstPage' : 'LoadingMore',
+              isLoading: true,
+              loadMore: noop,
+            }
           }
           else {
             return { error: currResult }
@@ -271,9 +293,9 @@ export function makeUsePaginatedQuery(
           && (currResult.pageStatus === 'SplitRecommended'
             || currResult.pageStatus === 'SplitRequired'
             // For custom pagination, we eagerly split the page when it grows.
-            || (options.customPagination
-              ? currResult.page.length > options.initialNumItems
-              : currResult.page.length > options.initialNumItems * 2))
+            || (customPagination
+              ? currResult.page.length > initialNumItems
+              : currResult.page.length > initialNumItems * 2))
         ) {
           // If a single page has more than 1.5x the expected number of items,
           // or if the server requests a split, split the page into two.
@@ -302,7 +324,7 @@ export function makeUsePaginatedQuery(
         maybeLastResult === undefined
         // The last page (which isn't the first page) is splitting, which is how
         // we model loading more with custom pagination.
-        || (options.customPagination
+        || (customPagination
           && currState.ongoingSplits[currState.pageKeys.at(-1)!] !== undefined)
       ) {
         return { results: allItems, status: 'LoadingMore', isLoading: true, loadMore: noop }
@@ -324,7 +346,7 @@ export function makeUsePaginatedQuery(
             const queries = { ...prevState.queries }
             let ongoingSplits = prevState.ongoingSplits
             let pageKeys = prevState.pageKeys
-            if (options.customPagination) {
+            if (customPagination) {
               // Connect the current last page to the next page
               // by setting the endCursor of the last page to the continueCursor
               // of the next page.

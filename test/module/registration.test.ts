@@ -98,6 +98,12 @@ describe('with Better Auth and nuxt-security declared (auto-detected)', () => {
     expect(keys.indexOf('#convex/api')).toBeLessThan(keys.indexOf('#convex'))
   })
 
+  it('constructs the app\'s client from #convex/client-class, a ConvexVueClient by default', () => {
+    expect(r.options.alias['#convex/client-class']).toMatch(/runtime\/vue\/client-class/)
+    const keys = Object.keys(r.options.alias).filter(k => k.startsWith('#convex'))
+    expect(keys.indexOf('#convex/client-class')).toBeLessThan(keys.indexOf('#convex'))
+  })
+
   // Without it, a Nuxt 4.6 production server fails every request: its build
   // inlines the Convex client with a broken relative import.
   it('dedupes convex on Vite, which keeps it external in the server build', () => {
@@ -500,5 +506,18 @@ describe('with Convex Auth', () => {
       expect(pluginsOf(r).some(p => p.includes('convex-auth'))).toBe(false)
       expect(r.options.serverHandlers.some(h => h.route === '/api/_convex/auth/:action')).toBe(false)
     })
+  })
+})
+
+// The counterpart of an upstream app passing `ConvexReactSessionClient` to
+// `<ConvexProvider>`.
+describe('with convex.convexHelpers.sessionClient', () => {
+  let nuxt: Nuxt
+  let r: Registered
+  beforeAll(async () => ({ nuxt, registered: r } = await load({ convexHelpers: { sessionClient: true } })), 60_000)
+  afterAll(() => nuxt.close())
+
+  it('constructs the app\'s client as a ConvexVueSessionClient', () => {
+    expect(r.options.alias['#convex/client-class']).toMatch(/runtime\/convex-helpers\/vue\/session-client/)
   })
 })

@@ -52,8 +52,8 @@ export function useQueries(
     }
   >>,
 ): Readonly<ShallowRef<Record<string, any | undefined | Error>>> {
-  const { registry } = inject(ConvexQueryCacheKey, { registry: null })
-  if (registry === null) {
+  const cache = inject(ConvexQueryCacheKey, { registry: null })
+  if (cache.registry === null) {
     throw new Error(
       'Could not find `ConvexQueryCacheContext`! This `useQuery` implementation must be used in the Vue component '
       + 'tree under `ConvexQueryCacheProvider`. Did you forget it? ',
@@ -71,9 +71,11 @@ export function useQueries(
   // Upstream holds the cached subscriptions from an effect, which React
   // never runs on the server.
   if (!import.meta.server) {
+    // Upstream's effect depends on the registry too: a provider with new
+    // options builds a new one.
     watch(
-      () => JSON.stringify(queryKeys.value),
-      (_keys, _previous, onCleanup) => {
+      [() => cache.registry!, () => JSON.stringify(queryKeys.value)],
+      ([registry], _previous, onCleanup) => {
         const ids: string[] = []
         for (const [key, { query, args }] of Object.entries(toValue(queries))) {
           const id = uuid()
@@ -98,7 +100,7 @@ export function useQueries(
  * Throws an error if not used under the Convex client and `provideConvexQueryCache`.
  *
  * @param query - a {@link FunctionReference} for the public query to run
- * like `api.dir1.dir2.filename.func`.
+ * like `api.dir1.dir2.filename.func`, as a value, a ref or a getter.
  * @param queryArgs - The arguments to the query function or the string "skip" if the
  * query should not be loaded, as a value, a ref or a getter.
  * @returns A ref of the result of the query. If the query is loading it holds `undefined`.
@@ -108,7 +110,7 @@ export function useQueries(
 export function useQuery<
   Query extends FunctionReference<'query'> | FunctionReference_future<'query'>,
 >(
-  query: Query,
+  query: MaybeRefOrGetter<Query>,
   ...queryArgs: OptionalRestArgsOrSkip<Query>
 ): ComputedRef<FunctionReturnType<Query> | undefined> {
   // Unlike the regular useQuery implementation, we don't need to memoize
@@ -118,7 +120,7 @@ export function useQuery<
     return args === 'skip'
       ? {} as Record<string, never> // Use queries doesn't support skip.
       : {
-          _default: { query, args: args as Record<string, Value> },
+          _default: { query: toValue(query), args: args as Record<string, Value> },
         }
   })
 
@@ -171,12 +173,13 @@ function nextPaginationId(): number {
  *
  * To learn more about pagination, see [Paginated Queries](https://docs.convex.dev/database/pagination).
  *
- * @param query - A FunctionReference to the public query function to run.
+ * @param query - A FunctionReference to the public query function to run,
+ * as a value, a ref or a getter.
  * @param args - The arguments object for the query function, excluding
  * the `paginationOpts` property, as a value, a ref or a getter. That
  * property is injected by this composable.
  * @param options - An object specifying the `initialNumItems` to be loaded in
- * the first page, and the `customPagination` to use.
+ * the first page, and the `customPagination` to use, as a value, a ref or a getter.
  * @param options.customPagination - Set this to true when you are using
  * `stream` or `paginator` helpers on the server. This enables gapless
  * pagination by connecting the pages explicitly when calling `loadMore`.

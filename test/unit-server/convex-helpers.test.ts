@@ -47,4 +47,30 @@ describe('convex-helpers during a server render', () => {
     expect(sessionId).toBeUndefined()
     expect(idGenerator).not.toHaveBeenCalled()
   })
+
+  // A server render would log every 3 s until the request's app is collected.
+  it('starts no debug logging for the query cache', async () => {
+    const setInterval = vi.spyOn(globalThis, 'setInterval')
+    const client = { watchQuery: vi.fn(), logger: { warn: vi.fn() } } as unknown as ConvexVueClient
+    const Cache = defineComponent({
+      setup() {
+        provideConvexQueryCache({ debug: true })
+        const Child = defineComponent({
+          setup() {
+            useQuery(makeFunctionReference<'query', { id: string }, string>('test:query'), { id: 'one' })
+            return () => null
+          },
+        })
+        return () => h(Child)
+      },
+    })
+    await renderToString(createSSRApp(defineComponent({
+      setup() {
+        provide(ConvexClientKey, client)
+        return () => h(Cache)
+      },
+    })))
+    expect(setInterval).not.toHaveBeenCalled()
+    setInterval.mockRestore()
+  })
 })

@@ -28,7 +28,8 @@
     "src/runtime/better-auth/vue/plugin.server.ts", // addPlugin(resolver.resolve(...))
     "src/runtime/nuxt/security.ts", // addServerPlugin(resolver.resolve(...))
     "src/runtime/vue/plugin.ts", // addPlugin(resolver.resolve(...))
-    "src/runtime/devtools/plugin.client.ts" // addPlugin({ src }, { append: true })
+    "src/runtime/devtools/plugin.client.ts", // addPlugin({ src }, { append: true })
+    "src/runtime/convex-helpers/vue/session-client.ts" // the `#convex/client-class` alias with `convexHelpers.sessionClient`
   ],
 
   // The website imports the module by its published name through the workspace

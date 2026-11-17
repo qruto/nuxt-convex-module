@@ -29,13 +29,17 @@ import type { SessionId } from 'convex-helpers/server/sessions'
 import {
   computed,
   defineComponent,
+  effectScope,
   inject,
   onMounted,
+  onScopeDispose,
   provide,
   ref,
+  shallowRef,
   toValue,
   watch,
   type ComputedRef,
+  type EffectScope,
   type InjectionKey,
   type MaybeRefOrGetter,
   type PropType,
@@ -73,7 +77,7 @@ type SessionContextValue = {
   sessionId: ComputedRef<SessionId | undefined>
   refreshSessionId: RefreshSessionFn
   sessionIdPromise: ComputedRef<Promise<SessionId>>
-  ssrFriendly?: boolean
+  readonly ssrFriendly?: boolean
 }
 
 /**
@@ -168,26 +172,40 @@ export type SessionProviderOptions = {
  *      the promise to await for the valid ID.
  * @public
  */
-export function provideSession(options: SessionProviderOptions = {}): void {
-  const { useStorage, storageKey, idGenerator, ssrFriendly } = options
-  const storeKey = storageKey ?? DEFAULT_STORAGE_KEY
+export function provideSession(options: MaybeRefOrGetter<SessionProviderOptions> = {}): void {
+  // Upstream reads its props on every render; here they are read when used.
+  const current = () => toValue(options)
   function idGen() {
     // On the server, crypto may not be defined.
-    return (idGenerator ?? crypto.randomUUID.bind(crypto))() as SessionId
+    return (current().idGenerator ?? randomSessionId)() as SessionId
   }
   const convex = useConvex()
-  const initialValue = ssrFriendly
+  const initialValueFor = () => current().ssrFriendly
     ? undefined
     : convex instanceof ConvexVueSessionClient
       ? convex.getSessionId()
       : idGen()
-  // Get or set the ID from our desired storage location.
-  const useStorageOrDefault = useStorage ?? useSessionStorage
-  const stored = useStorageOrDefault(storeKey, initialValue)
-  const sessionId = computed(() => stored.value)
+  // Get or set the ID from our desired storage location. A new `useStorage`
+  // or `storageKey` reads a new store, as upstream's next render does. Each
+  // store lives in its own scope, so the old one's listeners go with it.
+  const store = shallowRef<Ref<SessionId | undefined>>()
+  let storeScope: EffectScope | undefined
+  watch(
+    [() => current().useStorage, () => current().storageKey ?? DEFAULT_STORAGE_KEY],
+    ([useStorage, storeKey]) => {
+      storeScope?.stop()
+      storeScope = effectScope()
+      const useStorageOrDefault = useStorage ?? useSessionStorage
+      store.value = storeScope.run(() => useStorageOrDefault(storeKey, initialValueFor()))
+    },
+    { immediate: true },
+  )
+  onScopeDispose(() => storeScope?.stop())
+  const stored = computed(() => store.value!.value)
   const setSessionId = (value: SessionId) => {
-    stored.value = value
+    store.value!.value = value
   }
+  const sessionId = computed(() => stored.value)
 
   let resolveSessionId: (value: SessionId) => void = () => {}
   const sessionIdPromise = computed(() => {
@@ -205,7 +223,9 @@ export function provideSession(options: SessionProviderOptions = {}): void {
   // and never on the server.
   onMounted(() => {
     // If we're not using our session storage, let's ensure they save it.
-    if (useStorage && stored.value) setSessionId(stored.value)
+    watch(() => current().useStorage, (useStorage) => {
+      if (useStorage && stored.value) setSessionId(stored.value)
+    }, { immediate: true })
     watch(sessionId, (id) => {
       if (!id) {
         // Read the promise first, so its resolver is the current one.
@@ -217,7 +237,7 @@ export function provideSession(options: SessionProviderOptions = {}): void {
         }
         resolveSessionId(newId)
       }
-      if (ssrFriendly && initial.value) initial.value = false
+      if (current().ssrFriendly && initial.value) initial.value = false
     }, { immediate: true })
   })
 
@@ -227,15 +247,38 @@ export function provideSession(options: SessionProviderOptions = {}): void {
       await beforeUpdate(newSessionId)
     }
     setSessionId(newSessionId)
+    // PARITY: F-09
+    // Fixes an upstream bug: upstream tells the session client only about an
+    // ID it generates for an empty store, so after a refresh the client's
+    // own calls kept the old ID.
+    if (convex instanceof ConvexVueSessionClient) {
+      convex.setSessionId(newSessionId)
+    }
     return newSessionId
   }
 
   provide(SessionKey, {
-    sessionId: computed(() => (ssrFriendly && initial.value ? undefined : sessionId.value)),
+    sessionId: computed(() => (current().ssrFriendly && initial.value ? undefined : sessionId.value)),
     refreshSessionId,
     sessionIdPromise,
-    ssrFriendly,
+    get ssrFriendly() {
+      return current().ssrFriendly
+    },
   })
+}
+
+/**
+ * A random UUID v4: `crypto.randomUUID` where the page has it, and the same
+ * format from `crypto.getRandomValues` where it has not, as on an `http://`
+ * address other than localhost.
+ */
+function randomSessionId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6]! & 0x0F) | 0x40
+  bytes[8] = (bytes[8]! & 0x3F) | 0x80
+  const hex = [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 /**
@@ -244,7 +287,7 @@ export function provideSession(options: SessionProviderOptions = {}): void {
  *
  * @public
  */
-export const SessionProvider = defineComponent({
+export const SessionProvider = /* @__PURE__ */ defineComponent({
   name: 'SessionProvider',
   props: {
     useStorage: { type: Function as PropType<UseStorage<SessionId | undefined>>, default: undefined },
@@ -253,12 +296,12 @@ export const SessionProvider = defineComponent({
     ssrFriendly: { type: Boolean, default: false },
   },
   setup(props, { slots }) {
-    provideSession({
+    provideSession(() => ({
       useStorage: props.useStorage,
       storageKey: props.storageKey,
       idGenerator: props.idGenerator,
       ssrFriendly: props.ssrFriendly,
-    })
+    }))
     return () => slots.default?.()
   },
 })
@@ -418,10 +461,16 @@ export function useSessionId(): readonly [
   if (ctx === null) {
     throw new Error('Missing a <SessionProvider> wrapping this code.')
   }
-  if (!ctx.ssrFriendly && ctx.sessionId.value === undefined) {
-    throw new Error('Session ID invalid. Clear your storage?')
+  const check = (id: SessionId | undefined) => {
+    if (!ctx.ssrFriendly && id === undefined) {
+      throw new Error('Session ID invalid. Clear your storage?')
+    }
+    return id
   }
-  return [ctx.sessionId, ctx.refreshSessionId, ctx.sessionIdPromise] as const
+  check(ctx.sessionId.value)
+  // Upstream checks on every render; here on every read.
+  const sessionId = computed(() => check(ctx.sessionId.value))
+  return [sessionId, ctx.refreshSessionId, ctx.sessionIdPromise] as const
 }
 
 /**
@@ -555,7 +604,7 @@ export class ConvexVueSessionClient extends ConvexVueClient {
           )
         }
         // We have to explicitly set it here so TypeScript won't complain about it being uninitialized.
-        this.sessionId = crypto.randomUUID() as SessionId
+        this.sessionId = randomSessionId() as SessionId
         this.setSessionId(this.sessionId)
       }
     }

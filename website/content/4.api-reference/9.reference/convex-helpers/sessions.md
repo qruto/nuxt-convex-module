@@ -25,7 +25,7 @@ for more information.
 
 ### ConvexVueSessionClient
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:508](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L508)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:557](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L557)
 
 A client wrapper that adds session data to Convex functions: a port of
 upstream's `ConvexReactSessionClient`.
@@ -56,7 +56,7 @@ const result = await sessionClient.sessionQuery(
 new ConvexVueSessionClient(address, options?): ConvexVueSessionClient;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:522](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L522)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:571](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L571)
 
 Create a new ConvexVueSessionClient.
 
@@ -130,7 +130,7 @@ The [ConvexLogger](/api-reference/reference/client#convexlogger) for this client
 setSessionId(sessionId): void;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:573](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L573)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:622](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L622)
 
 Set a new session ID to use for future function calls.
 
@@ -154,7 +154,7 @@ you should update it there instead.
 getSessionId(): SessionId;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:585](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L585)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:634](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L634)
 
 Get the current session ID.
 
@@ -170,7 +170,7 @@ The current session ID
 sessionQuery<Query>(query, ...args): Promise<FunctionReturnType<Query>>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:596](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L596)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:645](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L645)
 
 Run a Convex query with the session ID injected.
 
@@ -199,7 +199,7 @@ A promise of the query result
 sessionMutation<Mutation>(mutation, ...args): Promise<FunctionReturnType<Mutation>>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:613](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L613)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:662](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L662)
 
 Run a Convex mutation with the session ID injected.
 
@@ -228,7 +228,7 @@ A promise of the mutation result
 sessionAction<Action>(action, ...args): Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:637](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L637)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:686](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L686)
 
 Run a Convex action with the session ID injected.
 
@@ -569,7 +569,7 @@ A `Promise` fulfilled when the connection has been completely closed.
 type UseStorage<T> = (key, initialValue) => Ref<T>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:62](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L62)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:66](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L66)
 
 Where the session ID is kept: a composable that returns a writable ref of
 the stored value, as VueUse's `useLocalStorage` and `useSessionStorage` do.
@@ -599,7 +599,7 @@ the stored value, as VueUse's `useLocalStorage` and `useSessionStorage` do.
 type RefreshSessionFn = (beforeUpdate?) => Promise<SessionId>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:67](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L67)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:71](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L71)
 
 #### Parameters
 
@@ -619,7 +619,7 @@ Defined in: [src/runtime/convex-helpers/vue/sessions.ts:67](https://github.com/q
 type SessionQueryArgsArray<Fn> = keyof FunctionArgs<Fn> extends "sessionId" ? [args?: EmptyObject | "skip"] : Partial<ArgsWithoutSession<Fn>> extends ArgsWithoutSession<Fn> ? [args?: ArgsWithoutSession<Fn> | "skip"] : [args: ArgsWithoutSession<Fn> | "skip"];
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:95](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L95)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:99](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L99)
 
 #### Type Parameters
 
@@ -635,7 +635,7 @@ Defined in: [src/runtime/convex-helpers/vue/sessions.ts:95](https://github.com/q
 type SessionArgsArray<Fn> = keyof FunctionArgs<Fn> extends "sessionId" ? [args?: EmptyObject] : Partial<ArgsWithoutSession<Fn>> extends ArgsWithoutSession<Fn> ? [args?: ArgsWithoutSession<Fn>] : [args: ArgsWithoutSession<Fn>];
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:102](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L102)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:106](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L106)
 
 #### Type Parameters
 
@@ -651,7 +651,7 @@ Defined in: [src/runtime/convex-helpers/vue/sessions.ts:102](https://github.com/
 type SessionArgsAndOptions<Fn, Options> = keyof FunctionArgs<Fn> extends "sessionId" ? [args?: EmptyObject, options?: Options] : Partial<ArgsWithoutSession<Fn>> extends ArgsWithoutSession<Fn> ? [args?: ArgsWithoutSession<Fn>, options?: Options] : [args: ArgsWithoutSession<Fn>, options?: Options];
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:110](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L110)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:114](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L114)
 
 #### Type Parameters
 
@@ -670,7 +670,7 @@ type SessionPaginatedQueryArgs<Fn> =
   | "skip";
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:130](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L130)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:134](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L134)
 
 #### Type Parameters
 
@@ -691,7 +691,7 @@ type SessionProviderOptions = {
 };
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:142](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L142)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:146](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L146)
 
 Options of [provideSession](#providesession) and the props of `<SessionProvider>`.
 
@@ -699,10 +699,10 @@ Options of [provideSession](#providesession) and the props of `<SessionProvider>
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="usestorage-1"></a> `useStorage?` | [`UseStorage`](#usestorage)\<`SessionId` \| `undefined`\> | [src/runtime/convex-helpers/vue/sessions.ts:143](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L143) |
-| <a id="storagekey"></a> `storageKey?` | `string` | [src/runtime/convex-helpers/vue/sessions.ts:144](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L144) |
-| <a id="idgenerator"></a> `idGenerator?` | () => `string` | [src/runtime/convex-helpers/vue/sessions.ts:145](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L145) |
-| <a id="ssrfriendly"></a> `ssrFriendly?` | `boolean` | [src/runtime/convex-helpers/vue/sessions.ts:146](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L146) |
+| <a id="usestorage-1"></a> `useStorage?` | [`UseStorage`](#usestorage)\<`SessionId` \| `undefined`\> | [src/runtime/convex-helpers/vue/sessions.ts:147](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L147) |
+| <a id="storagekey"></a> `storageKey?` | `string` | [src/runtime/convex-helpers/vue/sessions.ts:148](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L148) |
+| <a id="idgenerator"></a> `idGenerator?` | () => `string` | [src/runtime/convex-helpers/vue/sessions.ts:149](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L149) |
+| <a id="ssrfriendly"></a> `ssrFriendly?` | `boolean` | [src/runtime/convex-helpers/vue/sessions.ts:150](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L150) |
 
 ## Variables
 
@@ -712,7 +712,7 @@ Options of [provideSession](#providesession) and the props of `<SessionProvider>
 const DEFAULT_STORAGE_KEY: "convex-session-id" = 'convex-session-id';
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L54)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L58)
 
 ***
 
@@ -722,7 +722,7 @@ Defined in: [src/runtime/convex-helpers/vue/sessions.ts:54](https://github.com/q
 const SessionKey: InjectionKey<SessionContextValue>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:85](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L85)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:89](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L89)
 
 The injection key [provideSession](#providesession) provides the session under: the
 Vue counterpart of upstream's `SessionContext`.
@@ -787,7 +787,7 @@ const SessionProvider: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:247](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L247)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:290](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L290)
 
 A thin component over [provideSession](#providesession), for templates that mirror
 upstream's `<SessionProvider>`.
@@ -800,7 +800,7 @@ upstream's `<SessionProvider>`.
 function provideSession(options?): void;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:171](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L171)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:175](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L175)
 
 Provide a Convex session to the component's descendants: a port of
 upstream's `<SessionProvider>`, creating a server session and providing
@@ -810,7 +810,7 @@ the id.
 
 | Parameter | Type |
 | ------ | ------ |
-| `options?` | [`SessionProviderOptions`](#sessionprovideroptions) |
+| `options?` | `MaybeRefOrGetter`\<[`SessionProviderOptions`](#sessionprovideroptions)\> |
 
 #### Returns
 
@@ -826,7 +826,7 @@ function useSessionQuery<Query>(query, ...args): ComputedRef<
 | undefined>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:276](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L276)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:319](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L319)
 
 Use this in place of `useQuery` to run a query, passing a sessionId.
 
@@ -868,7 +868,7 @@ function useSessionPaginatedQuery<Query>(
   | undefined;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:302](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L302)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:345](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L345)
 
 Use this in place of `usePaginatedQuery` to run a query, passing a sessionId.
 
@@ -904,7 +904,7 @@ until the client has mounted.
 function useSessionMutation<Mutation>(name): VueSessionMutation<Mutation>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:346](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L346)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:389](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L389)
 
 Use this in place of `useMutation` to run a mutation with a sessionId.
 
@@ -937,7 +937,7 @@ valid sessionId.
 function useSessionAction<Action>(name): (...args) => Promise<FunctionReturnType<Action>>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:383](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L383)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:426](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L426)
 
 Use this in place of `useAction` to run an action with a sessionId.
 
@@ -970,7 +970,7 @@ valid sessionId.
 function useSessionId(): readonly [ComputedRef<SessionId | undefined>, RefreshSessionFn, ComputedRef<Promise<SessionId>>];
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:412](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L412)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:455](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L455)
 
 Get the session context when nested under [provideSession](#providesession).
 
@@ -997,7 +997,7 @@ function useSessionIdArg<T>(args): ComputedRef<
 }>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:439](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L439)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:488](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L488)
 
 Use this in place of args to a Convex query that also take a sessionId.
 e.g.
@@ -1036,7 +1036,7 @@ first client render, if ssrFriendly is set.
 function useSessionStorage(key, initialValue): Ref<SessionId | undefined>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/sessions.ts:454](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L454)
+Defined in: [src/runtime/convex-helpers/vue/sessions.ts:503](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/sessions.ts#L503)
 
 Compare with `ref`, but also persists the value in sessionStorage.
 
