@@ -694,7 +694,7 @@ upstream routes through that client has to land somewhere else here.
 
 - **Upstream** · `@convex-dev/r2@0.10.4` `client/upload.ts`
 - **Port** · [`r2/upstream/client/upload.ts`](./src/runtime/r2/upstream/client/upload.ts) — `uploadWithProgress`
-- **Pinned by** · `test/unit/r2-upstream-copies.test.ts`
+- **Pinned by** · `test/unit/r2-upstream-copies.test.ts`; `test/plain-vue/r2-upload.test.ts`, which runs the copy
 - **On sync** · copy the file again if it changed
 - **Why** · the package exports it from no entry. Its own `vue` entry imports it, but that entry
   also imports the community `convex-vue`, and the root entry pulls in the AWS SDK. The copy is
@@ -704,13 +704,16 @@ upstream routes through that client has to land somewhere else here.
 
 - **Upstream** · `@convex-dev/persistent-text-streaming@0.3.5` `react/index.ts` and `svelte/index.svelte.ts`
 - **Port** · [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts)
-- **Pinned by** · `test/plain-vue/persistent-text-streaming.test.ts` — "changing the token does not restart the request", "resuming a stream before its first chunk persists does not POST again"
+- **Pinned by** · `test/plain-vue/persistent-text-streaming.test.ts` — "changing the token does not restart the request", "resuming a stream before its first chunk persists does not POST again", "returning to a stream reads the database instead of sending the request again", "a failing query throws when the stream is read"
 - **On sync** · diff both entries; port the Svelte one's behaviour
 - **Why** · the package ships the hook twice. The React one lists the auth token and the headers
   among its effect's dependencies, so a new token mid-stream aborts the request and never restarts
   it: the text stops at the first chunks (sent as convex/persistent-text-streaming#82). The Svelte
   one reads the options when a stream starts and requests each stream once. The port keeps the
-  React hook's arguments and the Svelte hook's behaviour.
+  React hook's arguments and the Svelte hook's behaviour. One exception: a failing
+  `getPersistentBody` query throws when the result is read, as the React hook throws during
+  render (D-02). The Svelte entry's query client turns the error into `undefined` data, so it
+  shows the streamed text and hides the error.
 
 #### Type and signature refinements
 
@@ -1072,6 +1075,18 @@ so none can be "restored" by syncing.
   with a placeholder while the URL resolves and another when the query returns `null`. Attributes
   fall through to the `<img>`; `getUrl` is read once, like `useStorageUrl`'s argument.
 
+##### A-20 — `isRateLimitError` from the rate limiter's entry
+
+- **Port** · [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) re-exports `isRateLimitError` and the `RateLimitConfig` and `RateLimitError` types from `@convex-dev/rate-limiter`, and `isRateLimitError` is auto-imported
+- **Pinned by** · `test/plain-vue/rate-limiter.test.ts` — "re-exports the package's isRateLimitError"; `test/nuxt/public-surface.test.ts`; `test/types/rate-limiter.test-d.ts`, which passes the references `hookAPI()` generates
+- **Why** · upstream's `react` entry has only the hook, and a component that calls a rate-limited
+  mutation also imports `isRateLimitError` from the package's root. One import, or an auto-import,
+  serves both here. Measured: importing the root costs about 0.1 kB gzipped over the hook's own
+  `shared.js`, because the bundler drops the server-side `RateLimiter`, so the port imports it
+  rather than copying `shared.ts`. The query's argument and result types keep the validator's
+  config type, as upstream's do: the root's `RateLimitConfig` makes `shards` and `applyUpdates`
+  exclude each other, and a generated `getRateLimit` reference would not type-check against it.
+
 ##### A-18 — `nuxt-convex-module/testing`
 
 - **Port** · [`nuxt/testing.ts`](./src/runtime/nuxt/testing.ts) — `resetBetterAuthState`, defined in
@@ -1187,6 +1202,33 @@ and its marker.
   beacon. An app whose presence functions live anywhere but `convex/presence.ts` gets "Could not find
   public function" from the beacon, and the user stays online until the session times out. The port
   takes the path from the reference with `getFunctionName`.
+
+#### F-07 — a failed heartbeat no longer stops presence
+
+- **Kind** · a session left offline
+- **Upstream** · `@convex-dev/presence@0.4.0` `react/useSingleFlight.ts` — `try { await firstReq } finally {}`
+- **Port** · [`presence/vue/use-single-flight.ts`](./src/runtime/presence/vue/use-single-flight.ts), and the heartbeat calls in [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts)
+- **Pinned by** · `test/plain-vue/presence.test.ts` — "heartbeats again after one fails"
+- **Reported** · not yet
+- **On sync** · drop the entry once upstream catches the rejection
+- **Why** · the comment says a failed request is skipped, but `finally` lets the rejection end the
+  loop before `inFlight` is cleared. After one failed heartbeat (offline, a deployment error) every
+  later heartbeat waits forever, and the user shows offline until the tab reloads. The port catches
+  it there. The heartbeat calls log the error with `console.error`, as upstream's visibility handler
+  does, instead of leaving an unhandled rejection.
+
+#### F-08 — the rate limit's retry timer runs again after firing early
+
+- **Kind** · a status stuck at not-ok
+- **Upstream** · `@convex-dev/rate-limiter@0.4.3` `react/index.ts` — the retry effect depends on `status.ok` and `status.retryAt` only
+- **Port** · [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts)
+- **Pinned by** · `test/plain-vue/rate-limiter.test.ts` — "keeps waiting when the retry timer fires a moment early"
+- **Reported** · not yet
+- **On sync** · drop the entry once upstream re-arms the timer after each refresh
+- **Why** · a fixed window's `retryAt` is the window's end, the same number whenever it is
+  computed. A timer that fires a moment before it recomputes a not-ok status with that same
+  `retryAt`, so the effect keyed on the two never runs again and the button stays disabled until
+  something else re-renders. The port re-runs the watcher after every refresh.
 
 ---
 

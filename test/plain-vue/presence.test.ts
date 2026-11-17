@@ -23,7 +23,14 @@ const backend = vi.hoisted(() => {
   const sessions = new Map<string, string>() // sessionId -> live token
   const issuedTokens = new Set<string>()
   const disconnectedTokens = new Set<string>()
+  // Heartbeats still to fail, as when the network or the deployment is down.
+  const failures = { remaining: 0 }
   const heartbeat = async ({ sessionId }: { sessionId: string }) => {
+    if (failures.remaining > 0) {
+      failures.remaining--
+      await new Promise(resolve => setTimeout(resolve, LATENCY))
+      throw new Error('offline')
+    }
     let sessionToken = sessions.get(sessionId)
     if (sessionToken === undefined) {
       sessionToken = `token-${nextToken++}-${sessionId}`
@@ -46,8 +53,9 @@ const backend = vi.hoisted(() => {
     sessions.clear()
     issuedTokens.clear()
     disconnectedTokens.clear()
+    failures.remaining = 0
   }
-  return { sessions, issuedTokens, disconnectedTokens, heartbeat, disconnect, reset }
+  return { sessions, issuedTokens, disconnectedTokens, failures, heartbeat, disconnect, reset }
 })
 
 const listResult = vi.hoisted(() => ({ value: undefined as unknown, args: undefined as undefined | (() => unknown) }))
@@ -75,7 +83,7 @@ const convexClient = { url: 'https://test.convex.cloud' } as unknown as ConvexVu
 function mountPresence({
   roomId = ref('room1') as Ref<string>,
   userId = ref('user1') as Ref<string>,
-  interval = ref(10000) as Ref<number>,
+  interval = ref(10000) as Ref<number | undefined>,
   presence = presenceApi,
 } = {}) {
   const result = {} as { state: ReturnType<typeof usePresence> }
@@ -205,6 +213,33 @@ describe('usePresence', () => {
     wrapper.unmount()
   })
 
+  // PARITY: F-07
+  // Upstream's single-flight wrapper never clears its in-flight flag after a
+  // rejection, so every heartbeat after a failed one waits forever.
+  it('heartbeats again after one fails', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    backend.failures.remaining = 1
+    const { wrapper } = mountPresence({ interval: ref(LATENCY * 2) })
+
+    await sleep(6 * LATENCY)
+
+    expect(backend.sessions.size).toBe(1)
+    expect(error).toHaveBeenCalledWith(expect.objectContaining({ message: 'offline' }))
+    wrapper.unmount()
+    error.mockRestore()
+  })
+
+  // An optional prop passed through a getter is the Vue form of upstream's
+  // `undefined` argument, which takes the default.
+  it('an interval getter that gives undefined uses the 10 s default', async () => {
+    const setInterval = vi.spyOn(globalThis, 'setInterval')
+    const { wrapper } = mountPresence({ interval: ref(undefined) })
+    await nextTick()
+    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10000)
+    wrapper.unmount()
+    setInterval.mockRestore()
+  })
+
   // Upstream's tests leave the hidden tab and the sorting out.
 
   it('a hidden tab disconnects, and coming back starts a new session', async () => {
@@ -291,5 +326,19 @@ describe('FacePile', () => {
     expect(bob!.classes()).toContain('offline')
     expect(bob!.find('.tooltip-status').text()).toBe('Last seen 2 hours ago')
     expect(wrapper.find('.more-container').exists()).toBe(false)
+  })
+
+  // React skips an invalid attribute name with a warning; Vue's
+  // `setAttribute` would throw and stop the render.
+  it('leaves out a data key that is not a valid attribute name', () => {
+    const wrapper = mount(FacePile, {
+      props: { presenceState: [person('alice', { data: { 'is typing': true, 'mood': 'ok', 'is\u200Cdone': 'no' } })] },
+    })
+    const alice = wrapper.find('.avatars > .avatar')
+    expect(alice.attributes('data-presence-mood')).toBe('ok')
+    // A zero-width non-joiner is a name character, as in React's check.
+    expect(alice.attributes('data-presence-is\u200Cdone')).toBe('no')
+    expect(Object.keys(alice.attributes()).some(name => name.includes('typing'))).toBe(false)
+    expect(alice.find('.tooltip-data').text()).toContain('is typing: true')
   })
 })
