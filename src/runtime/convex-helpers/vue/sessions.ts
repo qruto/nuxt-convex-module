@@ -237,7 +237,15 @@ export function provideSession(options: MaybeRefOrGetter<SessionProviderOptions>
         }
         resolveSessionId(newId)
       }
-      if (current().ssrFriendly && initial.value) initial.value = false
+      // PARITY: F-09
+      // An ID the store already holds reaches the session client too, such
+      // as after a switch to another store.
+      else if (convex instanceof ConvexVueSessionClient && convex.getSessionId() !== id) {
+        convex.setSessionId(id)
+      }
+      // Cleared after the first client render whatever `ssrFriendly` says
+      // now, so turning it on later does not hide the ID again.
+      if (initial.value) initial.value = false
     }, { immediate: true })
   })
 
@@ -267,6 +275,7 @@ export function provideSession(options: MaybeRefOrGetter<SessionProviderOptions>
   })
 }
 
+// PARITY: F-10
 /**
  * A random UUID v4: `crypto.randomUUID` where the page has it, and the same
  * format from `crypto.getRandomValues` where it has not, as on an `http://`

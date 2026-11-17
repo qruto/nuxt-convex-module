@@ -1246,14 +1246,29 @@ and its marker.
 - **Kind** · calls under a stale session
 - **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — `refreshSessionId` sets the stored ID only
 - **Port** · [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
-- **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "a refresh reaches the session client too"
+- **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "a refresh reaches the session client too", "a store that already holds an ID passes it to the session client"
 - **Reported** · not yet
-- **On sync** · drop the entry once upstream updates the client on refresh
+- **On sync** · drop the entry once upstream keeps the client's ID in step with the provider's
 - **Why** · `SessionProvider` tells a `ConvexReactSessionClient` about an ID only when it
   generates one for an empty store, and the client's own docs say to change the ID through the
   provider. After `refreshSessionId` the components use the new ID while the client's
-  `sessionQuery`, `sessionMutation` and `sessionAction` keep the old one. The port sets it on
-  the client too.
+  `sessionQuery`, `sessionMutation` and `sessionAction` keep the old one. The same happens when
+  the store already holds an ID other than the client's, such as after a switch to another
+  `storageKey`. The port passes every ID the provider settles on to the client.
+
+#### F-10 — a session ID without `crypto.randomUUID`
+
+- **Kind** · a crash on an insecure origin
+- **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — the default ID generator and `ConvexReactSessionClient` call `crypto.randomUUID`
+- **Port** · `randomSessionId` in [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
+- **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "makes a UUID without crypto.randomUUID"
+- **Reported** · not yet
+- **On sync** · drop the entry once upstream has a fallback
+- **Why** · browsers expose `crypto.randomUUID` only in a secure context, so on an `http://`
+  address other than localhost, such as a phone on the dev server over the LAN, the provider
+  throws on mount. The port builds the same UUID v4 from `crypto.getRandomValues`, which every
+  context has. Upstream's own cache already falls back, to `Math.random`, which a session ID
+  should not use.
 
 ---
 

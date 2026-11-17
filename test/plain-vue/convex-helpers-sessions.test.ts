@@ -318,6 +318,30 @@ describe('provideSession', () => {
     expect(client.getSessionId()).toBe('session-2')
   })
 
+  // PARITY: F-09
+  it('a store that already holds an ID passes it to the session client', async () => {
+    sessionStorage.setItem('key-b', 'session-b')
+    const client = new ConvexVueSessionClient('http://localhost:3000', { sessionId: 'client-1' as SessionId })
+    const options = ref<SessionProviderOptions>({ storageKey: 'key-a' })
+    const { result } = mountSession(client, () => useSessionId(), options)
+    expect(result.current[0].value).toBe('client-1')
+
+    options.value = { storageKey: 'key-b' }
+    await flushPromises()
+
+    expect(result.current[0].value).toBe('session-b')
+    expect(client.getSessionId()).toBe('session-b')
+  })
+
+  it('turning ssrFriendly on after mount keeps the ID visible', async () => {
+    const options = ref<SessionProviderOptions>({ idGenerator: () => 'session-1' })
+    const { client } = fakeClient()
+    const { result } = mountSession(client, () => useSessionId(), options)
+    options.value = { ...options.value, ssrFriendly: true }
+    await flushPromises()
+    expect(result.current[0].value).toBe('session-1')
+  })
+
   // Upstream reads its props on every render.
   it('a new storageKey reads its own store', async () => {
     sessionStorage.setItem('key-b', 'session-b')
