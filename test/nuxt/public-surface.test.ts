@@ -53,7 +53,7 @@ const ENTRY: Record<string, Entry> = {
   '.': {
     source: 'src/module.ts',
     values: ['default'],
-    types: ['BetterAuthModuleOptions', 'ConvexAuthModuleOptions', 'ModuleOptions'],
+    types: ['BetterAuthModuleOptions', 'ConvexAuthModuleOptions', 'ConvexHelpersModuleOptions', 'ModuleOptions'],
   },
   './client': {
     source: 'src/runtime/vue/index.ts',
@@ -165,8 +165,8 @@ const ENTRY: Record<string, Entry> = {
   },
   './rate-limiter/client': {
     source: 'src/runtime/rate-limiter/vue/index.ts',
-    values: ['useRateLimit'],
-    types: ['GetRateLimitValueQuery', 'GetServerTimeMutation', 'UseRateLimitOptions'],
+    values: ['isRateLimitError', 'useRateLimit'],
+    types: ['GetRateLimitValueQuery', 'GetServerTimeMutation', 'RateLimitConfig', 'RateLimitError', 'UseRateLimitOptions'],
   },
   './convex-auth/client': {
     source: 'src/runtime/convex-auth/vue/index.ts',

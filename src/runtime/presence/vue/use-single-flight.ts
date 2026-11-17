@@ -47,7 +47,11 @@ export default function useSingleFlight<
       try {
         await firstReq
       }
-      finally {
+      // PARITY: F-07
+      // Fixes an upstream bug: upstream's `finally` lets the rejection end
+      // this function, so `inFlight` stays true and every later call waits
+      // forever. The caller still gets the rejection through `firstReq`.
+      catch {
         // If it failed, we naively just move on to the next request.
       }
       while (flightStatus.upNext) {

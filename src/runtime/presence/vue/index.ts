@@ -100,7 +100,7 @@ export interface PresenceState {
  * @param presence The presence functions of the app, usually `api.presence`.
  * @param roomId The room, as a value, a ref or a getter.
  * @param userId The user, as a value, a ref or a getter.
- * @param interval Milliseconds between heartbeats. Default 10000.
+ * @param interval Milliseconds between heartbeats. Default 10000, also when a ref or getter gives `undefined`.
  * @param convexUrl The deployment URL the unload beacon goes to. Defaults to the client's.
  * @returns A ref of the room's users, the current user first, or `undefined` while loading.
  * @public
@@ -109,7 +109,7 @@ export function usePresence(
   presence: PresenceAPI,
   roomId: MaybeRefOrGetter<string>,
   userId: MaybeRefOrGetter<string>,
-  interval: MaybeRefOrGetter<number> = 10000,
+  interval: MaybeRefOrGetter<number | undefined> = 10000,
   convexUrl?: MaybeRefOrGetter<string | undefined>,
 ): ComputedRef<PresenceState[] | undefined> {
   const convex = useConvex()
@@ -140,7 +140,9 @@ export function usePresence(
   // Upstream runs this in an effect, which React never runs on the server.
   if (!import.meta.server) {
     watch(
-      [() => toValue(roomId), () => toValue(userId), baseUrl, () => toValue(interval), sessionId],
+      // Upstream's default applies to an `undefined` argument; an optional
+      // prop passed through a getter is the Vue form of one.
+      [() => toValue(roomId), () => toValue(userId), baseUrl, () => toValue(interval) ?? 10000, sessionId],
       ([currentRoomId, currentUserId, currentBaseUrl, currentInterval, currentSessionId], previous, onCleanup) => {
         if (previous[0] !== currentRoomId || previous[1] !== currentUserId) {
           // The cleanup below ends the old session.
@@ -170,14 +172,21 @@ export function usePresence(
           sessionToken.value = result.sessionToken
         }
 
+        // PARITY: F-07
+        // A failed heartbeat is logged, as upstream logs a failed visibility
+        // change, rather than left as an unhandled rejection.
+        const beat = () => {
+          sendHeartbeat().catch(console.error)
+        }
+
         // Send initial heartbeat
-        void sendHeartbeat()
+        beat()
 
         // Clear any existing interval before setting a new one
         if (intervalHandle) {
           clearInterval(intervalHandle)
         }
-        intervalHandle = setInterval(sendHeartbeat, currentInterval)
+        intervalHandle = setInterval(beat, currentInterval)
 
         // Handle page unload.
         const handleUnload = () => {
@@ -210,11 +219,11 @@ export function usePresence(
             }
           }
           else {
-            void sendHeartbeat()
+            beat()
             if (intervalHandle) {
               clearInterval(intervalHandle)
             }
-            intervalHandle = setInterval(sendHeartbeat, currentInterval)
+            intervalHandle = setInterval(beat, currentInterval)
           }
         }
         const wrappedHandleVisibility = () => {

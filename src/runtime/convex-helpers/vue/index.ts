@@ -53,7 +53,7 @@ export function makeUseQueryWithStatus(useQueriesHook: typeof useQueries) {
     Query extends
     FunctionReference<'query'> | FunctionReference_future<'query'>,
   >(
-    query: Query,
+    query: MaybeRefOrGetter<Query>,
     ...queryArgs: OptionalRestArgsOrSkip<Query>
   ): ComputedRef<
     | {
@@ -89,7 +89,7 @@ export function makeUseQueryWithStatus(useQueriesHook: typeof useQueries) {
       }
       return {
         data: {
-          query: query as FunctionReference<'query'>,
+          query: toValue(query) as FunctionReference<'query'>,
           args: args as Record<string, Value>,
         },
       }
@@ -146,19 +146,20 @@ const usePaginatedQueryWithOptions = makeUsePaginatedQuery(useQueries)
  * `nuxt-convex-module` made for use with the `stream` and `paginator` helpers,
  * which don't automatically "grow" until you explicitly call `loadMore`.
  *
- * @param query - A FunctionReference to the public query function to run.
+ * @param query - A FunctionReference to the public query function to run,
+ * as a value, a ref or a getter.
  * @param args - The arguments object for the query function, excluding
  * the `paginationOpts` property, as a value, a ref or a getter.
  * @param options - An object specifying the `initialNumItems` to be loaded in
- * the first page.
+ * the first page, as a value, a ref or a getter.
  * @returns The refs of the currently loaded items and the status of the
  * pagination, and a `loadMore` function.
  * @public
  */
 export function usePaginatedQuery<Query extends PaginatedQueryReference>(
-  query: Query,
+  query: MaybeRefOrGetter<Query>,
   args: MaybeRefOrGetter<PaginatedQueryArgs<Query> | 'skip'>,
-  options: { initialNumItems: number },
+  options: MaybeRefOrGetter<{ initialNumItems: number }>,
 ): UsePaginatedQueryReturnType<Query> {
-  return usePaginatedQueryWithOptions(query, args, { ...options, customPagination: true })
+  return usePaginatedQueryWithOptions(query, args, () => ({ ...toValue(options), customPagination: true }))
 }

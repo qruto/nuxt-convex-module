@@ -157,7 +157,10 @@ export const APP_IMPORTS: Record<Integration, Registration[]> = {
     { name: 'provideConvexAuthFromAuth0', from: 'runtime/auth0/vue/index' },
   ],
   polar: [],
-  rateLimiter: [{ name: 'useRateLimit', from: 'runtime/rate-limiter/vue/index' }],
+  rateLimiter: [
+    { name: 'useRateLimit', from: 'runtime/rate-limiter/vue/index' },
+    { name: 'isRateLimitError', from: 'runtime/rate-limiter/vue/index' },
+  ],
   presence: [{ name: 'usePresence', from: 'runtime/presence/vue/index' }],
   r2: [{ name: 'useUploadFile', from: 'runtime/r2/vue/index' }],
   persistentTextStreaming: [{ name: 'useStream', from: 'runtime/persistent-text-streaming/vue/index' }],

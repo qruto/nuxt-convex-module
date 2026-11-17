@@ -10,7 +10,7 @@ import { useStream } from '../../src/runtime/persistent-text-streaming/vue/index
 // Stands in for the Convex subscription: a subscribed stream id returns the
 // body stored for it, and "skip" returns nothing. The map is reactive, so a
 // later write reaches the composable like a subscription update.
-const persisted = vi.hoisted(() => ({ map: undefined as unknown as Map<string, StreamBody> }))
+const persisted = vi.hoisted(() => ({ map: undefined as unknown as Map<string, StreamBody | Error> }))
 vi.mock('../../src/runtime/vue/composables/use-query', async () => {
   const { computed, reactive } = await import('vue')
   persisted.map = reactive(new Map<string, StreamBody>())
@@ -18,7 +18,10 @@ vi.mock('../../src/runtime/vue/composables/use-query', async () => {
     useQuery: (_query: unknown, getArgs: () => { streamId: string } | 'skip') =>
       computed(() => {
         const args = getArgs()
-        return args === 'skip' ? undefined : persisted.map.get(args.streamId)
+        const body = args === 'skip' ? undefined : persisted.map.get(args.streamId)
+        // The module's `useQuery` throws a failed query's error when read (D-02).
+        if (body instanceof Error) throw body
+        return body
       }),
   }
 })
@@ -302,6 +305,33 @@ describe('useStream (vue)', () => {
   )
 
   // The Svelte tests leave the request's own shape out.
+  // Mirrors the test of the React entry in our upstream PR
+  // (convex/persistent-text-streaming#82): A, then B, then A again.
+  it('returning to a stream reads the database instead of sending the request again', async () => {
+    fetchMock.mockReturnValue(new Promise(() => {}))
+    const { props, stream, destroy } = render({ driven: true, streamId: 'a' })
+    props.streamId = 'b'
+    await nextTick()
+    persisted.map.set('a', { text: 'from the database', status: 'streaming' })
+
+    props.streamId = 'a'
+    await nextTick()
+
+    expect(requestedIds()).toEqual(['a', 'b'])
+    expect(stream.value).toMatchObject({ text: 'from the database', status: 'streaming' })
+    destroy()
+  })
+
+  // PARITY: D-22
+  // The React hook throws during render; the Svelte entry hides the error.
+  it('a failing query throws when the stream is read', async () => {
+    fetchMock.mockReturnValue(new Promise(() => {}))
+    persisted.map.set('a', new Error('query failed'))
+    const { stream, destroy } = render({ driven: false, streamId: 'a' })
+    expect(() => stream.value).toThrow('query failed')
+    destroy()
+  })
+
   it('posts the stream id to the stream URL with the options read at the start', async () => {
     fetchMock.mockReturnValue(new Promise(() => {}))
     const { destroy } = render({ driven: true, streamId: 'a' }, { authToken: 'token-1', headers: { 'X-Trace': 't' } })

@@ -1,5 +1,6 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app'
-import { ConvexVueClient, ConvexClientKey } from './client'
+import ConvexClientClass from '#convex/client-class'
+import { ConvexClientKey } from './client'
 import { closeAfterRender } from '../nuxt/config'
 
 /**
@@ -31,7 +32,8 @@ export default defineNuxtPlugin({
       return
     }
 
-    const client = new ConvexVueClient(url)
+    // `ConvexVueClient`, or the session client `convex.convexHelpers.sessionClient` asks for.
+    const client = new ConvexClientClass(url)
     nuxtApp.vueApp.provide(ConvexClientKey, client)
     // PARITY: D-14
     if (import.meta.server) closeAfterRender(nuxtApp, client)

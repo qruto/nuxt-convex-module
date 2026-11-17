@@ -7,7 +7,7 @@ import type {
   FunctionReference,
   FunctionReference_future,
 } from 'convex/server'
-import { defineComponent, provide, type InjectionKey } from 'vue'
+import { computed, defineComponent, provide, toValue, type InjectionKey, type MaybeRefOrGetter } from 'vue'
 import { useConvex, type ConvexVueClient } from '../../../vue/client'
 
 /**
@@ -16,18 +16,18 @@ import { useConvex, type ConvexVueClient } from '../../../vue/client'
  *
  * @public
  */
-export const ConvexQueryCacheKey: InjectionKey<{ registry: CacheRegistry | null }> = Symbol('convex-helpers:query-cache')
+export const ConvexQueryCacheKey: InjectionKey<{ readonly registry: CacheRegistry | null }> = Symbol('convex-helpers:query-cache')
 
 /**
  * Establish a query cache for the component's descendants, so that cached
  * `useQuery` calls can be used: a port of upstream's
  * `<ConvexQueryCacheProvider>`.
  *
- * @param options - Options for the query cache
+ * @param options - Options for the query cache, as a value, a ref or a getter.
+ * A change builds a new cache, as upstream's `useMemo` does.
  * @public
  */
-export function provideConvexQueryCache(options: ConvexQueryCacheOptions = {}): void {
-  const { debug, expiration, maxIdleEntries } = options
+export function provideConvexQueryCache(options: MaybeRefOrGetter<ConvexQueryCacheOptions> = {}): void {
   const convex = useConvex()
   if (convex === undefined) {
     throw new Error(
@@ -36,8 +36,17 @@ export function provideConvexQueryCache(options: ConvexQueryCacheOptions = {}): 
       + 'See https://docs.convex.dev/quick-start',
     )
   }
-  const registry = new CacheRegistry(convex, { debug, expiration, maxIdleEntries })
-  provide(ConvexQueryCacheKey, { registry })
+  const registry = computed(() => {
+    const { debug, expiration, maxIdleEntries } = toValue(options)
+    return new CacheRegistry(convex, { debug, expiration, maxIdleEntries })
+  })
+  // The cached composables read `registry` reactively, and resubscribe on a
+  // new one.
+  provide(ConvexQueryCacheKey, {
+    get registry() {
+      return registry.value
+    },
+  })
 }
 
 /**
@@ -46,7 +55,7 @@ export function provideConvexQueryCache(options: ConvexQueryCacheOptions = {}): 
  *
  * @public
  */
-export const ConvexQueryCacheProvider = defineComponent({
+export const ConvexQueryCacheProvider = /* @__PURE__ */ defineComponent({
   name: 'ConvexQueryCacheProvider',
   props: {
     debug: { type: Boolean, default: undefined },
@@ -54,11 +63,11 @@ export const ConvexQueryCacheProvider = defineComponent({
     maxIdleEntries: { type: Number, default: undefined },
   },
   setup(props, { slots }) {
-    provideConvexQueryCache({
+    provideConvexQueryCache(() => ({
       debug: props.debug,
       expiration: props.expiration,
       maxIdleEntries: props.maxIdleEntries,
-    })
+    }))
     return () => slots.default?.()
   },
 })
@@ -80,7 +89,7 @@ export type ConvexQueryCacheOptions = {
    * How many "extra" idle query subscriptions are allowed to remain
    * connected to your convex backend.
    *
-   * @default Infinity
+   * @default 250
    */
   maxIdleEntries?: number
 
@@ -121,7 +130,10 @@ class CacheRegistry {
     this.idle = 0
     this.timeout = options.expiration ?? DEFAULT_EXPIRATION_MS
     this.maxIdleEntries = options.maxIdleEntries ?? DEFAULT_MAX_ENTRIES
-    if (options.debug ?? false) {
+    // PARITY: D-01
+    // A server render would log every 3 s until the request's app is
+    // collected.
+    if ((options.debug ?? false) && !import.meta.server) {
       const weakThis = new WeakRef(this)
       const debugInterval = setInterval(() => {
         const r = weakThis.deref()

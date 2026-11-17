@@ -58,7 +58,7 @@ status object the result refs carry.
 
 | Parameter | Type |
 | ------ | ------ |
-| `query` | `Query` |
+| `query` | `MaybeRefOrGetter`\<`Query`\> |
 | ...`queryArgs` | [`OptionalRestArgsOrSkip`](/api-reference/reference/client#optionalrestargsorskip)\<`Query`\> |
 
 #### Returns
@@ -186,7 +186,7 @@ function usePaginatedQuery<Query>(
 ): UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/index.ts:158](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/index.ts#L158)
+Defined in: [src/runtime/convex-helpers/vue/index.ts:159](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/index.ts#L159)
 
 This is a clone of the `usePaginatedQuery` composable from
 `nuxt-convex-module` made for use with the `stream` and `paginator` helpers,
@@ -202,10 +202,9 @@ which don't automatically "grow" until you explicitly call `loadMore`.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | A FunctionReference to the public query function to run. |
+| `query` | `MaybeRefOrGetter`\<`Query`\> | A FunctionReference to the public query function to run, as a value, a ref or a getter. |
 | `args` | `MaybeRefOrGetter`\< \| `"skip"` \| [`PaginatedQueryArgs`](/api-reference/reference/client#paginatedqueryargs)\<`Query`\>\> | The arguments object for the query function, excluding the `paginationOpts` property, as a value, a ref or a getter. |
-| `options` | \{ `initialNumItems`: `number`; \} | An object specifying the `initialNumItems` to be loaded in the first page. |
-| `options.initialNumItems` | `number` | - |
+| `options` | `MaybeRefOrGetter`\<\{ `initialNumItems`: `number`; \}\> | An object specifying the `initialNumItems` to be loaded in the first page, as a value, a ref or a getter. |
 
 #### Returns
 

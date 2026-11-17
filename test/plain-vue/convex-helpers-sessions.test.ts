@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import type { SessionId } from 'convex-helpers/server/sessions'
 import { makeFunctionReference, type FunctionReference } from 'convex/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, provide, ref } from 'vue'
+import { defineComponent, h, provide, ref, type MaybeRefOrGetter } from 'vue'
 import {
   ConvexVueSessionClient,
   DEFAULT_STORAGE_KEY,
@@ -12,6 +12,7 @@ import {
   useSessionId,
   useSessionIdArg,
   useSessionMutation,
+  useSessionPaginatedQuery,
   useSessionQuery,
   type SessionProviderOptions,
 } from '../../src/runtime/convex-helpers/vue/sessions'
@@ -128,7 +129,7 @@ function fakeClient() {
 }
 
 /** Run `useComposable` below the client and `provideSession(options)`. */
-function mountSession<T>(client: ConvexVueClient, useComposable: () => T, options: SessionProviderOptions = {}) {
+function mountSession<T>(client: ConvexVueClient, useComposable: () => T, options: MaybeRefOrGetter<SessionProviderOptions> = {}) {
   const result = {} as { current: T }
   const Child = defineComponent({
     setup() {
@@ -301,5 +302,101 @@ describe('provideSession', () => {
         return () => null
       },
     }))).toThrow('Missing a <SessionProvider> wrapping this code.')
+  })
+
+  // PARITY: F-09
+  // Upstream tells the session client only about an ID it generates for an
+  // empty store, so after a refresh the client's own calls keep the old one.
+  it('a refresh reaches the session client too', async () => {
+    const client = new ConvexVueSessionClient('http://localhost:3000', { sessionId: 'client-1' as SessionId })
+    const { result } = mountSession(client, () => useSessionId(), { idGenerator: () => 'session-2' })
+    expect(result.current[0].value).toBe('client-1')
+
+    await result.current[1]()
+
+    expect(result.current[0].value).toBe('session-2')
+    expect(client.getSessionId()).toBe('session-2')
+  })
+
+  // PARITY: F-09
+  it('a store that already holds an ID passes it to the session client', async () => {
+    sessionStorage.setItem('key-b', 'session-b')
+    const client = new ConvexVueSessionClient('http://localhost:3000', { sessionId: 'client-1' as SessionId })
+    const options = ref<SessionProviderOptions>({ storageKey: 'key-a' })
+    const { result } = mountSession(client, () => useSessionId(), options)
+    expect(result.current[0].value).toBe('client-1')
+
+    options.value = { storageKey: 'key-b' }
+    await flushPromises()
+
+    expect(result.current[0].value).toBe('session-b')
+    expect(client.getSessionId()).toBe('session-b')
+  })
+
+  it('turning ssrFriendly on after mount keeps the ID visible', async () => {
+    const options = ref<SessionProviderOptions>({ idGenerator: () => 'session-1' })
+    const { client } = fakeClient()
+    const { result } = mountSession(client, () => useSessionId(), options)
+    options.value = { ...options.value, ssrFriendly: true }
+    await flushPromises()
+    expect(result.current[0].value).toBe('session-1')
+  })
+
+  // Upstream reads its props on every render.
+  it('a new storageKey reads its own store', async () => {
+    sessionStorage.setItem('key-b', 'session-b')
+    const options = ref<SessionProviderOptions>({ storageKey: 'key-a', idGenerator: () => 'session-a' })
+    const { client } = fakeClient()
+    const { result } = mountSession(client, () => useSessionId(), options)
+    expect(result.current[0].value).toBe('session-a')
+
+    options.value = { ...options.value, storageKey: 'key-b' }
+    await flushPromises()
+
+    expect(result.current[0].value).toBe('session-b')
+  })
+
+  // Upstream checks on every render.
+  it('useSessionId\'s ref throws once the stored ID is gone, until a new one is made', async () => {
+    const store = ref<SessionId | undefined>(undefined)
+    const useStorage = (_key: string, initial: SessionId | undefined) => {
+      store.value ??= initial
+      return store
+    }
+    let n = 0
+    const { client } = fakeClient()
+    const { result } = mountSession(client, () => useSessionId(), { useStorage, idGenerator: () => `session-${++n}` })
+    const [id] = result.current
+
+    store.value = undefined
+    expect(() => id.value).toThrow('Session ID invalid. Clear your storage?')
+    await flushPromises()
+    expect(id.value).toBe('session-2')
+  })
+
+  // `crypto.randomUUID` needs a secure context: an `http://` address other
+  // than localhost has none.
+  it('makes a UUID without crypto.randomUUID', () => {
+    vi.stubGlobal('crypto', { getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto) })
+    const { client } = fakeClient()
+    const { result } = mountSession(client, () => useSessionId())
+    vi.unstubAllGlobals()
+    expect(result.current[0].value).toMatch(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/)
+  })
+
+  it('runs a paginated query with the session ID', async () => {
+    const { client, watched } = fakeClient()
+    const listQuery = makeFunctionReference<'query', { arg: string, sessionId: SessionId, paginationOpts: { numItems: number, cursor: string | null } }, { page: string[], isDone: boolean, continueCursor: string }>('test:list')
+    mountSession(client, () => useSessionPaginatedQuery(listQuery, { arg: 'a' }, { initialNumItems: 3 }), { idGenerator: () => 'session-1' })
+    await flushPromises()
+    expect(watched).toContainEqual(expect.objectContaining({ arg: 'a', sessionId: 'session-1', paginationOpts: expect.objectContaining({ numItems: 3, cursor: null }) }))
+  })
+
+  it('a mutation with an optimistic update still gets the session ID', async () => {
+    const { client, mock } = fakeClient()
+    const update = vi.fn()
+    const { result } = mountSession(client, () => useSessionMutation(sessionMutation), { idGenerator: () => 'session-1' })
+    await result.current.withOptimisticUpdate(update)({ arg: 'b' })
+    expect(mock.mutation).toHaveBeenCalledWith(sessionMutation, { arg: 'b', sessionId: 'session-1' }, expect.objectContaining({ optimisticUpdate: update }))
   })
 })

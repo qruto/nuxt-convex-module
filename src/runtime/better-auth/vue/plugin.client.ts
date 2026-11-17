@@ -1,5 +1,6 @@
 import { defineNuxtPlugin, useRuntimeConfig, useState } from '#app'
-import { ConvexVueClient, ConvexClientKey } from '../../vue/client'
+import ConvexClientClass from '#convex/client-class'
+import { ConvexClientKey } from '../../vue/client'
 import { ConvexAuthStateKey, createScopedConvexAuthState } from '../../vue/auth/index'
 import { CONVEX_INITIAL_TOKEN_KEY } from '../../nuxt/config'
 import { settleSessionWithoutClient, useBetterAuth } from './use-better-auth'
@@ -39,7 +40,8 @@ export default defineNuxtPlugin({
       return
     }
 
-    const client = new ConvexVueClient(url)
+    // `ConvexVueClient`, or the session client `convex.convexHelpers.sessionClient` asks for.
+    const client = new ConvexClientClass(url)
     nuxtApp.vueApp.provide(ConvexClientKey, client)
 
     // PARITY: D-18

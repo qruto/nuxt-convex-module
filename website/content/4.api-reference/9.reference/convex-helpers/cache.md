@@ -23,15 +23,15 @@ type ConvexQueryCacheOptions = {
 };
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:70](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L70)
+Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:79](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L79)
 
 #### Properties
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="expiration"></a> `expiration?` | `number` | How long, in milliseconds, to keep the subscription to the convex query alive even after all references in the app have been dropped. **Default** `300000` | [src/runtime/convex-helpers/vue/cache/provider.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L77) |
-| <a id="maxidleentries"></a> `maxIdleEntries?` | `number` | How many "extra" idle query subscriptions are allowed to remain connected to your convex backend. **Default** `Infinity` | [src/runtime/convex-helpers/vue/cache/provider.ts:85](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L85) |
-| <a id="debug"></a> `debug?` | `boolean` | A debug flag that will cause information about the query cache to be logged to the console every 3 seconds. **Default** `false` | [src/runtime/convex-helpers/vue/cache/provider.ts:93](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L93) |
+| <a id="expiration"></a> `expiration?` | `number` | How long, in milliseconds, to keep the subscription to the convex query alive even after all references in the app have been dropped. **Default** `300000` | [src/runtime/convex-helpers/vue/cache/provider.ts:86](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L86) |
+| <a id="maxidleentries"></a> `maxIdleEntries?` | `number` | How many "extra" idle query subscriptions are allowed to remain connected to your convex backend. **Default** `250` | [src/runtime/convex-helpers/vue/cache/provider.ts:94](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L94) |
+| <a id="debug"></a> `debug?` | `boolean` | A debug flag that will cause information about the query cache to be logged to the console every 3 seconds. **Default** `false` | [src/runtime/convex-helpers/vue/cache/provider.ts:102](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L102) |
 
 ## Variables
 
@@ -41,7 +41,7 @@ Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:70](https://github
 const usePaginatedQuery: <Query>(query, args, options) => UsePaginatedQueryReturnType<Query>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/cache/hooks.ts:188](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/hooks.ts#L188)
+Defined in: [src/runtime/convex-helpers/vue/cache/hooks.ts:191](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/hooks.ts#L191)
 
 Load data reactively from a paginated query to a create a growing list,
 utilizing the query cache.
@@ -68,11 +68,9 @@ To learn more about pagination, see [Paginated Queries](https://docs.convex.dev/
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | A FunctionReference to the public query function to run. |
+| `query` | `MaybeRefOrGetter`\<`Query`\> | A FunctionReference to the public query function to run, as a value, a ref or a getter. |
 | `args` | `MaybeRefOrGetter`\< \| `"skip"` \| [`PaginatedQueryArgs`](/api-reference/reference/client#paginatedqueryargs)\<`Query`\>\> | The arguments object for the query function, excluding the `paginationOpts` property, as a value, a ref or a getter. That property is injected by this composable. |
-| `options` | \{ `initialNumItems`: `number`; `customPagination?`: `boolean`; \} | An object specifying the `initialNumItems` to be loaded in the first page, and the `customPagination` to use. |
-| `options.initialNumItems` | `number` | - |
-| `options.customPagination?` | `boolean` | Set this to true if you are using the `stream` or `paginator` helpers. |
+| `options` | `MaybeRefOrGetter`\<`PaginatedQueryOptions`\> | An object specifying the `initialNumItems` to be loaded in the first page, and the `customPagination` to use, as a value, a ref or a getter. |
 
 #### Returns
 
@@ -147,7 +145,7 @@ const ConvexQueryCacheProvider: DefineComponent<ExtractPropTypes<{
 }, any>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L49)
+Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L58)
 
 A thin component over [provideConvexQueryCache](#provideconvexquerycache), for templates that
 mirror upstream's `<ConvexQueryCacheProvider>`.
@@ -195,7 +193,7 @@ function useQuery<Query>(query, ...queryArgs): ComputedRef<
 | undefined>;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/cache/hooks.ts:108](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/hooks.ts#L108)
+Defined in: [src/runtime/convex-helpers/vue/cache/hooks.ts:110](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/hooks.ts#L110)
 
 Load a reactive query within a Vue component, utilizing the query cache.
 
@@ -211,7 +209,7 @@ Throws an error if not used under the Convex client and `provideConvexQueryCache
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `query` | `Query` | a [FunctionReference](/api-reference/reference/client#functionreference) for the public query to run like `api.dir1.dir2.filename.func`. |
+| `query` | `MaybeRefOrGetter`\<`Query`\> | a [FunctionReference](/api-reference/reference/client#functionreference) for the public query to run like `api.dir1.dir2.filename.func`, as a value, a ref or a getter. |
 | ...`queryArgs` | [`OptionalRestArgsOrSkip`](/api-reference/reference/client#optionalrestargsorskip)\<`Query`\> | The arguments to the query function or the string "skip" if the query should not be loaded, as a value, a ref or a getter. |
 
 #### Returns
@@ -230,7 +228,7 @@ A ref of the result of the query. If the query is loading it holds `undefined`.
 function provideConvexQueryCache(options?): void;
 ```
 
-Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:29](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L29)
+Defined in: [src/runtime/convex-helpers/vue/cache/provider.ts:30](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-helpers/vue/cache/provider.ts#L30)
 
 Establish a query cache for the component's descendants, so that cached
 `useQuery` calls can be used: a port of upstream's
@@ -240,7 +238,7 @@ Establish a query cache for the component's descendants, so that cached
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options?` | [`ConvexQueryCacheOptions`](#convexquerycacheoptions) | Options for the query cache |
+| `options?` | `MaybeRefOrGetter`\<[`ConvexQueryCacheOptions`](#convexquerycacheoptions)\> | Options for the query cache, as a value, a ref or a getter. A change builds a new cache, as upstream's `useMemo` does. |
 
 #### Returns
 
