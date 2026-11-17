@@ -30,6 +30,10 @@
 
 - Bump nuxt to 4.6.4 ([#183](https://github.com/qruto/nuxt-convex-module/pull/183))
 
+#### Dev dependencies
+
+- Bump the all-non-major group across 1 directory with 11 updates ([#185](https://github.com/qruto/nuxt-convex-module/pull/185))
+
 ### 🤖 CI
 
 #### Dependencies
