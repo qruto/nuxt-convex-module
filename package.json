@@ -455,6 +455,7 @@
     "scopeMap": {
       "better-auth": "Better Auth",
       "convex-auth": "Convex Auth",
+      "convex-helpers": "convex-helpers",
       "persistent-text-streaming": "Text Streaming",
       "rate-limiter": "Rate Limiter",
       "ci": "CI",

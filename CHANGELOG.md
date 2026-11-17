@@ -10,7 +10,7 @@
 
 - Close the gaps to upstream's client and Next.js provider ([#186](https://github.com/qruto/nuxt-convex-module/pull/186))
 
-#### Convex-helpers
+#### convex-helpers
 
 - Follow changed options, fix refreshSessionId, add the Nuxt session client ([#188](https://github.com/qruto/nuxt-convex-module/pull/188))
 
