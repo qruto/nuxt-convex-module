@@ -86,6 +86,11 @@ function getTimeAgo(timestamp: number): string {
 // React skips an attribute whose name is not valid, with a warning. Vue's
 // `setAttribute` throws instead, so such a `data` key is left out here.
 const ATTRIBUTE_NAME_CHARS = /^[\w:.\-\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]*$/
+// The zero-width non-joiner and joiner are name characters too. They are
+// taken out before the check, because a joiner inside the class above would
+// merge its neighbours into one character.
+const isAttributeName = (key: string) =>
+  ATTRIBUTE_NAME_CHARS.test(key.replaceAll('\u200C', '').replaceAll('\u200D', ''))
 
 const Avatar = /* @__PURE__ */ defineComponent({
   name: 'Avatar',
@@ -99,7 +104,7 @@ const Avatar = /* @__PURE__ */ defineComponent({
       const { presence, index, total } = props
       const presenceData = Object.entries(presence.data ?? {}).reduce(
         (acc, [key, value]) => {
-          if (ATTRIBUTE_NAME_CHARS.test(key)) acc[`data-presence-${key}`] = String(value)
+          if (isAttributeName(key)) acc[`data-presence-${key}`] = String(value)
           return acc
         },
         {} as Record<`data-presence-${string}`, string>,
