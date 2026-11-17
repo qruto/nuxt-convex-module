@@ -421,7 +421,7 @@ A `Promise` fulfilled when the connection has been completely closed.
 
 ### ConvexProviderWithAuthOptions
 
-Defined in: [src/runtime/vue/auth/index.ts:75](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L75)
+Defined in: [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L76)
 
 Options for [provideConvexWithAuth](#provideconvexwithauth) — the Vue translation of the props of
 upstream's `ConvexProviderWithAuth` component.
@@ -430,8 +430,8 @@ upstream's `ConvexProviderWithAuth` component.
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:76](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L76) |
-| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L77) |
+| <a id="client"></a> `client` | [`IConvexVueClient`](#iconvexvueclient) | [src/runtime/vue/auth/index.ts:77](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L77) |
+| <a id="useauth"></a> `useAuth` | () => \{ `isLoading`: `MaybeRefOrGetter`\<`boolean`\>; `isAuthenticated`: `MaybeRefOrGetter`\<`boolean`\>; `fetchAccessToken`: `MaybeRef`\<[`AuthTokenFetcher`](#authtokenfetcher)\>; `authVersion?`: `unknown`; \} | [src/runtime/vue/auth/index.ts:78](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L78) |
 
 ***
 
@@ -1602,7 +1602,7 @@ type IConvexVueClient = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:9](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L9)
+Defined in: [src/runtime/vue/auth/index.ts:10](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L10)
 
 #### Methods
 
@@ -1616,7 +1616,7 @@ setAuth(
 ): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:10](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L10)
+Defined in: [src/runtime/vue/auth/index.ts:11](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L11)
 
 ###### Parameters
 
@@ -1636,7 +1636,7 @@ Defined in: [src/runtime/vue/auth/index.ts:10](https://github.com/qruto/nuxt-con
 clearAuth(): void;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:15](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L15)
+Defined in: [src/runtime/vue/auth/index.ts:16](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L16)
 
 ###### Returns
 
@@ -1654,7 +1654,7 @@ type ConvexAuthState = {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:35](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L35)
+Defined in: [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L36)
 
 Type representing the state of an auth integration with Convex.
 
@@ -1674,9 +1674,9 @@ plain booleans), so the upstream destructuring idiom stays reactive:
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L36) |
-| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L37) |
-| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L38) |
+| <a id="isloading"></a> `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L37) |
+| <a id="isauthenticated"></a> `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:38](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L38) |
+| <a id="isrefreshing"></a> `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:39](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L39) |
 
 ***
 
@@ -2080,7 +2080,7 @@ rendered if the user is authenticated.
 const ConvexAuthStateKey: InjectionKey<ConvexAuthState>;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L42)
+Defined in: [src/runtime/vue/auth/index.ts:43](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L43)
 
 ***
 
@@ -2649,7 +2649,7 @@ function useConvexAuth(): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L54)
+Defined in: [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L55)
 
 Get the [ConvexAuthState](#convexauthstate) within a Vue component.
 
@@ -2670,9 +2670,9 @@ The current [ConvexAuthState](#convexauthstate).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:55](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L55) |
-| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L56) |
-| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:57](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L57) |
+| `isLoading` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L56) |
+| `isAuthenticated` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:57](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L57) |
+| `isRefreshing` | `ComputedRef`\<`boolean`\> | [src/runtime/vue/auth/index.ts:58](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L58) |
 
 ***
 
@@ -2682,11 +2682,12 @@ The current [ConvexAuthState](#convexauthstate).
 function provideConvexWithAuth(options): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:168](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L168)
+Defined in: [src/runtime/vue/auth/index.ts:170](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L170)
 
 A replacement for the plain Convex client provide (upstream's
 `ConvexProvider`) which additionally provides [ConvexAuthState](#convexauthstate) to
-descendants of the calling component.
+descendants of the calling component. The descendants also get `client`,
+as upstream's provider renders a `ConvexProvider` for it.
 
 Use this to integrate any auth provider with Convex. The `useAuth` option
 should be a Vue composable that returns the provider's authentication state
@@ -2729,7 +2730,7 @@ const authState = provideConvexWithAuth({ client, useAuth })
 function createConvexAuthState(options, scope?): ConvexAuthState;
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:185](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L185)
+Defined in: [src/runtime/vue/auth/index.ts:190](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L190)
 
 Build reactive [ConvexAuthState](#convexauthstate) and wire watchers between the
 external auth provider and the Convex client, without calling `provide()` —
@@ -2763,7 +2764,7 @@ function createScopedConvexAuthState(options): {
 };
 ```
 
-Defined in: [src/runtime/vue/auth/index.ts:366](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L366)
+Defined in: [src/runtime/vue/auth/index.ts:371](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L371)
 
 Create a fresh `EffectScope` and build a Convex auth state inside it.
 The scope is returned so the caller can `.stop()` it on teardown.
@@ -2785,8 +2786,8 @@ The scope is returned so the caller can `.stop()` it on teardown.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:368](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L368) |
-| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:368](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L368) |
+| `state` | [`ConvexAuthState`](#convexauthstate) | [src/runtime/vue/auth/index.ts:373](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L373) |
+| `scope` | `EffectScope` | [src/runtime/vue/auth/index.ts:373](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/vue/auth/index.ts#L373) |
 
 ***
 

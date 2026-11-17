@@ -102,7 +102,7 @@ type ConvexAuthActionsContextType = {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/vue/client.ts:36](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L36)
+Defined in: [src/runtime/convex-auth/vue/client.ts:37](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L37)
 
 The value exposed by [useAuthActions](#useauthactions).
 
@@ -110,8 +110,8 @@ The value exposed by [useAuthActions](#useauthactions).
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="setsession"></a> `setSession` | (`session`) => `Promise`\<`void`\> | Initialize or refresh a session. A SPA client will receive a full [TokenBundle](#tokenbundle) so it can access the refresh token for direct session refreshing. An SSR client will receive a SlimTokenBundle which doesn't include the refresh token (that value is in an httpOnly cookie, not reachable by client JS code). | [src/runtime/convex-auth/vue/client.ts:45](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L45) |
-| <a id="signout-1"></a> `signOut` | () => `Promise`\<`void`\> | Sign out: revoke the session on the server and clear it locally. | [src/runtime/convex-auth/vue/client.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L47) |
+| <a id="setsession"></a> `setSession` | (`session`) => `Promise`\<`void`\> | Initialize or refresh a session. A SPA client will receive a full [TokenBundle](#tokenbundle) so it can access the refresh token for direct session refreshing. An SSR client will receive a SlimTokenBundle which doesn't include the refresh token (that value is in an httpOnly cookie, not reachable by client JS code). | [src/runtime/convex-auth/vue/client.ts:46](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L46) |
+| <a id="signout-1"></a> `signOut` | () => `Promise`\<`void`\> | Sign out: revoke the session on the server and clear it locally. | [src/runtime/convex-auth/vue/client.ts:48](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/client.ts#L48) |
 
 ***
 

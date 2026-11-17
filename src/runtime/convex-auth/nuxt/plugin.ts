@@ -200,7 +200,7 @@ export default defineNuxtPlugin({
     // In the app's context: on a page the server did not render this runs
     // after an await, and the watcher's query injects the client.
     const watchSession = (name: string) => nuxtApp.vueApp.runWithContext(() =>
-      scope.run(() => useSessionWatcher(authClient, makeFunctionReference(name) as IsAuthenticatedFn, state)))
+      scope.run(() => useSessionWatcher(authClient, makeFunctionReference(name) as IsAuthenticatedFn, state, convex)))
     const name = isAuthenticatedFunctionName.value
     if (name !== null) watchSession(name)
     else {

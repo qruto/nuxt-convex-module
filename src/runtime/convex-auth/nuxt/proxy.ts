@@ -1,4 +1,5 @@
 import { defineEventHandler, getRequestURL } from 'nuxt/server'
+import { useRuntimeConfig } from '#imports'
 import auth from '#convex/auth-server'
 import { CONVEX_AUTH_ROUTE } from './route'
 
@@ -8,7 +9,10 @@ import { CONVEX_AUTH_ROUTE } from './route'
  * cookies.
  */
 export default defineEventHandler(async (event) => {
-  // `includes`, not `startsWith`: Nitro mounts the routes under the app's base URL.
-  if (getRequestURL(event).pathname.includes(`${CONVEX_AUTH_ROUTE}/`)) return
+  // Nitro mounts the routes under the app's base URL.
+  // `nuxt/server`'s event, which `useRuntimeConfig`'s h3 typing predates.
+  const config = (useRuntimeConfig as (event: unknown) => { app?: { baseURL?: string } })(event)
+  const base = (config.app?.baseURL ?? '/').replace(/\/+$/, '')
+  if (getRequestURL(event).pathname.startsWith(`${base}${CONVEX_AUTH_ROUTE}/`)) return
   await auth.convexAuthNuxtProxy(event)
 })

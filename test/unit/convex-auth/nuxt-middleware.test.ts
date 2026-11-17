@@ -114,6 +114,12 @@ describe('convex-auth-guest route middleware, in the browser', () => {
     expect(await guest(page('/login'))).toEqual({ redirectedTo: '/' })
   })
 
+  it('stays on a guest-only page that is its own destination', async () => {
+    auth({ isLoading: false, isAuthenticated: true })
+    expect(await guest(page('/'))).toBeUndefined()
+    expect(navigateTo).not.toHaveBeenCalled()
+  })
+
   it('never follows ?redirect= off the site', async () => {
     auth({ isLoading: false, isAuthenticated: true })
     expect(await guest(page('/login', { redirect: '//evil.example' }))).toEqual({ redirectedTo: '/' })
