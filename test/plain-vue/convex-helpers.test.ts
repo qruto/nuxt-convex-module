@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { makeFunctionReference, type FunctionReference_future } from 'convex/server'
+import { getFunctionName, makeFunctionReference, type FunctionReference_future } from 'convex/server'
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { defineComponent, h, provide, ref, type ComputedRef } from 'vue'
+import { defineComponent, h, provide, ref, shallowRef, type ComputedRef } from 'vue'
 import { usePaginatedQuery as useCachedPaginatedQuery, useQueries, useQuery, provideConvexQueryCache } from '../../src/runtime/convex-helpers/vue/cache/index'
 import { makeUseQueryWithStatus, usePaginatedQuery } from '../../src/runtime/convex-helpers/vue/index'
 import { ConvexClientKey, type ConvexVueClient } from '../../src/runtime/vue/client'
@@ -288,5 +288,182 @@ describe('cached usePaginatedQuery', () => {
     expect(calls.map(c => c.paginationOpts)).toContainEqual({ numItems: 3, cursor: '2', id: 0 })
     expect(calls.map(c => c.paginationOpts)).not.toContainEqual(expect.objectContaining({ endCursor: '2' }))
     expect(result.current.results.value).toEqual([0, 1, 2, 3, 4])
+  })
+})
+
+/**
+ * A client whose pages answer what `answer` says for each query and its
+ * pagination options, re-read on `update()` as a subscription would be.
+ */
+function scriptedClient(answer: (name: string, opts: { numItems: number, cursor: string | null, endCursor?: string }) => unknown) {
+  const listeners = new Set<() => void>()
+  const calls: Array<{ name: string, opts: { numItems: number, cursor: string | null, endCursor?: string } }> = []
+  const unsubscribed: string[] = []
+  const watchQuery = vi.fn((reference: unknown, args: { paginationOpts: { numItems: number, cursor: string | null, endCursor?: string } }) => {
+    const name = getFunctionName(reference as never)
+    calls.push({ name, opts: args.paginationOpts })
+    return {
+      localQueryResult: () => {
+        const value = answer(name, args.paginationOpts)
+        if (value instanceof Error) throw value
+        return value
+      },
+      onUpdate: (listener: () => void) => {
+        listeners.add(listener)
+        return () => {
+          listeners.delete(listener)
+          unsubscribed.push(name)
+        }
+      },
+      journal: () => undefined,
+    }
+  })
+  const logger = { warn: vi.fn() }
+  return {
+    client: { watchQuery, logger } as unknown as ConvexVueClient,
+    calls,
+    unsubscribed,
+    logger,
+    update: () => listeners.forEach(listener => listener()),
+  }
+}
+
+const page = (items: number[], extra: Record<string, unknown> = {}) =>
+  ({ page: items, isDone: false, continueCursor: String(items.at(-1)! + 1), ...extra })
+
+describe('the paginated query, case by case', () => {
+  // Upstream reads the query on every render; a new one resets the pages.
+  it('a new query from a ref resets the pagination and loads it', async () => {
+    const other = makeFunctionReference<'query', { paginationOpts: { numItems: number, cursor: string | null } }, { page: number[], isDone: boolean, continueCursor: string }>('test:other')
+    const { client } = scriptedClient(name => page(name === 'test:list' ? [0, 1] : [10, 11]))
+    const current = shallowRef(listQuery)
+    const { result } = mountUnder(client, () => usePaginatedQuery(current, {}, { initialNumItems: 2 }))
+    await flushPromises()
+    expect(result.current.results.value).toEqual([0, 1])
+
+    current.value = other
+    await flushPromises()
+    void result.current.results.value
+    await flushPromises()
+    expect(result.current.results.value).toEqual([10, 11])
+  })
+
+  it('sizes the first page from initialNumItems in a ref', async () => {
+    const { client, calls } = scriptedClient(() => page([0]))
+    const options = ref({ initialNumItems: 2 })
+    const args = ref({ tag: 'a' })
+    mountUnder(client, () => usePaginatedQuery(listQuery, args as never, options))
+    await flushPromises()
+    options.value = { initialNumItems: 5 }
+    args.value = { tag: 'b' }
+    await flushPromises()
+    expect([...new Set(calls.map(c => c.opts.numItems))]).toEqual([2, 5])
+  })
+
+  // After the reset upstream returns no last result, so a pagination past
+  // its first page reads `LoadingMore` for that render.
+  it('resets on InvalidCursor, reading LoadingMore past the first page', async () => {
+    let invalid = false
+    const { client, calls, logger, update } = scriptedClient((_name, opts) =>
+      opts.cursor === '2' && invalid ? new Error('InvalidCursor: the data changed') : page(opts.cursor === null ? [0, 1] : [2, 3]))
+    const { result } = mountUnder(client, () => useCachedPaginatedQuery(listQuery, {}, { initialNumItems: 2 }))
+    await flushPromises()
+    result.current.loadMore(2)
+    await flushPromises()
+    expect(result.current.results.value).toEqual([0, 1, 2, 3])
+
+    const firstPages = () => calls.filter(c => c.opts.cursor === null).length
+    const before = firstPages()
+    invalid = true
+    update()
+    await flushPromises()
+    expect(result.current.status.value).toBe('LoadingMore')
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('resetting pagination state'))
+    await flushPromises()
+    void result.current.results.value
+    expect(firstPages()).toBeGreaterThan(before)
+  })
+
+  it('reads Exhausted once the last page is done', async () => {
+    const { client } = scriptedClient(() => page([0, 1], { isDone: true }))
+    const { result } = mountUnder(client, () => usePaginatedQuery(listQuery, {}, { initialNumItems: 2 }))
+    await flushPromises()
+    expect(result.current.status.value).toBe('Exhausted')
+    expect(result.current.isLoading.value).toBe(false)
+  })
+
+  it('a page the server could not fill splits, and its items wait for the split', async () => {
+    const { client, calls } = scriptedClient((_name, opts) =>
+      opts.endCursor === undefined
+        ? page([0, 1], { pageStatus: 'SplitRequired', splitCursor: '1' })
+        : page(opts.cursor === null ? [0] : [1]))
+    const { result } = mountUnder(client, () => useCachedPaginatedQuery(listQuery, {}, { initialNumItems: 2 }))
+    await flushPromises()
+    expect(result.current.status.value).toBe('LoadingFirstPage')
+    expect(result.current.results.value).toEqual([])
+    await flushPromises()
+    expect(calls.map(c => c.opts)).toContainEqual({ numItems: 2, cursor: null, id: 0, endCursor: '1' })
+    void result.current.results.value
+    await flushPromises()
+    expect(result.current.results.value).toEqual([0, 1])
+  })
+
+  it('a new argument resets to the first page, and "skip" loads nothing', async () => {
+    const { client, calls } = scriptedClient(() => page([0, 1]))
+    const args = ref<Record<string, string> | 'skip'>({ tag: 'a' })
+    const { result } = mountUnder(client, () => usePaginatedQuery(listQuery, args as never, { initialNumItems: 2 }))
+    await flushPromises()
+    result.current.loadMore(2)
+    await flushPromises()
+
+    args.value = 'skip'
+    await flushPromises()
+    expect(result.current.status.value).toBe('LoadingFirstPage')
+    expect(result.current.results.value).toEqual([])
+    const before = calls.length
+
+    args.value = { tag: 'b' }
+    await flushPromises()
+    void result.current.results.value
+    expect(new Set(calls.slice(before).map(c => JSON.stringify(c.opts)))).toEqual(new Set([JSON.stringify({ numItems: 2, cursor: null })]))
+  })
+})
+
+describe('the query cache, case by case', () => {
+  // Upstream's provider builds a new registry when an option changes.
+  it('new options build a new cache, and the composables move to it', async () => {
+    vi.useFakeTimers()
+    const { client, watchQuery, unsubscribe } = setup('found')
+    const options = ref({ expiration: 1000, maxIdleEntries: 5 })
+    const { result } = mountUnder(client, () => useQuery(query, { id: 'one' }), options)
+    expect(result.current.value).toBe('found')
+    const opened = watchQuery.mock.calls.length
+
+    options.value = { expiration: 2000, maxIdleEntries: 5 }
+    await flushPromises()
+
+    // A new cached subscription on the new cache; the old one idles out.
+    expect(watchQuery.mock.calls.length).toBeGreaterThan(opened)
+    unsubscribe.mockClear()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(unsubscribe).toHaveBeenCalled()
+  })
+
+  it('keeps at most maxIdleEntries idle subscriptions', async () => {
+    vi.useFakeTimers()
+    const { client, unsubscribed } = scriptedClient(() => 'found')
+    const first = makeFunctionReference<'query', { id: string }, string>('test:first')
+    const second = makeFunctionReference<'query', { id: string }, string>('test:second')
+    const { visible } = mountUnder(client, () => ({ a: useQuery(first, { id: 'a' }), b: useQuery(second, { id: 'b' }) }), { maxIdleEntries: 1, expiration: 10_000 })
+
+    visible.value = false
+    await flushPromises()
+    // One idles for the expiration; the other goes at once. Each query also
+    // has the composable's own subscription, which ends with it.
+    const cached = (name: string) => unsubscribed.filter(n => n === name).length
+    expect(cached('test:first') + cached('test:second')).toBe(3)
+
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(cached('test:first') + cached('test:second')).toBe(4)
   })
 })

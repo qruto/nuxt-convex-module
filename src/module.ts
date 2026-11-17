@@ -75,6 +75,22 @@ export interface ConvexAuthModuleOptions {
 }
 
 /**
+ * Options for the `convex-helpers` integration, under `convex.convexHelpers`.
+ *
+ * @public
+ */
+export interface ConvexHelpersModuleOptions {
+  /**
+   * Construct the app's Convex client as a `ConvexVueSessionClient`, the
+   * counterpart of passing `ConvexReactSessionClient` to `<ConvexProvider>`:
+   * its `sessionQuery`, `sessionMutation` and `sessionAction` add the session
+   * ID outside components, and `provideSession` keeps the two IDs in step.
+   * @default false
+   */
+  sessionClient?: boolean
+}
+
+/**
  * Options for the `convex` key in `nuxt.config`. Every key is optional: the
  * URLs default to the environment, and each integration auto-enables from
  * your `package.json`.
@@ -150,9 +166,9 @@ export interface ModuleOptions {
    * Sessions and the query cache of `convex-helpers` (`provideSession`,
    * `useSessionQuery`, `provideConvexQueryCache`, …), ports of its React
    * entries. Auto-enabled when `convex-helpers` is a dependency of your app;
-   * set `false` to force it off.
+   * set `false` to force it off, or an object to configure it.
    */
-  convexHelpers?: boolean
+  convexHelpers?: boolean | ConvexHelpersModuleOptions
   /**
    * Convex-aware security headers through [`nuxt-security`](https://nuxt-security.vercel.app).
    * Auto-enabled when `nuxt-security` is a dependency of your app (or listed in
@@ -298,6 +314,7 @@ export default defineNuxtModule<ModuleOptions>({
     // `<functionsDir>/auth-client` (which doesn't exist).
     registerAuthClientAlias(resolver, nuxt, options)
     registerAuthServerAlias(resolver, nuxt)
+    registerClientClassAlias(resolver, nuxt, options)
     // PARITY: D-18
     keepAuthClientOffPrefetch(nuxt)
     registerAuthClientOnEvaluation(resolver, nuxt)
@@ -655,6 +672,19 @@ function registerAuthServerAlias(resolver: Resolver, nuxt: Nuxt): void {
   // stand-in with none. App code only, so no Nitro alias.
   nuxt.options.alias['#convex/auth-app'] = findConvexAuthApp(nuxt) ?? resolver.resolve('./runtime/convex-auth/nuxt/no-app')
   restartOnConvexAuthFiles(nuxt)
+}
+
+/**
+ * Register the `#convex/client-class` alias the plugins construct the app's
+ * Convex client from: `ConvexVueClient`, or `convex-helpers`'
+ * `ConvexVueSessionClient` with `convex.convexHelpers.sessionClient`.
+ * Registered unconditionally, before the functions-dir catch-all.
+ */
+function registerClientClassAlias(resolver: Resolver, nuxt: Nuxt, options: ModuleOptions): void {
+  const sessionClient = typeof options.convexHelpers === 'object' && options.convexHelpers.sessionClient === true
+  nuxt.options.alias['#convex/client-class'] = sessionClient
+    ? resolver.resolve('./runtime/convex-helpers/vue/session-client')
+    : resolver.resolve('./runtime/vue/client-class')
 }
 
 /**

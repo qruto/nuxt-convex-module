@@ -225,6 +225,7 @@ source.
 | `vue/composables/{use-query,use-mutation,use-action,use-connection-state}.ts` | homes for hooks upstream declares in `client.ts` | N-12 |
 | `vue/composables/{use-upload,use-upload-queue,use-storage-url}.ts` | file-storage helpers | A-02 |
 | `vue/plugin.ts`, `better-auth/vue/plugin.{client,server}.ts` | Nuxt plugins standing in for provider components | A-07 |
+| `vue/client-class.ts`, `convex-helpers/vue/session-client.ts` | what `#convex/client-class` names: the class the plugins construct the app's client from | A-21 |
 | `nuxt/composables/use-async-query.ts`, `nuxt/app.ts` | `useAsyncQuery` and its `nuxt-convex-module/app` barrel | A-04 |
 | `nuxt/function-name.ts` | names the function in a server fetch error, and gives F-01's check the message without it | D-17 |
 | `nuxt/testing.ts` | the `nuxt-convex-module/testing` barrel: resets the state the Better Auth integration keeps for the app's lifetime, for an app's own tests | A-18 |
@@ -358,7 +359,7 @@ Entries are grouped by *kind*, because that is what decides how to treat one on 
 | <a id="n-17"></a>**N-17** | `setupConvexAuthNextjs` with `setupConvexAuthServer`; `convexAuthNextjsProxy`, `convexAuthNextjsAccessToken`, `isAuthenticatedNextjs`; `<ConvexAuthNextjsServerProvider>` rendering `<ConvexAuthNextjsProvider>` | `setupConvexAuthNuxt`; `convexAuthNuxtProxy(event)`, `convexAuthNuxtAccessToken(event)`, `isAuthenticatedNuxt(event)`; a Nuxt plugin | *Framework-qualified names* + *Ambient per-request context* + *`<ConvexProvider client>` component*. One config feeds both upstream setups, because the module mounts the routes from the same file, and the result carries the three handlers too. `convexUrl` is optional and `secure` defaults to on outside `nuxt dev` ([§2.1](#21-the-contract)). The proxy leaves the token on `event.context` (*`React.cache` per-request memoization*), which is where a render after a refresh reads it: the request still carries the old cookie. The server provider's props reach the browser in the payload. The session loads when the root `<Suspense>` resolves, the first moment the tree has hydrated, as upstream's effect does. Upstream's `replaceUrl`, a workaround for Next's router keeping its own copy of the URL, becomes `router.replace` on the app's router, which keeps one too. That holds for browser-storage sessions as well, where upstream's React provider keeps its bare `history.replaceState`: without it the router's next navigation writes the OAuth callback params back into history. The router's base is stripped first, and the auth routes sit under `app.baseURL`. Upstream's server provider renders on every page, so its session watcher always runs. A page the server did not render carries no payload, so the plugin asks the module's `session` route for the query's name |
 
 | <a id="n-18"></a>**N-18** | convex-helpers' `usePaginatedQuery` in `react.ts` and again in `react/cache/hooks.ts` | one `makeUsePaginatedQuery(useQueries, nextPaginationId?)` in `convex-helpers/vue/paginated.ts` | Same as N-11. The two copies differ only in `customPagination` (always on in `react.ts`, an option in the cached one) and in the pagination id (none, and always `0`). Pinned by `test/plain-vue/convex-helpers.test.ts` — "sends pagination id 0, so every mount shares the cached pages" |
-| <a id="n-19"></a>**N-19** | convex-helpers' `useStorage` and `useSessionStorage` return `[value, setValue]`; `useSessionId` returns `[sessionId, refresh, promise]`; `SessionContext`, `ConvexQueryCacheContext` | `useStorage` and `useSessionStorage` return a writable ref, so VueUse's `useLocalStorage` fits as it is; `useSessionId` returns `[ComputedRef, refresh, ComputedRef<Promise>]`; `SessionKey`, `ConvexQueryCacheKey` | *Returns a plain value* (N-06): a state pair is one writable ref. A context becomes an injection key. `ConvexReactSessionClient` is `ConvexVueSessionClient` (N-01) |
+| <a id="n-19"></a>**N-19** | convex-helpers' `useStorage` and `useSessionStorage` return `[value, setValue]`; `useSessionId` returns `[sessionId, refresh, promise]`; `SessionContext`, `ConvexQueryCacheContext` | `useStorage` and `useSessionStorage` return a writable ref, so VueUse's `useLocalStorage` fits as it is; `useSessionId` returns `[ComputedRef, refresh, ComputedRef<Promise>]`; `SessionKey`, `ConvexQueryCacheKey` | *Returns a plain value* (N-06): a state pair is one writable ref, and a store's `remove` (upstream's optional third element) is writing `undefined`. A context becomes an injection key. `ConvexReactSessionClient` is `ConvexVueSessionClient` (N-01). Upstream reads its props and hook arguments on every render, so the query, the options and the provider props are values, refs or getters (N-05): a new `useStorage` or `storageKey` reads a new store, new cache options build a new cache, a new query resets a pagination, and `useSessionId`'s ref checks the ID on every read, where upstream checks on every render. The session functions keep one identity and read the ID when called, where upstream's change with it. `useSessionStorage` is not auto-imported, because VueUse auto-imports the same name. Upstream's `react/cache/hooks` and `react/cache/provider` subpaths are both reached through `convex-helpers/cache` |
 
 ### 3.2 Behaviour (`D-*`)
 
@@ -1087,6 +1088,16 @@ so none can be "restored" by syncing.
   config type, as upstream's do: the root's `RateLimitConfig` makes `shards` and `applyUpdates`
   exclude each other, and a generated `getRateLimit` reference would not type-check against it.
 
+##### A-21 — `convex.convexHelpers.sessionClient`
+
+- **Port** · `registerClientClassAlias` in [`src/module.ts`](./src/module.ts); [`vue/client-class.ts`](./src/runtime/vue/client-class.ts), [`convex-helpers/vue/session-client.ts`](./src/runtime/convex-helpers/vue/session-client.ts)
+- **Pinned by** · `test/module/registration.test.ts` — "constructs the app's client from #convex/client-class, a ConvexVueClient by default", "constructs the app's client as a ConvexVueSessionClient"
+- **Why** · an upstream app constructs `ConvexReactSessionClient` itself and passes it to
+  `<ConvexProvider>`. Here the module's plugins construct the client, so an app had no way to
+  make it a session client, and `provideSession`'s session-client branches could not be reached.
+  The option points `#convex/client-class` at `ConvexVueSessionClient`; without it the alias
+  names `ConvexVueClient`, as before.
+
 ##### A-18 — `nuxt-convex-module/testing`
 
 - **Port** · [`nuxt/testing.ts`](./src/runtime/nuxt/testing.ts) — `resetBetterAuthState`, defined in
@@ -1229,6 +1240,35 @@ and its marker.
   computed. A timer that fires a moment before it recomputes a not-ok status with that same
   `retryAt`, so the effect keyed on the two never runs again and the button stays disabled until
   something else re-renders. The port re-runs the watcher after every refresh.
+
+#### F-09 — a refreshed session ID reaches the session client
+
+- **Kind** · calls under a stale session
+- **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — `refreshSessionId` sets the stored ID only
+- **Port** · [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
+- **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "a refresh reaches the session client too", "a store that already holds an ID passes it to the session client"
+- **Reported** · not yet
+- **On sync** · drop the entry once upstream keeps the client's ID in step with the provider's
+- **Why** · `SessionProvider` tells a `ConvexReactSessionClient` about an ID only when it
+  generates one for an empty store, and the client's own docs say to change the ID through the
+  provider. After `refreshSessionId` the components use the new ID while the client's
+  `sessionQuery`, `sessionMutation` and `sessionAction` keep the old one. The same happens when
+  the store already holds an ID other than the client's, such as after a switch to another
+  `storageKey`. The port passes every ID the provider settles on to the client.
+
+#### F-10 — a session ID without `crypto.randomUUID`
+
+- **Kind** · a crash on an insecure origin
+- **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — the default ID generator and `ConvexReactSessionClient` call `crypto.randomUUID`
+- **Port** · `randomSessionId` in [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
+- **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "makes a UUID without crypto.randomUUID"
+- **Reported** · not yet
+- **On sync** · drop the entry once upstream has a fallback
+- **Why** · browsers expose `crypto.randomUUID` only in a secure context, so on an `http://`
+  address other than localhost, such as a phone on the dev server over the LAN, the provider
+  throws on mount. The port builds the same UUID v4 from `crypto.getRandomValues`, which every
+  context has. Upstream's own cache already falls back, to `Math.random`, which a session ID
+  should not use.
 
 ---
 

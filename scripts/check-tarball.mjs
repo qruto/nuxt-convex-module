@@ -332,10 +332,13 @@ try {
   // ceiling moves to 860 KB / 220 files. Convex Auth's `app/convex-auth.ts`
   // options, the `convex-auth-guest` middleware and the router-aware URL
   // cleanup add four runtime files (+6 KB, 8 files): 859.2 KB in 228 files,
-  // so the ceiling moves to 870 KB / 230 files.
+  // so the ceiling moves to 870 KB / 230 files. The `#convex/client-class`
+  // alias's two targets add 4 files (+1.4 KB, with the cache and session
+  // changes +4.9 KB): 864.1 KB in 232 files, so the ceiling moves to 875 KB /
+  // 235 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 870_000
-  const MAX_FILES = 230
+  const MAX_BYTES = 875_000
+  const MAX_FILES = 235
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {
