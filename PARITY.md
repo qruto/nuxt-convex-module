@@ -1078,12 +1078,14 @@ so none can be "restored" by syncing.
 ##### A-20 — `isRateLimitError` from the rate limiter's entry
 
 - **Port** · [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) re-exports `isRateLimitError` and the `RateLimitConfig` and `RateLimitError` types from `@convex-dev/rate-limiter`, and `isRateLimitError` is auto-imported
-- **Pinned by** · `test/plain-vue/rate-limiter.test.ts` — "re-exports the package's isRateLimitError"; `test/nuxt/public-surface.test.ts`
+- **Pinned by** · `test/plain-vue/rate-limiter.test.ts` — "re-exports the package's isRateLimitError"; `test/nuxt/public-surface.test.ts`; `test/types/rate-limiter.test-d.ts`, which passes the references `hookAPI()` generates
 - **Why** · upstream's `react` entry has only the hook, and a component that calls a rate-limited
   mutation also imports `isRateLimitError` from the package's root. One import, or an auto-import,
   serves both here. Measured: importing the root costs about 0.1 kB gzipped over the hook's own
   `shared.js`, because the bundler drops the server-side `RateLimiter`, so the port imports it
-  rather than copying `shared.ts`.
+  rather than copying `shared.ts`. The query's argument and result types keep the validator's
+  config type, as upstream's do: the root's `RateLimitConfig` makes `shards` and `applyUpdates`
+  exclude each other, and a generated `getRateLimit` reference would not type-check against it.
 
 ##### A-18 — `nuxt-convex-module/testing`
 

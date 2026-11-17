@@ -332,10 +332,12 @@ describe('FacePile', () => {
   // `setAttribute` would throw and stop the render.
   it('leaves out a data key that is not a valid attribute name', () => {
     const wrapper = mount(FacePile, {
-      props: { presenceState: [person('alice', { data: { 'is typing': true, 'mood': 'ok' } })] },
+      props: { presenceState: [person('alice', { data: { 'is typing': true, 'mood': 'ok', 'is\u200Cdone': 'no' } })] },
     })
     const alice = wrapper.find('.avatars > .avatar')
     expect(alice.attributes('data-presence-mood')).toBe('ok')
+    // A zero-width non-joiner is a name character, as in React's check.
+    expect(alice.attributes('data-presence-is\u200Cdone')).toBe('no')
     expect(Object.keys(alice.attributes()).some(name => name.includes('typing'))).toBe(false)
     expect(alice.find('.tooltip-data').text()).toContain('is typing: true')
   })

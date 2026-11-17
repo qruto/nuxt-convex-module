@@ -64,7 +64,7 @@ type UseRateLimitOptions = {
 };
 ```
 
-Defined in: [src/runtime/rate-limiter/vue/index.ts:42](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L42)
+Defined in: [src/runtime/rate-limiter/vue/index.ts:48](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L48)
 
 Options of [useRateLimit](#useratelimit).
 
@@ -72,12 +72,12 @@ Options of [useRateLimit](#useratelimit).
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="name-1"></a> `name?` | `string` | [src/runtime/rate-limiter/vue/index.ts:43](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L43) |
-| <a id="key"></a> `key?` | `string` | [src/runtime/rate-limiter/vue/index.ts:44](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L44) |
-| <a id="count"></a> `count?` | `number` | [src/runtime/rate-limiter/vue/index.ts:45](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L45) |
-| <a id="sampleshards"></a> `sampleShards?` | `number` | [src/runtime/rate-limiter/vue/index.ts:46](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L46) |
-| <a id="getservertimemutation"></a> `getServerTimeMutation?` | [`GetServerTimeMutation`](#getservertimemutation-1) | [src/runtime/rate-limiter/vue/index.ts:47](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L47) |
-| <a id="config"></a> `config?` | [`RateLimitConfig`](#ratelimitconfig) | [src/runtime/rate-limiter/vue/index.ts:48](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L48) |
+| <a id="name-1"></a> `name?` | `string` | [src/runtime/rate-limiter/vue/index.ts:49](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L49) |
+| <a id="key"></a> `key?` | `string` | [src/runtime/rate-limiter/vue/index.ts:50](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L50) |
+| <a id="count"></a> `count?` | `number` | [src/runtime/rate-limiter/vue/index.ts:51](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L51) |
+| <a id="sampleshards"></a> `sampleShards?` | `number` | [src/runtime/rate-limiter/vue/index.ts:52](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L52) |
+| <a id="getservertimemutation"></a> `getServerTimeMutation?` | [`GetServerTimeMutation`](#getservertimemutation-1) | [src/runtime/rate-limiter/vue/index.ts:53](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L53) |
+| <a id="config"></a> `config?` | [`RateLimitConfig`](#ratelimitconfig) | [src/runtime/rate-limiter/vue/index.ts:54](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L54) |
 
 ***
 
@@ -87,7 +87,7 @@ Options of [useRateLimit](#useratelimit).
 type GetRateLimitValueQuery = FunctionReference<"query", "public", GetValueArgs, GetValueReturns>;
 ```
 
-Defined in: [src/runtime/rate-limiter/vue/index.ts:56](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L56)
+Defined in: [src/runtime/rate-limiter/vue/index.ts:62](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L62)
 
 The `getRateLimit` query that `rateLimiter.hookAPI()` creates.
 
@@ -99,7 +99,7 @@ The `getRateLimit` query that `rateLimiter.hookAPI()` creates.
 type GetServerTimeMutation = FunctionReference<"mutation", "public", Record<string, never>, number>;
 ```
 
-Defined in: [src/runtime/rate-limiter/vue/index.ts:68](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L68)
+Defined in: [src/runtime/rate-limiter/vue/index.ts:74](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L74)
 
 The `getServerTime` mutation that `rateLimiter.hookAPI()` creates.
 
@@ -143,7 +143,7 @@ function useRateLimit(getRateLimitValueQuery, opts?): {
 };
 ```
 
-Defined in: [src/runtime/rate-limiter/vue/index.ts:117](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L117)
+Defined in: [src/runtime/rate-limiter/vue/index.ts:123](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L123)
 
 A composable for using rate limits in Vue components.
 This composable provides information about the current rate limit status,
@@ -182,8 +182,8 @@ An object containing:
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `status` | `ComputedRef`\< \| \{ `ok`: `true`; `retryAt`: `undefined`; \} \| \{ `ok`: `false`; `retryAt`: `number`; \} \| `undefined`\> | [src/runtime/rate-limiter/vue/index.ts:121](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L121) |
-| `check()` | (`ts?`, `count?`) => `RateLimitCheck` \| `undefined` | [src/runtime/rate-limiter/vue/index.ts:122](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L122) |
+| `status` | `ComputedRef`\< \| \{ `ok`: `true`; `retryAt`: `undefined`; \} \| \{ `ok`: `false`; `retryAt`: `number`; \} \| `undefined`\> | [src/runtime/rate-limiter/vue/index.ts:127](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L127) |
+| `check()` | (`ts?`, `count?`) => `RateLimitCheck` \| `undefined` | [src/runtime/rate-limiter/vue/index.ts:128](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/rate-limiter/vue/index.ts#L128) |
 
 #### Example
 
