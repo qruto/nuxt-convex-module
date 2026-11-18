@@ -95,6 +95,9 @@ its functions with the ordinary `useMutation` / `useAction`.
 The `react` entry: chat hooks over the AI SDK, about 1,300 lines, plus about 900 lines the port
 would copy because the package exports them from no React-free entry. Not ported yet; a scope
 decision, not a gap. Its server half works in any app.
+[convex/agent#492](https://github.com/convex/agent/pull/492) exports the functions that turn stream
+deltas into UIMessages from the root entry. `resolveStreams` and `mergeUIMessages` stay in files
+that import React, so a port would still copy those two.
 
 #### X-09 — `@convex-dev/prosemirror-sync`
 
