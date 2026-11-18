@@ -702,7 +702,10 @@ upstream routes through that client has to land somewhere else here.
 - **Upstream** · `@convex-dev/r2@0.10.4` `client/upload.ts`
 - **Port** · [`r2/upstream/client/upload.ts`](./src/runtime/r2/upstream/client/upload.ts) — `uploadWithProgress`
 - **Pinned by** · `test/unit/r2-upstream-copies.test.ts`; `test/plain-vue/r2-upload.test.ts`, which runs the copy
-- **On sync** · copy the file again if it changed
+- **Reported** · [convex/r2#101](https://github.com/convex/r2/pull/101)
+- **On sync** · copy the file again if it changed. When upstream exports it, delete the copy and
+  `r2-upstream-copies.test.ts`, and import `uploadWithProgress` from `@convex-dev/r2/browser` in
+  the composable and in the `plain-vue` tests `r2.test.ts` and `r2-upload.test.ts`
 - **Why** · the package exports it from no entry. Its own `vue` entry imports it, but that entry
   also imports the community `convex-vue`, and the root entry pulls in the AWS SDK. The copy is
   byte for byte, 34 lines.
