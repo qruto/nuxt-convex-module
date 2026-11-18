@@ -100,7 +100,9 @@ decision, not a gap. Its server half works in any app.
 
 The `tiptap` and `blocknote` entries. The Tiptap sync extension is React-free but exported only
 from an entry that imports React; [convex/prosemirror-sync#291](https://github.com/convex/prosemirror-sync/pull/291)
-adds a React-free entry. BlockNote has no Vue renderer. Not ported yet.
+adds a React-free entry that takes a `ConvexClient` from `convex/browser`. The port will adapt
+`ConvexVueClient` to the three methods the entry calls (`query`, `mutation`, `onUpdate`), as that
+PR's React entry adapts `ConvexReactClient`. BlockNote has no Vue renderer. Not ported yet.
 
 #### X-10 — `@convex-dev/static-hosting`, `@convex-dev/batched-replay`
 
@@ -676,7 +678,11 @@ upstream routes through that client has to land somewhere else here.
 - **Reported** · [convex/convex-auth#933](https://github.com/convex/convex-auth/pull/933)
 - **On sync** · copy the changed files again. When upstream exports the clients, delete the folder
   and import them. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and its types from the copy,
-  as upstream's `methods/oauth/react.ts` does from the original
+  as upstream's `methods/oauth/react.ts` does from the original. The three `convex as unknown as`
+  casts in `convex-auth/vue/methods/username-passkey/{hooks,management}.ts` go with the folder: the
+  copied flows name `ConvexReactClient`, and the exported ones take any client with a `mutation`
+  method. The entry exports `SignInFlowContext` and `ManagementFlowContext`; read `AuthSignInApi`
+  off `SignInFlowContext['signInApi']` and `AmbientSignInClient` off `ReturnType<typeof oauth>`
 - **Why** · the files are free of React, but the package's `exports` map offers them only
   through entries that import `react`. Each copy is the package's own source. Every copy loses the
   `.ts` extension of its relative imports, because the build emits them as written. The OAuth
