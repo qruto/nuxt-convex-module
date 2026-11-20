@@ -235,7 +235,7 @@ type UsernamePasskeyApi = {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:62](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L62)
+Defined in: [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:61](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L61)
 
 The mutation references the sign-in flows drive.
 
@@ -243,10 +243,10 @@ The mutation references the sign-in flows drive.
 
 | Property | Type | Defined in |
 | ------ | ------ | ------ |
-| <a id="startsigninwithusernamepasskey"></a> `startSignInWithUsernamePasskey` | `StartSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L63) |
-| <a id="startautofillsigninwithusernamepasskey"></a> `startAutofillSignInWithUsernamePasskey` | `StartAutofillSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L64) |
-| <a id="finishsigninwithusernamepasskey"></a> `finishSignInWithUsernamePasskey` | `FinishSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L65) |
-| <a id="finishsignupwithusernamepasskey"></a> `finishSignUpWithUsernamePasskey` | `FinishSignUpMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:66](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L66) |
+| <a id="startsigninwithusernamepasskey"></a> `startSignInWithUsernamePasskey` | `StartSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:62](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L62) |
+| <a id="startautofillsigninwithusernamepasskey"></a> `startAutofillSignInWithUsernamePasskey` | `StartAutofillSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:63](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L63) |
+| <a id="finishsigninwithusernamepasskey"></a> `finishSignInWithUsernamePasskey` | `FinishSignInMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:64](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L64) |
+| <a id="finishsignupwithusernamepasskey"></a> `finishSignUpWithUsernamePasskey` | `FinishSignUpMutation` | [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:65](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L65) |
 
 ***
 
@@ -260,7 +260,7 @@ type UsernamePasskeyAutofillError =
   | PasskeyClientError;
 ```
 
-Defined in: [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:116](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L116)
+Defined in: [src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts:115](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/upstream/methods/username-passkey/flows.ts#L115)
 
 The errors the autofill sign-in flow reports.
 

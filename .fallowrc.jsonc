@@ -114,7 +114,10 @@
     // both diffable against their sources (PARITY.md N-18).
     // dup:869f7a26 and dup:c6e88640: two type tests that each restate their
     // upstream's `expectTypeOf` scenarios.
-    "ignoredClones": ["dup:2fa4ad82:2", "dup:6c2c5d72:2", "dup:83a94bae:2", "dup:90be2eeb:2", "dup:75cc2c63:2", "dup:869f7a26:2", "dup:c6e88640:2"]
+    // dup:7654c248 and dup:8e91f9b1: Convex Auth's magic-link hook repeats the
+    // run-once effect of its email-password `useLinkFlow` inline, and the port
+    // keeps both files diffable against their sources (PARITY.md §2.1).
+    "ignoredClones": ["dup:2fa4ad82:2", "dup:6c2c5d72:2", "dup:83a94bae:2", "dup:90be2eeb:2", "dup:75cc2c63:2", "dup:869f7a26:2", "dup:c6e88640:2", "dup:7654c248:2", "dup:8e91f9b1:2"]
   },
 
   "health": {

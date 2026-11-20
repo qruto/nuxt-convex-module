@@ -13,10 +13,10 @@ are in [AGENTS.md](./AGENTS.md).
 
 | Upstream package | Baseline version | Diffed against |
 |---|---|---|
-| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.50.0** | tag `npm/1.50.0` in [convex/convex-js](https://github.com/convex/convex-js) |
-| `convex-helpers` (`/react`, `/react/cache`, `/react/sessions`) | **0.1.135** | tag `v0.1.135` in [get-convex/convex-helpers](https://github.com/get-convex/convex-helpers), under `packages/convex-helpers` |
+| `convex` (`/react`, `/nextjs`, `/react-clerk`, `/react-auth0`) | **1.51.0** | tag `npm/1.51.0` in [convex/convex-js](https://github.com/convex/convex-js) |
+| `convex-helpers` (`/react`, `/react/cache`, `/react/sessions`) | **0.1.136** | tag `v0.1.136` in [get-convex/convex-helpers](https://github.com/get-convex/convex-helpers), under `packages/convex-helpers` |
 | `@convex-dev/better-auth` | **0.13.0** | tag `v0.13.0` in [convex/better-auth](https://github.com/convex/better-auth) |
-| `@convex-dev/auth` | **2.0.0** | tag `v2.0.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
+| `@convex-dev/auth` | **2.1.0** | tag `v2.1.0` in [convex/convex-auth](https://github.com/convex/convex-auth), under `packages/core` |
 | `@convex-dev/persistent-text-streaming` | **0.3.5** | tag `v0.3.5` in [get-convex/persistent-text-streaming](https://github.com/get-convex/persistent-text-streaming) |
 | `@convex-dev/polar` | **0.9.2** | tag `v0.9.2` in [convex/polar](https://github.com/convex/polar) |
 | `@convex-dev/presence` | **0.4.0** | tag `v0.4.0` in [convex/presence](https://github.com/convex/presence) |
@@ -57,10 +57,11 @@ when the component is installed, and each sits on **its own** baseline.
 | `@convex-dev/auth` — `react` client: the provider, `useAuthActions`, `useAuthToken` | `src/runtime/convex-auth/vue/{index,client}.ts` | Complete · N-16 |
 | `@convex-dev/auth` — `methods/username-password/react` | `src/runtime/convex-auth/vue/methods/username-password.ts` | Complete |
 | `@convex-dev/auth` — `methods/email-password/react` | `src/runtime/convex-auth/vue/methods/email-password.ts` | Complete |
+| `@convex-dev/auth` — `methods/email-magic-link/react` | `src/runtime/convex-auth/vue/methods/email-magic-link.ts` | Complete |
 | `@convex-dev/auth` — the OAuth client `oauth()`, and the passkey ceremonies and flows | `src/runtime/convex-auth/upstream/**` | Copied until upstream exports them · D-20 |
 | `@convex-dev/auth` — `ssr/nextjs`: the server helpers and the client provider | `src/runtime/convex-auth/nuxt/**` | Complete + additive · N-17, X-07, A-19 |
 | `@convex-dev/auth` — `ssr`: the auth handlers, the server session, the auth checker | imported as-is from `@convex-dev/auth/ssr` | Reused, never reimplemented |
-| `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github}.ts` | Complete |
+| `@convex-dev/auth` — `methods/oauth/react`, `methods/{google,apple,github,discord}/react` | `src/runtime/convex-auth/vue/methods/{oauth,google,apple,github,discord}.ts` | Complete |
 | `@convex-dev/auth` — `methods/username-passkey/react` and `react-custom` | `src/runtime/convex-auth/vue/methods/username-passkey/**` | Complete |
 | `@convex-dev/polar` — `react` components | `src/runtime/polar/vue/components.ts` | Complete + additive · F-02 |
 | `@convex-dev/persistent-text-streaming` — `svelte` and `react`: `useStream` | `src/runtime/persistent-text-streaming/vue/index.ts` | Complete · D-01, D-22 |
@@ -162,7 +163,7 @@ as upstream's example does. A server route decides by `isAuthenticatedNuxt(event
 
 ### File by file
 
-Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.50.0, not the
+Verified `@internal` claims above are against the *published* `.d.ts` of convex 1.51.0, not the
 source.
 
 **Convex's own client** (`convex/src/…` → `src/runtime/…`)
@@ -199,8 +200,9 @@ source.
 | auth `react/methods.ts` | `convex-auth/vue/methods.ts` |
 | auth `methods/username-password/react.tsx` | `convex-auth/vue/methods/username-password.ts` |
 | auth `methods/email-password/react.tsx` | `convex-auth/vue/methods/email-password.ts` — the landing-page hooks return a ref of their state (N-06) and take `emailCode` as a value, a ref or a getter (N-05) |
+| auth `methods/email-magic-link/react.tsx` | `convex-auth/vue/methods/email-magic-link.ts` — `pending` is a ref and the landing-page hook returns a ref of its state (N-06), and it takes `emailCode` as a value, a ref or a getter (N-05) |
 | auth `methods/oauth/react.ts` | `convex-auth/vue/methods/oauth.ts` — `flowError` is a ref (N-06) |
-| auth `methods/{google,apple,github}/react.ts` | `convex-auth/vue/methods/{google,apple,github}.ts` |
+| auth `methods/{google,apple,github,discord}/react.ts` | `convex-auth/vue/methods/{google,apple,github,discord}.ts` |
 | auth `methods/username-passkey/react.tsx` | `convex-auth/vue/methods/username-passkey/index.ts` |
 | auth `methods/username-passkey/react-custom.tsx` | `convex-auth/vue/methods/username-passkey/custom.ts` |
 | auth `methods/username-passkey/hooks.tsx` | `convex-auth/vue/methods/username-passkey/hooks.ts` — `pending` and the `autofill` fields are refs (N-06) |
@@ -376,7 +378,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-01 — subscriptions and `setAuth` are skipped during SSR
 
 - **Kind** · Vue runs `watchEffect` bodies during SSR setup; React never runs passive effects
-- **Upstream** · `convex@1.50.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
+- **Upstream** · `convex@1.51.0` `react/use_subscription.ts`, `react/use_queries.ts`, `react/ConvexAuthState.tsx` — all subscribe inside `useEffect`
 - **Port** · [`vue/composables/use-subscription.ts`](./src/runtime/vue/composables/use-subscription.ts), [`vue/composables/use-queries.ts`](./src/runtime/vue/composables/use-queries.ts), [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts); the components' effects, such as the clock sync and retry timer of [`rate-limiter/vue/index.ts`](./src/runtime/rate-limiter/vue/index.ts) and the heartbeats of [`presence/vue/index.ts`](./src/runtime/presence/vue/index.ts), the stream request of [`persistent-text-streaming/vue/index.ts`](./src/runtime/persistent-text-streaming/vue/index.ts), the cached subscriptions of [`convex-helpers/vue/cache/hooks.ts`](./src/runtime/convex-helpers/vue/cache/hooks.ts) and the session ID of [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
 - **Pinned by** · `test/unit-server/ssr-subscription-guard.test.ts`, `test/unit-server/ssr-auth-guard.test.ts`, `test/unit-server/rate-limiter.test.ts`, `test/unit-server/presence.test.ts`, `test/unit-server/persistent-text-streaming.test.ts`, `test/unit-server/convex-helpers.test.ts`
 - **On sync** · keep every `import.meta.server` short-circuit
@@ -387,7 +389,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-02 — `useQuery` returns a lazy computed that throws when read
 
 - **Kind** · a composable body runs once — there is no render phase to throw in
-- **Upstream** · `convex@1.50.0` `react/client.ts` — `useQuery` throws inside the hook call
+- **Upstream** · `convex@1.51.0` `react/client.ts` — `useQuery` throws inside the hook call
 - **Port** · [`vue/composables/use-query.ts`](./src/runtime/vue/composables/use-query.ts)
 - **Pinned by** · `test/unit/use-query.test.ts`, `test/nuxt/auth/vue/auth-boundary.test.ts`
 - **On sync** · keep. Knock-on: `AuthBoundary` must read `user.value` during render, where
@@ -456,7 +458,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-14 — a server render opens no WebSocket, and its client is closed after the request
 
 - **Kind** · a Nitro process renders every request with a client of its own; React renders one app
-- **Upstream** · `convex@1.50.0` `react/client.ts` — `connectionState()` reads `this.sync`, which
+- **Upstream** · `convex@1.51.0` `react/client.ts` — `connectionState()` reads `this.sync`, which
   creates the WebSocket client
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `connectionState()`;
   [`nuxt/config.ts`](./src/runtime/nuxt/config.ts) — `closeAfterRender`, called by
@@ -489,7 +491,7 @@ for free — removing one would break the behaviour, not restore it.
 ##### D-15 — `clearAuth` and the next `setAuth` wait for the flush
 
 - **Kind** · a Vue watcher has no first-child and last-child effect order
-- **Upstream** · `convex@1.50.0` `react/ConvexAuthState.tsx` — `ConvexAuthStateFirstEffect`,
+- **Upstream** · `convex@1.51.0` `react/ConvexAuthState.tsx` — `ConvexAuthStateFirstEffect`,
   `ConvexAuthStateLastEffect`
 - **Port** · [`vue/auth/index.ts`](./src/runtime/vue/auth/index.ts) — `clearAuthLast`
 - **Pinned by** · `test/nuxt/vue/convex-auth-state.test.ts` — "clears auth after the queries gated on
@@ -639,7 +641,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-05 — `watchPaginatedQuery` throws instead of returning a watch
 
-- **Upstream** · `convex@1.50.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
+- **Upstream** · `convex@1.51.0` `react/client.ts` — `ConvexReactClient.watchPaginatedQuery`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `ConvexVueClient.watchPaginatedQuery`
 - **Pinned by** · `test/unit/client.test.ts` — "watchPaginatedQuery"
 - **On sync** · keep the throw; port page-management changes into `use-paginated-query.ts`
@@ -649,7 +651,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-06 — the sync client's transition callback is wired directly
 
-- **Upstream** · `convex@1.50.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
+- **Upstream** · `convex@1.51.0` `react/client.ts` — the `BaseConvexClient` construction in `get sync()`
 - **Port** · [`vue/client.ts`](./src/runtime/vue/client.ts) — `cachedSync`
 - **Pinned by** · `test/unit/client.test.ts`
 - **On sync** · keep; re-check if upstream stops routing transitions through `PaginatedQueryClient`
@@ -658,7 +660,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-07 — split pages inherit the split page's `paginationOpts`
 
-- **Upstream** · `convex@1.50.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
+- **Upstream** · `convex@1.51.0` `browser/sync/paginated_query_client.ts` — `splitPaginatedQueryPage` resets `numItems` to `initialNumItems`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `splitQuery`
 - **Pinned by** · `test/nuxt/use-paginated-query.test.ts` — "page split", "splits a non-first
   page from that page's own cursor, not the start of the list"
@@ -670,7 +672,7 @@ upstream routes through that client has to land somewhere else here.
 
 ##### D-20 — Convex Auth's OAuth and passkey clients are copies
 
-- **Upstream** · `@convex-dev/auth@2.0.0` `methods/oauth/client.ts`, `browser/retry.ts`,
+- **Upstream** · `@convex-dev/auth@2.1.0` `methods/oauth/client.ts`, `browser/retry.ts`,
   `lib/oauthParams.ts`; `methods/username-passkey/{client,ceremonies,flows,base64url}.ts`,
   `methods/username-passkey/management/flows.ts`
 - **Port** · [`convex-auth/upstream/`](./src/runtime/convex-auth/upstream) — `oauth`,
@@ -736,7 +738,7 @@ is that the declaration now matches what actually happens.
 ##### D-10 — `TypeError` where upstream throws `Error`
 
 - **Kind** · error subclass
-- **Upstream** · `convex@1.50.0` `nextjs/index.ts` — deployment-URL validation
+- **Upstream** · `convex@1.51.0` `nextjs/index.ts` — deployment-URL validation
 - **Port** · [`nuxt/index.ts`](./src/runtime/nuxt/index.ts)
 - **Pinned by** · `test/unit/nuxt-server.test.ts` — "throws when no URL is available"
 - **On sync** · keep the subclass; the **message text is the contract** and stays verbatim
@@ -750,7 +752,7 @@ What an error says, never what it is: the class, `data` and identity stay upstre
 ##### D-17 — server fetch errors name the function they ran
 
 - **Kind** · a message prefix, in the form the browser client already writes
-- **Upstream** · `convex@1.50.0` `nextjs/index.ts` — `fetchQuery`, `fetchMutation`, `fetchAction` return
+- **Upstream** · `convex@1.51.0` `nextjs/index.ts` — `fetchQuery`, `fetchMutation`, `fetchAction` return
   `ConvexHttpClient`'s promise as it is
 - **Port** · [`nuxt/function-name.ts`](./src/runtime/nuxt/function-name.ts) — `withFunctionName`, called by the three
   helpers in [`nuxt/index.ts`](./src/runtime/nuxt/index.ts); `withoutFunctionName`, called by F-01's retry in
@@ -1173,7 +1175,7 @@ and its marker.
 #### F-03 — `usePaginatedQuery` throws the missing-client error
 
 - **Kind** · missing guard
-- **Upstream** · `convex@1.50.0` `react/use_paginated_query.ts` — `useConvex().logger`
+- **Upstream** · `convex@1.51.0` `react/use_paginated_query.ts` — `useConvex().logger`
 - **Port** · [`vue/composables/use-paginated-query.ts`](./src/runtime/vue/composables/use-paginated-query.ts) — `useConvexOrThrow('usePaginatedQuery')`
 - **Pinned by** · `test/nuxt/composables.test.ts` — "usePaginatedQuery"
 - **Reported** · [convex/convex-js#214](https://github.com/convex/convex-js/pull/214)
@@ -1256,7 +1258,7 @@ and its marker.
 #### F-09 — a refreshed session ID reaches the session client
 
 - **Kind** · calls under a stale session
-- **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — `refreshSessionId` sets the stored ID only
+- **Upstream** · `convex-helpers@0.1.136` `react/sessions.ts` — `refreshSessionId` sets the stored ID only
 - **Port** · [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
 - **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "a refresh reaches the session client too", "a store that already holds an ID passes it to the session client"
 - **Reported** · not yet
@@ -1271,7 +1273,7 @@ and its marker.
 #### F-10 — a session ID without `crypto.randomUUID`
 
 - **Kind** · a crash on an insecure origin
-- **Upstream** · `convex-helpers@0.1.135` `react/sessions.ts` — the default ID generator and `ConvexReactSessionClient` call `crypto.randomUUID`
+- **Upstream** · `convex-helpers@0.1.136` `react/sessions.ts` — the default ID generator and `ConvexReactSessionClient` call `crypto.randomUUID`
 - **Port** · `randomSessionId` in [`convex-helpers/vue/sessions.ts`](./src/runtime/convex-helpers/vue/sessions.ts)
 - **Pinned by** · `test/plain-vue/convex-helpers-sessions.test.ts` — "makes a UUID without crypto.randomUUID"
 - **Reported** · not yet
@@ -1316,7 +1318,7 @@ file's table by row prefix, so keep [§1](#1-what-is-ported)'s row shape verbati
 
 | # | Where | Form |
 |---|---|---|
-| 1 | [§1](#1-what-is-ported), first table | `**1.50.0**` in a table cell |
+| 1 | [§1](#1-what-is-ported), first table | `**1.51.0**` in a table cell |
 | 2 | [`website/app/utils/upstream-baselines.ts`](./website/app/utils/upstream-baselines.ts) | the site's machine-readable copy (hero chip, introduction, component pages) |
 | 3 | [`website/content/3.components/1.index.md`](./website/content/3.components/1.index.md) | last cell of each component row |
 
@@ -1337,9 +1339,9 @@ upstream change is noticed:
   `getRateLimit` query from the rate limiter's `shared.ts`, which the package does not export.
   They are rebuilt around the config type of the exported `calculateRateLimit`, so a new field
   in either has to be added by hand.
-- `storage` on Convex Auth's `AuthClient` (`convex-auth/vue/methods/email-password.ts`), where the
-  email flows keep their browser secrets, as upstream's hooks do. It is `@internal`: present at
-  runtime, absent from the published types.
+- `storage` on Convex Auth's `AuthClient` (`convex-auth/vue/methods/{email-password,email-magic-link}.ts`),
+  where the email flows keep their browser secrets, as upstream's hooks do. It is `@internal`:
+  present at runtime, absent from the published types.
 - `CHALLENGE_TTL_MS` in `convex-auth/vue/methods/username-passkey/impl.ts`: the server's ten
   minutes for a passkey challenge, from `components/passkey/constants.ts`, which the package does
   not export. The autofill loop refreshes its challenge two minutes before that.
@@ -1374,6 +1376,9 @@ A sync runs the full gate in [`AGENTS.md`](./AGENTS.md#verification).
 
 | Date | Package | From → To | Commit | What was ported |
 |---|---|---|---|---|
+| 2026-11-20 | `@convex-dev/auth` | 2.0.0 → 2.1.0 | #195 | Two sign-in methods. Email magic link (`09a9242`): `useSendEmailMagicLink` and `useSignInWithEmailMagicLink`, at `convex-auth/methods/email-magic-link`. Discord (`8a9871f`): `useSignInWithDiscord`, at `convex-auth/methods/discord`. The copy of `methods/username-passkey/flows.ts` loses two comments (`a1693fd`). Not ported: the comments that commit removes from `methods/username-passkey/react.tsx` and `management/react.tsx`, which the port never carried; `normalizeExpectedOrigin` in `components/passkey/validation.ts` (`293dc8e`) and the Google profile's `hd` (`86e72cc`), which run on the deployment. The peer range stays `^2.0.0`; the two new methods need 2.1.0 |
+| 2026-11-20 | `convex` | 1.50.0 → 1.51.0 | #195 | Nothing: no commits in the mapped paths, `src/browser/sync`, `src/browser/http_client.ts` or `src/common`, and the published `src`, `dist/esm`, `dist/cjs` and `.d.ts` for `browser`, `react`, `nextjs`, `react-clerk`, `react-auth0` and `common` are byte-identical; exports, peers and `engines` unchanged. The release lets a Node action run with 2048 MiB of memory and changes the CLI |
+| 2026-11-20 | `convex-helpers` | 0.1.135 → 0.1.136 | #195 | Nothing: no commits in `react.ts` or `react/`, and the published files differ only in `server/crud` and `server/stream`, whose type declarations the release fixes; exports and peers unchanged |
 | 2026-11-15 | `convex-helpers` | → 0.1.135 | #178 | Initial pin: sessions, the query cache and the status query, with both paginated copies in one (N-18) |
 | 2026-11-15 | `@convex-dev/persistent-text-streaming` | → 0.3.5 | #177 | Initial pin: `useStream`, from the Svelte entry (D-22) |
 | 2026-11-15 | `@convex-dev/r2` | → 0.10.4 | #176 | Initial pin: `useUploadFile`, with the upload helper copied (D-21) |
