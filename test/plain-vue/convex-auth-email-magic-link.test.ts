@@ -3,7 +3,7 @@ import { AuthClient, InMemoryStorage, type TokenStorage } from '@convex-dev/auth
 import { flushPromises, mount } from '@vue/test-utils'
 import { makeFunctionReference } from 'convex/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, nextTick, provide, ref } from 'vue'
+import { defineComponent, h, nextTick, provide, ref, watchSyncEffect } from 'vue'
 import { provideAuth, type AuthSignInApi } from '../../src/runtime/convex-auth/vue/client'
 import {
   useSendEmailMagicLink,
@@ -53,7 +53,12 @@ const bundle: TokenBundle = {
 const signInMutation = makeFunctionReference<'mutation'>('auth:signIn') as never
 const sendMutation = makeFunctionReference<'mutation'>('auth:send') as never
 
-function mountWithProviders<T>(useComposable: () => T, tokenStorage: TokenStorage = storage) {
+function mountWithProviders<T>(
+  useComposable: () => T,
+  tokenStorage: TokenStorage = storage,
+  // Set to `false` to keep the composable's component out until later.
+  shown = ref(true),
+) {
   const authClient = new AuthClient({
     mode: 'spa',
     authApi: {
@@ -74,10 +79,47 @@ function mountWithProviders<T>(useComposable: () => T, tokenStorage: TokenStorag
     setup() {
       provide(ConvexClientKey, convexClient)
       result.auth = provideAuth({ authClient, signInApi })
-      return () => h(Child)
+      return () => (shown.value ? h(Child) : null)
     },
   }))
   return { result, wrapper }
+}
+
+/** A storage whose read of the `secretKey` secret waits for `release()`. */
+function holdSecretRead(secretKey: string) {
+  let release!: () => void
+  const held = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const readSecret = vi.fn()
+  const tokenStorage: TokenStorage = {
+    getItem: async (key: string) => {
+      if (key.startsWith(secretKey)) {
+        readSecret()
+        await held
+      }
+      return storage.getItem(key)
+    },
+    setItem: async (key: string, value: string) => storage.setItem(key, value),
+    removeItem: async (key: string) => storage.removeItem(key),
+  }
+  return { tokenStorage, release, readSecret }
+}
+
+/**
+ * Record the auth state from the moment the sign-in mutation is called, and
+ * answer it with a session.
+ */
+function recordAuthStateFromMutation(auth: () => ReturnType<typeof provideAuth>) {
+  const seen: string[] = []
+  let stop = () => {}
+  runSignInMutation.mockImplementation(async () => {
+    stop = watchSyncEffect(() => {
+      seen.push(`${auth().isLoading() ? 'loading' : 'loaded'}, ${auth().isAuthenticated() ? 'signed in' : 'signed out'}`)
+    })
+    return { status: 'complete', tokens: bundle }
+  })
+  return { seen, stop: () => stop() }
 }
 
 /** Mount, and wait for the auth client to load. */
@@ -258,22 +300,7 @@ describe('useSignInWithEmailMagicLink', () => {
     secretStorage.set('secret-1')
     // Hold the read of the secret, so the code changes before the mutation
     // starts.
-    let releaseSecret!: () => void
-    const held = new Promise<void>((resolve) => {
-      releaseSecret = resolve
-    })
-    const readSecret = vi.fn()
-    const tokenStorage: TokenStorage = {
-      getItem: async (key: string) => {
-        if (key.startsWith(SECRET_KEY)) {
-          readSecret()
-          await held
-        }
-        return storage.getItem(key)
-      },
-      setItem: async (key: string, value: string) => storage.setItem(key, value),
-      removeItem: async (key: string) => storage.removeItem(key),
-    }
+    const { tokenStorage, release: releaseSecret, readSecret } = holdSecretRead(SECRET_KEY)
     runSignInMutation.mockResolvedValue({ status: 'complete', tokens: bundle })
     const emailCode = ref('code-1')
     const { result } = mountWithProviders(use(() => emailCode.value), tokenStorage)
@@ -290,6 +317,22 @@ describe('useSignInWithEmailMagicLink', () => {
       emailCode: 'code-1',
       browserSecret: 'secret-1',
     })
+  })
+
+  // A React effect always runs on mount. Here the watcher must also run for a
+  // page that opens after the auth client has loaded, as on a client-side
+  // navigation.
+  it('presents the link on a page that opens after the auth client has loaded', async () => {
+    secretStorage.set('secret-1')
+    runSignInMutation.mockResolvedValue({ status: 'complete', tokens: bundle })
+    const shown = ref(false)
+    const { result } = mountWithProviders(use(), storage, shown)
+    await flushPromises()
+    expect(result.auth.isLoading()).toBe(false)
+
+    shown.value = true
+    await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
+    expect(runSignInMutation).toHaveBeenCalledTimes(1)
   })
 
   it('reports isLoading while the link is checked', async () => {
@@ -310,6 +353,21 @@ describe('useSignInWithEmailMagicLink', () => {
     resolveMutation({ status: 'complete', tokens: bundle })
     await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
     expect([result.auth.isLoading(), result.auth.isAuthenticated()]).toEqual([false, true])
+  })
+
+  // The `convex-auth` middleware decides on this state: a signed-out user
+  // between the server's answer and the stored session would go to the
+  // sign-in page.
+  it('shows no signed-out user between the server\'s answer and the stored session', async () => {
+    secretStorage.set('secret-1')
+    const { result } = mountWithProviders(use())
+    const { seen, stop } = recordAuthStateFromMutation(() => result.auth)
+    await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
+    stop()
+
+    expect(seen[0]).toBe('loading, signed out')
+    expect(seen.at(-1)).toBe('loaded, signed in')
+    expect(seen).not.toContain('loaded, signed out')
   })
 
   it('is MISSING_SECRET when this browser did not ask for the link', async () => {
@@ -380,10 +438,13 @@ describe('useSignInWithEmailMagicLink', () => {
 describe('with an asynchronous storage', () => {
   it('the secret stays in the provider\'s storage, and a later page signs in with it', async () => {
     const backing = new InMemoryStorage()
+    // Every call ends on a later task, so a write the composable does not
+    // wait for is not there yet when it reports.
+    const later = () => new Promise(resolve => setTimeout(resolve, 5))
     const tokenStorage: TokenStorage = {
-      getItem: async (key: string) => backing.getItem(key),
-      setItem: async (key: string, value: string) => backing.setItem(key, value),
-      removeItem: async (key: string) => backing.removeItem(key),
+      getItem: async (key: string) => later().then(() => backing.getItem(key)),
+      setItem: async (key: string, value: string) => later().then(() => backing.setItem(key, value)),
+      removeItem: async (key: string) => later().then(() => backing.removeItem(key)),
     }
     stubConvexMutation().mockResolvedValue({
       success: true,
@@ -408,11 +469,18 @@ describe('with an asynchronous storage', () => {
         ),
       tokenStorage,
     )
+    // The secret is gone by the time the page reports the sign-in complete.
+    let secretAtComplete: string | null | undefined
+    watchSyncEffect(() => {
+      if (result.composable.value.status === 'complete') {
+        secretAtComplete = secretStorage.get(backing)
+      }
+    })
     await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
     expect(runSignInMutation).toHaveBeenCalledWith({
       emailCode: 'code-1',
       browserSecret: 'secret-1',
     })
-    expect(secretStorage.get(backing)).toBeNull()
+    expect(secretAtComplete).toBeNull()
   })
 })
