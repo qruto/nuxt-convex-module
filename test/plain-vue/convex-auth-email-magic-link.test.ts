@@ -357,6 +357,22 @@ describe('useSignInWithEmailMagicLink', () => {
       }),
     )
   })
+
+  it('a code getter that throws becomes an OTHER_ERROR state preserving cause', async () => {
+    secretStorage.set('secret-1')
+    const cause = new Error('the link has no code')
+    const { result } = mountWithProviders(use(() => {
+      throw cause
+    }))
+    await vi.waitFor(() =>
+      expect(result.composable.value).toEqual({
+        status: 'error',
+        userError: { error: 'OTHER_ERROR', cause },
+      }),
+    )
+
+    expect(runSignInMutation).not.toHaveBeenCalled()
+  })
 })
 
 // Upstream's "without localStorage (React Native)". Here the provider's

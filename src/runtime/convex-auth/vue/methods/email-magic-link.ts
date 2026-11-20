@@ -192,12 +192,12 @@ export function useSignInWithEmailMagicLink(
         return
       }
       started = true
-      // Read the code before the first `await`, as upstream's effect uses the
-      // `emailCode` of the render it started in: a getter read later could
-      // return another link's code for this link's secret.
-      const code = toValue(emailCode)
       void (async () => {
         try {
+          // Read the code before the first `await`, as upstream's effect uses
+          // the `emailCode` of the render it started in: a getter read later
+          // could return another link's code for this link's secret.
+          const code = toValue(emailCode)
           const browserSecret = await storage.get(SECRET_STORAGE_KEY)
           if (browserSecret === null || browserSecret === undefined) {
             state.value = { status: 'error', userError: { error: 'MISSING_SECRET' } }
