@@ -686,8 +686,12 @@ upstream routes through that client has to land somewhere else here.
   as upstream's `methods/oauth/react.ts` does from the original. The three `convex as unknown as`
   casts in `convex-auth/vue/methods/username-passkey/{hooks,management}.ts` go with the folder: the
   copied flows name `ConvexReactClient`, and the exported ones take any client with a `mutation`
-  method. The entry exports `SignInFlowContext` and `ManagementFlowContext`; read `AuthSignInApi`
-  off `SignInFlowContext['signInApi']` and `AmbientSignInClient` off `ReturnType<typeof oauth>`
+  method. The PR publishes them at `@convex-dev/auth/methods/oauth/client` and
+  `@convex-dev/auth/methods/username-passkey/client`. The passkey entry exports
+  `SignInFlowContext`, `ManagementFlowContext` and `CHALLENGE_TTL_MS`, so the constant in
+  `username-passkey/impl.ts` goes too. `@convex-dev/auth/browser` exports `AuthSignInApi`; read
+  `AmbientSignInClient` off `ReturnType<typeof oauth>`. The autofill loop stays in upstream's
+  React hook, so `impl.ts` keeps its own
 - **Why** · the files are free of React, but the package's `exports` map offers them only
   through entries that import `react`. Each copy is the package's own source. Every copy loses the
   `.ts` extension of its relative imports, because the build emits them as written. The OAuth
@@ -1344,7 +1348,8 @@ upstream change is noticed:
   present at runtime, absent from the published types.
 - `CHALLENGE_TTL_MS` in `convex-auth/vue/methods/username-passkey/impl.ts`: the server's ten
   minutes for a passkey challenge, from `components/passkey/constants.ts`, which the package does
-  not export. The autofill loop refreshes its challenge two minutes before that.
+  not export (convex/convex-auth#933 exports it from the passkey client entry). The autofill loop
+  refreshes its challenge two minutes before that.
 - The copied passkey flows type their client as `ConvexReactClient` and call only `mutation` on
   it. The composables hand them the Vue client through a cast
   (`convex-auth/vue/methods/username-passkey/{hooks,management}.ts`), so a flow that starts
