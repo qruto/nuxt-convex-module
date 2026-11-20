@@ -139,10 +139,12 @@ const allowed = {
   './convex-auth/methods/username-passkey': ['@convex-dev/auth', '@simplewebauthn/browser'],
   './convex-auth/methods/username-passkey/custom': ['@convex-dev/auth'],
   './convex-auth/methods/email-password': ['@convex-dev/auth'],
+  './convex-auth/methods/email-magic-link': ['@convex-dev/auth'],
   './convex-auth/methods/oauth': ['@convex-dev/auth'],
   './convex-auth/methods/google': ['@convex-dev/auth'],
   './convex-auth/methods/apple': ['@convex-dev/auth'],
   './convex-auth/methods/github': ['@convex-dev/auth'],
+  './convex-auth/methods/discord': ['@convex-dev/auth'],
   './convex-auth/server': ['@convex-dev/auth'],
   './clerk/client': ['@clerk/vue'],
   './clerk/vue': ['@clerk/vue'],
@@ -335,10 +337,12 @@ try {
   // so the ceiling moves to 870 KB / 230 files. The `#convex/client-class`
   // alias's two targets add 4 files (+1.4 KB, with the cache and session
   // changes +4.9 KB): 864.1 KB in 232 files, so the ceiling moves to 875 KB /
-  // 235 files.
+  // 235 files. Convex Auth 2.1's magic-link and Discord composables add two
+  // runtime files (+10.4 KB, 4 files): 874.6 KB in 236 files, so the ceiling
+  // moves to 885 KB / 240 files.
   console.log('── Size ───────────────────────────────────────')
-  const MAX_BYTES = 875_000
-  const MAX_FILES = 235
+  const MAX_BYTES = 885_000
+  const MAX_FILES = 240
   let bytes = 0
   let count = 0
   for (const entry of readdirSync(pkgRoot, { recursive: true, withFileTypes: true })) {

@@ -213,6 +213,11 @@ const ENTRY: Record<string, Entry> = {
       'PasswordRecoveryApi', 'SignInResult', 'SignUpResult', 'StartChangeEmailResult', 'StartPasswordRecoveryResult',
     ],
   },
+  './convex-auth/methods/email-magic-link': {
+    source: 'src/runtime/convex-auth/vue/methods/email-magic-link.ts',
+    values: ['useSendEmailMagicLink', 'useSignInWithEmailMagicLink'],
+    types: ['SendResult', 'SignInState'],
+  },
   './convex-auth/methods/oauth': {
     source: 'src/runtime/convex-auth/vue/methods/oauth.ts',
     values: ['oauth', 'useOauth', 'useOauthSignIn'],
@@ -237,6 +242,11 @@ const ENTRY: Record<string, Entry> = {
     source: 'src/runtime/convex-auth/vue/methods/github.ts',
     values: ['useOauth', 'useSignInWithGithub'],
     types: ['OauthCompleteResult', 'OauthFlowError', 'OauthStartResult', 'SignInOptions', 'UseOauthReturn', 'UseSignInWithGithubReturn'],
+  },
+  './convex-auth/methods/discord': {
+    source: 'src/runtime/convex-auth/vue/methods/discord.ts',
+    values: ['useOauth', 'useSignInWithDiscord'],
+    types: ['OauthCompleteResult', 'OauthFlowError', 'OauthStartResult', 'SignInOptions', 'UseOauthReturn', 'UseSignInWithDiscordReturn'],
   },
   './clerk/client': {
     source: 'src/runtime/clerk/vue/index.ts',

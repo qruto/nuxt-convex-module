@@ -12,8 +12,8 @@ Vue client for the shared OAuth state: a port of
 
 OAuth is registered by default in `provideConvexAuth` and in the plugin
 that starts cookie sessions. If you set `ambientSignIns`, include
-[oauth](#oauth) yourself. The Google, Apple and GitHub methods have their own
-composables, at `nuxt-convex-module/convex-auth/methods/<provider>`.
+[oauth](#oauth) yourself. The Google, Apple, GitHub and Discord methods have
+their own composables, at `nuxt-convex-module/convex-auth/methods/<provider>`.
 [useOauth](#useoauth) returns the state that isn't tied to one provider.
 
 Under cookie sessions, add each provider's `completeSignIn*` function to

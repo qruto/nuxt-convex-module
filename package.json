@@ -97,6 +97,10 @@
       "types": "./dist/runtime/convex-auth/vue/methods/email-password.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/email-password.js"
     },
+    "./convex-auth/methods/email-magic-link": {
+      "types": "./dist/runtime/convex-auth/vue/methods/email-magic-link.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/email-magic-link.js"
+    },
     "./convex-auth/methods/oauth": {
       "types": "./dist/runtime/convex-auth/vue/methods/oauth.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/oauth.js"
@@ -112,6 +116,10 @@
     "./convex-auth/methods/github": {
       "types": "./dist/runtime/convex-auth/vue/methods/github.d.ts",
       "import": "./dist/runtime/convex-auth/vue/methods/github.js"
+    },
+    "./convex-auth/methods/discord": {
+      "types": "./dist/runtime/convex-auth/vue/methods/discord.d.ts",
+      "import": "./dist/runtime/convex-auth/vue/methods/discord.js"
     },
     "./better-auth/client": {
       "types": "./dist/runtime/better-auth/vue/index.d.ts",
@@ -224,6 +232,9 @@
       "convex-auth/methods/email-password": [
         "./dist/runtime/convex-auth/vue/methods/email-password.d.ts"
       ],
+      "convex-auth/methods/email-magic-link": [
+        "./dist/runtime/convex-auth/vue/methods/email-magic-link.d.ts"
+      ],
       "convex-auth/methods/oauth": [
         "./dist/runtime/convex-auth/vue/methods/oauth.d.ts"
       ],
@@ -235,6 +246,9 @@
       ],
       "convex-auth/methods/github": [
         "./dist/runtime/convex-auth/vue/methods/github.d.ts"
+      ],
+      "convex-auth/methods/discord": [
+        "./dist/runtime/convex-auth/vue/methods/discord.d.ts"
       ],
       "better-auth/client": [
         "./dist/runtime/better-auth/vue/index.d.ts"
@@ -403,7 +417,7 @@
     "@clerk/vue": "2.5.21",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
-    "@convex-dev/auth": "^2.0.0",
+    "@convex-dev/auth": "^2.1.0",
     "@convex-dev/better-auth": "^0.13.0",
     "@convex-dev/persistent-text-streaming": "^0.3.5",
     "@convex-dev/polar": "^0.9.2",
@@ -427,8 +441,8 @@
     "@vue/test-utils": "^2.5.1",
     "better-auth": "~1.7.25",
     "changelogen": "^0.6.2",
-    "convex": "^1.50.0",
-    "convex-helpers": "^0.1.135",
+    "convex": "^1.51.0",
+    "convex-helpers": "^0.1.136",
     "eslint": "^10.15.0",
     "fallow": "3.43.1",
     "happy-dom": "^21.0.4",

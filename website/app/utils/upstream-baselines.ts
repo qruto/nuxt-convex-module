@@ -27,7 +27,7 @@ export const upstreamBaselines = {
   // same baseline with their own `entry`.
   'convex': {
     package: 'convex',
-    version: '1.50.0',
+    version: '1.51.0',
     entries: 'convex/react + convex/nextjs',
   },
   'better-auth': {
@@ -37,7 +37,7 @@ export const upstreamBaselines = {
   },
   'convex-auth': {
     package: '@convex-dev/auth',
-    version: '2.0.0',
+    version: '2.1.0',
     entries: 'react + ssr/nextjs + every sign-in method',
   },
   'polar': {
@@ -67,7 +67,7 @@ export const upstreamBaselines = {
   },
   'convex-helpers': {
     package: 'convex-helpers',
-    version: '0.1.135',
+    version: '0.1.136',
     entries: 'react + react/cache + react/sessions',
   },
 } as const satisfies Record<string, UpstreamBaseline>

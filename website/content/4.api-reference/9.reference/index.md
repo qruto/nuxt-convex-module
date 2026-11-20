@@ -19,6 +19,8 @@ seo:
 | [convex-auth/server](/api-reference/reference/convex-auth/server) | Server bindings for Convex Auth on Nuxt: a port of `@convex-dev/auth/ssr/nextjs`. |
 | [convex-auth/client](/api-reference/reference/convex-auth/client) | Vue bindings for Convex Auth. |
 | [convex-auth/methods/apple](/api-reference/reference/convex-auth/methods/apple) | Vue client for the Apple sign-in method: a port of `@convex-dev/auth/methods/apple/react`. |
+| [convex-auth/methods/discord](/api-reference/reference/convex-auth/methods/discord) | Vue client for the Discord sign-in method: a port of `@convex-dev/auth/methods/discord/react`. |
+| [convex-auth/methods/email-magic-link](/api-reference/reference/convex-auth/methods/email-magic-link) | Vue client for the `emailMagicLink` method: a port of `@convex-dev/auth/methods/email-magic-link/react`. |
 | [convex-auth/methods/email-password](/api-reference/reference/convex-auth/methods/email-password) | Vue client for the `emailPassword` method: a port of `@convex-dev/auth/methods/email-password/react`. |
 | [convex-auth/methods/github](/api-reference/reference/convex-auth/methods/github) | Vue client for the GitHub sign-in method: a port of `@convex-dev/auth/methods/github/react`. |
 | [convex-auth/methods/google](/api-reference/reference/convex-auth/methods/google) | Vue client for the Google sign-in method: a port of `@convex-dev/auth/methods/google/react`. |

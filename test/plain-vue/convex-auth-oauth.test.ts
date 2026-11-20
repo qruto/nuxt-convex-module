@@ -8,6 +8,7 @@ import { provideAuth, useAuth, type AuthSignInApi } from '../../src/runtime/conv
 import { useAuthToken } from '../../src/runtime/convex-auth/vue/index'
 import { useAmbientSignInValue } from '../../src/runtime/convex-auth/vue/methods'
 import { useSignInWithApple } from '../../src/runtime/convex-auth/vue/methods/apple'
+import { useSignInWithDiscord } from '../../src/runtime/convex-auth/vue/methods/discord'
 import { useSignInWithGithub } from '../../src/runtime/convex-auth/vue/methods/github'
 import { useSignInWithGoogle } from '../../src/runtime/convex-auth/vue/methods/google'
 import {
@@ -46,6 +47,10 @@ const googleApi = {
 const githubApi = {
   startSignInWithGithub: reference('auth:startSignInWithGithub') as OauthProviderApi['startSignIn'],
   completeSignInWithGithub: reference('auth:completeSignInWithGithub') as OauthProviderApi['completeSignIn'],
+}
+const discordApi = {
+  startSignInWithDiscord: reference('auth:startSignInWithDiscord') as OauthProviderApi['startSignIn'],
+  completeSignInWithDiscord: reference('auth:completeSignInWithDiscord') as OauthProviderApi['completeSignIn'],
 }
 const appleApi = {
   startSignInWithApple: reference('auth:startSignInWithApple') as OauthProviderApi['startSignIn'],
@@ -269,6 +274,7 @@ describe('OAuth Vue client', () => {
 
   it.each([
     ['github', () => useSignInWithGithub(githubApi), githubApi.startSignInWithGithub, 'auth:completeSignInWithGithub'],
+    ['discord', () => useSignInWithDiscord(discordApi), discordApi.startSignInWithDiscord, 'auth:completeSignInWithDiscord'],
     ['apple', () => useSignInWithApple(appleApi), appleApi.startSignInWithApple, 'auth:completeSignInWithApple'],
     ['acme', () => useOauthSignIn(acmeRefs), acmeRefs.startSignIn, 'auth:completeSignInWithAcme'],
   ] as const)('the %s composable starts a flow with its own references', async (providerName, useSignIn, startSignIn, completeSignIn) => {
