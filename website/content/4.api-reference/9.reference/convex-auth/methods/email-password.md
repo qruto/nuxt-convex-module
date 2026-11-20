@@ -248,7 +248,7 @@ function useSignInWithEmailPassword(api): {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:399](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L399)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:405](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L405)
 
 Client for the sign-in flow: run the `signInWithEmailPassword` mutation and, on
 success, establish an authenticated session.
@@ -271,8 +271,8 @@ success, establish an authenticated session.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `signIn()` | (`credentials`) => `Promise`\<[`SignInResult`](#signinresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:402](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L402) |
-| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:403](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L403) |
+| `signIn()` | (`credentials`) => `Promise`\<[`SignInResult`](#signinresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:408](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L408) |
+| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:409](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L409) |
 
 #### Example
 
@@ -304,7 +304,7 @@ function useSignUpWithEmailPassword(api): {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:468](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L468)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:474](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L474)
 
 Client for the sign-up flow: run the `signUpWithEmailPassword` mutation and keep
 the returned secret for [useCompleteSignUpWithEmailPassword](#usecompletesignupwithemailpassword).
@@ -330,8 +330,8 @@ email. Tell the user to open the link (in this same browser).
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `signUp()` | (`credentials`) => `Promise`\<[`SignUpResult`](#signupresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:471](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L471) |
-| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:472](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L472) |
+| `signUp()` | (`credentials`) => `Promise`\<[`SignUpResult`](#signupresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:477](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L477) |
+| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:478](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L478) |
 
 #### Example
 
@@ -366,7 +366,7 @@ async function onSubmit() {
 function useCompleteSignUpWithEmailPassword(api, emailCode): ShallowRef<CompleteSignUpState>;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:526](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L526)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:532](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L532)
 
 Client for the landing page of the validation link: as soon as the page
 opens, present the code from the link with the secret stored by
@@ -410,7 +410,7 @@ function useStartPasswordRecovery(api): {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:571](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L571)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:578](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L578)
 
 Client for starting a password recovery: run the backend's
 `startPasswordRecovery` mutation and keep the returned secret for
@@ -436,8 +436,8 @@ the two can differ in case or in Unicode form.
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `startPasswordRecovery()` | (`args`) => `Promise`\<[`StartPasswordRecoveryResult`](#startpasswordrecoveryresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:574](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L574) |
-| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:575](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L575) |
+| `startPasswordRecovery()` | (`args`) => `Promise`\<[`StartPasswordRecoveryResult`](#startpasswordrecoveryresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:581](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L581) |
+| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:582](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L582) |
 
 ***
 
@@ -447,7 +447,7 @@ the two can differ in case or in Unicode form.
 function useCompletePasswordRecovery(recoveryApi, emailCode): ComputedRef<CompletePasswordRecoveryState>;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:646](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L646)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:653](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L653)
 
 Client for the landing page of the password-reset link. As soon as the page
 opens, it reads the secret stored by [useStartPasswordRecovery](#usestartpasswordrecovery) and
@@ -509,7 +509,7 @@ function useStartChangeEmail(api): {
 };
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:749](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L749)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:756](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L756)
 
 Client for starting an email change: run the backend's `startChangeEmail`
 mutation and keep the returned secret for [useCompleteChangeEmail](#usecompletechangeemail).
@@ -532,8 +532,8 @@ mutation and keep the returned secret for [useCompleteChangeEmail](#usecompletec
 
 | Name | Type | Defined in |
 | ------ | ------ | ------ |
-| `startChangeEmail()` | (`args`) => `Promise`\<[`StartChangeEmailResult`](#startchangeemailresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:752](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L752) |
-| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:753](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L753) |
+| `startChangeEmail()` | (`args`) => `Promise`\<[`StartChangeEmailResult`](#startchangeemailresult)\> | [src/runtime/convex-auth/vue/methods/email-password.ts:759](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L759) |
+| `pending` | `Ref`\<`boolean`\> | [src/runtime/convex-auth/vue/methods/email-password.ts:760](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L760) |
 
 ***
 
@@ -543,7 +543,7 @@ mutation and keep the returned secret for [useCompleteChangeEmail](#usecompletec
 function useCompleteChangeEmail(api, emailCode): ShallowRef<CompleteChangeEmailState>;
 ```
 
-Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:794](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L794)
+Defined in: [src/runtime/convex-auth/vue/methods/email-password.ts:801](https://github.com/qruto/nuxt-convex-module/blob/main/src/runtime/convex-auth/vue/methods/email-password.ts#L801)
 
 Client for the landing page of the email-change confirmation link: as soon
 as the page opens, present the code from the link with the secret stored by
