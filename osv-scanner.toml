@@ -4,17 +4,12 @@
 [[IgnoredVulns]]
 id = "GHSA-3g3m-2fjr-6pw4"
 ignoreUntil = 2027-01-31T00:00:00Z
-reason = "glob 10.5.0 and 13.0.6: fixed only in glob 14, a major the dependents' ranges don't allow. Build and dev tooling only: archiver (via nitropack) and installed-check; neither passes an AbortSignal, which is what the advisory is about."
+reason = "glob 13.0.6: fixed only in glob 14, a major the dependents' ranges don't allow. Build and dev tooling only: @vercel/nft (via nitropack) and installed-check; neither passes an AbortSignal, which is what the advisory is about."
 
 [[IgnoredVulns]]
 id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2027-01-31T00:00:00Z
-reason = "minimatch 9.0.9 and 10.2.6: fixed only in minimatch 11, a major the dependents' ranges don't allow. Build and dev tooling only (eslint, and glob under archiver via nitropack): the patterns come from config files, never request input."
-
-[[IgnoredVulns]]
-id = "GHSA-gcqx-w48m-w2h4"
-ignoreUntil = 2027-01-31T00:00:00Z
-reason = "deepmerge 4.3.1 has no patched release. Build only: @rollup/plugin-node-resolve (via nitropack) merges its own options with it, never request input."
+reason = "minimatch 10.2.6: fixed only in minimatch 11, a major the dependents' ranges don't allow. Build and dev tooling (eslint, typedoc, installed-check, glob and archiver under nitropack) and @nuxt/content, which matches paths against the collection patterns of the website's own config: the patterns never come from request input."
 
 [[IgnoredVulns]]
 id = "GHSA-mrhx-c7xc-m3w5"
@@ -25,3 +20,18 @@ reason = "zod 3.25.76 has no patched 3.x release (the fix is 4.6.6). Website bui
 id = "GHSA-vjh5-4x84-xrqp"
 ignoreUntil = 2026-12-31T00:00:00Z
 reason = "Fixed in nuxt and @nuxt/nitro-server 4.6.2, which the lockfile resolves. osv.dev's copy of the advisory lost the `< 4.0.0` bound of the unfixed Nuxt 3 range, so it reads as every version from 3.0.0 on; GitHub's own record (and Dependabot) have the range right. Expires soon so it is looked at again once the record is corrected."
+
+[[IgnoredVulns]]
+id = "GHSA-96x6-fvhx-49hg"
+ignoreUntil = 2026-12-31T00:00:00Z
+reason = "Fixed in nuxt 4.6.4, which the lockfile resolves. osv.dev's copy has the same fault as GHSA-vjh5-4x84-xrqp above: the unfixed Nuxt 3 range has no upper bound."
+
+[[IgnoredVulns]]
+id = "GHSA-f3x9-2chm-73c8"
+ignoreUntil = 2026-12-31T00:00:00Z
+reason = "Fixed in nuxt, @nuxt/nitro-server and @nuxt/vite-server 4.6.4, which the lockfile resolves. Same osv.dev fault as GHSA-vjh5-4x84-xrqp above."
+
+[[IgnoredVulns]]
+id = "GHSA-hf59-9xwc-2g4p"
+ignoreUntil = 2026-12-31T00:00:00Z
+reason = "Fixed in nuxt and @nuxt/nitro-server 4.6.4, which the lockfile resolves. Same osv.dev fault as GHSA-vjh5-4x84-xrqp above."
