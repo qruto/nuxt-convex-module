@@ -192,6 +192,10 @@ export function useSignInWithEmailMagicLink(
         return
       }
       started = true
+      // Read the code before the first `await`, as upstream's effect uses the
+      // `emailCode` of the render it started in: a getter read later could
+      // return another link's code for this link's secret.
+      const code = toValue(emailCode)
       void (async () => {
         try {
           const browserSecret = await storage.get(SECRET_STORAGE_KEY)
@@ -203,7 +207,7 @@ export function useSignInWithEmailMagicLink(
           // client stores the new session.
           const result = await withSignInPending(async () => {
             const result = await signInApi.mutation(signInMutation, {
-              emailCode: toValue(emailCode),
+              emailCode: code,
               browserSecret,
             })
             if (result.status === 'complete') {

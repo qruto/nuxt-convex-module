@@ -182,6 +182,22 @@ describe('useSendEmailMagicLink', () => {
     await second
     expect(result.composable.pending.value).toBe(false)
   })
+
+  it('needs an auth provider above it', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const Child = defineComponent({
+      setup() {
+        use()
+        return () => null
+      },
+    })
+    expect(() => mount(defineComponent({
+      setup() {
+        provide(ConvexClientKey, convexClient)
+        return () => h(Child)
+      },
+    }))).toThrow('Must be used below `provideConvexAuth`')
+  })
 })
 
 describe('useSignInWithEmailMagicLink', () => {
@@ -227,6 +243,46 @@ describe('useSignInWithEmailMagicLink', () => {
     emailCode.value = 'code-2'
     await nextTick()
     resolveMutation({ status: 'complete', tokens: bundle })
+    await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
+
+    expect(runSignInMutation).toHaveBeenCalledTimes(1)
+    expect(runSignInMutation).toHaveBeenCalledWith({
+      emailCode: 'code-1',
+      browserSecret: 'secret-1',
+    })
+  })
+
+  // Upstream's effect presents the code of the render it started in. Here the
+  // code is a getter, so it must be read before the secret, not after.
+  it('presents the code the page opened with when it changes while the secret is read', async () => {
+    secretStorage.set('secret-1')
+    // Hold the read of the secret, so the code changes before the mutation
+    // starts.
+    let releaseSecret!: () => void
+    const held = new Promise<void>((resolve) => {
+      releaseSecret = resolve
+    })
+    const readSecret = vi.fn()
+    const tokenStorage: TokenStorage = {
+      getItem: async (key: string) => {
+        if (key.startsWith(SECRET_KEY)) {
+          readSecret()
+          await held
+        }
+        return storage.getItem(key)
+      },
+      setItem: async (key: string, value: string) => storage.setItem(key, value),
+      removeItem: async (key: string) => storage.removeItem(key),
+    }
+    runSignInMutation.mockResolvedValue({ status: 'complete', tokens: bundle })
+    const emailCode = ref('code-1')
+    const { result } = mountWithProviders(use(() => emailCode.value), tokenStorage)
+    await vi.waitFor(() => expect(readSecret).toHaveBeenCalledTimes(1))
+    expect(runSignInMutation).not.toHaveBeenCalled()
+
+    emailCode.value = 'code-2'
+    await nextTick()
+    releaseSecret()
     await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
 
     expect(runSignInMutation).toHaveBeenCalledTimes(1)
