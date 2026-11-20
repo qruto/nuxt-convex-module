@@ -125,6 +125,30 @@ async function mountLoaded<T>(useComposable: () => T) {
   return mounted.result
 }
 
+/**
+ * A storage that holds the read of one secret until `release` is called, so
+ * that a test can change the code of the link while the read is pending.
+ */
+function holdSecretRead(secretKey: string) {
+  let release!: () => void
+  const held = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const read = vi.fn()
+  const tokenStorage: TokenStorage = {
+    getItem: async (key: string) => {
+      if (key.startsWith(secretKey)) {
+        read()
+        await held
+      }
+      return storage.getItem(key)
+    },
+    setItem: async (key: string, value: string) => storage.setItem(key, value),
+    removeItem: async (key: string) => storage.removeItem(key),
+  }
+  return { tokenStorage, read, release }
+}
+
 beforeEach(() => {
   storage = new InMemoryStorage()
 })
@@ -293,6 +317,29 @@ describe('useCompleteSignUpWithEmailPassword', () => {
     emailCode.value = 'code-2'
     await nextTick()
     resolveMutation({ status: 'complete', tokens: bundle })
+    await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
+
+    expect(runSignInMutation).toHaveBeenCalledTimes(1)
+    expect(runSignInMutation).toHaveBeenCalledWith({
+      emailCode: 'code-1',
+      browserSecret: 'secret-1',
+    })
+  })
+
+  // Upstream's effect presents the code of the render it started in. Here the
+  // code is a getter, so it must be read before the secret, not after.
+  it('presents the code the page opened with when it changes while the secret is read', async () => {
+    secretStorage.set(SIGN_UP_SECRET_KEY, 'secret-1')
+    const secret = holdSecretRead(SIGN_UP_SECRET_KEY)
+    runSignInMutation.mockResolvedValue({ status: 'complete', tokens: bundle })
+    const emailCode = ref('code-1')
+    const { result } = mountWithProviders(use(() => emailCode.value), secret.tokenStorage)
+    await vi.waitFor(() => expect(secret.read).toHaveBeenCalledTimes(1))
+    expect(runSignInMutation).not.toHaveBeenCalled()
+
+    emailCode.value = 'code-2'
+    await nextTick()
+    secret.release()
     await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
 
     expect(runSignInMutation).toHaveBeenCalledTimes(1)
@@ -611,6 +658,30 @@ describe('useCompleteChangeEmail', () => {
     })
     expect(secretStorage.get(CHANGE_EMAIL_SECRET_KEY)).toBeNull()
     expect(result.auth.isAuthenticated()).toBe(false)
+  })
+
+  it('presents the code the page opened with when it changes while the secret is read', async () => {
+    secretStorage.set(CHANGE_EMAIL_SECRET_KEY, 'secret-5')
+    const secret = holdSecretRead(CHANGE_EMAIL_SECRET_KEY)
+    const mutation = stubConvexMutation().mockResolvedValue({ success: true } as never)
+    const emailCode = ref('code-5')
+    const { result } = mountWithProviders(
+      () => useCompleteChangeEmail({ completeChangeEmail: convexMutation }, { emailCode }),
+      secret.tokenStorage,
+    )
+    await vi.waitFor(() => expect(secret.read).toHaveBeenCalledTimes(1))
+    expect(mutation).not.toHaveBeenCalled()
+
+    emailCode.value = 'code-6'
+    await nextTick()
+    secret.release()
+    await vi.waitFor(() => expect(result.composable.value).toEqual({ status: 'complete' }))
+
+    expect(mutation).toHaveBeenCalledTimes(1)
+    expect(mutation.mock.calls[0]?.[1]).toEqual({
+      emailCode: 'code-5',
+      browserSecret: 'secret-5',
+    })
   })
 
   it('is MISSING_SECRET when this browser did not start the flow', async () => {

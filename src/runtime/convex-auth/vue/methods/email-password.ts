@@ -321,7 +321,9 @@ function useLinkFlow<UserError>(
   flow: EmailLinkFlow,
   complete: (
     browserSecret: string,
+    code: string,
   ) => Promise<{ done: true } | { done: false, userError: UserError }>,
+  emailCode: MaybeRefOrGetter<string>,
 ): ShallowRef<LinkFlowState<UserError | MissingSecretError | OtherError>> {
   const { isLoading } = useAuth()
   const storage = useSecretStorage()
@@ -340,12 +342,16 @@ function useLinkFlow<UserError>(
       started = true
       void (async () => {
         try {
+          // Read the code before the first `await`, as upstream's effect runs
+          // the `complete` of the render it started in: a getter read later
+          // could return another link's code for this link's secret.
+          const code = toValue(emailCode)
           const browserSecret = await storage.get(SECRET_STORAGE_KEYS[flow])
           if (browserSecret === null || browserSecret === undefined) {
             state.value = { status: 'error', userError: { error: 'MISSING_SECRET' } }
             return
           }
-          const result = await complete(browserSecret)
+          const result = await complete(browserSecret, code)
           if (result.done) {
             await storage.remove(SECRET_STORAGE_KEYS[flow])
             state.value = { status: 'complete' }
@@ -535,10 +541,10 @@ export function useCompleteSignUpWithEmailPassword(
   // Keep `isLoading` true while the server validates the link and the client
   // stores the new session, so the app does not see a signed-out user and
   // go to the sign-in page during this time.
-  const complete = (browserSecret: string) =>
+  const complete = (browserSecret: string, code: string) =>
     withSignInPending(async () => {
       const result = await signInApi.mutation(completeSignUpMutation, {
-        emailCode: toValue(emailCode),
+        emailCode: code,
         browserSecret,
       })
       if (result.status === 'complete') {
@@ -551,6 +557,7 @@ export function useCompleteSignUpWithEmailPassword(
   return useLinkFlow<SignInError<ClientView<CompleteSignUpResult>>>(
     'signUp',
     complete,
+    emailCode,
   )
 }
 
@@ -798,8 +805,8 @@ export function useCompleteChangeEmail(
   const completeChangeEmailMutation = api.completeChangeEmail
   const runCompleteChangeEmail = useMutation(completeChangeEmailMutation)
 
-  const complete = async (browserSecret: string) => {
-    const result = await runCompleteChangeEmail({ emailCode: toValue(emailCode), browserSecret })
+  const complete = async (browserSecret: string, code: string) => {
+    const result = await runCompleteChangeEmail({ emailCode: code, browserSecret })
     if (result.success) {
       return { done: true } as const
     }
@@ -809,5 +816,6 @@ export function useCompleteChangeEmail(
   return useLinkFlow<ExtractError<CompleteChangeEmailResult>>(
     'changeEmail',
     complete,
+    emailCode,
   )
 }
