@@ -27,7 +27,7 @@
 - Note what the upstream entry PRs change for the port ([#191](https://github.com/qruto/nuxt-convex-module/pull/191))
 - Link the upstream PR for the R2 upload helper ([#192](https://github.com/qruto/nuxt-convex-module/pull/192))
 - Link the upstream PR for the agent's stream helpers ([#193](https://github.com/qruto/nuxt-convex-module/pull/193))
-- Name the client entries convex-auth#933 now publishes ([#198](https://github.com/qruto/nuxt-convex-module/pull/198), [#933](https://github.com/qruto/nuxt-convex-module/issues/933))
+- Name the client entries convex-auth#933 now publishes ([#198](https://github.com/qruto/nuxt-convex-module/pull/198))
 
 ### 🏡 Chore
 
