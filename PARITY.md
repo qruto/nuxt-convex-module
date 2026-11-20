@@ -684,8 +684,8 @@ upstream routes through that client has to land somewhere else here.
 - **On sync** · copy the changed files again. When upstream exports the clients, delete the folder
   and import them, and raise the `@convex-dev/auth` peer floor to the first release that has the
   entries, everywhere the range is stated ([§4](#4-keeping-parity)): an older version in the
-  range could not resolve the imports. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and its types from the copy,
-  as upstream's `methods/oauth/react.ts` does from the original. The three `convex as unknown as`
+  range could not resolve the imports. `convex-auth/vue/methods/oauth.ts` re-exports `oauth` and
+  its types from the copy, as upstream's `methods/oauth/react.ts` does from the original. The three `convex as unknown as`
   casts in `convex-auth/vue/methods/username-passkey/{hooks,management}.ts` go with the folder: the
   copied flows name `ConvexReactClient`, and the exported ones take any client with a `mutation`
   method. The PR publishes three entries: `@convex-dev/auth/methods/oauth/client`,
