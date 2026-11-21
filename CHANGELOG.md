@@ -1,5 +1,42 @@
 # Changelog
 
+## v0.15.2
+
+[compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.15.1...v0.15.2)
+
+### 🚀 Enhancements
+
+#### Parity
+
+- Track @convex-dev/auth 2.1.0, with magic link and Discord sign-in ([#195](https://github.com/qruto/nuxt-convex-module/pull/195))
+
+### 🩹 Fixes
+
+#### Convex Auth
+
+- Present the code a link page opened with in the email and password flows ([#197](https://github.com/qruto/nuxt-convex-module/pull/197))
+
+### 📖 Documentation
+
+#### Guide
+
+- Name the component entries that work without Nuxt ([#194](https://github.com/qruto/nuxt-convex-module/pull/194))
+
+#### Parity
+
+- Note what the upstream entry PRs change for the port ([#191](https://github.com/qruto/nuxt-convex-module/pull/191))
+- Link the upstream PR for the R2 upload helper ([#192](https://github.com/qruto/nuxt-convex-module/pull/192))
+- Link the upstream PR for the agent's stream helpers ([#193](https://github.com/qruto/nuxt-convex-module/pull/193))
+- Name the client entries convex-auth#933 now publishes ([#198](https://github.com/qruto/nuxt-convex-module/pull/198))
+
+### 🏡 Chore
+
+- Accept three Nuxt advisories osv.dev misreads, drop a withdrawn one ([#196](https://github.com/qruto/nuxt-convex-module/pull/196))
+
+### ❤️ Contributors
+
+- Slava Razum ([@slavarazum](https://github.com/slavarazum))
+
 ## v0.15.1
 
 [compare changes](https://github.com/qruto/nuxt-convex-module/compare/v0.15.0...v0.15.1)
