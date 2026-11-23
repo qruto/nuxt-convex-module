@@ -53,8 +53,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(@standard-schema/spec@1.1.0)(convex@1.51.0(react@19.2.8))(hono@4.13.18)(prettier@3.9.10)(react@19.2.8)(typescript@6.0.3)(zod@4.6.7)
       '@convex-dev/better-auth':
-        specifier: ^0.13.0
-        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.25(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@5.1.0)(vue@3.5.44(typescript@6.0.3)))(convex@1.51.0(react@19.2.8))(hono@4.13.18)(prettier@3.9.10)(react@19.2.8)(typescript@6.0.3)
+        specifier: ^0.13.1
+        version: 0.13.1(@standard-schema/spec@1.1.0)(better-auth@1.7.25(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@5.1.0)(vue@3.5.44(typescript@6.0.3)))(convex@1.51.0(react@19.2.8))(hono@4.13.18)(prettier@3.9.10)(react@19.2.8)(typescript@6.0.3)
       '@convex-dev/persistent-text-streaming':
         specifier: ^0.3.5
         version: 0.3.5(convex@1.51.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -792,10 +792,10 @@ packages:
     peerDependencies:
       convex: ^1.43.0
 
-  '@convex-dev/better-auth@0.13.0':
-    resolution: {integrity: sha512-U82uCij3drlk8ktHeo6sUrPP06KIPEo1FCmB2VFKnQb+Xbv10gUf05SGJYKiPH1mmCrG2ylFRfUFku3I9vnCTw==}
+  '@convex-dev/better-auth@0.13.1':
+    resolution: {integrity: sha512-xztRo6i9SyJJXklvmeXpnSuxAsvOMgd4WwGjCT48WO/jdlRTYOGvvuctdRN19Ebvg6Lk/AflxBGE7+HUvwIyXg==}
     peerDependencies:
-      better-auth: '>=1.7.16 <1.8.0'
+      better-auth: '>=1.7.25 <1.8.0'
       convex: ^1.25.0
       react: ^18.3.1 || ^19.0.0
 
@@ -11233,7 +11233,7 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/better-auth@0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.25(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@5.1.0)(vue@3.5.44(typescript@6.0.3)))(convex@1.51.0(react@19.2.8))(hono@4.13.18)(prettier@3.9.10)(react@19.2.8)(typescript@6.0.3)':
+  '@convex-dev/better-auth@0.13.1(@standard-schema/spec@1.1.0)(better-auth@1.7.25(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@5.1.0)(vue@3.5.44(typescript@6.0.3)))(convex@1.51.0(react@19.2.8))(hono@4.13.18)(prettier@3.9.10)(react@19.2.8)(typescript@6.0.3)':
     dependencies:
       '@better-fetch/fetch': 1.3.3
       better-auth: 1.7.25(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@5.1.0)(vue@3.5.44(typescript@6.0.3))
